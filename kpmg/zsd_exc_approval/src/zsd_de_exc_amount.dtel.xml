@@ -16,6 +16,7 @@
     <SCRTEXT_M>Exceptional Amt</SCRTEXT_M>
     <SCRTEXT_L>Exceptional Amount</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

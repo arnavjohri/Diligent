@@ -16,6 +16,7 @@
     <SCRTEXT_M>Appr. Month</SCRTEXT_M>
     <SCRTEXT_L>Exceptional Approval Month</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

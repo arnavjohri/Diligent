@@ -45,6 +45,16 @@ changing anything — every fix above was made without that and three of the fou
 Better still: install abapGit properly and let it *serialise* a working object, then copy
 that shape.
 
+**Root cause, found 05/09/26 while reviewing `kpmg/zsd_exc_approval/`:** this folder's
+`.abapgit.xml` is wrapped in `<abapGit version="v1.0.0" serializer="LCL_OBJECT_DEVC" ...>`.
+Object XML files must carry that wrapper — abapGit strips it in `zcl_abapgit_xml_input`
+before the transformation — but `.abapgit.xml` is read by `zcl_abapgit_dot_abapgit=>from_xml`,
+which runs `CALL TRANSFORMATION id` on the raw string and needs a bare `<asx:abap>` root.
+`FROM_XML` is exactly the frame the four dumps named, and it runs the moment the ZIP is
+imported, before any object is looked at. None of the four fixes above touched that file.
+To retry: remove the wrapper (keep `<?xml ...?>`, start at `<asx:abap ...>`, end at
+`</asx:abap>`), re-zip from `src/` without directory entries, import. Not yet tried.
+
 ## The manual route (this is how it shipped)
 
 The object is **screen-free by design** — `CL_SALV_TABLE`, no `CALL SCREEN`, no

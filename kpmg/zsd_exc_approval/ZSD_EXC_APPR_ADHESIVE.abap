@@ -28,6 +28,12 @@
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
+*&   05.09.2026  Arnav Johri  <TR>  BP3100 read: INFOCATEGORY column
+*&                                  does not exist (activation error),
+*&                                  filter on INFOTYPE only; BSID/BSAD
+*&                                  read for approval partners only;
+*&                                  commitment date parse accepts a two
+*&                                  digit year and month-first order
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_adhesive.
 
@@ -73,6 +79,9 @@ TYPES: BEGIN OF ty_appr,
        END OF ty_appr.
 
 * Parsed commitment date per approval row (BP3100-TEXT is free text).
+* One row per GT_APPR row, in GT_APPR order - the link is positional
+* (see f_get_open_items), so PARTNER / COUNTER are carried for
+* readability only.
 TYPES: BEGIN OF ty_cdate,
          partner     TYPE bp3100-partner,
          counter     TYPE bp3100-counter,
@@ -162,8 +171,14 @@ TYPES: BEGIN OF ty_output,
 DATA: gt_cust    TYPE ty_t_cust,
       gt_partner TYPE ty_t_kunnr,
       gt_appr    TYPE STANDARD TABLE OF ty_appr,
-      gt_cdate   TYPE SORTED TABLE OF ty_cdate
-                      WITH NON-UNIQUE KEY partner counter,
+*BOC By Arnav on 05/09/26
+* GT_CDATE is read by INDEX, in step with GT_APPR: PARTNER + COUNTER
+* is not confirmed to be unique in BP3100, so a keyed read could hand
+* one approval the commitment date of another.
+*      gt_cdate   TYPE SORTED TABLE OF ty_cdate
+*                      WITH NON-UNIQUE KEY partner counter,
+      gt_cdate   TYPE STANDARD TABLE OF ty_cdate,
+*EOC By Arnav on 05/09/26
       gt_kna1    TYPE SORTED TABLE OF ty_name
                       WITH NON-UNIQUE KEY kunnr,
       gt_climit  TYPE SORTED TABLE OF ty_climit
@@ -184,12 +199,25 @@ SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
 SELECT-OPTIONS s_kunnr FOR knvv-kunnr.
 PARAMETERS     p_infcat TYPE ukm_infocat-infocategory OBLIGATORY.
 PARAMETERS     p_inftyp TYPE ukm_infotyp-infotype OBLIGATORY.
+* ASSUMPTION (FS deviation 10): the FS lists a required "Date" range
+* with no table or field. It is applied to BP3100-DATEFR, the approval
+* date from - not the commitment date and not a posting date. See open
+* issue 11.
 SELECT-OPTIONS s_date FOR bp3100-datefr OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
 PARAMETERS     p_bukrs TYPE knb1-bukrs OBLIGATORY.
 SELECT-OPTIONS s_vkorg FOR knvv-vkorg OBLIGATORY.
+*BOC By Arnav on 05/09/26
+* ASSUMPTION (FS deviation 12): the FS input table for Adhesives has no
+* division, but the reviewer comment in the FS (Yogesh Vanani,
+* 26/08/26) asks for "company code, sales organisation, division,
+* customer group 1 & 2", and the Paints sibling filters on division.
+* Division is therefore offered here as an OPTIONAL range - blank means
+* every division, so nothing changes for a user who ignores it.
+SELECT-OPTIONS s_spart FOR knvv-spart.
+*EOC By Arnav on 05/09/26
 SELECT-OPTIONS s_kvgr1 FOR knvv-kvgr1.
 SELECT-OPTIONS s_kvgr2 FOR knvv-kvgr2.
 * ASSUMPTION (FS deviation 7): the FS names no credit segment, but
@@ -394,6 +422,11 @@ AT SELECTION-SCREEN ON p_inftyp.
 * table that holds the credit segments is not confirmed on this
 * landscape (build spec 1.2).
 
+* ASSUMPTION (FS deviation 11): no authorization check is built. The
+* FS says "Authorization TBD" and no object was named - see open issue
+* 15. When one is agreed it goes here, before START-OF-SELECTION reads
+* anything.
+
 *&---------------------------------------------------------------------*
 *& Main flow
 *&---------------------------------------------------------------------*
@@ -441,14 +474,26 @@ FORM f_get_customers.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
+*BOC By Arnav on 05/09/26
+* Division added to the KNVV filter (optional range, see block B2).
+*  SELECT kunnr
+*    FROM knvv
+*    FOR ALL ENTRIES IN @lt_knb1
+*    WHERE kunnr = @lt_knb1-kunnr
+*      AND vkorg IN @s_vkorg
+*      AND kvgr1 IN @s_kvgr1
+*      AND kvgr2 IN @s_kvgr2
+*    INTO TABLE @lt_knvv.
   SELECT kunnr
     FROM knvv
     FOR ALL ENTRIES IN @lt_knb1
     WHERE kunnr = @lt_knb1-kunnr
       AND vkorg IN @s_vkorg
+      AND spart IN @s_spart
       AND kvgr1 IN @s_kvgr1
       AND kvgr2 IN @s_kvgr2
     INTO TABLE @lt_knvv.
+*EOC By Arnav on 05/09/26
 
   IF lt_knvv IS INITIAL.
     MESSAGE 'No customers match the selection'(m01)
@@ -456,9 +501,9 @@ FORM f_get_customers.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
-* KNVV is sales-area dependent, so a customer extended to several sales
-* areas comes back more than once. It must appear exactly once in the
-* report - see open issue 13.
+* ASSUMPTION (FS deviation 9): KNVV is sales-area dependent, so a
+* customer extended to several sales areas comes back more than once.
+* It must appear exactly once in the report - see open issue 13.
   SORT lt_knvv BY kunnr.
   DELETE ADJACENT DUPLICATES FROM lt_knvv COMPARING kunnr.
 
@@ -495,14 +540,39 @@ FORM f_get_approvals.
 * The field list below matches TY_APPR component for component. Adding
 * a field here without adding it at the same index of TY_APPR fills the
 * wrong component.
+* ASSUMPTION: BP3100-PARTNER (and UKMBP_CMS_SGM-PARTNER in
+* f_get_credit_limits) is compared directly with the customer number.
+* That holds only where the business partner number equals the
+* customer number (CVI same-number assignment). If the numbers differ
+* on this landscape, a CVI_CUST_LINK lookup has to be inserted before
+* this read and before f_get_credit_limits - see open issue 18.
+*BOC By Arnav on 05/09/26
+* ASSUMPTION: BP3100 has no column INFOCATEGORY. The first activation
+* on 02/09/26 failed on this SELECT with "Unknown column name
+* INFOCATEGORY", so the information category is not filtered here any
+* more. It is still enforced on the selection screen: P_INFTYP must be
+* a type of P_INFCAT in UKM_INFOTYP (AT SELECTION-SCREEN ON P_INFTYP),
+* so the rows read below belong to the chosen category unless the same
+* type code exists under a second category. BP3100-INFOTYPE itself is
+* not yet confirmed by an activation - see open issue 17. If BP3100
+* carries the category under another name, add it back to this WHERE
+* clause under that name; nothing else changes.
+*  SELECT partner, counter, datefr, dateto, amnt, text
+*    FROM bp3100
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE partner      = @gt_cust-kunnr
+*      AND infocategory = @p_infcat
+*      AND infotype     = @p_inftyp
+*      AND datefr      IN @s_date
+*    INTO TABLE @gt_appr.
   SELECT partner, counter, datefr, dateto, amnt, text
     FROM bp3100
     FOR ALL ENTRIES IN @gt_cust
-    WHERE partner      = @gt_cust-kunnr
-      AND infocategory = @p_infcat
-      AND infotype     = @p_inftyp
-      AND datefr      IN @s_date
+    WHERE partner  = @gt_cust-kunnr
+      AND infotype = @p_inftyp
+      AND datefr  IN @s_date
     INTO TABLE @gt_appr.
+*EOC By Arnav on 05/09/26
 
   IF gt_appr IS INITIAL.
     MESSAGE 'No exceptional approvals found for the selection'(m02)
@@ -510,9 +580,18 @@ FORM f_get_approvals.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
+*BOC By Arnav on 05/09/26
+* The database returns the rows in no guaranteed order, and a FOR ALL
+* ENTRIES read comes back in blocks. Sorted here, once: the list is
+* then grouped per customer as in the FS layout, two runs of the same
+* selection compare line for line, and GT_CDATE (built later in this
+* order) can be read by index. Nothing may re-sort GT_APPR after this.
+  SORT gt_appr BY partner datefr counter.
+*EOC By Arnav on 05/09/26
+
 * One entry per partner that actually carries an approval. This list
-* drives the KNA1 and UKMBP_CMS_SGM reads, so those two FOR ALL ENTRIES
-* run over the smallest possible driver table.
+* drives the KNA1, UKMBP_CMS_SGM, BSID and BSAD reads, so those FOR ALL
+* ENTRIES run over the smallest possible driver table.
   LOOP AT gt_appr INTO ls_appr.
     CLEAR ls_partner.
     ls_partner-kunnr = ls_appr-partner.
@@ -666,6 +745,7 @@ FORM f_parse_commit_date  USING    iv_text TYPE bp3100-text
         lv_nday   TYPE n LENGTH 2,
         lv_nmon   TYPE n LENGTH 2,
         lv_nyear  TYPE n LENGTH 4,
+        lv_swap   TYPE i,                    "Changes by Arnav on 05/09/26
         lv_cand   TYPE c LENGTH 8.
 
   CLEAR cv_date.
@@ -738,14 +818,43 @@ FORM f_parse_commit_date  USING    iv_text TYPE bp3100-text
                                OR lv_p3 CN '0123456789'.
         CONTINUE.
       ENDIF.
-      IF strlen( lv_p1 ) > 2 OR strlen( lv_p2 ) > 2
-                             OR strlen( lv_p3 ) <> 4.
+*BOC By Arnav on 05/09/26
+* ASSUMPTION: two more spellings of a free-text date are accepted so
+* that fewer rows fall out with a blank commitment date (open issue 3):
+*   - a two digit year is read as 20YY, so 05.08.26 is 05.08.2026;
+*   - month-first order is taken ONLY when the middle part cannot be a
+*     month, so 7/25/2026 (the spelling of the FS sample rows) is
+*     25.07.2026. An ambiguous 8/5/2026 stays day-first, 8 May 2026,
+*     exactly as on an SAP screen.
+*      IF strlen( lv_p1 ) > 2 OR strlen( lv_p2 ) > 2
+*                             OR strlen( lv_p3 ) <> 4.
+*        CONTINUE.
+*      ENDIF.
+*
+*      lv_day  = lv_p1.
+*      lv_mon  = lv_p2.
+*      lv_year = lv_p3.
+      IF strlen( lv_p1 ) > 2 OR strlen( lv_p2 ) > 2.
+        CONTINUE.
+      ENDIF.
+      IF strlen( lv_p3 ) <> 4 AND strlen( lv_p3 ) <> 2.
         CONTINUE.
       ENDIF.
 
       lv_day  = lv_p1.
       lv_mon  = lv_p2.
       lv_year = lv_p3.
+
+      IF strlen( lv_p3 ) = 2.
+        lv_year = lv_year + 2000.
+      ENDIF.
+
+      IF lv_mon > 12 AND lv_day <= 12.
+        lv_swap = lv_day.
+        lv_day  = lv_mon.
+        lv_mon  = lv_swap.
+      ENDIF.
+*EOC By Arnav on 05/09/26
 
     ELSE.
 
@@ -860,17 +969,29 @@ FORM f_get_open_items.
   CLEAR: gt_cdate, gt_bsid, gt_bsad, lv_min_date, lv_max_date.
 
 * Parse first: f_build_output reads the parsed dates from GT_CDATE and
-* must never parse the same text twice.
+* must never parse the same text twice. GT_CDATE gets exactly one row
+* per GT_APPR row, in GT_APPR order, and is read back by index.
   LOOP AT gt_appr INTO ls_appr.
     CLEAR ls_cdate.
     ls_cdate-partner = ls_appr-partner.
     ls_cdate-counter = ls_appr-counter.
     PERFORM f_parse_commit_date USING    ls_appr-text
                                 CHANGING ls_cdate-commit_date.
-    INSERT ls_cdate INTO TABLE gt_cdate.
+*BOC By Arnav on 05/09/26
+*    INSERT ls_cdate INTO TABLE gt_cdate.
+    APPEND ls_cdate TO gt_cdate.
+*EOC By Arnav on 05/09/26
   ENDLOOP.
 
-  IF gt_cust IS INITIAL.
+*BOC By Arnav on 05/09/26
+* The line items are needed only for the customers that actually carry
+* an approval (GT_PARTNER), not for every customer of the company code
+* (GT_CUST). GT_PARTNER is a subset of GT_CUST and f_build_output only
+* ever asks for those partners, so the figures are identical - the read
+* is just far smaller on a large BSID / BSAD.
+*  IF gt_cust IS INITIAL.
+  IF gt_partner IS INITIAL.
+*EOC By Arnav on 05/09/26
     RETURN.
   ENDIF.
 
@@ -905,30 +1026,59 @@ FORM f_get_open_items.
 * arithmetic uses DMBTR. WRBTR is document currency while the credit
 * limit is not, so only the company code currency amount is comparable.
 * Switching back is a one line change in f_calc_open_amount.
+* ASSUMPTION: every BSID / BSAD line of the customer is summed - normal
+* receivables, special G/L items (down payments received, bills of
+* exchange, security deposits, UMSKZ filled) and noted items (down
+* payment requests, BSTAT 'S') alike. The FS says "fetch WRBTR from
+* BSID" and draws no line between them, so none is drawn here. If
+* functional wants the FBL5N picture (no noted items, special G/L shown
+* separately) the two SELECTs need UMSKZ and BSTAT in their field lists
+* and f_calc_open_amount needs the exclusion - open issue 19.
 * NOTE: FOR ALL ENTRIES suppresses duplicate result rows. BUDAT is in
 * the field list, so two documents that share BELNR / BUZEI across
 * fiscal years are still returned separately.
+*BOC By Arnav on 05/09/26
+* Driver table changed from GT_CUST to GT_PARTNER - see the note above.
+*  SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg, rebzg
+*    FROM bsid
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE bukrs = @p_bukrs
+*      AND kunnr = @gt_cust-kunnr
+*      AND budat <= @lv_max_date
+*    INTO TABLE @gt_bsid.
   SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg, rebzg
     FROM bsid
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE bukrs = @p_bukrs
-      AND kunnr = @gt_cust-kunnr
+      AND kunnr = @gt_partner-kunnr
       AND budat <= @lv_max_date
     INTO TABLE @gt_bsid.
+*EOC By Arnav on 05/09/26
 
   IF sy-subrc <> 0.
     CLEAR gt_bsid.
   ENDIF.
 
+*BOC By Arnav on 05/09/26
+*  SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg,
+*         rebzg, augdt
+*    FROM bsad
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE bukrs = @p_bukrs
+*      AND kunnr = @gt_cust-kunnr
+*      AND budat <= @lv_max_date
+*      AND augdt >  @lv_min_date
+*    INTO TABLE @gt_bsad.
   SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg,
          rebzg, augdt
     FROM bsad
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE bukrs = @p_bukrs
-      AND kunnr = @gt_cust-kunnr
+      AND kunnr = @gt_partner-kunnr
       AND budat <= @lv_max_date
       AND augdt >  @lv_min_date
     INTO TABLE @gt_bsad.
+*EOC By Arnav on 05/09/26
 
   IF sy-subrc <> 0.
     CLEAR gt_bsad.
@@ -999,12 +1149,17 @@ FORM f_build_output.
         ls_name   TYPE ty_name,
         ls_climit TYPE ty_climit,
         ls_cdate  TYPE ty_cdate,
+        lv_tabix  TYPE sy-tabix,             "Changes by Arnav on 05/09/26
         lv_amount TYPE dmbtr,
         lv_perc   TYPE p LENGTH 15 DECIMALS 2.
 
   CLEAR gt_output.
 
   LOOP AT gt_appr INTO ls_appr.
+
+*   Kept before any READ TABLE below overwrites SY-TABIX: GT_CDATE is
+*   read by this index.
+    lv_tabix = sy-tabix.                     "Changes by Arnav on 05/09/26
 
     CLEAR: ls_out, ls_cust, ls_name, ls_climit, ls_cdate,
            lv_amount, lv_perc.
@@ -1045,13 +1200,26 @@ FORM f_build_output.
     ls_out-exc_amnt    = ls_appr-amnt.
     ls_out-commit_text = ls_appr-text.
 
-    READ TABLE gt_cdate INTO ls_cdate
-         WITH KEY partner = ls_appr-partner
-                  counter = ls_appr-counter.
+*BOC By Arnav on 05/09/26
+* Positional read - GT_CDATE row n belongs to GT_APPR row n (built in
+* f_get_open_items in this order). PARTNER + COUNTER is not confirmed
+* to be unique in BP3100, so a keyed read could return the commitment
+* date of a different approval of the same partner.
+*    READ TABLE gt_cdate INTO ls_cdate
+*         WITH KEY partner = ls_appr-partner
+*                  counter = ls_appr-counter.
+    READ TABLE gt_cdate INTO ls_cdate INDEX lv_tabix.
+*EOC By Arnav on 05/09/26
     IF sy-subrc = 0.
       ls_out-commit_date = ls_cdate-commit_date.
     ENDIF.
 
+*   ASSUMPTION: a partner with no UKMBP_CMS_SGM row in P_SEGMNT keeps a
+*   credit limit of zero and is judged against it (Non-Fulfilment =
+*   the whole outstanding, Default % blank). A limit that is genuinely
+*   zero and a limit that is simply not maintained in this segment
+*   therefore read the same; build spec 3.4 accepts that - open issue
+*   16 covers the segment question.
     READ TABLE gt_climit INTO ls_climit
          WITH KEY partner = ls_appr-partner.
     IF sy-subrc = 0.

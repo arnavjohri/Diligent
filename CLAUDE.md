@@ -210,7 +210,11 @@ In this repo:
   and promise it will import** — generate it by serialising from a system that has abapGit
   installed, or plan on paste from the start. What was ruled out, so it need not be redone:
   well-formedness, UTF-8/no-BOM/LF, `package.devc.xml`, `TPOOL` items carrying a `KEY`, and
-  `PROGDIR` element order.
+  `PROGDIR` element order. **Root cause found 05/09/26:** that folder's `.abapgit.xml` is
+  wrapped in an `<abapGit ...>` element. Object XML files need the wrapper; `.abapgit.xml`
+  must NOT have it — abapGit reads it with `CALL TRANSFORMATION id` on the raw string
+  (`zcl_abapgit_dot_abapgit=>from_xml`, the frame in the dump) and needs a bare
+  `<asx:abap>` root. `kpmg/zsd_exc_approval/.abapgit.xml` is the correct shape.
 - **Hand-written abapGit XML: element order is load-bearing.** abapGit deserialises with
   `CALL TRANSFORMATION id`, which walks the target structure component by component and
   raises `CX_XSLT_FORMAT_ERROR` — a short dump in `ZABAPGIT_STANDALONE` reported as

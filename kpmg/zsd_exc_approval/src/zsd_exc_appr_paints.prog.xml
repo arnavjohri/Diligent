@@ -247,61 +247,61 @@
      <ID>S</ID>
      <KEY>S_KUNNR</KEY>
      <ENTRY>Customer Number</ENTRY>
-     <LENGTH>15</LENGTH>
+     <LENGTH>23</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_DATE</KEY>
      <ENTRY>Approval Date</ENTRY>
-     <LENGTH>13</LENGTH>
+     <LENGTH>21</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_BUKRS</KEY>
      <ENTRY>Company Code</ENTRY>
-     <LENGTH>12</LENGTH>
+     <LENGTH>20</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_VKORG</KEY>
      <ENTRY>Sales Organization</ENTRY>
-     <LENGTH>18</LENGTH>
+     <LENGTH>26</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_SPART</KEY>
      <ENTRY>Division</ENTRY>
-     <LENGTH>8</LENGTH>
+     <LENGTH>16</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_KVGR1</KEY>
      <ENTRY>Customer Group 1</ENTRY>
-     <LENGTH>16</LENGTH>
+     <LENGTH>24</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_KVGR2</KEY>
      <ENTRY>Customer Group 2</ENTRY>
-     <LENGTH>16</LENGTH>
+     <LENGTH>24</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_SEGMNT</KEY>
      <ENTRY>Credit Segment</ENTRY>
-     <LENGTH>14</LENGTH>
+     <LENGTH>22</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_RLDNR</KEY>
      <ENTRY>Ledger</ENTRY>
-     <LENGTH>6</LENGTH>
+     <LENGTH>14</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>S_BLART</KEY>
      <ENTRY>Document Type</ENTRY>
-     <LENGTH>13</LENGTH>
+     <LENGTH>21</LENGTH>
     </item>
    </TPOOL>
   </asx:values>

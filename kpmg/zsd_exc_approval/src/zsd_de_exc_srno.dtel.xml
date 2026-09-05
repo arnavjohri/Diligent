@@ -16,6 +16,7 @@
     <SCRTEXT_M>Serial No.</SCRTEXT_M>
     <SCRTEXT_L>Serial Number</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

@@ -1,7 +1,9 @@
 # Uploading ZSD_EXC_APPROVAL.zip with abapGit standalone
 
-One ZIP, 19 files, 14 objects. Everything for **Paints (141.B)** except the table
-maintenance generator, which abapGit cannot serialise.
+One ZIP, 18 files, 14 objects. Everything for **Paints (141.B)** except the table
+maintenance generator, which abapGit cannot serialise. **Rebuilt 05/09/26** — six
+defects in the hand-written XML were corrected first (`ZIP_IMPORT_NOTES.md`); use this
+build, not the 03/09/26 one.
 
 ## Before you start
 
@@ -29,9 +31,11 @@ maintenance generator, which abapGit cannot serialise.
    ```
 
    If the list is empty or the pull short-dumps `XML_FORMAT_ERROR` /
-   `CX_XSLT_FORMAT_ERROR` in `FROM_XML`, stop and use the manual route instead
+   `CX_XSLT_FORMAT_ERROR`, go to ST22 first and note **which file** abapGit was
+   deserialising (the `FROM_XML` / `READ` frame shows it) — that is the one fact every
+   earlier attempt failed to capture. Then use the manual route
    (`ZSD_EXP_PAINTS_DDIC.md` for the DDIC, paste for the two programs). See
-   `ZIP_IMPORT_NOTES.md` for why that is a real possibility.
+   `ZIP_IMPORT_NOTES.md` for what was fixed on 05/09/26 and what is still unproven.
 
 6. **Pull**. Give the transport when asked.
 7. Activate in this order — the order matters, each step needs the previous one active:
@@ -43,7 +47,7 @@ maintenance generator, which abapGit cannot serialise.
 | # | What | Where |
 |---|---|---|
 | 1 | Foreign keys: `ZCUSTOMER` -> KNA1, `WAERS` -> TCURC | SE11, Foreign Keys button, accept SE11's proposal. `ZSD_EXP_PAINTS_DDIC.md` §3.4 |
-| 2 | Enhancement category "Can be enhanced (deep)" | SE11 -> Extras -> Enhancement Category. §3.7 |
+| 2 | Enhancement category — the ZIP now sets "Can be enhanced (deep)" (`EXCLASS 4`); just confirm it under SE11 -> Extras -> Enhancement Category. §3.7 |
 | 3 | "Log data changes" tick | SE11 -> Goto -> Technical Settings. §3.6 |
 | 4 | **Table maintenance generator** | SE11 -> Utilities -> Table Maintenance Generator. §4 — auth group `&NC&`, function group `ZSD_EXC_PAINTS`, one step, overview screen `0001`, standard recording routine |
 
@@ -56,11 +60,15 @@ recalculate.
 
 ## Why A is not here
 
-`ZSD_EXC_APPR_ADHESIVE` is already active in your system with the corrected `BP3100`
-field name. The repo copy still carries the old `INFOCATEGORY` that failed activation,
-because that name was never sent back to me. An abapGit pull **overwrites the SAP object
-with the repo version**, so including A would replace your working program with the broken
-one.
+`ZSD_EXC_APPR_ADHESIVE` is already active in your system with the `BP3100` WHERE clause
+you corrected by hand on 02/09/26. That clause was never sent back, so on 05/09/26 the
+repo copy was corrected on reasoning alone: the `INFOCATEGORY` predicate is gone and the
+read filters on `INFOTYPE` only, with the category enforced on the selection screen. That
+may or may not be the same clause you activated. An abapGit pull **overwrites the SAP
+object with the repo version**, so A stays out of the ZIP until the two are reconciled.
 
-Send the field name and I will patch the repo copy, add A to this ZIP and reissue it.
-Until then A stays where it is — activated, and correct in the system.
+To reconcile: `ZR_PROG_DOWNLOAD` the active `ZSD_EXC_APPR_ADHESIVE`, drop it in
+`incoming/`, and the diff against the repo copy settles it (ISSUES.md #17). The repo copy
+also carries the other 05/09/26 corrections (sorted output, positional commitment-date
+link, smaller BSID/BSAD read, optional Division, sturdier date parse) that the active
+version does not have, so the reconciled repo copy is what gets pasted back.

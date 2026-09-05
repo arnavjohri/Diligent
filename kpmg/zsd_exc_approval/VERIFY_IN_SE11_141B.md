@@ -11,6 +11,10 @@ whose exact spelling came from the FS or from `BUILD_SPEC_141B.md` rather than f
 knowledge I can genuinely vouch for.** Work through it top to bottom in SE11 **before**
 pasting anything.
 
+**Line numbers are from the 02/09/26 snapshot** (report 982 lines, upload 1522). The
+report grew to 1012 lines on 05/09/26 (ACDOCA read driven by `gt_partner`, one extra
+ASSUMPTION block in `f_get_credit_limits`); the upload is unchanged. Locate by FORM name.
+
 ## Why this file exists in this form
 
 The sibling object `ZSD_EXC_APPR_ADHESIVE` has just failed its first activation. One

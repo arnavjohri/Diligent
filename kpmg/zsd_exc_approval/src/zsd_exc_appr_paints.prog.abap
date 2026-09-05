@@ -47,6 +47,9 @@
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
+*&   05.09.2026  Arnav Johri  <TR>  ACDOCA read driven by the partners
+*&                                  that carry an approval (GT_PARTNER)
+*&                                  instead of every customer (GT_CUST)
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_paints.
 
@@ -71,8 +74,8 @@ TYPES ty_t_kunnr TYPE STANDARD TABLE OF ty_kunnr WITH DEFAULT KEY.
 
 * Customer key list. L4/L5/L6 are carried here so that the (stubbed)
 * hierarchy read has somewhere to write once a real source is agreed.
-* This is also the driver table for the ACDOCA collection read - build
-* spec 6.3 point 7 fixes FOR ALL ENTRIES IN @gt_cust.
+* The ACDOCA collection read is driven by GT_PARTNER (the customers
+* that carry an approval), not by this table - 05/09/26.
 TYPES: BEGIN OF ty_cust,
          kunnr   TYPE kna1-kunnr,
          l4_name TYPE char40,
@@ -429,6 +432,12 @@ FORM f_get_credit_limits.
     RETURN.
   ENDIF.
 
+* ASSUMPTION: UKMBP_CMS_SGM-PARTNER is compared directly with the
+* customer number. That holds only where the business partner number
+* equals the customer number (CVI same-number assignment). If the
+* numbers differ on this landscape, a CVI_CUST_LINK lookup has to be
+* inserted before this read - see open issue 18 (shared with the
+* Adhesives report).
   SELECT partner, credit_sgmnt, credit_limit
     FROM ukmbp_cms_sgm
     FOR ALL ENTRIES IN @gt_partner
@@ -513,7 +522,15 @@ FORM f_get_collections.
 
   CLEAR: gt_coll, ls_appr, lv_min_date, lv_max_date.
 
-  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
+*BOC By Arnav on 05/09/26
+* The collection lines are needed only for the customers that actually
+* carry an approval (GT_PARTNER), not for every customer of the company
+* code (GT_CUST). GT_PARTNER is a subset of GT_CUST and f_build_output
+* only ever asks for those partners, so the figures are identical - the
+* ACDOCA read is just far smaller.
+*  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
+  IF gt_partner IS INITIAL OR gt_appr IS INITIAL.
+*EOC By Arnav on 05/09/26
     RETURN.
   ENDIF.
 
@@ -560,19 +577,32 @@ FORM f_get_collections.
 * ZCOMMIT_DATE - is applied afterwards, in memory, in
 * f_calc_collection, and never here.
 * NOTE: the field list below matches TY_COLL component for component.
-* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_CUST-KUNNR, but
-* it is part of the locked WHERE clause in build spec 6.3 point 7 and
-* is kept so the code and the contract read the same.
+* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_PARTNER-KUNNR,
+* but it is part of the locked WHERE clause in build spec 6.3 point 7
+* and is kept so the code and the contract read the same.
+*BOC By Arnav on 05/09/26
+* Driver table changed from GT_CUST to GT_PARTNER - see the note above.
+*  SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
+*    FROM acdoca
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE rldnr  = @p_rldnr
+*      AND rbukrs = @p_bukrs
+*      AND kunnr  = @gt_cust-kunnr
+*      AND budat  BETWEEN @lv_min_date AND @lv_max_date
+*      AND blart IN @s_blart
+*      AND kunnr <> @space
+*    INTO TABLE @gt_coll.
   SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
     FROM acdoca
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE rldnr  = @p_rldnr
       AND rbukrs = @p_bukrs
-      AND kunnr  = @gt_cust-kunnr
+      AND kunnr  = @gt_partner-kunnr
       AND budat  BETWEEN @lv_min_date AND @lv_max_date
       AND blart IN @s_blart
       AND kunnr <> @space
     INTO TABLE @gt_coll.
+*EOC By Arnav on 05/09/26
 
 * No collection document in the whole window is a normal business
 * result, not an error: every Actual Collection is then zero and the

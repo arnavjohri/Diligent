@@ -16,6 +16,7 @@
     <SCRTEXT_M>Remarks</SCRTEXT_M>
     <SCRTEXT_L>Remarks</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

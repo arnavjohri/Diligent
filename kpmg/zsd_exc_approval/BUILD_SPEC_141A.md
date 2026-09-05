@@ -196,6 +196,22 @@ Locate by FORM name, never by line number.
 | 7 | no credit segment | p_segmnt on the selection screen | CREDIT_LIMIT is per segment |
 | 8 | status for zero non-fulfilment | 'Fulfilled' | FS covers only (+) and (-) |
 
+## 4a. Amendments — 05/09/26
+
+The contract above is kept as written; these amendments override it where they
+conflict. Each is marked in the source with a `*BOC By Arnav on 05/09/26` block and is
+logged in `ISSUES.md` #17-#21.
+
+| # | Section | Was | Now | Why |
+|---|---|---|---|---|
+| A1 | §3 step 2 | `WHERE ... AND infocategory = @p_infcat AND infotype = @p_inftyp` | `AND infotype = @p_inftyp` only | BP3100 has no INFOCATEGORY column — the 02/09/26 syntax check said so. The category is enforced by the P_INFTYP validation of §1.2. BP3100-INFOTYPE is still unverified |
+| A2 | §3 step 2 | rows in database order | `SORT gt_appr BY partner datefr counter` right after the empty check; nothing re-sorts it later | grouped per customer as in the FS layout; deterministic between runs; lets A3 read by index |
+| A3 | §3 steps 7/8/10 | commitment dates cached in a sorted table keyed PARTNER + COUNTER | standard table, one row per GT_APPR row, read by index in `f_build_output` | PARTNER + COUNTER is not confirmed unique in BP3100 |
+| A4 | §3 step 8 | `FOR ALL ENTRIES IN @gt_cust` on BSID and BSAD | `FOR ALL ENTRIES IN @gt_partner` | only approval partners are ever asked for; identical figures, far smaller read on a large BSID/BSAD |
+| A5 | §1 block b2 | no division | `s_spart FOR knvv-spart`, optional, applied to the KNVV read | FS reviewer comment (Yogesh Vanani) asks for division; blank = all divisions |
+| A6 | §3 step 7 | DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY / YYYYMMDD | plus a two-digit year read as 20YY, plus month-first order when the middle part is > 12 (7/25/2026); an ambiguous 8/5/2026 stays day-first | the FS sample writes M/D/YYYY; only the unambiguous case is taken |
+| A7 | §4 | eight deviations | plus 9 (dedupe), 10 (S_DATE on DATEFR), 11 (no authorization), 12 (division) — all now carry `" ASSUMPTION:` in the source; BP-number = customer-number and "all BSID/BSAD lines summed" are ASSUMPTION notes too (ISSUES.md #18, #19) | every deviation greppable, as §0 requires |
+
 ## 5. Also deliver
 
 - `ZSD_EXC_APPR_ADHESIVE_TEXTS.md` — the text symbols and selection texts as two

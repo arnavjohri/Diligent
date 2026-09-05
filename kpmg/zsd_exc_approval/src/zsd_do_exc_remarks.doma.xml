@@ -8,8 +8,8 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000250</LENG>
     <OUTPUTLEN>000250</OUTPUTLEN>
-    <DDTEXT>Exceptional Approval Remarks</DDTEXT>
     <LOWERCASE>X</LOWERCASE>
+    <DDTEXT>Exceptional Approval Remarks</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

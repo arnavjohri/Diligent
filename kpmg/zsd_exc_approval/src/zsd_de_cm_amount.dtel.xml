@@ -16,6 +16,7 @@
     <SCRTEXT_M>Collection Comm.</SCRTEXT_M>
     <SCRTEXT_L>Collection Commitment Amount</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

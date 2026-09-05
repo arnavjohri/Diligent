@@ -20,3 +20,31 @@
 | 14 | A+B | Output layout | Format shown as three stacked tables. | Confirm single flat ALV, one row per exception record, key columns repeated |
 | 15 | A+B | Authorisation | FS says "Authorization TBD". | Auth object / check to build in |
 | 16 | A+B | Actual Credit Limit | `UKMBP_CMS_SGM` is keyed by partner **and credit segment** — a customer with several segments has several CREDIT_LIMIT values. FS names neither a segment nor a rule. | Which credit segment: fixed default (0000?) or a selection-screen field |
+
+## 02/09/26 — first paste of ZSD_EXC_APPR_ADHESIVE
+
+Syntax check stopped at ONE error, in `FORM f_get_approvals`:
+`Unknown column name INFOCATEGORY` on the `SELECT ... FROM bp3100`. Everything the check
+reached before that line resolved (UKM_INFOCAT-INFOCATEGORY, UKM_INFOTYP-INFOTYPE /
+-INFOCATEGORY, BP3100-PARTNER / COUNTER / DATEFR / DATETO / AMNT / TEXT, CHAR40 / CHAR30 /
+CHAR15 / CHAR7). Arnav corrected the WHERE clause by hand in SE38 and the program is active
+in the system; the corrected field name was not sent back, so the repo copy stayed on the
+failed version until 05/09/26 (item 17 below).
+
+## 05/09/26 — full review of 141 A/B (both programs, upload, ZIP, docs)
+
+| # | Doc | Item | Problem | Needed from functional / Arnav |
+|---|-----|------|---------|--------------------------------|
+| 17 | A | BP3100 category filter | BP3100 has no `INFOCATEGORY` column (activation error 02/09/26). Repo copy now filters on `INFOTYPE` only; the category is enforced on the selection screen (P_INFTYP must belong to P_INFCAT). `BP3100-INFOTYPE` itself is still unconfirmed by an activation. | **Arnav:** `ZR_PROG_DOWNLOAD` of the active `ZSD_EXC_APPR_ADHESIVE`, so the repo copy can be reconciled with the WHERE clause that actually activated. Until then A stays out of the ZIP. |
+| 18 | A+B | BP number = customer number | `BP3100-PARTNER` and `UKMBP_CMS_SGM-PARTNER` are compared directly with `KUNNR`. Holds only with CVI same-number assignment. If not, A finds no approvals and both reports show zero limits. | Confirm BP and customer share the number range (SE16N `CVI_CUST_LINK`, PARTNER_GUID vs CUSTOMER). |
+| 19 | A | Actual OS composition | Every BSID/BSAD line is summed: normal receivables, special G/L items (down payments, bills of exchange, deposits) and noted items (down-payment requests). The FS draws no line; FBL5N would exclude noted items. | Confirm whether special G/L and noted items count toward "Actual OS as on Commitment Date". |
+| 20 | A | Division on the Adhesives screen | Yogesh Vanani's FS comment asks for division; the FS input table omits it. Built as an OPTIONAL range `S_SPART` (blank = all divisions). | Confirm optional is right, or make it obligatory as in Paints. |
+| 21 | A | Commitment date spellings | Parser now also accepts a two-digit year (`05.08.26` → 2026) and month-first order when the middle part cannot be a month (`7/25/2026`). An ambiguous `8/5/2026` stays day-first, 8 May. | Still open under #3: the agreed entry convention for `BP3100-TEXT`. |
+| 22 | B | abapGit ZIP shape | `ZSD_EXC_APPROVAL.zip` rebuilt 05/09/26: DDIC XML element order corrected (DDTEXT after SIGNFLAG/VALEXI/LOWERCASE in DD01V; REFTABLE/REFFIELD before NOTNULL/COMPTYPE in DD03P), `REFKIND D` added to the six data elements, `CLIDEP X` and `EXCLASS 4` added to DD02V, table short text aligned to the build sheet, selection-text LENGTH values corrected (+8), ZIP written without directory entries. See `ZIP_IMPORT_NOTES.md`. | **Arnav:** try the ZIP once more; if it dumps, capture the file abapGit names in ST22 and fall back to paste. |
+| 23 | — | Root cause of the `zfi_tds_cl34` import dumps | Its `.abapgit.xml` is wrapped in an `<abapGit ...>` element. abapGit reads `.abapgit.xml` with `CALL TRANSFORMATION id` directly (`zcl_abapgit_dot_abapgit=>from_xml`, the very frame named in the dump), and that transformation needs a bare `<asx:abap>` root. Object XML files, by contrast, MUST carry the wrapper. This folder's `.abapgit.xml` is bare and correct. | Nothing for functional. Recorded in `kpmg/zfi_tds_cl34/NOTES.md` and `CLAUDE.md`. |
+
+Also done 05/09/26, no functional input needed: `GT_APPR` sorted (A), commitment date
+linked to its approval row by position instead of by PARTNER + COUNTER (A), BSID/BSAD and
+ACDOCA reads driven by the approval partners instead of every customer of the company code
+(A and B), ASSUMPTION tags added for deviations 9/10/11 (A), Adhesives TS wording corrected
+(0.00, not blank, for cleared amounts), `fs/141B_extract.md` added.

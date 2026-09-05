@@ -343,31 +343,31 @@
      <ID>S</ID>
      <KEY>P_FILE</KEY>
      <ENTRY>Upload file</ENTRY>
-     <LENGTH>11</LENGTH>
+     <LENGTH>19</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_HEAD</KEY>
      <ENTRY>First line is a column header</ENTRY>
-     <LENGTH>29</LENGTH>
+     <LENGTH>37</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_INS</KEY>
      <ENTRY>Insert new records only</ENTRY>
-     <LENGTH>23</LENGTH>
+     <LENGTH>31</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_UPD</KEY>
      <ENTRY>Insert new and change existing</ENTRY>
-     <LENGTH>30</LENGTH>
+     <LENGTH>38</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_TEST</KEY>
      <ENTRY>Test run - validate only, no database update</ENTRY>
-     <LENGTH>44</LENGTH>
+     <LENGTH>52</LENGTH>
     </item>
    </TPOOL>
   </asx:values>

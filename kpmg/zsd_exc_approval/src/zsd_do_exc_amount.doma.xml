@@ -9,8 +9,8 @@
     <LENG>000023</LENG>
     <DECIMALS>000002</DECIMALS>
     <OUTPUTLEN>000031</OUTPUTLEN>
-    <DDTEXT>Exceptional Approval Amount</DDTEXT>
     <SIGNFLAG>X</SIGNFLAG>
+    <DDTEXT>Exceptional Approval Amount</DDTEXT>
    </DD01V>
   </asx:values>
  </asx:abap>

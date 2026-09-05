@@ -10,6 +10,12 @@ and their fields used here are all long-standing SAP-standard structures and are
 Go through this table top to bottom in SE11 **before** pasting. A wrong name in row 1
 stops the whole program from activating; a wrong name lower down stops one FORM.
 
+**Line numbers below are from the 02/09/26 snapshot (1247 lines).** The 05/09/26 edit
+(ISSUES.md #17-#21) grew the file to 1415 lines, so locate by FORM name, never by line
+number — CLAUDE.md says the same. The first paste on 02/09/26 already proved rows 1, 2,
+4, 5 and the `p LENGTH 7 DECIMALS 2` / `charNN` types; only row 3 (`INFOTYPE`) and row 6
+(`UKMBP_CMS_SGM` field names) remain genuinely unverified.
+
 ## How this is ordered
 
 Highest risk first, where "risk" = (my confidence the FS-supplied name is exactly
@@ -22,11 +28,10 @@ right) combined with (how much of the program a wrong name takes down):
    feed `TY_APPR` and, through it, most of `TY_OUTPUT`. Each is an independent point
    of failure, and per CLAUDE.md they are matched to `TY_APPR` **by position**, not
    by name.
-3. **BP3100-INFOCATEGORY / BP3100-INFOTYPE** — used only in a `WHERE` clause, so a
-   wrong name here is not caught anywhere else. This pair is also the least
-   independently confirmed relationship in the whole design: the FS's "Info Category
-   / Info Type" filter is asserted to live on BP3100 as two named fields, and that
-   assertion has no support beyond the FS sentence itself.
+3. **BP3100-INFOTYPE** — used only in a `WHERE` clause, so a wrong name here is not
+   caught anywhere else. `BP3100-INFOCATEGORY` is settled: it does not exist (the
+   02/09/26 syntax check said so) and the repo copy no longer references it. INFOTYPE
+   is the same class of name and was never reached by that check.
 4. **UKM_INFOCAT** + INFOCATEGORY — drives the `p_infcat` parameter, its F4 and its
    validation.
 5. **UKM_INFOTYP** + INFOTYPE + INFOCATEGORY — same pattern for `p_inftyp`, one step
@@ -76,14 +81,15 @@ at the same index or later fields silently shift into the wrong component.
 
 ---
 
-## 3. BP3100-INFOCATEGORY / BP3100-INFOTYPE — WHERE-clause-only fields
+## 3. BP3100-INFOTYPE — the one WHERE-clause-only field left (INFOCATEGORY is settled)
 
 | | |
 |---|---|
-| **Confidence** | **Lowest in the program.** These two are not carried into `TY_APPR` at all — they exist only inside the `WHERE` clause of `f_get_approvals` (lines 501–503: `AND infocategory = @p_infcat AND infotype = @p_inftyp`). Nothing else in the source exercises them, so a wrong name here is invisible until this one SELECT is checked. This is also the single most load-bearing guess in the design: the whole premise that "info category / info type" filters BP3100 rows by these two exact field names is asserted by the FS with no independent support. |
-| **Program assumes** | Two fields literally named `INFOCATEGORY` and `INFOTYPE` exist on BP3100 and are comparable to `UKM_INFOCAT-INFOCATEGORY` / `UKM_INFOTYP-INFOTYPE` respectively (same or convertible character domain). |
-| **SE11 navigation** | SE11 → BP3100 → Fields tab → look for `INFOCATEGORY` and `INFOTYPE` by name. If BP3100 exists but doesn't have these exact fields, also check whether the FS's flow (BP → Further Information → Info category → Additional info in credit mgmt) is actually maintained via a **different** table with the category/type folded into the key some other way — ask functional before renaming blind. |
-| **If different** | Edit the two field names inside the `WHERE` clause of `f_get_approvals` (lines 501–503) only — `TY_APPR` does not reference these fields, so nothing else changes. If the filtering mechanism is structurally different (e.g. a single combined key field, or the category/type live on a different table entirely), this FORM needs a redesign, not a one-line rename — flag that back rather than guessing further. |
+| **What happened** | The first paste on 02/09/26 failed its syntax check on exactly this SELECT with **"Unknown column name INFOCATEGORY"**. So `BP3100` has **no** column of that name — settled, no SE11 check needed. Arnav corrected the WHERE clause by hand in SE38 and the program is active; the corrected clause was not sent back (ISSUES.md #17). |
+| **Repo copy since 05/09/26** | `f_get_approvals` filters `WHERE partner = @gt_cust-kunnr AND infotype = @p_inftyp AND datefr IN @s_date`. The information category is no longer filtered in SQL; it is enforced on the selection screen, where `AT SELECTION-SCREEN ON p_inftyp` requires the `P_INFCAT` / `P_INFTYP` pair to exist in `UKM_INFOTYP`. The only leak is a type code that exists under two categories — flagged in the `" ASSUMPTION:` above the SELECT. |
+| **Confidence** | **Still low on `INFOTYPE`.** The syntax check stopped at the first error, so `BP3100-INFOTYPE` was never reached. It is the same class of name INFOCATEGORY was: asserted by the FS, unverified. |
+| **SE11 navigation** | SE11 → BP3100 → Fields tab → look for `INFOTYPE`. While there, note whether a category column exists under another name (`INFOCAT`, `INFO_CATEGORY`, …) and what the table key is (`PARTNER` + `COUNTER` alone, or with `DATEFR` / an info-type field). Better still: `ZR_PROG_DOWNLOAD` the active `ZSD_EXC_APPR_ADHESIVE` and diff it against the repo copy — that answers both questions without SE11. |
+| **If different** | Edit the `infotype` line inside the BOC/EOC block of `f_get_approvals` only — `TY_APPR` does not reference the field. If BP3100 turns out to carry a category column, add it back to the WHERE under its real name and drop the ASSUMPTION paragraph. If the category/type mechanism is structurally different, this FORM needs a redesign, not a rename — flag it. |
 
 ---
 

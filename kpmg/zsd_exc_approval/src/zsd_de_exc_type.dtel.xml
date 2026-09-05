@@ -16,6 +16,7 @@
     <SCRTEXT_M>Appr. Type</SCRTEXT_M>
     <SCRTEXT_L>Exceptional Approval Type</SCRTEXT_L>
     <DTELMASTER>E</DTELMASTER>
+    <REFKIND>D</REFKIND>
    </DD04V>
   </asx:values>
  </asx:abap>

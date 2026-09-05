@@ -27,7 +27,9 @@ reference, and nothing the source references is missing. The two `(m09)` occurre
 (lines 247 and 328) are the same symbol used twice — one row, not two.
 
 Selection-screen fields were reconciled separately: every `SELECT-OPTIONS` and
-`PARAMETERS` statement in the source (9 total) has exactly one row in Table 2.
+`PARAMETERS` statement in the source (10 total since 05/09/26, when `S_SPART` was
+added) has exactly one row in Table 2. The 05/09/26 code changes added no text
+symbol: the 35 IDs below are unchanged.
 
 ---
 
@@ -91,11 +93,12 @@ next to each.
 | S_DATE | SELECT-OPTIONS FOR BP3100-DATEFR | Approval Date |
 | P_BUKRS | PARAMETERS TYPE KNB1-BUKRS | Company Code |
 | S_VKORG | SELECT-OPTIONS FOR KNVV-VKORG | Sales Organization |
+| S_SPART | SELECT-OPTIONS FOR KNVV-SPART | Division |
 | S_KVGR1 | SELECT-OPTIONS FOR KNVV-KVGR1 | Customer Group 1 |
 | S_KVGR2 | SELECT-OPTIONS FOR KNVV-KVGR2 | Customer Group 2 |
 | P_SEGMNT | PARAMETERS TYPE UKMBP_CMS_SGM-CREDIT_SGMNT | Credit Segment |
 
-9 rows — every SELECT-OPTIONS/PARAMETERS statement in the source has one.
+10 rows — every SELECT-OPTIONS/PARAMETERS statement in the source has one.
 
 ## 3. List Headings / Title
 

@@ -8,8 +8,8 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000001</LENG>
     <OUTPUTLEN>000001</OUTPUTLEN>
-    <DDTEXT>Exceptional Approval Type</DDTEXT>
     <VALEXI>X</VALEXI>
+    <DDTEXT>Exceptional Approval Type</DDTEXT>
    </DD01V>
    <DD07V_TAB>
     <DD07V>

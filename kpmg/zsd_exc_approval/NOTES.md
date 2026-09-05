@@ -19,9 +19,19 @@ approval block and actual-vs-commitment block.
 
 ## Open questions blocking build
 
-See `ISSUES.md` for the numbered list raised 02/09/26. The hard blocker is the
-L4/L5/L6 name source — the FS names `SAPLSLVC_FULLSCREEN`, which is the generic
-ALV full-screen function group, not a data source and not SUBMIT-able.
+See `ISSUES.md` for the numbered list raised 02/09/26 and extended 05/09/26. The hard
+blocker is the L4/L5/L6 name source — the FS names `SAPLSLVC_FULLSCREEN`, which is the
+generic ALV full-screen function group, not a data source and not SUBMIT-able.
+
+## Where each object stands (05/09/26)
+
+| Object | Repo copy | System | Next step |
+|---|---|---|---|
+| `ZSD_EXC_APPR_ADHESIVE` (141.A) | corrected 05/09/26: BP3100 filter on INFOTYPE only, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division, sturdier date parse | **active** since 02/09/26 with Arnav's hand fix of the BP3100 WHERE clause — that clause was never sent back | `ZR_PROG_DOWNLOAD` the active version, diff against the repo copy, then paste the reconciled repo copy (ISSUES.md #17) |
+| `ZSD_EXP_PAINTS` + 5 domains + 6 data elements | `src/` XML rebuilt 05/09/26 | not yet created | ZIP first (`ABAPGIT_UPLOAD_STEPS.md`); `ZSD_EXP_PAINTS_DDIC.md` by hand if the ZIP dumps |
+| TMG on `ZSD_EXP_PAINTS` | build sheet only | not yet | SE11 by hand after the table is active |
+| `ZSD_EXP_PAINTS_UPLOAD` | unchanged since 02/09/26; reviewed 05/09/26, no defect found | not yet pasted | ZIP or paste after the table is active |
+| `ZSD_EXC_APPR_PAINTS` | ACDOCA read driven by approval partners since 05/09/26 | not yet pasted | ZIP or paste after the table is active |
 
 ## Delivery
 
@@ -29,3 +39,9 @@ Table + data elements are ZIP-able. TMG (SE11 maintenance generator), any number
 range (SNRO) and the authorisation object are manual. Reports are ZIP-able only if
 they stay screen-free — use `REUSE_ALV_GRID_DISPLAY_LVC` full-screen, no custom
 container, no `CALL SCREEN`.
+
+`ZSD_EXC_APPROVAL.zip` (18 files) carries everything for 141.B except the TMG and the
+two foreign keys. It was rebuilt 05/09/26 after an element-by-element check of the
+abapGit XML — `ZIP_IMPORT_NOTES.md` lists the six defects that were fixed and the root
+cause found for the `zfi_tds_cl34` import dumps. It has not been tried since the rebuild.
+141.A is deliberately not in it (ISSUES.md #17).

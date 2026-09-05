@@ -301,6 +301,14 @@ waers last, `no_out = abap_true`, currency reference for the amount columns.
 | 13 | no credit segment | p_segmnt on the screen | CREDIT_LIMIT is per segment | 16 |
 | 14 | SR. No. source unstated | required in the upload file | no number range confirmed; SNRO can be added later | 9 |
 
+## 7a. Amendments — 05/09/26
+
+| # | Section | Was | Now | Why |
+|---|---|---|---|---|
+| B1 | §6.3 point 7 | `FOR ALL ENTRIES IN @gt_cust` on ACDOCA, guard on `gt_cust` | `FOR ALL ENTRIES IN @gt_partner`, guard on `gt_partner` | only the customers that carry an approval are ever asked for in `f_calc_collection`; identical figures, far smaller ACDOCA read. Marked `*BOC By Arnav on 05/09/26` in the source |
+| B2 | §6.3 point 4 | — | `" ASSUMPTION:` on the UKMBP_CMS_SGM read that BP number = customer number (ISSUES.md #18, shared with 141.A) | greppable, as §0 requires |
+| B3 | §8 / `src/` | hand-written abapGit XML as of 03/09/26 | XML regenerated 05/09/26 in DDIC structure order, `REFKIND`, `CLIDEP`, `EXCLASS 4`, selection-text lengths fixed, ZIP without directory entries | `ZIP_IMPORT_NOTES.md` — the ZIP has still not been tried since |
+
 ## 8. Also deliver
 
 - `ZSD_EXP_PAINTS_DDIC.md` — the SE11 build sheet for objects 1, 2 and 3: every domain,

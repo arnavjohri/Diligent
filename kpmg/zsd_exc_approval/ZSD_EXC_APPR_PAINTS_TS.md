@@ -27,7 +27,14 @@ share FORM naming, ALV construction and text-symbol style by design.
 | ALV (both programs) | `REUSE_ALV_GRID_DISPLAY_LVC`, full screen, hand-built `LVC_T_FCAT` |
 | Shipping | DDIC objects 1–3: SE11 build sheet, typed by hand (not ZIP-able, not paste-able). Programs 4–5: PASTE. Screen-free, so a ZIP is technically possible, but hand-written abapGit XML has never imported successfully on this landscape — see `CLAUDE.md`. |
 | Transport | `<TR to be filled by Arnav>` |
-| Date | 02.09.2026 |
+| Date | 02.09.2026, revised 05.09.2026 |
+
+Revision 05.09.2026: the ACDOCA collection read is driven by the partners that carry an
+approval instead of every customer of the company code (same figures, smaller read);
+the BP-number-equals-customer-number assumption is tagged in the source; the abapGit
+XML in `src/` was regenerated and the ZIP rebuilt (`ZIP_IMPORT_NOTES.md`). Marked
+`*BOC By Arnav on 05/09/26` in the source; `BUILD_SPEC_141B.md` §7a, `ISSUES.md` #18, #22.
+The upload program was reviewed on the same day and is unchanged.
 
 ---
 
@@ -333,15 +340,17 @@ both reports can be filled from one confirmed source in one change.
 
 #### 6.3.7 `F_GET_COLLECTIONS`
 
-Reads `ACDOCA` **once** for the whole customer set. Before reading, the FORM scans every
-approval row to find `lv_min_date` (the lowest `ZEXC_DATE_FROM`) and `lv_max_date` (the
-highest `ZCOMMIT_DATE`) across the entire result set, and bounds the single read with them
-— the per-row window applied in 6.3.8 is always a subset of what was read here.
+Reads `ACDOCA` **once** for the partners that carry an approval (the deduplicated list
+of 6.3.2 — since 05/09/26; the full customer set of 6.3.1 was never needed, because
+6.3.8 only ever asks for those partners). Before reading, the FORM scans every approval
+row to find `lv_min_date` (the lowest `ZEXC_DATE_FROM`) and `lv_max_date` (the highest
+`ZCOMMIT_DATE`) across the entire result set, and bounds the single read with them — the
+per-row window applied in 6.3.8 is always a subset of what was read here.
 
 ```
 SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl FROM acdoca
-FOR ALL ENTRIES IN @gt_cust
-WHERE rldnr = @p_rldnr AND rbukrs = @p_bukrs AND kunnr = @gt_cust-kunnr
+FOR ALL ENTRIES IN @gt_partner
+WHERE rldnr = @p_rldnr AND rbukrs = @p_bukrs AND kunnr = @gt_partner-kunnr
   AND budat BETWEEN @lv_min_date AND @lv_max_date
   AND blart IN @s_blart AND kunnr <> @space
 ```
@@ -474,6 +483,7 @@ Every row carries an `" ASSUMPTION:` comment at the matching point in the source
 | 12 | Status-2 equality undefined | equality treated as Fulfilled | the FS covers only strictly greater and strictly less | #12 |
 | 13 | no credit segment on the screen | `P_SEGMNT` added, obligatory, no default | `CREDIT_LIMIT` is per segment | #16 |
 | 14 | Serial No. source unstated | required as a file/SM30 input, no number range | no SNRO object confirmed; can be added later without changing this build | #9 |
+| 15 | credit limit "fetched" for the customer | `UKMBP_CMS_SGM-PARTNER` compared directly with the customer number | holds only under CVI same-number assignment; shared with 141.A | #18 |
 
 One additional judgement call, not a numbered FS deviation: the amount columns (Actual
 Collection, Non-Fulfilment Amount) are **not** cleared when `COMMIT_DATE` is initial —
@@ -519,6 +529,9 @@ Ranked by what changes a number or a column on the report or the upload log, not
 13. **Judgement call, §7 note.** Confirm whether Actual Collection/Non-Fulfilment should be
     blanked, not computed, on a row with no commitment date — currently they are computed
     against zero while both statuses stay blank.
+14. **ISSUES.md #18 — BP number = customer number.** If the CVI does not keep them
+    identical, every credit limit reads zero; a `CVI_CUST_LINK` lookup would be needed
+    before 6.3.4. Same question for 141.A.
 
 ---
 
