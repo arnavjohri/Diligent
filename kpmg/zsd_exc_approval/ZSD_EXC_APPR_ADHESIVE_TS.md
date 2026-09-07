@@ -55,8 +55,8 @@ Two framed blocks, `TEXT-001` "Exceptional Approval Data" and `TEXT-002`
 | Field | Type | Obligation | F4 source | Description |
 |---|---|---|---|---|
 | `S_KUNNR` | SELECT-OPTIONS on `KNVV-KUNNR` | Optional | standard DDIC (customer search helps) | Customer number |
-| `P_INFCAT` | PARAMETER, `UKM_INFOCAT-INFOCATEGORY` | **Obligatory** | custom — distinct `INFOCATEGORY` from `UKM_INFOCAT` | Information category |
-| `P_INFTYP` | PARAMETER, `UKM_INFOTYP-INFOTYPE` | **Obligatory** | custom — distinct `INFOTYPE` from `UKM_INFOTYP` `WHERE INFOCATEGORY = P_INFCAT` | Information type |
+| `P_INFCAT` | PARAMETER, `BP3100-ADDTYPE` | **Obligatory** | custom — distinct `ADDTYPE` from `BP3100` | Information category |
+| `P_INFTYP` | PARAMETER, `BP3100-DATA_TYPE` | **Obligatory** | custom — distinct `DATA_TYPE` from `BP3100` `WHERE ADDTYPE = P_INFCAT` | Information type |
 | `S_DATE` | SELECT-OPTIONS on `BP3100-DATEFR` | **Obligatory** | standard (date) | Exceptional approval date (from) |
 | `P_BUKRS` | PARAMETER, `KNB1-BUKRS` | **Obligatory** | standard DDIC | Company code |
 | `S_VKORG` | SELECT-OPTIONS on `KNVV-VKORG` | **Obligatory** | standard DDIC | Sales organisation |
@@ -70,7 +70,7 @@ customer is ambiguous. See §7 deviation 7 / `ISSUES.md` #16.
 
 ### 3.1 F4 help behaviour
 
-- **`P_INFCAT`**: reads the distinct `INFOCATEGORY` values from `UKM_INFOCAT` and
+- **`P_INFCAT`**: reads the distinct `ADDTYPE` values from `BP3100` and
   offers them via `F4IF_INT_TABLE_VALUE_REQUEST`. No text table is read — its name
   is unconfirmed on this landscape — so only the key value is shown.
 - **`P_INFTYP`**: dependent on `P_INFCAT`. The routine reads what the user has typed
@@ -84,8 +84,8 @@ customer is ambiguous. See §7 deviation 7 / `ISSUES.md` #16.
 | Field | Check | On failure |
 |---|---|---|
 | `P_BUKRS` | exists in `T001` | Error on the field: "Company code does not exist" |
-| `P_INFCAT` | exists in `UKM_INFOCAT` | Error on the field: "Information category does not exist" |
-| `P_INFTYP` | exists in `UKM_INFOTYP` for the chosen `P_INFCAT` (checked only once `P_INFCAT` is filled, so one mistake does not raise two errors) | Error on the field: "Information type not valid for this category" |
+| `P_INFCAT` | exists as an `ADDTYPE` in `BP3100` | Error on the field: "Information category does not exist" |
+| `P_INFTYP` | exists as a `DATA_TYPE` in `BP3100` for the chosen `ADDTYPE` (checked only once `P_INFCAT` is filled, so one mistake does not raise two errors) | Error on the field: "Information type not valid for this category" |
 | `P_SEGMNT` | **not checked** | the customizing table holding valid credit segments is not confirmed on this landscape (build spec §1.2) |
 
 ---
@@ -100,8 +100,7 @@ customer is ambiguous. See §7 deviation 7 / `ISSUES.md` #16.
 | `KNA1` | Customer name (`NAME1`) | `F_GET_NAMES` |
 | `UKMBP_CMS_SGM` | Actual credit limit, keyed by partner + credit segment | `F_GET_CREDIT_LIMITS` |
 | `T001` | Company-code currency (ALV currency reference); also the `P_BUKRS` existence check | `F_GET_COMPANY_CURRENCY`, `AT SELECTION-SCREEN ON P_BUKRS` |
-| `UKM_INFOCAT` | F4 list and existence check for `P_INFCAT` | F4 handler, `AT SELECTION-SCREEN ON P_INFCAT` |
-| `UKM_INFOTYP` | F4 list (dependent on `P_INFCAT`) and existence check for `P_INFTYP` | F4 handler, `AT SELECTION-SCREEN ON P_INFTYP` |
+| `BP3100` | F4 lists and existence checks for `P_INFCAT` (`ADDTYPE`) and `P_INFTYP` (`DATA_TYPE`) | F4 handlers, `AT SELECTION-SCREEN ON P_INFCAT` / `ON P_INFTYP` |
 | `BSID` | Customer open items **as they stand today** | `F_GET_OPEN_ITEMS` |
 | `BSAD` | Customer items cleared **since** the commitment date — needed because an item open on the commitment date but cleared afterwards must still count as open on that date | `F_GET_OPEN_ITEMS` |
 
@@ -392,5 +391,17 @@ apply to this object.
 | 6 | Customer in more than one sales area | One `KUNNR` extended to two `VKORG` values that both satisfy `S_VKORG` | Customer appears **exactly once** in `GT_CUST` and therefore at most once per approval row — never duplicated by sales area |
 | 7 | No exceptional approvals for a valid customer set | Customers found in `KNB1`/`KNVV`, but no `BP3100` row matches `P_INFCAT`/`P_INFTYP`/`S_DATE` | Message "No exceptional approvals found for the selection"; report stops |
 | 8 | Company code that does not exist | `P_BUKRS` value absent from `T001` | Error on the selection screen: "Company code does not exist"; cursor stays on the field |
-| 9 | Information type not valid for the category | `P_INFTYP` filled, but no `UKM_INFOTYP` row for that `INFOCATEGORY`/`INFOTYPE` pair | Error on the selection screen: "Information type not valid for this category" |
+| 9 | Information type not valid for the category | `P_INFTYP` filled, but no `BP3100` row for that `ADDTYPE`/`DATA_TYPE` pair | Error on the selection screen: "Information type not valid for this category" |
 | 10 | Item cleared after the commitment date | A `BSID` item as of the commitment date is later cleared (now only in `BSAD`), with `AUGDT` after the commitment date | Still counted as open in `F_CALC_OPEN_AMOUNT` via the `BSAD` leg — Actual OS on Commitment Date includes it |
+
+## Note added 07/09/26 — BP3100 field names
+
+`BP3100` has no `INFOCATEGORY` / `INFOTYPE` column. The information category and
+information type are held in **`ADDTYPE`** and **`DATA_TYPE`**, confirmed from the system.
+Everything technical was re-pointed; the business labels on the screen are unchanged.
+
+`UKM_INFOCAT` / `UKM_INFOTYP` are no longer read. With BP3100 using different field names,
+the matching customizing field names are unconfirmed here, and both value helps now read
+the distinct values present in `BP3100` itself. That cannot be wrong, and for a report it
+is the better list: only values that carry data can be reported on. Offering the full
+customizing list instead is a change to two `SELECT`s.

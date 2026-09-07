@@ -33,6 +33,11 @@
 *&                                  hierarchy read built as a background
 *&                                  SUBMIT with the source name held in
 *&                                  the GC_HIER_* constants.
+*&   07.09.2026  Arnav Johri  <TR>  BP3100 has no INFOCATEGORY /
+*&                                  INFOTYPE. The real fields are
+*&                                  ADDTYPE and DATA_TYPE. Selection,
+*&                                  F4 help and validation re-pointed;
+*&                                  business labels unchanged.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_adhesive.
 
@@ -123,13 +128,28 @@ TYPES: BEGIN OF ty_clritem,
        END OF ty_clritem.
 
 * F4 helper tables.
+*BOC By Arnav on 07/09/26
+* BP3100 carries no INFOCATEGORY / INFOTYPE column. The fields that hold
+* the information category and the information type are ADDTYPE and
+* DATA_TYPE. Both helper tables are therefore typed straight off BP3100,
+* which cannot be wrong whatever data element sits behind those fields.
+* The business labels on the screen stay "Information Category" and
+* "Information Type" - only the technical names changed.
+* Old code:
+**TYPES: BEGIN OF ty_f4_infcat,
+**         infocategory TYPE ukm_infocat-infocategory,
+**       END OF ty_f4_infcat.
+**TYPES: BEGIN OF ty_f4_infotyp,
+**         infotype TYPE ukm_infotyp-infotype,
+**       END OF ty_f4_infotyp.
 TYPES: BEGIN OF ty_f4_infcat,
-         infocategory TYPE ukm_infocat-infocategory,
+         addtype TYPE bp3100-addtype,
        END OF ty_f4_infcat.
 
 TYPES: BEGIN OF ty_f4_infotyp,
-         infotype TYPE ukm_infotyp-infotype,
+         data_type TYPE bp3100-data_type,
        END OF ty_f4_infotyp.
+*EOC By Arnav on 07/09/26
 
 * Output structure - declared in the exact order fixed by the build
 * spec section 2. WAERS is last on purpose: it is the ALV currency
@@ -224,8 +244,16 @@ CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
 *&---------------------------------------------------------------------*
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
 SELECT-OPTIONS s_kunnr FOR knvv-kunnr.
-PARAMETERS     p_infcat TYPE ukm_infocat-infocategory OBLIGATORY.
-PARAMETERS     p_inftyp TYPE ukm_infotyp-infotype OBLIGATORY.
+*BOC By Arnav on 07/09/26
+* Typed off BP3100-ADDTYPE / BP3100-DATA_TYPE, the fields that actually
+* hold the information category and information type. Parameter names
+* keep the business meaning so the selection texts do not change.
+* Old code:
+**PARAMETERS     p_infcat TYPE ukm_infocat-infocategory OBLIGATORY.
+**PARAMETERS     p_inftyp TYPE ukm_infotyp-infotype OBLIGATORY.
+PARAMETERS     p_infcat TYPE bp3100-addtype OBLIGATORY.
+PARAMETERS     p_inftyp TYPE bp3100-data_type OBLIGATORY.
+*EOC By Arnav on 07/09/26
 SELECT-OPTIONS s_date FOR bp3100-datefr OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b1.
 
@@ -270,12 +298,26 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_infcat.
 
   CLEAR: lt_f4cat, lt_retcat, ls_retcat.
 
-* No text table is read here - its name is not confirmed on this
-* landscape, so only the key values are offered (build spec 1.1).
-  SELECT DISTINCT infocategory
-    FROM ukm_infocat
-    ORDER BY infocategory
+*BOC By Arnav on 07/09/26
+* ASSUMPTION: the value help is sourced from BP3100 itself rather than
+* from a customizing table. UKM_INFOCAT was dropped because BP3100 uses
+* ADDTYPE / DATA_TYPE and the matching customizing field names are not
+* confirmed on this landscape - a wrong table name costs an activation
+* cycle. Reading the distinct values actually present in BP3100 cannot
+* be wrong, and for a report it is the better list anyway: only values
+* that carry data can be reported on.
+* Old code:
+** No text table is read here - its name is not confirmed on this
+** landscape, so only the key values are offered (build spec 1.1).
+**  SELECT DISTINCT infocategory
+**    FROM ukm_infocat
+**    ORDER BY infocategory
+**    INTO TABLE @lt_f4cat.
+  SELECT DISTINCT addtype
+    FROM bp3100
+    ORDER BY addtype
     INTO TABLE @lt_f4cat.
+*EOC By Arnav on 07/09/26
 
   IF lt_f4cat IS INITIAL.
     MESSAGE 'No information categories are maintained'(m08)
@@ -283,7 +325,7 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_infcat.
   ELSE.
     CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
       EXPORTING
-        retfield        = 'INFOCATEGORY'
+        retfield        = 'ADDTYPE'
         dynpprog        = gv_repid
         dynpnr          = sy-dynnr
         dynprofield     = 'P_INFCAT'
@@ -317,7 +359,7 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_inftyp.
         ls_rettyp TYPE ddshretval,
         lt_dynp   TYPE STANDARD TABLE OF dynpread,
         ls_dynp   TYPE dynpread,
-        lv_infcat TYPE ukm_infocat-infocategory.
+        lv_infcat TYPE bp3100-addtype.
 
   CLEAR: lt_f4typ, lt_rettyp, ls_rettyp, lt_dynp, ls_dynp, lv_infcat.
 
@@ -352,11 +394,19 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_inftyp.
     MESSAGE 'Enter the information category first'(m03)
             TYPE 'S' DISPLAY LIKE 'W'.
   ELSE.
-    SELECT DISTINCT infotype
-      FROM ukm_infotyp
-      WHERE infocategory = @lv_infcat
-      ORDER BY infotype
+*BOC By Arnav on 07/09/26
+* Old code:
+**    SELECT DISTINCT infotype
+**      FROM ukm_infotyp
+**      WHERE infocategory = @lv_infcat
+**      ORDER BY infotype
+**      INTO TABLE @lt_f4typ.
+    SELECT DISTINCT data_type
+      FROM bp3100
+      WHERE addtype = @lv_infcat
+      ORDER BY data_type
       INTO TABLE @lt_f4typ.
+*EOC By Arnav on 07/09/26
 
     IF lt_f4typ IS INITIAL.
       MESSAGE 'No information types for this category'(m10)
@@ -364,7 +414,7 @@ AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_inftyp.
     ELSE.
       CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
         EXPORTING
-          retfield        = 'INFOTYPE'
+          retfield        = 'DATA_TYPE'
           dynpprog        = gv_repid
           dynpnr          = sy-dynnr
           dynprofield     = 'P_INFTYP'
@@ -409,14 +459,26 @@ AT SELECTION-SCREEN ON p_bukrs.
 
 AT SELECTION-SCREEN ON p_infcat.
 
-  DATA lv_chk_cat TYPE ukm_infocat-infocategory.
+*BOC By Arnav on 07/09/26
+* Checked against BP3100 for the same reason as the value help above.
+* SELECT SINGLE stops at the first hit, so a valid value is cheap; only
+* a value that does not exist reads further, and that is the error path.
+* Old code:
+**  DATA lv_chk_cat TYPE ukm_infocat-infocategory.
+**  CLEAR lv_chk_cat.
+**  SELECT SINGLE infocategory
+**    FROM ukm_infocat
+**    WHERE infocategory = @p_infcat
+**    INTO @lv_chk_cat.
+  DATA lv_chk_cat TYPE bp3100-addtype.
 
   CLEAR lv_chk_cat.
 
-  SELECT SINGLE infocategory
-    FROM ukm_infocat
-    WHERE infocategory = @p_infcat
+  SELECT SINGLE addtype
+    FROM bp3100
+    WHERE addtype = @p_infcat
     INTO @lv_chk_cat.
+*EOC By Arnav on 07/09/26
 
   IF sy-subrc <> 0.
     MESSAGE 'Information category does not exist'(m05) TYPE 'E'.
@@ -424,18 +486,30 @@ AT SELECTION-SCREEN ON p_infcat.
 
 AT SELECTION-SCREEN ON p_inftyp.
 
-  DATA lv_chk_typ TYPE ukm_infotyp-infotype.
+*BOC By Arnav on 07/09/26
+* Old code:
+**  DATA lv_chk_typ TYPE ukm_infotyp-infotype.
+  DATA lv_chk_typ TYPE bp3100-data_type.
+*EOC By Arnav on 07/09/26
 
   CLEAR lv_chk_typ.
 
 * Only checked once the category itself is filled - otherwise the user
 * would get two errors for one mistake.
   IF p_infcat IS NOT INITIAL.
-    SELECT SINGLE infotype
-      FROM ukm_infotyp
-      WHERE infocategory = @p_infcat
-        AND infotype     = @p_inftyp
+*BOC By Arnav on 07/09/26
+* Old code:
+**    SELECT SINGLE infotype
+**      FROM ukm_infotyp
+**      WHERE infocategory = @p_infcat
+**        AND infotype     = @p_inftyp
+**      INTO @lv_chk_typ.
+    SELECT SINGLE data_type
+      FROM bp3100
+      WHERE addtype   = @p_infcat
+        AND data_type = @p_inftyp
       INTO @lv_chk_typ.
+*EOC By Arnav on 07/09/26
 
     IF sy-subrc <> 0.
       MESSAGE 'Information type not valid for this category'(m06)
@@ -552,8 +626,13 @@ FORM f_get_approvals.
     FROM bp3100
     FOR ALL ENTRIES IN @gt_cust
     WHERE partner      = @gt_cust-kunnr
-      AND infocategory = @p_infcat
-      AND infotype     = @p_inftyp
+*BOC By Arnav on 07/09/26
+* Old code:
+**      AND infocategory = @p_infcat
+**      AND infotype     = @p_inftyp
+      AND addtype      = @p_infcat
+      AND data_type    = @p_inftyp
+*EOC By Arnav on 07/09/26
       AND datefr      IN @s_date
     INTO TABLE @gt_appr.
 

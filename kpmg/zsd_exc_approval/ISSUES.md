@@ -71,3 +71,26 @@ figures on the same data, so a guess would ship a wrong number rather than a bla
 
 Issue 15 (authorisation object) is still "TBD" in the FS. It does not block functional
 testing, but it blocks the move to QA.
+
+## 07/09/26 — BP3100 field names corrected
+
+Arnav confirmed from the system that **BP3100 has no `INFOCATEGORY` / `INFOTYPE` column**.
+The fields carrying the information category and information type are **`ADDTYPE`** and
+**`DATA_TYPE`**. `ZSD_EXC_APPR_ADHESIVE` re-pointed throughout: the BP3100 read, both
+parameters (now typed off `BP3100-ADDTYPE` / `BP3100-DATA_TYPE`), both F4 helps and both
+selection-screen checks.
+
+Business labels are unchanged — the screen still reads "Information Category" and
+"Information Type", and the parameter names `P_INFCAT` / `P_INFTYP` keep that meaning, so
+no selection text or message text moved.
+
+`UKM_INFOCAT` and `UKM_INFOTYP` were dropped as the value-help and validation source. Now
+that BP3100 uses different field names, the matching customizing field names are not
+confirmed on this landscape, and a wrong table or field name costs an activation cycle.
+Both F4 helps and both checks now read the distinct values present in BP3100 itself, which
+cannot be wrong and, for a report, is the better list: only values that carry data can be
+reported on. If those customizing tables do exist with usable field names and functional
+wants the full list offered rather than the used list, that is a change to two SELECTs.
+
+`ZSD_EXC_APPR_PAINTS` is unaffected — Info Category and Info Type were already dropped from
+the Paints selection screen (issue 10), so it never referenced either field.
