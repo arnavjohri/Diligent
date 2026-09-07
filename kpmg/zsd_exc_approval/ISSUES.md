@@ -94,3 +94,37 @@ wants the full list offered rather than the used list, that is a change to two S
 
 `ZSD_EXC_APPR_PAINTS` is unaffected — Info Category and Info Type were already dropped from
 the Paints selection screen (issue 10), so it never referenced either field.
+
+## 07/09/26 — all three programs activated
+
+| Object | State |
+|---|---|
+| `ZSD_EXC_APPR_ADHESIVE` | **Active.** With the credit-segment default, the `ZSD_CUSTOMER_DATA` hierarchy call, and the ADDTYPE / DATA_TYPE correction. |
+| `ZSD_EXC_APPR_PAINTS` | **Active.** With the credit-segment default and the hierarchy call. |
+| `ZSD_EXP_PAINTS_UPLOAD` | **Active.** |
+
+Activation of the two Paints programs proves the DDIC underneath them is active as well —
+neither would syntax check otherwise. So SE11 steps 1 to 4 of `ZSD_EXP_PAINTS_DDIC.md` are
+done: the 5 domains, the 6 data elements, table `ZSD_EXP_PAINTS` and its technical settings.
+
+### What is left on the build
+
+| Item | Blocking? |
+|---|---|
+| Table maintenance generator, function group `ZSD_EXC_PAINTS`, one step, screen 0001 (§4 of the DDIC sheet) | Not implied by activation — check SM30 opens on `ZSD_EXP_PAINTS`. Needed for single-record maintenance; the upload program covers mass entry without it. |
+| Text elements on all three programs | Cosmetic. Every literal carries its own default, so all three run without them. |
+| The four `GC_HIER_*` field names from `ZSD_CUSTOMER_DATA` | L4/L5/L6 stay blank until supplied. |
+| Authorisation object (issue 15) | Blocks QA, not functional testing. |
+| The four functional questions (issues 2, 3, 5, 6) | Each decides a number, not whether the program runs. |
+
+### First-run order for functional testing
+
+1. `ZSD_EXP_PAINTS_UPLOAD` with the test-run box ticked, on a small file. The log must come
+   back clean before anything is written.
+2. Same file with the box unticked, insert mode.
+3. `ZSD_EXC_APPR_PAINTS` over the loaded rows.
+4. `ZSD_EXC_APPR_ADHESIVE` against real BP3100 data.
+
+On the first run of either report, watch whether `ZSD_CUSTOMER_DATA` stops on its own
+selection screen. That is the one failure mode the `GC_HIER_*` guards cannot cover.
+
