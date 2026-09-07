@@ -1,6 +1,6 @@
 *&---------------------------------------------------------------------*
 *& Report/Include : ZFI_TDS_CL34_FORMS
-*& Title          : TDS Report Clause 34 - form routines
+*& Title          : TDS Reporting as per Clause 34(a) - form routines
 *& Project        : KPMG - UDAY / Astral          Module: FI
 *& Related FS     : Clause 34 TDS Report FS.xlsx, v1, 21.08.2026
 *& Author         : Arnav Johri                   Date: 26.08.2026
@@ -2336,8 +2336,15 @@ FORM display_alv.
       DATA(lo_waers) = lo_cols->get_column( CONV lvc_fname( 'WAERS' ) ).
       lo_waers->set_technical( abap_true ).
 
+*BOC By Arnav on 07/09/26
+*     Renamed on Bhavin Suthar's instruction of 07/09/26. The fiscal
+*     year stays dynamic - it is P_GJAHR, never a literal, so the
+*     heading follows whatever year the user selects.
+*      go_alv->get_display_settings( )->set_list_header(
+*        |TDS Report - Clause 34 - Fiscal Year { p_gjahr }| ).
       go_alv->get_display_settings( )->set_list_header(
-        |TDS Report - Clause 34 - Fiscal Year { p_gjahr }| ).
+        |TDS Reporting as per Clause 34(a) - Fiscal Year { p_gjahr }| ).
+*EOC By Arnav on 07/09/26
 
       go_alv->display( ).
 

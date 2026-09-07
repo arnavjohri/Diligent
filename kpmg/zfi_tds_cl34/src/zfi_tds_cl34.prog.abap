@@ -1,6 +1,6 @@
 *&---------------------------------------------------------------------*
 *& Report/Include : ZFI_TDS_CL34
-*& Title          : TDS Report - Clause 34 compliance
+*& Title          : TDS Reporting as per Clause 34(a)
 *& Project        : KPMG - UDAY / Astral          Module: FI
 *& Related FS     : Clause 34 TDS Report FS.xlsx, v1, 21.08.2026
 *& Author         : Arnav Johri                   Date: 26.08.2026

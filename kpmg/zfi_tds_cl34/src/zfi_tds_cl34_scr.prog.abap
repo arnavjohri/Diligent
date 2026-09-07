@@ -1,6 +1,6 @@
 *&---------------------------------------------------------------------*
 *& Report/Include : ZFI_TDS_CL34_SCR
-*& Title          : TDS Report Clause 34 - selection screen
+*& Title          : TDS Reporting as per Clause 34(a) - selection screen
 *& Project        : KPMG - UDAY / Astral          Module: FI
 *& Related FS     : Clause 34 TDS Report FS.xlsx, v1, 21.08.2026
 *& Author         : Arnav Johri                   Date: 26.08.2026
@@ -123,7 +123,15 @@ SELECTION-SCREEN END OF BLOCK b1.
 *&    or PROGRAM statement of its own - the main program owns it.
 *&
 *& 2. Goto -> Attributes
-*&    Title                    TDS Report - Clause 34 compliance
+*&    Title                    TDS Reporting as per Clause 34(a)
+*&                             Renamed 07/09/26 on Bhavin Suthar's
+*&                             instruction. THIS IS WHAT THE INPUT
+*&                             SCREEN SHOWS as its heading - it does
+*&                             not travel with the source, so it must
+*&                             be typed here. The program was carrying
+*&                             "Main Prog", which is what he saw.
+*&                             The report heading is set separately in
+*&                             DISPLAY_ALV and carries the fiscal year.
 *&    Fixed point arithmetic   MUST be ticked. Every SELECT in this
 *&                             program uses strict ABAP SQL
 *&                             (comma-separated field lists, @ escaped
