@@ -66,6 +66,31 @@ logic works.
 
 | Q26 | Ankita | Row selection — item status | The driver now excludes `I_WithholdingTaxItem-WhldgTaxItemStatus` in `'V'`, `'D'`, `'M'`, `'S'` (instruction of 07/09/26). Three things need confirming: (a) is that list complete, or are there further non-reportable codes; (b) **is a blank status reportable?** It is kept today — if blank means "not yet processed" the report is currently wider than intended; (c) the element name, length and the meaning of each code are taken from the instruction, not from DDIC — nothing here can read the view. If `WHLDGTAXITEMSTATUS` is not an element of the view the program will not activate, and the fix is one line in `FETCH_WT_ITEMS`. | Excluded in the driver SELECT; blank kept. |
 
+### Q21 — closed 07/09/26, mechanism established
+
+The sign is **`BSEG-SHKZG` of the vendor line**, not the document type:
+
+| Vendor line | Example | `WT_QSSHH` / `WT_QBSHH` |
+|---|---|---|
+| credited — invoice, posting key 31 | `1900000001` | `4,500.00-` / `90.00-` |
+| debited — down payment key 29 / SGL `J` | `1500000010` | `10,000.00` / `2,000.00` |
+| debited — invoice cancellation | `5110000004/5/6`, `5110000018` | positive |
+
+Confirmed across all 93 rows of the 07/09/26 run: every positive row is a vendor-debit
+posting. `1700000000` is **negative** although it is a `17*` document, which rules out the
+number range as the driver.
+
+**Decision taken 07/09/26 (Arnav):** columns P and T report `abs( )` magnitudes. A flat
+`x -1` was rejected — it turns invoices positive but down payments negative, and both are
+real deductions.
+
+**What this hands to Q6, unchanged:** with `abs( )`, a reversal ADDS rather than nets off.
+On that run: 5 rows, 400,100.00 of base and 2.00 of tax (four carry code `C8` at
+`0.0000`). If reversed documents should net off or be excluded, the sign must come from a
+reversal indicator on `BKPF` — **not** from the `MR8M` text visible in Nature of Payment,
+which is `BSEG-SGTXT` typed by hand; `5110000012` is a reversal that does not carry it.
+
+
 ### Second run, company code with the `19*` / `511*` ranges — 27/08/26
 
 17 rows, **all reconcile, no exceptions.** `4,000 x 0.1% = 4.00`, `175,000 x 2% = 3,500`,

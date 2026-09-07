@@ -16,7 +16,7 @@ Four files, all under `src/`:
 | `zfi_tds_cl34.prog.abap` | 132 | Main program — includes and the event blocks, incl. the two ON VALUE-REQUEST for section code. No logic. |
 | `zfi_tds_cl34_top.prog.abap` | 663 | `TABLES`, `TYPES`, `CONSTANTS`, global `DATA`. No executable statement. |
 | `zfi_tds_cl34_scr.prog.abap` | 172 | The five selection fields (S_SECTN filters column H, not BSEG-SECCO), plus the manual-steps checklist as a trailer comment. |
-| `zfi_tds_cl34_forms.prog.abap` | 2404 | Every form routine. |
+| `zfi_tds_cl34_forms.prog.abap` | 2441 | Every form routine. |
 
 Companion docs: `docs/TS_ZFI_TDS_CL34.md` (the TS), `docs/DDIC_FACTS.md` (the verified
 field list — it overrides both the FS and BUILD_BRIEF §D4), `docs/QUERIES.md` (Q1–Q15,
