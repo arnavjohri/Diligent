@@ -13,10 +13,10 @@ Four files, all under `src/`:
 
 | File | Lines | What |
 |---|---|---|
-| `zfi_tds_cl34.prog.abap` | ~94 | Main program — includes and the four event blocks. No logic. |
-| `zfi_tds_cl34_top.prog.abap` | ~511 | `TABLES`, `TYPES`, `CONSTANTS`, global `DATA`. No executable statement. |
-| `zfi_tds_cl34_scr.prog.abap` | ~101 | The five selection fields, plus the manual-steps checklist as a trailer comment. |
-| `zfi_tds_cl34_forms.prog.abap` | ~1938 | Every form routine. |
+| `zfi_tds_cl34.prog.abap` | 107 | Main program — includes and the four event blocks. No logic. |
+| `zfi_tds_cl34_top.prog.abap` | 613 | `TABLES`, `TYPES`, `CONSTANTS`, global `DATA`. No executable statement. |
+| `zfi_tds_cl34_scr.prog.abap` | 113 | The five selection fields, plus the manual-steps checklist as a trailer comment. |
+| `zfi_tds_cl34_forms.prog.abap` | 2158 | Every form routine. |
 
 Companion docs: `docs/TS_ZFI_TDS_CL34.md` (the TS), `docs/DDIC_FACTS.md` (the verified
 field list — it overrides both the FS and BUILD_BRIEF §D4), `docs/QUERIES.md` (Q1–Q15,

@@ -248,6 +248,12 @@ ENDFORM.
 *&       AND w~koart = 'K' AND w~wt_withcd <> @space
 *&     INTO TABLE @gt_witem.
 *&
+*& The WHLDGTAXITEMSTATUS exclusion added on 07/09/26 is NOT reproduced
+*& in that fallback - no WITH_ITEM equivalent of the element has been
+*& confirmed. Before ever switching to the fallback, look up where the
+*& view sources WHLDGTAXITEMSTATUS from and carry the filter across;
+*& dropping it would silently widen the report.
+*&
 *& The header buffer GT_BKPF is still read from BKPF and the line items
 *& from BSEG, because that is what the FS itself asks for everywhere
 *& except this one driver select: [L2] names BKPF for XBLNR, [J2] [K2]
@@ -261,6 +267,20 @@ ENDFORM.
 *& read of the same rows.
 *&---------------------------------------------------------------------*
 FORM fetch_wt_items.
+
+*BOC By Arnav on 07/09/26
+* Withholding tax item statuses that are NOT reportable. These are the
+* values of I_WITHHOLDINGTAXITEM-WHLDGTAXITEMSTATUS and are excluded in
+* the driver SELECT below, so nothing downstream ever sees such an item.
+*
+* " ASSUMPTION: WHLDGTAXITEMSTATUS is a CHAR 1 element of the view. If
+* the view declares it longer, widen LENGTH here - the driver SELECT is
+* the only place these four constants are used.
+  CONSTANTS: lc_stat_v TYPE c LENGTH 1 VALUE 'V',
+             lc_stat_d TYPE c LENGTH 1 VALUE 'D',
+             lc_stat_m TYPE c LENGTH 1 VALUE 'M',
+             lc_stat_s TYPE c LENGTH 1 VALUE 'S'.
+*EOC By Arnav on 07/09/26
 
   CLEAR: gt_witem, gt_bkpf, gt_bseg, gt_dockey, gv_nobseg.
 
@@ -289,6 +309,22 @@ FORM fetch_wt_items.
       AND h~fiscalyear              =  @p_gjahr
       AND h~postingdate             IN @s_budat
       AND w~customersupplieraccount IN @s_lifnr
+*BOC By Arnav on 07/09/26
+*     Status exclusion. Items in status V, D, M or S are not reportable
+*     and are filtered in the database rather than after the read, so
+*     they are absent from GT_WITEM, from GT_DOCKEY and therefore from
+*     every buffer and every diagnostic count downstream.
+*
+*     A BLANK status is KEPT - only the four listed codes are excluded.
+*     " ASSUMPTION: WHLDGTAXITEMSTATUS is never NULL in the view. NOT IN
+*     evaluates to unknown against NULL, so a NULL-bearing element would
+*     drop the row silently. It is a field of the withholding tax item
+*     itself, on the inner-joined side, so a NULL can only come from a
+*     CASE or a left outer join inside the view - check the view's own
+*     definition in ADT if a document you expect goes missing.
+      AND w~whldgtaxitemstatus  NOT IN ( @lc_stat_v, @lc_stat_d,
+                                         @lc_stat_m, @lc_stat_s )
+*EOC By Arnav on 07/09/26
     INTO TABLE @gt_witem.
 
   IF gt_witem IS INITIAL.
