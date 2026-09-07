@@ -26,6 +26,9 @@
 *&
 *& CHANGE HISTORY
 *&   26.08.2026  Arnav Johri  <TR>  Initial development
+*&   07.09.2026  Arnav Johri  <TR>  WhldgTaxItemStatus V/D/M/S excluded;
+*&                                  vendor code F4 + ALPHA conversion;
+*&                                  F4 on section code
 *&---------------------------------------------------------------------*
 
 *&---------------------------------------------------------------------*
@@ -220,6 +223,150 @@ FORM check_authorisation CHANGING pv_bukrs TYPE bkpf-bukrs.
   ENDLOOP.
 
 ENDFORM.
+
+*BOC By Arnav on 07/09/26
+*&---------------------------------------------------------------------*
+*& F4 for the Section Code select-option.
+*&
+*& BSEG-SECCO brings no value help of its own, so the list is built from
+*& the section codes that ACTUALLY OCCUR in the documents the user is
+*& about to report on. That is more use than a master list: every code it
+*& offers will return rows.
+*&
+*& Company code and fiscal year are read off the SCREEN with
+*& DYNP_VALUES_READ, not from S_BUKRS / P_GJAHR. At ON VALUE-REQUEST the
+*& screen has not yet been transported into the ABAP variables, so those
+*& are still empty. Both fields are OBLIGATORY anyway, so asking for them
+*& before F4 costs the user nothing - and it keeps the BSEG read bounded.
+*& Without them this would scan the whole table.
+*&
+*& Only the LOW and HIGH visible on the screen are honoured. Values added
+*& through the multiple-selection dialog are not on the screen and cannot
+*& be read here; they narrow the report itself, not this list.
+*&
+*& If the read is ever too slow, or the business wants the canonical list
+*& with its descriptions rather than the codes in use, replace the SELECT
+*& with a read of the section code master table - that is the only part
+*& of this FORM that would change.
+*&---------------------------------------------------------------------*
+FORM f4_section_code USING pv_field TYPE clike.
+
+  TYPES: BEGIN OF ty_f4,
+           secco TYPE bseg-secco,
+         END OF ty_f4.
+
+  CONSTANTS: lc_digits TYPE string      VALUE '0123456789',
+             lc_i      TYPE c LENGTH 1  VALUE 'I',
+             lc_eq     TYPE c LENGTH 2  VALUE 'EQ',
+             lc_bt     TYPE c LENGTH 2  VALUE 'BT',
+*            Typed as the column itself, so the comparison below needs
+*            no implicit length conversion.
+             lc_nosecc TYPE bseg-secco  VALUE IS INITIAL.
+
+  DATA: lt_dynp  TYPE STANDARD TABLE OF dynpread    WITH DEFAULT KEY,
+        lt_val   TYPE STANDARD TABLE OF ty_f4       WITH DEFAULT KEY,
+        lt_ret   TYPE STANDARD TABLE OF ddshretval  WITH DEFAULT KEY,
+        lr_bukrs TYPE RANGE OF bkpf-bukrs,
+        lv_low   TYPE bkpf-bukrs,
+        lv_high  TYPE bkpf-bukrs,
+        lv_gj4   TYPE c LENGTH 4,
+        lv_gjahr TYPE bkpf-gjahr.
+
+* The three screen fields whose current contents this F4 needs.
+  APPEND INITIAL LINE TO lt_dynp ASSIGNING FIELD-SYMBOL(<ls_ask>).
+  <ls_ask>-fieldname = 'S_BUKRS-LOW'.
+  APPEND INITIAL LINE TO lt_dynp ASSIGNING <ls_ask>.
+  <ls_ask>-fieldname = 'S_BUKRS-HIGH'.
+  APPEND INITIAL LINE TO lt_dynp ASSIGNING <ls_ask>.
+  <ls_ask>-fieldname = 'P_GJAHR'.
+
+  CALL FUNCTION 'DYNP_VALUES_READ'
+    EXPORTING
+      dyname             = sy-repid
+      dynumb             = sy-dynnr
+      translate_to_upper = abap_true
+    TABLES
+      dynpfields         = lt_dynp
+    EXCEPTIONS
+      OTHERS             = 1.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Enter Company Code and Fiscal Year, then press F4' TYPE 'S'.
+    RETURN.
+  ENDIF.
+
+  LOOP AT lt_dynp ASSIGNING FIELD-SYMBOL(<ls_got>).
+
+    CASE <ls_got>-fieldname.
+      WHEN 'S_BUKRS-LOW'.
+        lv_low  = <ls_got>-fieldvalue.
+      WHEN 'S_BUKRS-HIGH'.
+        lv_high = <ls_got>-fieldvalue.
+      WHEN 'P_GJAHR'.
+*       FIELDVALUE is CHAR 132 and blank padded, so it is moved into a
+*       CHAR 4 first - CO against the padded field would never match.
+        lv_gj4 = <ls_got>-fieldvalue.
+        IF lv_gj4 CO lc_digits.
+          lv_gjahr = lv_gj4.
+        ENDIF.
+    ENDCASE.
+
+  ENDLOOP.
+
+  IF lv_low IS INITIAL OR lv_gjahr IS INITIAL.
+    MESSAGE 'Enter Company Code and Fiscal Year first, then press F4' TYPE 'S'.
+    RETURN.
+  ENDIF.
+
+  APPEND INITIAL LINE TO lr_bukrs ASSIGNING FIELD-SYMBOL(<ls_rng>).
+  <ls_rng>-sign = lc_i.
+  <ls_rng>-low  = lv_low.
+  IF lv_high IS INITIAL.
+    <ls_rng>-option = lc_eq.
+  ELSE.
+    <ls_rng>-option = lc_bt.
+    <ls_rng>-high   = lv_high.
+  ENDIF.
+
+* Bounded by company code and fiscal year, and DISTINCT on one CHAR 4
+* column, so what comes back is a handful of rows however large the
+* company code is.
+  SELECT DISTINCT secco
+    FROM bseg
+    WHERE bukrs IN @lr_bukrs
+      AND gjahr =  @lv_gjahr
+      AND secco <> @lc_nosecc
+    ORDER BY secco
+    INTO TABLE @lt_val.
+
+  IF lt_val IS INITIAL.
+    MESSAGE 'No section code is posted in this company code and year' TYPE 'S'.
+    RETURN.
+  ENDIF.
+
+* DYNPROFIELD is what makes the picked value land back in the field the
+* user pressed F4 on, so RETURN_TAB needs no post-processing here.
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      retfield        = 'SECCO'
+      dynpprog        = sy-repid
+      dynpnr          = sy-dynnr
+      dynprofield     = pv_field
+      value_org       = 'S'
+    TABLES
+      value_tab       = lt_val
+      return_tab      = lt_ret
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Section code value help could not be displayed' TYPE 'S'.
+  ENDIF.
+
+ENDFORM.
+*EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
 *& Read the driver set: the withholding tax items, their document

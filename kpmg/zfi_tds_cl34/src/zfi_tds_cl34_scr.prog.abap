@@ -13,6 +13,9 @@
 *&
 *& CHANGE HISTORY
 *&   26.08.2026  Arnav Johri  <TR>  Initial development
+*&   07.09.2026  Arnav Johri  <TR>  WhldgTaxItemStatus V/D/M/S excluded;
+*&                                  vendor code F4 + ALPHA conversion;
+*&                                  F4 on section code
 *&---------------------------------------------------------------------*
 
 *&---------------------------------------------------------------------*

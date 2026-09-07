@@ -28,6 +28,7 @@ Bhavin Suthar (MM / account determination)
 | 27/08/26 | Second live run, other company code | — | 17 rows, **every one reconciles**, no blank GL and no status message. Closes **Q18** for both company codes. Completes GL branch coverage: run 1 proved `MBEW-BKLAS` -> `T030` BSX, this run adds `EKKN-SAKTO` (rows 15-17 -> `60020201 CONSUMPTION PROJECT INVENTORY`, a WBS assignment). Q24's rate mismatch is absent here, so it is certificate-specific source data rather than a code defect. Q21 refined: a credit memo (`5110000002`, `MR8M`) comes through positive against the invoice's negative, so if the sign is flipped it must be `x -1`, never `ABS( )` | `<TR>` |
 | 07/09/26 | Withholding tax items in status V / D / M / S were reported | The FS [B2] driver applied the mandatory company code / fiscal year / posting date filter and nothing else. `WHLDGTAXITEMSTATUS` was never tested, so non-reportable items came through into `GT_WITEM` and onto the ALV | `FORM fetch_wt_items`: `AND w~whldgtaxitemstatus NOT IN ( 'V', 'D', 'M', 'S' )` added to the driver WHERE, through four local `lc_stat_*` constants. Filtered **in the database**, so `GT_DOCKEY`, every downstream buffer and the GL-gap counts narrow with it. The SELECT field list and `TY_WITEM` are deliberately untouched — the status is a filter, not a column, so the positional alignment that broke on 27/08 is unchanged. A blank status is kept; only the four codes are excluded. The base-table fallback in the FORM header now carries a warning that it has no equivalent filter. Raised as Q26 | `<TR>` |
 | 07/09/26 | Vendor Code had no F4 and no leading-zero conversion — the user was typing `0000100025` by hand | `S_LIFNR` was declared `FOR with_item-wt_acco`. The data element `WT_ACCO` carries neither the vendor search help nor the ALPHA conversion exit, so the field offered no value help and handed `100025` to the driver unpadded, where it matched nothing | `S_LIFNR` moved to `FOR lfa1-lifnr` in `_SCR` — same CHAR 10, same value, but data element `LIFNR` brings the vendor F4 **and** the ALPHA exit, so the selection screen converts the input to internal format itself. `lfa1` added to `TABLES` in `_TOP`; `with_item` kept, the `TYPES` are typed against it. Driver `WHERE`, the `GT_LFA1` read, the field name and the field length are all unchanged, so existing variants stay valid. Correct direction proven by the live runs: column E (PAN) populated on every row, so `WT_ACCO` holds the vendor padded | `<TR>` |
+| 07/09/26 | No F4 on Section Code either | `BSEG-SECCO` brings no value help of its own, and unlike vendor there is no second dictionary field holding the same value that does — the section code master table is India-localisation config whose name is not confirmed anywhere in this repo, and guessing it costs an activation cycle | New `FORM f4_section_code` in `_FORMS` plus two `AT SELECTION-SCREEN ON VALUE-REQUEST` blocks in the main program. The list is built from the section codes **actually posted** in the company code and fiscal year already typed on the screen: `DYNP_VALUES_READ` for those two (at value-request the screen is not yet transported, so `S_BUKRS` / `P_GJAHR` are still empty), then `SELECT DISTINCT secco FROM bseg` bounded by them, then `F4IF_INT_TABLE_VALUE_REQUEST`. Every code it offers therefore returns rows. Both fields are `OBLIGATORY` anyway, so requiring them first costs nothing and keeps the BSEG read bounded. Swapping to the master table later is a change to the one SELECT | `<TR>` |
 
 ## Open, not yet defects
 
@@ -51,6 +52,13 @@ Tracked in `docs/QUERIES.md` (Q1–Q15). The ones that would change a number on 
 - **Q20** should customer withholding items be excluded (no `KOART` filter today)?
 - **Q16** is `F_BKPF_BUK` the right authorisation object? If it is wrong the report refuses
   every company code and nobody can run it (Basis).
+
+## Object headers
+
+All four programs carry a `07.09.2026` row in their `CHANGE HISTORY` block covering
+the three changes of that date. The main program's `DESCRIPTION` was also corrected:
+it still claimed the driver reads `WITH_ITEM` / `BKPF` / `BSEG` "rather than the CDS
+views", which stopped being true with the 27/08 revert to the FS.
 
 ## Before the next change
 

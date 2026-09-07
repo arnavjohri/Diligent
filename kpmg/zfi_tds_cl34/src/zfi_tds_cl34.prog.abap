@@ -9,10 +9,11 @@
 *& DESCRIPTION
 *&   Lists every FI document in which withholding tax (TDS) was deducted,
 *&   GL wise and document number wise, for compliance reporting under
-*&   clause 34. One row per withholding tax item. Reads the WITH_ITEM /
-*&   BKPF / BSEG base tables rather than the CDS views I_WITHHOLDINGTAXITEM
-*&   and I_JOURNALENTRY named in the FS - see the TS, section "Open points",
-*&   for why. Output is a CL_SALV_TABLE ALV list of 25 columns.
+*&   clause 34. One row per withholding tax item. The driver reads the two
+*&   CDS views the FS names, I_WITHHOLDINGTAXITEM inner-joined to
+*&   I_JOURNALENTRY; the header and line item buffers are read from BKPF
+*&   and BSEG, which is what the FS asks for everywhere else. Output is a
+*&   CL_SALV_TABLE ALV list of 25 columns.
 *&
 *&   Include structure:
 *&     ZFI_TDS_CL34_TOP    types, global data, constants
@@ -21,6 +22,9 @@
 *&
 *& CHANGE HISTORY
 *&   26.08.2026  Arnav Johri  <TR>  Initial development
+*&   07.09.2026  Arnav Johri  <TR>  WhldgTaxItemStatus V/D/M/S excluded;
+*&                                  vendor code F4 + ALPHA conversion;
+*&                                  F4 on section code
 *&---------------------------------------------------------------------*
 REPORT zfi_tds_cl34.
 
@@ -44,6 +48,26 @@ INITIALIZATION.
 AT SELECTION-SCREEN.
 
   PERFORM validate_selection.
+
+*BOC By Arnav on 07/09/26
+*&---------------------------------------------------------------------*
+*& Value help for Section Code. BSEG-SECCO brings no F4 of its own, so
+*& the list is built from the section codes actually posted in the
+*& company code and fiscal year already typed on the screen. Both are
+*& obligatory, so nothing is lost by requiring them first.
+*&
+*& Vendor Code needs no event of its own: S_LIFNR is declared over
+*& LFA1-LIFNR, so its F4 and its leading-zero conversion both come from
+*& the dictionary.
+*&---------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_secco-low.
+
+  PERFORM f4_section_code USING 'S_SECCO-LOW'.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_secco-high.
+
+  PERFORM f4_section_code USING 'S_SECCO-HIGH'.
+*EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
 *& Read the withholding items and their documents, then derive the 25
