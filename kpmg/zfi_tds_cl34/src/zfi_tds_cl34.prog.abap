@@ -51,22 +51,23 @@ AT SELECTION-SCREEN.
 
 *BOC By Arnav on 07/09/26
 *&---------------------------------------------------------------------*
-*& Value help for Section Code. BSEG-SECCO brings no F4 of its own, so
-*& the list is built from the section codes actually posted in the
-*& company code and fiscal year already typed on the screen. Both are
+*& Value help for Section Code - the official withholding tax key of
+*& output column H. The list is built from the keys the report can
+*& actually return in the company code and fiscal year already typed on
+*& the screen, with their descriptions. Both driving fields are
 *& obligatory, so nothing is lost by requiring them first.
 *&
 *& Vendor Code needs no event of its own: S_LIFNR is declared over
 *& LFA1-LIFNR, so its F4 and its leading-zero conversion both come from
 *& the dictionary.
 *&---------------------------------------------------------------------*
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_secco-low.
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_sectn-low.
 
-  PERFORM f4_section_code USING 'S_SECCO-LOW'.
+  PERFORM f4_section_code USING 'S_SECTN-LOW'.
 
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_secco-high.
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_sectn-high.
 
-  PERFORM f4_section_code USING 'S_SECCO-HIGH'.
+  PERFORM f4_section_code USING 'S_SECTN-HIGH'.
 *EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
@@ -100,7 +101,7 @@ START-OF-SELECTION.
 *   compliance report. Only ONE status message survives on the screen,
 *   so REPORT_GL_GAPS REPLACES the generic message rather than joining
 *   it. Its own guard tests exactly the same three counters.
-    IF gt_glmsg IS INITIAL AND gt_glamb IS INITIAL AND gv_nobseg IS INITIAL.
+    IF gt_glmsg IS INITIAL AND gt_glamb IS INITIAL AND gv_nosect IS INITIAL.
       MESSAGE 'No TDS documents found for the given selection' TYPE 'S' DISPLAY LIKE 'W'.
     ELSE.
       PERFORM report_gl_gaps.

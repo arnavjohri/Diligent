@@ -226,52 +226,55 @@ ENDFORM.
 
 *BOC By Arnav on 07/09/26
 *&---------------------------------------------------------------------*
-*& F4 for the Section Code select-option.
+*& F4 for the Section Code select-option - the official withholding tax
+*& key, output column H.
 *&
-*& BSEG-SECCO brings no value help of its own, so the list is built from
-*& the data. It must be built from the SAME place the filter is applied,
-*& or the F4 offers codes the report cannot return.
+*& The list must come from the SAME place the filter is applied, or it
+*& offers keys the report cannot return. S_SECTN is compared with
+*& LS_OUT-SECTION in BUILD_OUTPUT, which is T059Z-QSCOD read on the
+*& item's country, withholding tax type and withholding tax code. So
+*& this read reproduces that: the withholding items in scope, joined to
+*& T001 for the country and to T059Z for the key, with the same V/D/M/S
+*& status exclusion the driver applies. A key whose only items the driver
+*& throws away is not offered.
 *&
-*& Where the filter is applied: the section code is taken off the VENDOR
-*& line - KOART 'K' with a non-blank LIFNR - of a document that carries a
-*& reportable withholding tax item, and only then compared with S_SECCO
-*& (see the IF S_SECCO IS NOT INITIAL block in FETCH_WT_ITEMS, which
-*& tests LS_VLINE-SECCO from READ_VENDOR_LINE).
-*&
-*& So this SELECT joins BSEG to I_WITHHOLDINGTAXITEM and repeats all
-*& three conditions. A plain DISTINCT over BSEG does NOT work: it returns
-*& the section code of every GL, tax and customer line, and of every
-*& document with no withholding tax at all, so the list fills up with
-*& codes the report will never show. That was the first version's defect.
-*&
-*& Still wider than the report by two hairs, both of which can only add a
-*& code, never hide one:
-*&   - the posting date is not applied. It lives on the header and would
-*&     need a third join plus a date conversion off the screen; the fiscal
-*&     year already bounds the read.
-*&   - where a document holds two vendor lines with different section
-*&     codes, READ_VENDOR_LINE picks one and this offers both.
+*& The description is fetched separately from T059OT rather than by a
+*& LEFT OUTER JOIN: the join would need SY-LANGU in its ON condition to
+*& stay outer, and a WHERE on the outer table silently makes the join
+*& inner again, which would drop every key with no text in the logon
+*& language. Two reads, no such trap.
 *&
 *& Company code and fiscal year are read off the SCREEN with
 *& DYNP_VALUES_READ, not from S_BUKRS / P_GJAHR. At ON VALUE-REQUEST the
 *& screen has not yet been transported into the ABAP variables, so those
-*& are still empty. Both fields are OBLIGATORY anyway, so asking for them
-*& before F4 costs the user nothing - and it keeps the BSEG read bounded.
-*& Without them this would scan the whole table.
+*& are still empty. Both are OBLIGATORY anyway, so asking for them first
+*& costs the user nothing and keeps the read bounded.
 *&
 *& Only the LOW and HIGH visible on the screen are honoured. Values added
 *& through the multiple-selection dialog are not on the screen and cannot
 *& be read here; they narrow the report itself, not this list.
 *&
-*& If the read is ever too slow, or the business wants the canonical list
-*& with its descriptions rather than the codes in use, replace the SELECT
-*& with a read of the section code master table - that is the only part
-*& of this FORM that would change.
+*& Wider than the report by one hair, which can only add a key and never
+*& hide one: the posting date is not applied. It lives on the header and
+*& would need a further join plus a date conversion off the screen, and
+*& the fiscal year already bounds the read.
+*&
+*& History, so it is not re-tried: the first version of this form read
+*& SELECT DISTINCT SECCO FROM BSEG, and the second joined BSEG to
+*& I_WITHHOLDINGTAXITEM to get the section code of the vendor line. Both
+*& were on BSEG-SECCO - the SAP India business place, values like 08AL -
+*& which is not what the report shows in its Section column and, as of
+*& 07/09/26, not what the screen filters either.
 *&---------------------------------------------------------------------*
 FORM f4_section_code USING pv_field TYPE clike.
 
-  TYPES: BEGIN OF ty_f4,
-           secco TYPE bseg-secco,
+  TYPES: BEGIN OF ty_key,
+           land1 TYPE t001-land1,
+           qscod TYPE t059z-qscod,
+         END OF ty_key,
+         BEGIN OF ty_f4,
+           qscod  TYPE t059z-qscod,
+           text40 TYPE t059ot-text40,
          END OF ty_f4.
 
   CONSTANTS: lc_digits TYPE string      VALUE '0123456789',
@@ -280,12 +283,13 @@ FORM f4_section_code USING pv_field TYPE clike.
              lc_bt     TYPE c LENGTH 2  VALUE 'BT',
 *            Typed as the column itself, so the comparison below needs
 *            no implicit length conversion.
-             lc_nosecc TYPE bseg-secco  VALUE IS INITIAL,
-             lc_nolifn TYPE bseg-lifnr  VALUE IS INITIAL.
+             lc_noqsc  TYPE t059z-qscod VALUE IS INITIAL.
 
   DATA: lt_dynp  TYPE STANDARD TABLE OF dynpread    WITH DEFAULT KEY,
+        lt_key   TYPE STANDARD TABLE OF ty_key      WITH DEFAULT KEY,
         lt_val   TYPE STANDARD TABLE OF ty_f4       WITH DEFAULT KEY,
         lt_ret   TYPE STANDARD TABLE OF ddshretval  WITH DEFAULT KEY,
+        lt_txt   TYPE tt_t059ot,
         lr_bukrs TYPE RANGE OF bkpf-bukrs,
         lv_low   TYPE bkpf-bukrs,
         lv_high  TYPE bkpf-bukrs,
@@ -348,36 +352,65 @@ FORM f4_section_code USING pv_field TYPE clike.
     <ls_rng>-high   = lv_high.
   ENDIF.
 
-* Vendor lines of documents that carry a reportable withholding tax
-* item, in the company code and fiscal year on the screen. DISTINCT on
-* one CHAR 4 column, so a handful of rows come back however large the
-* company code is.
-  SELECT DISTINCT b~secco
-    FROM bseg AS b
-    INNER JOIN i_withholdingtaxitem AS w
-            ON  w~companycode        = b~bukrs
-            AND w~accountingdocument = b~belnr
-            AND w~fiscalyear         = b~gjahr
-    WHERE b~bukrs IN @lr_bukrs
-      AND b~gjahr =  @lv_gjahr
-      AND b~koart =  @gc_koart_vendor
-      AND b~lifnr <> @lc_nolifn
-      AND b~secco <> @lc_nosecc
+* The official withholding tax keys the report can return in this
+* company code and fiscal year. The country comes from T001 because
+* T059Z is keyed by it, exactly as FETCH_TAX_CONFIG reads it at runtime.
+  SELECT DISTINCT c~land1, z~qscod
+    FROM i_withholdingtaxitem AS w
+    INNER JOIN t001  AS c ON c~bukrs = w~companycode
+    INNER JOIN t059z AS z ON  z~land1     = c~land1
+                          AND z~witht     = w~withholdingtaxtype
+                          AND z~wt_withcd = w~withholdingtaxcode
+    WHERE w~companycode IN @lr_bukrs
+      AND w~fiscalyear  =  @lv_gjahr
+      AND z~qscod      <> @lc_noqsc
       AND w~whldgtaxitemstatus NOT IN ( @gc_wtstat_v, @gc_wtstat_d,
                                         @gc_wtstat_m, @gc_wtstat_s )
-    ORDER BY b~secco
-    INTO TABLE @lt_val.
+    ORDER BY c~land1, z~qscod
+    INTO TABLE @lt_key.
 
-  IF lt_val IS INITIAL.
-    MESSAGE 'No TDS document in this company code and year carries a section code' TYPE 'S'.
+  IF lt_key IS INITIAL.
+    MESSAGE 'No TDS document in this company code and year has a section' TYPE 'S'.
     RETURN.
   ENDIF.
+
+* Descriptions of those keys, the same source column I uses.
+  SELECT spras, land1, wt_qscod, text40
+    FROM t059ot
+    FOR ALL ENTRIES IN @lt_key
+    WHERE spras    = @sy-langu
+      AND land1    = @lt_key-land1
+      AND wt_qscod = @lt_key-qscod
+    INTO TABLE @lt_txt.
+
+  SORT lt_txt BY spras land1 wt_qscod.
+
+  LOOP AT lt_key ASSIGNING FIELD-SYMBOL(<ls_key>).
+
+    APPEND INITIAL LINE TO lt_val ASSIGNING FIELD-SYMBOL(<ls_val>).
+    <ls_val>-qscod = <ls_key>-qscod.
+
+    READ TABLE lt_txt ASSIGNING FIELD-SYMBOL(<ls_txt>)
+         WITH KEY spras    = sy-langu
+                  land1    = <ls_key>-land1
+                  wt_qscod = <ls_key>-qscod
+         BINARY SEARCH.
+    IF sy-subrc = 0.
+      <ls_val>-text40 = <ls_txt>-text40.
+    ENDIF.
+
+  ENDLOOP.
+
+* Two company codes in different countries can carry the same key, so
+* the pair is collapsed to the key the user actually picks.
+  SORT lt_val BY qscod text40.
+  DELETE ADJACENT DUPLICATES FROM lt_val COMPARING qscod.
 
 * DYNPROFIELD is what makes the picked value land back in the field the
 * user pressed F4 on, so RETURN_TAB needs no post-processing here.
   CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
     EXPORTING
-      retfield        = 'SECCO'
+      retfield        = 'QSCOD'
       dynpprog        = sy-repid
       dynpnr          = sy-dynnr
       dynprofield     = pv_field
@@ -391,7 +424,7 @@ FORM f4_section_code USING pv_field TYPE clike.
       OTHERS          = 3.
 
   IF sy-subrc <> 0.
-    MESSAGE 'Section code value help could not be displayed' TYPE 'S'.
+    MESSAGE 'Section value help could not be displayed' TYPE 'S'.
   ENDIF.
 
 ENDFORM.
@@ -444,7 +477,10 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM fetch_wt_items.
 
-  CLEAR: gt_witem, gt_bkpf, gt_bseg, gt_dockey, gv_nobseg.
+*BOC By Arnav on 07/09/26
+*  CLEAR: gt_witem, gt_bkpf, gt_bseg, gt_dockey, gv_nobseg.
+  CLEAR: gt_witem, gt_bkpf, gt_bseg, gt_dockey, gv_nosect.
+*EOC By Arnav on 07/09/26
 
 * Driver. FS [B2]: inner join the two views, apply the mandatory filter
 * of company code, fiscal year and posting date, and take every
@@ -534,50 +570,58 @@ FORM fetch_wt_items.
 
   SORT gt_bseg BY bukrs belnr gjahr buzei.
 
-* Section code filter. The section code is read off the SAME vendor line
-* that later supplies columns J / N / O, through the one form
-* READ_VENDOR_LINE, so the filter and those three columns can never
-* resolve to different lines of the document.
-  IF s_secco IS NOT INITIAL.
-
-    DATA: lt_keep  TYPE tt_witem,
-          ls_vline TYPE ty_bseg.
-
-    LOOP AT gt_witem INTO DATA(ls_wi).
-
-      PERFORM read_vendor_line USING    ls_wi-bukrs
-                                        ls_wi-belnr
-                                        ls_wi-gjahr
-                                        ls_wi-buzei
-                               CHANGING ls_vline.
-
-      IF ls_vline IS INITIAL.
-*       No vendor line could be resolved for this withholding item, so
-*       its section code cannot be evaluated against the filter. The
-*       item is COUNTED, never silently dropped - the count is reported
-*       with the GL gaps in REPORT_GL_GAPS. Without this the same row
-*       would survive a run with an empty section code and vanish from a
-*       run with one, and nothing would say so.
-        gv_nobseg = gv_nobseg + 1.
-      ELSEIF ls_vline-secco IN s_secco.
-        APPEND ls_wi TO lt_keep.
-      ENDIF.
-
-    ENDLOOP.
-
-    gt_witem = lt_keep.
-    FREE lt_keep.
-
-    IF gt_witem IS INITIAL.
-      RETURN.
-    ENDIF.
-
-*   The surviving documents are a subset, so the key table is rebuilt.
-*   GT_BSEG is left as the superset it already is - re-reading it would
-*   buy nothing and cost a second full pass over BSEG.
-    PERFORM build_dockey.
-
-  ENDIF.
+*BOC By Arnav on 07/09/26
+* The section filter USED to sit here, on the BSEG-SECCO of the vendor
+* line, and narrowed GT_WITEM before the headers were read. It has moved
+* to BUILD_OUTPUT: S_SECTN now filters column H, the official withholding
+* tax key, which is not known until T059Z has been read. The block is
+* kept commented rather than deleted so the shape it had is on record.
+*
+* Consequence, deliberate and documented: the GL derivation and its gap
+* counts now run over the documents the DATE and COMPANY CODE selection
+* returns, not over the section-filtered subset. So a run filtered to one
+* section can report GL gaps for documents that section excluded. The
+* alternative was to read T001 and T059Z inside this form and filter
+* early, which restructures a form that is proven against two live runs.
+* If the message noise matters, that is the fix - it is not a defect in
+* the numbers, only in the scope of a diagnostic.
+*
+** Section code filter. The section code is read off the SAME vendor line
+** that later supplies columns J / N / O, through the one form
+** READ_VENDOR_LINE, so the filter and those three columns can never
+** resolve to different lines of the document.
+*  IF s_secco IS NOT INITIAL.
+*
+*    DATA: lt_keep  TYPE tt_witem,
+*          ls_vline TYPE ty_bseg.
+*
+*    LOOP AT gt_witem INTO DATA(ls_wi).
+*
+*      PERFORM read_vendor_line USING    ls_wi-bukrs
+*                                        ls_wi-belnr
+*                                        ls_wi-gjahr
+*                                        ls_wi-buzei
+*                               CHANGING ls_vline.
+*
+*      IF ls_vline IS INITIAL.
+*        gv_nobseg = gv_nobseg + 1.
+*      ELSEIF ls_vline-secco IN s_secco.
+*        APPEND ls_wi TO lt_keep.
+*      ENDIF.
+*
+*    ENDLOOP.
+*
+*    gt_witem = lt_keep.
+*    FREE lt_keep.
+*
+*    IF gt_witem IS INITIAL.
+*      RETURN.
+*    ENDIF.
+*
+*    PERFORM build_dockey.
+*
+*  ENDIF.
+*EOC By Arnav on 07/09/26
 
 * Document headers of the surviving set.
 *
@@ -883,6 +927,30 @@ FORM build_output.
       ENDIF.
 
     ENDIF.
+
+*BOC By Arnav on 07/09/26
+*   Section filter. S_SECTN is compared with COLUMN H - the official
+*   withholding tax key just derived - because that is the value the
+*   report shows in its Section column. It sits here rather than in
+*   FETCH_WT_ITEMS because the key is not known until T059Z has been
+*   read, and before the exemption reads below so a row that is about to
+*   be dropped does not pay for them.
+    IF s_sectn IS NOT INITIAL.
+
+      IF ls_out-section IS INITIAL.
+*       No T059Z entry for this item's country, type and code, so column
+*       H is blank and the row cannot be tested against the filter. It is
+*       COUNTED, never dropped in silence - REPORT_GL_GAPS reports the
+*       count. Without this the same row would survive a run with an
+*       empty section and vanish from a run with one, saying nothing.
+        gv_nosect = gv_nosect + 1.
+        CONTINUE.
+      ELSEIF ls_out-section NOT IN s_sectn.
+        CONTINUE.
+      ENDIF.
+
+    ENDIF.
+*EOC By Arnav on 07/09/26
 
 *   Exemption certificate - columns U / V / W / X.
     PERFORM read_exemption USING    <ls_wi>-bukrs
@@ -2126,7 +2194,7 @@ FORM report_gl_gaps.
 
   DATA lv_text TYPE string.
 
-  IF gt_glmsg IS INITIAL AND gt_glamb IS INITIAL AND gv_nobseg IS INITIAL.
+  IF gt_glmsg IS INITIAL AND gt_glamb IS INITIAL AND gv_nosect IS INITIAL.
     RETURN.
   ENDIF.
 
@@ -2142,13 +2210,22 @@ FORM report_gl_gaps.
     ENDIF.
   ENDIF.
 
-  IF gv_nobseg > 0.
+*BOC By Arnav on 07/09/26
+*  IF gv_nobseg > 0.
+*    IF lv_text IS INITIAL.
+*      lv_text = |{ gv_nobseg } item(s) skipped by the section code filter - vendor line not found|.
+*    ELSE.
+*      lv_text = |{ lv_text }; { gv_nobseg } item(s) skipped, vendor line not found|.
+*    ENDIF.
+*  ENDIF.
+  IF gv_nosect > 0.
     IF lv_text IS INITIAL.
-      lv_text = |{ gv_nobseg } item(s) skipped by the section code filter - vendor line not found|.
+      lv_text = |{ gv_nosect } item(s) skipped by the section filter - no T059Z entry|.
     ELSE.
-      lv_text = |{ lv_text }; { gv_nobseg } item(s) skipped, vendor line not found|.
+      lv_text = |{ lv_text }; { gv_nosect } item(s) skipped, no T059Z entry|.
     ENDIF.
   ENDIF.
+*EOC By Arnav on 07/09/26
 
 * The counts on their own leave the user no way to tell a missing
 * GHKON from a missing logistics invoice, and columns F and G are blank

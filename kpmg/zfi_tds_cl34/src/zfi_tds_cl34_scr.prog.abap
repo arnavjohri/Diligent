@@ -31,8 +31,14 @@
 *& convenient look-alike, so the length and the dictionary value help are
 *& the correct ones:
 *&   S_BUKRS  BKPF-BUKRS       - company code of the FI document header
-*&   S_SECCO  BSEG-SECCO       - section code; it exists on the line item
-*&                               only, neither BKPF nor WITH_ITEM has it
+*&   S_SECTN  T059Z-QSCOD      - the official withholding tax key, i.e.
+*&                               the Income Tax section (194C, 194Q). This
+*&                               is OUTPUT COLUMN H, which is what the FS
+*&                               input field "Section Code" turned out to
+*&                               mean. It is NOT BSEG-SECCO, the SAP India
+*&                               business place - that field is still read
+*&                               and still drives columns U to Y, it is
+*&                               just not what the user filters on
 *&   S_LIFNR  LFA1-LIFNR      - the vendor. It filters the account of the
 *&                               withholding tax item, which is also output
 *&                               column C, but it is declared over LFA1 so
@@ -43,6 +49,19 @@
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-b01.
 
 *BOC By Arnav on 07/09/26
+* S_SECCO replaced by S_SECTN, declared over T059Z-QSCOD. The old field
+* filtered BSEG-SECCO - the SAP India business place, values like 08AL -
+* while the report's own Section column shows the official withholding
+* tax key, 194C / 194Q. Two different things both called "section code",
+* and the screen contradicted the list. The FS's Input Screen tab names
+* the field with no mapping at all, and its Output Screen tab calls
+* column I "Section Code Description" - so column H is what it means.
+* RENAMED, not retyped, on purpose: the name S_SECCO next to the
+* BSEG-SECCO the program still reads internally is exactly the confusion
+* this change removes. The selection text has to be re-entered under the
+* new name, and any saved variant loses its section code value - the
+* other four fields of a variant are unaffected.
+*
 * S_LIFNR moved off WITH_ITEM-WT_ACCO onto LFA1-LIFNR. Both are CHAR 10
 * and hold the same value, so the filter is unchanged - but the data
 * element LIFNR carries the vendor search help AND the ALPHA conversion
@@ -61,10 +80,10 @@ SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-b01.
 *
 * Field name and length are unchanged, so existing variants stay valid.
 *SELECT-OPTIONS: s_bukrs FOR bkpf-bukrs OBLIGATORY,
-*                s_secco FOR bseg-secco,
+*                s_secco FOR bseg-secco,          " -> s_sectn 07/09/26
 *                s_lifnr FOR with_item-wt_acco.
 SELECT-OPTIONS: s_bukrs FOR bkpf-bukrs OBLIGATORY,
-                s_secco FOR bseg-secco,
+                s_sectn FOR t059z-qscod,
                 s_lifnr FOR lfa1-lifnr.
 *EOC By Arnav on 07/09/26
 
@@ -123,13 +142,16 @@ SELECTION-SCREEN END OF BLOCK b1.
 *&
 *& 3. Goto -> Text elements -> Selection texts
 *&     S_BUKRS   Company Code
-*&     S_SECCO   Section Code
+*&     S_SECTN   Section Code
 *&     S_LIFNR   Vendor Code
 *&     P_GJAHR   Fiscal Year
 *&     S_BUDAT   Posting Date
 *&
+*&    S_SECCO no longer exists - delete its selection text and enter
+*&    S_SECTN, or the field shows its technical name.
+*&
 *&    Do not tick "Dictionary reference" on the selection texts - the
-*&    dictionary labels for LIFNR and SECCO are not the words the FS
+*&    dictionary labels for LIFNR and QSCOD are not the words the FS
 *&    asks for. Leaving it unticked does NOT affect F4 or the ALPHA
 *&    conversion: those come from the field's dictionary reference in
 *&    the SELECT-OPTIONS, not from the selection text.

@@ -30,7 +30,9 @@
 *& exit - see the note in ZFI_TDS_CL34_SCR.
 *&---------------------------------------------------------------------*
 *BOC By Arnav on 07/09/26
-* LFA1 added for the S_LIFNR select-option. WITH_ITEM stays declared -
+* LFA1 added for the S_LIFNR select-option, T059Z for S_SECTN. Each
+* select-option is declared over the field it really filters, so it gets
+* that field's length and its dictionary help. WITH_ITEM stays declared -
 * the TYPES below are typed against its fields throughout.
 *TABLES: bkpf,
 *        bseg,
@@ -38,7 +40,8 @@
 TABLES: bkpf,
         bseg,
         with_item,
-        lfa1.
+        lfa1,
+        t059z.
 *EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
@@ -622,12 +625,24 @@ DATA: gt_rseg   TYPE tt_rseg,                   " logistics invoice items, RMRP 
       gt_glmsg  TYPE tt_glmsg,                  " documents whose GL could not be derived
       gt_glamb  TYPE tt_glmsg.                  " documents whose BSX account determination was not unique
 
+*BOC By Arnav on 07/09/26
 *&---------------------------------------------------------------------*
-*& Withholding items the section code filter had to discard because
-*& their vendor line could not be resolved. Counted rather than dropped
-*& in silence - REPORT_GL_GAPS reports the count with the GL gaps.
+*& Withholding items the section filter had to discard because their
+*& official withholding tax key could not be determined - no T059Z entry
+*& for the item's country, type and code, so column H is blank and the
+*& row cannot be tested against S_SECTN. Counted rather than dropped in
+*& silence - REPORT_GL_GAPS reports the count with the GL gaps.
+*&
+*& Renamed from GV_NOBSEG on 07/09/26. Until then the filter ran on the
+*& vendor line's BSEG-SECCO and the unresolvable case was a missing
+*& vendor line; now the filter is on column H and the unresolvable case
+*& is a missing T059Z entry. A missing vendor line no longer makes an
+*& item vanish - it only blanks columns J / K / M / N / O, as it did
+*& before the filter existed - so it is no longer counted.
 *&---------------------------------------------------------------------*
-DATA: gv_nobseg TYPE i.
+*DATA: gv_nobseg TYPE i.
+DATA: gv_nosect TYPE i.
+*EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
 *& Authorisation. GV_AUTHCC carries the first company code the user may
