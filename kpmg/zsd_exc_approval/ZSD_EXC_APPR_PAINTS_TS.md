@@ -241,7 +241,7 @@ counts read / valid / written / in error, and appends "TEST RUN — nothing was 
 | Organisational Data | `S_SPART` | SELECT-OPTIONS on `KNVV-SPART` | **Obligatory** | — |
 | Organisational Data | `S_KVGR1` | SELECT-OPTIONS on `KNVV-KVGR1` | Optional | — |
 | Organisational Data | `S_KVGR2` | SELECT-OPTIONS on `KNVV-KVGR2` | Optional | — |
-| Organisational Data | `P_SEGMNT` | PARAMETER, `UKMBP_CMS_SGM-CREDIT_SGMNT` | **Obligatory** | — |
+| Organisational Data | `P_SEGMNT` | PARAMETER, `UKMBP_CMS_SGM-CREDIT_SGMNT` | **Obligatory**, default `2000` | — |
 | Collection Document Selection | `P_RLDNR` | PARAMETER, `ACDOCA-RLDNR` | **Obligatory** | `0L` |
 | Collection Document Selection | `S_BLART` | SELECT-OPTIONS on `ACDOCA-BLART` | **Obligatory** | `DZ` |
 
@@ -320,16 +320,33 @@ One `SELECT SINGLE T001-WAERS` for `P_BUKRS` — the currency shown against ever
 column. `P_BUKRS` is already validated on the selection screen, so this is a defensive
 fallback; failure shows a warning and the report still runs.
 
-#### 6.3.6 `F_GET_HIERARCHY` — stub, deliberately does nothing
+#### 6.3.6 `F_GET_HIERARCHY` — background call to the hierarchy report
 
-The FS asks for L4/L5/L6 customer-hierarchy names from "Submit program
-SAPLSLVC_FULLSCREEN" — the generic ALV full-screen **function group**, not a program, not
-`SUBMIT`-able, and holding no customer data. The FORM exists and is called exactly as the
-build spec requires, `CHANGING` the customer table, but contains no `SELECT`, no `SUBMIT`
-and no `CALL FUNCTION`. `L4_NAME`/`L5_NAME`/`L6_NAME` are present as ALV columns so the
-layout matches the FS, and are blank on every row until the real source is confirmed
-(§7 deviation 1, ISSUES.md #1). Kept structurally identical to the Adhesives stub so that
-both reports can be filled from one confirmed source in one change.
+Functional confirmed on 07/09/26 that the hierarchy report is to be run in background and
+its output read, and that the program name printed in the FS is wrong and will be
+corrected. The call is therefore built in full:
+
+1. `TRDIR` is read for `GC_HIER_PROG`. Unless it exists **and** is `SUBC = '1'`
+   (executable), the FORM issues one status message and returns with the columns blank.
+2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
+   under the name `GC_HIER_SELNAME`.
+3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
+   with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result is
+   taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own ALV is
+   never swallowed by a capture left armed.
+4. Result rows are read by field **name** through `ASSIGN COMPONENT`, so the callee
+   structure need not be known at compile time, and are merged into `GT_CUST` on customer
+   number after `CONVERSION_EXIT_ALPHA_INPUT`.
+
+The six unconfirmed names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
+selection screen. Correcting the source is a change to that block and nothing else.
+
+**Today the guard fires.** `SAPLSLVC_FULLSCREEN`, the name the FS gives, is `TRDIR` type
+`F` — a function group main program, not an executable report. Step 1 stops, message `M08`
+appears in the status bar, and L4/L5/L6 are blank on every row while every other column is
+correct. Nothing dumps. See §7 deviation 1 / ISSUES.md #1 for the four values needed to
+finish it. Kept structurally identical to the Adhesives FORM so that both reports fill
+from one confirmed source in one change.
 
 #### 6.3.7 `F_GET_COLLECTIONS`
 
@@ -460,7 +477,7 @@ Every row carries an `" ASSUMPTION:` comment at the matching point in the source
 
 | # | FS says | Build does | Why | ISSUES.md |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Stub FORM, columns present but always blank | that is the ALV function group, not a data source | #1 |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` + ALV capture built in full; source names held in the `GC_HIER_*` constants. Columns blank until the real report name is given | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 |
 | 2 | Info Category / Info Type required on the screen | Omitted | the Z table has no such field to filter on | #10 |
 | 3 | Actual Collection `BUDAT` from the selection screen | Per row, `ZEXC_DATE_FROM` to `ZCOMMIT_DATE` inclusive | reviewer comment, and a shared range would double count | #5 |
 | 4 | Sample row implies Actual minus Credit Limit | `ZCM_AMNT` minus Actual Collection | the prose states the formula twice, the sample is the Adhesives formula copy-pasted | #6 |
@@ -472,7 +489,7 @@ Every row carries an `" ASSUMPTION:` comment at the matching point in the source
 | 10 | no currency field on the table | `WAERS` added | a CURR field cannot activate without one | #9 |
 | 11 | no audit fields | `ERNAM`/`ERDAT`/`AENAM`/`AEDAT` added | TMG plus mass upload with no other audit trail | #9 |
 | 12 | Status-2 equality undefined | equality treated as Fulfilled | the FS covers only strictly greater and strictly less | #12 |
-| 13 | no credit segment on the screen | `P_SEGMNT` added, obligatory, no default | `CREDIT_LIMIT` is per segment | #16 |
+| 13 | no credit segment on the screen | `P_SEGMNT` added, obligatory, **defaults to 2000** | `CREDIT_LIMIT` is per segment. Segment 2000 confirmed by functional 07/09/26 | #16 closed |
 | 14 | Serial No. source unstated | required as a file/SM30 input, no number range | no SNRO object confirmed; can be added later without changing this build | #9 |
 
 One additional judgement call, not a numbered FS deviation: the amount columns (Actual
@@ -498,8 +515,8 @@ Ranked by what changes a number or a column on the report or the upload log, not
 5. **ISSUES.md #8 — Field names.** `ZEXC_AMOUNT` is built as the DDIC name. Separately,
    confirm whether `ZEX_AMNT` is a genuine second figure the business needs or a duplicate
    of `ZEXC_AMOUNT` safe to drop.
-6. **ISSUES.md #16 — Credit segment.** `P_SEGMNT` is a required selection field with no
-   default. Confirm this is acceptable, and if not, what the fixed segment should be.
+6. ~~**ISSUES.md #16 — Credit segment.**~~ **Closed 07/09/26.** Functional confirmed
+   segment `2000`. `P_SEGMNT` now defaults to it and stays overridable.
 7. **ISSUES.md #10 — Info Category / Info Type.** Dropped from the selection screen because
    `ZSD_EXP_PAINTS` has no such field. Confirm: drop from the FS permanently, or add the
    fields to the table (a DDIC change, not a code-only fix).

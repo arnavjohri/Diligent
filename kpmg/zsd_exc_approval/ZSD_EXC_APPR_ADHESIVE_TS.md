@@ -62,7 +62,7 @@ Two framed blocks, `TEXT-001` "Exceptional Approval Data" and `TEXT-002`
 | `S_VKORG` | SELECT-OPTIONS on `KNVV-VKORG` | **Obligatory** | standard DDIC | Sales organisation |
 | `S_KVGR1` | SELECT-OPTIONS on `KNVV-KVGR1` | Optional | standard DDIC | Customer group 1 |
 | `S_KVGR2` | SELECT-OPTIONS on `KNVV-KVGR2` | Optional | standard DDIC | Customer group 2 |
-| `P_SEGMNT` | PARAMETER, `UKMBP_CMS_SGM-CREDIT_SGMNT` | **Obligatory** | standard DDIC | Credit segment |
+| `P_SEGMNT` | PARAMETER, `UKMBP_CMS_SGM-CREDIT_SGMNT` | **Obligatory**, default `2000` | standard DDIC | Credit segment |
 
 `P_SEGMNT` is **not in the FS**. `UKMBP_CMS_SGM` (Actual Credit Limit) is keyed by
 partner **and** credit segment, so without a segment the credit limit for a given
@@ -162,19 +162,32 @@ every amount column in the ALV. `P_BUKRS` is already validated on the selection
 screen, so a failure here is defensive only — the report still runs, the amounts are
 shown without a currency, and the user gets a warning.
 
-### 5.6 `F_GET_HIERARCHY` — stub, deliberately does nothing
+### 5.6 `F_GET_HIERARCHY` — background call to the hierarchy report
 
-The FS asks for L4/L5/L6 customer hierarchy names by "submitting"
-`SAPLSLVC_FULLSCREEN` with `VKORG = 1000/1100/1200/1300`. `SAPLSLVC_FULLSCREEN` is the
-generic ALV full-screen **function group** — it is not a program, cannot be
-`SUBMIT`ted, and holds no customer data. There is nothing there to read.
+Functional confirmed on 07/09/26 that the hierarchy report is to be run in background
+and its output read, and that the program name printed in the FS is wrong and will be
+corrected. The call is therefore built in full:
 
-This FORM exists and is called, exactly as the build spec requires, but it contains
-no `SELECT`, no `SUBMIT` and no `CALL FUNCTION`. L4_Name, L5_Name and L6_Name are
-present as ALV columns so the layout matches the FS, and they are blank on every row
-until the real source is confirmed. See §7 deviation 1 / `ISSUES.md` #1 — this is the
-one open item that blocks nothing today but should be resolved first, since it is the
-only column with no data at all.
+1. `TRDIR` is read for `GC_HIER_PROG`. Unless it exists **and** is `SUBC = '1'`
+   (executable), the FORM issues one status message and returns with the columns blank.
+2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
+   under the name `GC_HIER_SELNAME`.
+3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
+   with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result
+   is taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own
+   ALV is never swallowed by a capture left armed.
+4. The result rows are read by field **name** through `ASSIGN COMPONENT`, so the callee
+   structure does not have to be known at compile time, and are merged into `GT_CUST`
+   on customer number after `CONVERSION_EXIT_ALPHA_INPUT`.
+
+The six unconfirmed names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above
+the selection screen. Correcting the source is a change to that block and nothing else.
+
+**Today the guard fires.** `SAPLSLVC_FULLSCREEN`, the name the FS gives, is `TRDIR`
+type `F` — a function group main program, not an executable report. So step 1 stops,
+message `M14` appears in the status bar, and L4/L5/L6 are blank on every row while every
+other column is correct. Nothing dumps. See §7 deviation 1 / `ISSUES.md` #1 for the four
+values needed to finish it.
 
 ### 5.7 `F_GET_OPEN_ITEMS`
 
@@ -305,13 +318,13 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 | # | FS says | Build does | Why | `ISSUES.md` |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Stub FORM, columns present but always blank | That is the generic ALV function group, not a data source, not `SUBMIT`-able | #1 |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` + ALV capture built in full; source names held in the `GC_HIER_*` constants. Columns blank until the real report name is given | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 |
 | 2 | Actual OS from `BSID` by `GJAHR` | `BSID` + `BSAD`, bounded by `BUDAT`/`AUGDT`, no `GJAHR` filter | `BSID` holds items open **now**; an item cleared after the commitment date must still count as open on that date. Open items also span fiscal years, so a `GJAHR` filter drops valid rows | #4 |
 | 3 | Fetch `WRBTR` | `WRBTR` is selected for reference; the arithmetic uses `DMBTR` | `WRBTR` is document currency; the credit limit is not. `DMBTR` (company-code currency) is the comparable figure. Switching back is a one-line change | #4 |
 | 4 | `REBZG` blank / not blank as two separate steps | Single read, `REBZG` selected but not filtered | The two FS steps together are simply "all items" — filtering on `REBZG` would not change the sum | related to #4 |
 | 5 | Exceptional Approval Type column, values Credit Limit / Order / Both | Column present, always blank | No source field is named in the output mapping | #2 |
 | 6 | Commitment date "fetched" from `TEXT` | Defensive multi-format parse, initial on failure | `BP3100-TEXT` is free text with no agreed entry format | #3 |
-| 7 | No credit segment on the selection screen | `P_SEGMNT` added, obligatory, no default | `UKMBP_CMS_SGM` is keyed by partner **and** credit segment — the credit limit is ambiguous without one | #16 |
+| 7 | No credit segment on the selection screen | `P_SEGMNT` added, obligatory, **defaults to 2000** | `UKMBP_CMS_SGM` is keyed by partner **and** credit segment — the credit limit is ambiguous without one. Segment 2000 confirmed by functional 07/09/26 | #16 closed |
 | 8 | Status defined only for (+) and (−) non-fulfilment | Exactly zero is treated as **Fulfilled** | The FS gives no rule for the boundary case | #12 |
 | 9 | KNVV-keyed customer selection | Result deduplicated to one row per customer | A customer extended to several sales areas would otherwise multiply rows | #13 |
 | 10 | Required "Date" selection field, no table/field stated | Applied to `BP3100-DATEFR` (approval date from) | The output mapping's only date the FS ties to an approval, as opposed to a commitment or posting date | #11 |
@@ -338,9 +351,8 @@ Ranked by what changes a number or a column on the report, not by `ISSUES.md` or
    for `BP3100-TEXT` (today: defensive multi-format parse) and whether an unparseable
    row should be flagged to the user in some way beyond the blank columns it already
    gets.
-5. **`ISSUES.md` #16 — credit segment.** Confirm whether asking the user for
-   `P_SEGMNT` on the selection screen (rather than a fixed default) is acceptable, and
-   if not, what the fixed segment should be.
+5. ~~**`ISSUES.md` #16 — credit segment.**~~ **Closed 07/09/26.** Functional confirmed
+   segment `2000`. `P_SEGMNT` now defaults to it and stays overridable.
 6. **`ISSUES.md` #13 — sales-area duplication.** Confirm one row per customer
    (current build) is the wanted behaviour, as opposed to one row per sales area.
 7. **`ISSUES.md` #12 — zero non-fulfilment boundary.** Confirm `Fulfilled` (current
