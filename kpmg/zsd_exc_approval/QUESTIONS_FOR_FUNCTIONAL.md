@@ -16,10 +16,15 @@ Line numbers are snapshot-bound and drift as soon as anyone edits. **Locate by F
 
 # PART 1 — Blocking a correct number
 
+**Two of these four closed on 07/09/26 — Q1 and Q2. Q3 and Q4, both on Paints, remain.**
+
 Each of these has two readings that produce **different figures on the same data**. A guess
 ships a wrong number rather than a blank, which is why none of them was assumed.
 
-## Q1 — Issue 2 (A). Which BP3100 field carries the Exceptional Approval Type?
+## ~~Q1 — Issue 2 (A). Which BP3100 field carries the Exceptional Approval Type?~~ CLOSED 07/09/26
+
+> **Answered: the column is not required.** Removed from `TY_OUTPUT`, `F_BUILD_OUTPUT` and
+> the field catalogue. Paints keeps its own approval type — that one has a real source field.
 
 **Where:** A, `F_BUILD_OUTPUT`, around line 1327.
 
@@ -46,7 +51,10 @@ column should be dropped, not filled.
 symbols if it is coded. Paints does this already — see its `F_BUILD_OUTPUT`, `ZEXC_APPR_TYPE`
 1/2/3 to `T01`/`T02`/`T03` — so there is a working pattern to copy.
 
-## Q2 — Issue 3 (A). What is the agreed entry format for the commitment date in BP3100-TEXT?
+## ~~Q2 — Issue 3 (A). What is the agreed entry format for the commitment date in BP3100-TEXT?~~ CLOSED 07/09/26
+
+> **Answered: DD.MM.YYYY.** `F_PARSE_COMMIT_DATE` narrowed; the bare 8-digit branch removed.
+> `/` and `-` still normalised to `.` since they carry the same field order.
 
 **Where:** A, `F_PARSE_COMMIT_DATE` (a whole FORM, around line 925), called from
 `F_GET_OPEN_ITEMS`.

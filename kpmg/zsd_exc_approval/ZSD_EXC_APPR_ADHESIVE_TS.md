@@ -405,3 +405,22 @@ the matching customizing field names are unconfirmed here, and both value helps 
 the distinct values present in `BP3100` itself. That cannot be wrong, and for a report it
 is the better list: only values that carry data can be reported on. Offering the full
 customizing list instead is a change to two `SELECT`s.
+
+## Note added 07/09/26 — issues 2 and 3 closed
+
+**Exceptional Approval Type removed.** Functional confirmed the column is not required.
+`EXC_TYPE` is gone from `TY_OUTPUT`, from `F_BUILD_OUTPUT` and from the field catalogue; the
+columns after it renumber 8 to 18. The ALV now carries 17 visible columns plus the hidden
+`WAERS` currency reference. Text symbol `C08` is unused; the rest were deliberately not
+renumbered so only one row left the text-element sheet.
+
+**Commitment date confirmed as DD.MM.YYYY.** `F_PARSE_COMMIT_DATE` no longer accepts a bare
+8-digit `YYYYMMDD` token. `/` and `-` are still normalised to `.` before parsing, since those
+carry the same field order and accepting them prevents a blank row when a user types a slash
+out of habit. This makes the parse stricter: an 8-digit run inside free text is more likely
+to be an amount or a document number, which the old code would have read as a date.
+
+A row that still fails to parse behaves as before — the raw text shows in the Commitment
+Text column, and Actual OS, Non-Fulfilment, Default % and Status stay blank rather than
+carrying a number derived from a date the program could not read.
+

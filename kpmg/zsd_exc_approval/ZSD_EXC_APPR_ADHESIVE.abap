@@ -38,6 +38,12 @@
 *&                                  ADDTYPE and DATA_TYPE. Selection,
 *&                                  F4 help and validation re-pointed;
 *&                                  business labels unchanged.
+*&   07/09/26    Arnav Johri  <TR>  Functional dropped the Exceptional
+*&                                  Approval Type column (issue 2 -
+*&                                  not required). Commitment date in
+*&                                  BP3100-TEXT confirmed as DD.MM.YYYY
+*&                                  (issue 3), so the parse no longer
+*&                                  accepts a bare 8 digit token.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_adhesive.
 
@@ -163,7 +169,15 @@ TYPES: BEGIN OF ty_output,
          l6_name      TYPE char40,
          exc_month    TYPE char7,
          exc_no       TYPE bp3100-counter,
-         exc_type     TYPE char30,
+*BOC By Arnav on 07/09/26
+* Functional confirmed 07/09/26 that the Exceptional Approval Type is
+* not required on this report, closing open issue 2. The component is
+* removed rather than left blank, so the ALV carries no column that can
+* never be filled. Paints keeps its own approval type - that one has a
+* real source field, ZSD_EXP_PAINTS-ZEXC_APPR_TYPE.
+* Old code:
+**         exc_type     TYPE char30,
+*EOC By Arnav on 07/09/26
          date_from    TYPE bp3100-datefr,
          date_to      TYPE bp3100-dateto,
          exc_amnt     TYPE bp3100-amnt,
@@ -925,13 +939,34 @@ ENDFORM.
 FORM f_parse_commit_date  USING    iv_text TYPE bp3100-text
                           CHANGING cv_date TYPE dats.
 
-* ASSUMPTION (FS deviation 6): the FS maps the commitment date to
-* BP3100-TEXT, which is free text with no agreed entry format. This
-* routine accepts DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY and an 8 digit
-* YYYYMMDD token anywhere inside the text, validates day and month
-* against the calendar and returns initial on anything else - see open
-* issue 3. No regular expression is used: the token scan below is the
-* same logic without the escaping risk.
+*BOC By Arnav on 07/09/26
+* Functional confirmed on 07/09/26 that the commitment date is entered
+* as DD.MM.YYYY, closing open issue 3.
+*
+* This routine now accepts DD.MM.YYYY and nothing else in substance.
+* The slash and hyphen are still normalised to a full stop first,
+* because DD/MM/YYYY and DD-MM-YYYY carry the SAME field order and
+* accepting them costs one REPLACE and prevents a blank row when a
+* user types a slash out of habit.
+*
+* The bare 8 digit YYYYMMDD branch is REMOVED. With a confirmed
+* separated format it is no longer needed, and an 8 digit run inside
+* free text is more likely to be something else - an amount, a phone
+* fragment, a document number - which the old code would have read as
+* a date. Dropping it makes the parse stricter, not weaker.
+*
+* A row that still does not parse is reported with its raw text in the
+* Commitment Text column and blank as-on-date figures. It never dumps
+* and it never messages per row.
+* Old code:
+** ASSUMPTION (FS deviation 6): the FS maps the commitment date to
+** BP3100-TEXT, which is free text with no agreed entry format. This
+** routine accepts DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY and an 8 digit
+** YYYYMMDD token anywhere inside the text, validates day and month
+** against the calendar and returns initial on anything else - see open
+** issue 3. No regular expression is used: the token scan below is the
+** same logic without the escaping risk.
+*EOC By Arnav on 07/09/26
 
   DATA: lv_string TYPE string,
         lt_token  TYPE STANDARD TABLE OF string,
@@ -1035,17 +1070,23 @@ FORM f_parse_commit_date  USING    iv_text TYPE bp3100-text
 
     ELSE.
 
-*     Plain 8 digit form - YYYYMMDD.
-      IF strlen( lv_clean ) <> 8.
-        CONTINUE.
-      ENDIF.
-      IF lv_clean CN '0123456789'.
-        CONTINUE.
-      ENDIF.
-
-      lv_year = lv_clean(4).
-      lv_mon  = lv_clean+4(2).
-      lv_day  = lv_clean+6(2).
+*BOC By Arnav on 07/09/26
+*     No separator, so this token is not a DD.MM.YYYY date. The bare 8
+*     digit YYYYMMDD form is no longer accepted - see the note in the
+*     FORM header, issue 3 closed 07/09/26.
+      CONTINUE.
+* Old code:
+**     Plain 8 digit form - YYYYMMDD.
+**      IF strlen( lv_clean ) <> 8.
+**        CONTINUE.
+**      ENDIF.
+**      IF lv_clean CN '0123456789'.
+**        CONTINUE.
+**      ENDIF.
+**      lv_year = lv_clean(4).
+**      lv_mon  = lv_clean+4(2).
+**      lv_day  = lv_clean+6(2).
+*EOC By Arnav on 07/09/26
 
     ENDIF.
 
@@ -1321,11 +1362,19 @@ FORM f_build_output.
 
     ls_out-exc_no = ls_appr-counter.
 
-* ASSUMPTION (FS deviation 5): the FS shows an "Exceptional Approval
-* Type" column with values Credit Limit / Order / Both but names no
-* source field for it. The column is kept so the layout matches the FS
-* and is left blank until functional confirms the field - open issue 2.
-    CLEAR ls_out-exc_type.
+*BOC By Arnav on 07/09/26
+* FS deviation 5 withdrawn. The FS showed an "Exceptional Approval
+* Type" column with values Credit Limit / Order / Both but named no
+* source field for it, so the column shipped blank. Functional
+* confirmed on 07/09/26 that it is not required - open issue 2 closed
+* and the column removed from TY_OUTPUT and from the field catalogue.
+* Old code:
+** ASSUMPTION (FS deviation 5): the FS shows an "Exceptional Approval
+** Type" column with values Credit Limit / Order / Both but names no
+** source field for it. The column is kept so the layout matches the FS
+** and is left blank until functional confirms the field - open issue 2.
+**    CLEAR ls_out-exc_type.
+*EOC By Arnav on 07/09/26
 
     ls_out-date_from   = ls_appr-datefr.
     ls_out-date_to     = ls_appr-dateto.
@@ -1441,33 +1490,40 @@ FORM f_display_alv.
                               space   space   CHANGING lt_fcat.
   PERFORM f_add_fcat USING  7 'EXC_NO'       'Exception Number'(c07)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING  8 'EXC_TYPE'     'Approval Type'(c08)
+*BOC By Arnav on 07/09/26
+* EXC_TYPE removed (issue 2 closed - not required). Every column after
+* it moves up one position. The text symbol IDs are deliberately NOT
+* renumbered: C09 to C19 keep their IDs so only one row leaves the
+* text-element sheet. C08 is now unused.
+* Old code:
+**  PERFORM f_add_fcat USING  8 'EXC_TYPE'     'Approval Type'(c08)
+**                              space   space   CHANGING lt_fcat.
+  PERFORM f_add_fcat USING  8 'DATE_FROM'    'Approval Date From'(c09)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING  9 'DATE_FROM'    'Approval Date From'(c09)
+  PERFORM f_add_fcat USING  9 'DATE_TO'      'Approval Date To'(c10)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 10 'DATE_TO'      'Approval Date To'(c10)
-                              space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 11 'EXC_AMNT'     'Exceptional Amount'(c11)
+  PERFORM f_add_fcat USING 10 'EXC_AMNT'     'Exceptional Amount'(c11)
                               'WAERS' space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 12 'COMMIT_DATE'  'Commitment Date'(c12)
+  PERFORM f_add_fcat USING 11 'COMMIT_DATE'  'Commitment Date'(c12)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 13 'COMMIT_TEXT'  'Commitment Text'(c13)
+  PERFORM f_add_fcat USING 12 'COMMIT_TEXT'  'Commitment Text'(c13)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 14 'CREDIT_LIMIT' 'Actual Credit Limit'(c14)
+  PERFORM f_add_fcat USING 13 'CREDIT_LIMIT' 'Actual Credit Limit'(c14)
                               'WAERS' space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 15 'ACT_OS'       'Actual OS on Commit Date'(c15)
+  PERFORM f_add_fcat USING 14 'ACT_OS'       'Actual OS on Commit Date'(c15)
                               'WAERS' space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 16 'NON_FULFIL'   'Non-Fulfilment Amount'(c16)
+  PERFORM f_add_fcat USING 15 'NON_FULFIL'   'Non-Fulfilment Amount'(c16)
                               'WAERS' space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 17 'DEF_PERC'     'Default % Non-Fulfilment'(c17)
+  PERFORM f_add_fcat USING 16 'DEF_PERC'     'Default % Non-Fulfilment'(c17)
                               space   space   CHANGING lt_fcat.
-  PERFORM f_add_fcat USING 18 'STATUS'       'Status'(c18)
+  PERFORM f_add_fcat USING 17 'STATUS'       'Status'(c18)
                               space   space   CHANGING lt_fcat.
 
 * WAERS is the currency reference for the amount columns above and is
 * not a business column, so it is not displayed.
-  PERFORM f_add_fcat USING 19 'WAERS'        'Currency'(c19)
+  PERFORM f_add_fcat USING 18 'WAERS'        'Currency'(c19)
                               space   'X'    CHANGING lt_fcat.
+*EOC By Arnav on 07/09/26
 
   ls_layout-zebra      = abap_true.
   ls_layout-cwidth_opt = abap_true.

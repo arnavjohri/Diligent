@@ -20,8 +20,10 @@ string, plus the two status literals). The `(BSID)` on line 93 and the `(4)` / `
 are comment prose and substring offsets (`lv_clean+lv_pos(1)`, `lv_clean(4)`,
 `ls_appr-datefr+4(2)`), so they are excluded.
 
-That leaves 39 distinct IDs: `001`, `002`, `C01`–`C19`, `M01`–`M16`, `S01`, `S02`. Every
-one of the 39 appears in Table 1 below, each exactly once, with the literal text taken
+That leaves 38 distinct IDs: `001`, `002`, `C01`–`C07`, `C09`–`C19`, `M01`–`M16`, `S01`,
+`S02`. `C08` ("Approval Type") was dropped on 07/09/26 with the column — issue 2 closed,
+the type is not required. The remaining IDs were deliberately NOT renumbered, so only one
+row left this sheet. Every one of the 38 appears in Table 1 below, each exactly once, with the literal text taken
 verbatim from the source as the default. Nothing is listed that the source does not
 reference, and nothing the source references is missing. The two `(m09)` occurrences
 (lines 247 and 328) are the same symbol used twice — one row, not two.
@@ -47,7 +49,6 @@ before letters, so `001`, `002` come before `C01…`).
 | C05 | L6 Name | 7 | ALV column heading, L6_NAME |
 | C06 | Approval Month | 14 | ALV column heading, EXC_MONTH |
 | C07 | Exception Number | 16 | ALV column heading, EXC_NO |
-| C08 | Approval Type | 13 | ALV column heading, EXC_TYPE |
 | C09 | Approval Date From | 18 | ALV column heading, DATE_FROM |
 | C10 | Approval Date To | 16 | ALV column heading, DATE_TO |
 | C11 | Exceptional Amount | 18 | ALV column heading, EXC_AMNT |

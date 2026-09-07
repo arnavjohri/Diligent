@@ -128,3 +128,26 @@ done: the 5 domains, the 6 data elements, table `ZSD_EXP_PAINTS` and its technic
 On the first run of either report, watch whether `ZSD_CUSTOMER_DATA` stops on its own
 selection screen. That is the one failure mode the `GC_HIER_*` guards cannot cover.
 
+## 07/09/26 — issues 2 and 3 answered
+
+| # | Answer | What changed in `ZSD_EXC_APPR_ADHESIVE` |
+|---|---|---|
+| 2 | The Exceptional Approval Type is **not required** on this report. | Column removed, not blanked. `EXC_TYPE` dropped from `TY_OUTPUT`, the `CLEAR` dropped from `F_BUILD_OUTPUT`, the field-catalogue entry dropped and the columns after it renumbered 8 to 18. Text symbol `C08` is now unused. **Closed.** |
+| 3 | The commitment date in `BP3100-TEXT` is entered as **DD.MM.YYYY**. | `F_PARSE_COMMIT_DATE` narrowed. The bare 8-digit `YYYYMMDD` branch is removed. `/` and `-` are still normalised to `.` first, because those carry the same field order and accepting them costs one `REPLACE` and prevents a blank row when a user types a slash out of habit. **Closed.** |
+
+Dropping the 8-digit branch makes the parse **stricter**, not weaker: an 8-digit run inside
+free text is more likely to be an amount, a phone fragment or a document number, all of
+which the old code would have read as a date.
+
+`ZSD_EXC_APPR_PAINTS` is unaffected by issue 2. Its approval type column has a real source
+field, `ZSD_EXP_PAINTS-ZEXC_APPR_TYPE`, mapped 1/2/3 to text symbols `T01` to `T03`, and it
+stays.
+
+### Note on the commitment date DISPLAY
+
+`COMMIT_DATE` in the ALV is typed `DATS`, so SAP renders it in each user's own date format
+from their user profile (SU3, Defaults tab). For an Indian profile that is already
+DD.MM.YYYY. Forcing DD.MM.YYYY regardless of the user setting would mean converting the
+column to a character field, which loses date sorting and date filtering in the ALV — not
+recommended, but it is a small change if functional insists.
+
