@@ -668,9 +668,11 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 *BOC By Arnav on 07/09/26
 * Functional confirmed on 07/09/26 that the hierarchy report is to be
 * called in background and its output read, and that the program name
-* in the FS is wrong and will be corrected. The call is therefore built
-* in full here, with every unconfirmed name held in the CONSTANTS block
-* GC_HIER_* above. Correcting the source is a change to that block.
+* printed in the FS is wrong. Arnav gave the real source the same day:
+* ZSD_CUSTOMER_DATA. The call is built in full here, with every source
+* name - the confirmed program and the four placeholders alike - held
+* in the CONSTANTS block GC_HIER_* above. Correcting any of them is a
+* change to that block alone.
 *
 * HOW IT WORKS
 *   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
