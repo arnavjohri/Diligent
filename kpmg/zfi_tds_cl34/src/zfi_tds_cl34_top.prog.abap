@@ -20,10 +20,23 @@
 *& actually filters, so both the field length and the dictionary value
 *& help are the right ones. Section code exists only on BSEG; the vendor
 *& account of a withholding item is WITH_ITEM-WT_ACCO.
+*&
+*& 07/09/26: S_LIFNR is nevertheless declared over LFA1-LIFNR, not over
+*& WT_ACCO. Both are CHAR 10 and hold the same value, but only the data
+*& element LIFNR carries the vendor search help and the ALPHA conversion
+*& exit - see the note in ZFI_TDS_CL34_SCR.
 *&---------------------------------------------------------------------*
+*BOC By Arnav on 07/09/26
+* LFA1 added for the S_LIFNR select-option. WITH_ITEM stays declared -
+* the TYPES below are typed against its fields throughout.
+*TABLES: bkpf,
+*        bseg,
+*        with_item.
 TABLES: bkpf,
         bseg,
-        with_item.
+        with_item,
+        lfa1.
+*EOC By Arnav on 07/09/26
 
 *&---------------------------------------------------------------------*
 *& Output structure - the 25 columns of the FS "Output Screen" tab plus

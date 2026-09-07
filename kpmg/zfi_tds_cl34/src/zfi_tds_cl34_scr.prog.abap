@@ -30,16 +30,40 @@
 *&   S_BUKRS  BKPF-BUKRS       - company code of the FI document header
 *&   S_SECCO  BSEG-SECCO       - section code; it exists on the line item
 *&                               only, neither BKPF nor WITH_ITEM has it
-*&   S_LIFNR  WITH_ITEM-WT_ACCO- the account of the withholding tax item,
-*&                               which is also output column C
+*&   S_LIFNR  LFA1-LIFNR      - the vendor. It filters the account of the
+*&                               withholding tax item, which is also output
+*&                               column C, but it is declared over LFA1 so
+*&                               the field gets F4 and ALPHA (07/09/26)
 *&   P_GJAHR  BKPF-GJAHR       - single value, per the FS input screen
 *&   S_BUDAT  BKPF-BUDAT       - posting date From / To
 *&---------------------------------------------------------------------*
 SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-b01.
 
+*BOC By Arnav on 07/09/26
+* S_LIFNR moved off WITH_ITEM-WT_ACCO onto LFA1-LIFNR. Both are CHAR 10
+* and hold the same value, so the filter is unchanged - but the data
+* element LIFNR carries the vendor search help AND the ALPHA conversion
+* exit, which WT_ACCO does not. Two things follow from that:
+*   - F4 now works on the field;
+*   - a vendor typed as 100025 is converted to 0000100025 by the
+*     selection screen itself, so the leading zeros no longer have to
+*     be typed by hand. That was the reported complaint.
+*
+* The driver SELECT still filters CUSTOMERSUPPLIERACCOUNT against
+* S_LIFNR and GT_LFA1 is still read on WT_ACCO - only the dictionary
+* reference of the SCREEN FIELD moved. WITH_ITEM-WT_ACCO stores the
+* vendor in internal format with its leading zeros, which is what the
+* two live runs proved when column E (PAN) populated on every row, so
+* converting the input to internal format is the correct direction.
+*
+* Field name and length are unchanged, so existing variants stay valid.
+*SELECT-OPTIONS: s_bukrs FOR bkpf-bukrs OBLIGATORY,
+*                s_secco FOR bseg-secco,
+*                s_lifnr FOR with_item-wt_acco.
 SELECT-OPTIONS: s_bukrs FOR bkpf-bukrs OBLIGATORY,
                 s_secco FOR bseg-secco,
-                s_lifnr FOR with_item-wt_acco.
+                s_lifnr FOR lfa1-lifnr.
+*EOC By Arnav on 07/09/26
 
 PARAMETERS:     p_gjahr TYPE bkpf-gjahr OBLIGATORY.
 
@@ -102,8 +126,10 @@ SELECTION-SCREEN END OF BLOCK b1.
 *&     S_BUDAT   Posting Date
 *&
 *&    Do not tick "Dictionary reference" on the selection texts - the
-*&    dictionary labels for WT_ACCO and SECCO are not the words the FS
-*&    asks for.
+*&    dictionary labels for LIFNR and SECCO are not the words the FS
+*&    asks for. Leaving it unticked does NOT affect F4 or the ALPHA
+*&    conversion: those come from the field's dictionary reference in
+*&    the SELECT-OPTIONS, not from the selection text.
 *&
 *& 4. Goto -> Text elements -> Text symbols
 *&     b01       Selection

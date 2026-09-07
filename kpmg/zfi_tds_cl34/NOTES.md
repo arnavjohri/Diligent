@@ -14,8 +14,8 @@ Four files, all under `src/`:
 | File | Lines | What |
 |---|---|---|
 | `zfi_tds_cl34.prog.abap` | 107 | Main program — includes and the four event blocks. No logic. |
-| `zfi_tds_cl34_top.prog.abap` | 613 | `TABLES`, `TYPES`, `CONSTANTS`, global `DATA`. No executable statement. |
-| `zfi_tds_cl34_scr.prog.abap` | 113 | The five selection fields, plus the manual-steps checklist as a trailer comment. |
+| `zfi_tds_cl34_top.prog.abap` | 626 | `TABLES`, `TYPES`, `CONSTANTS`, global `DATA`. No executable statement. |
+| `zfi_tds_cl34_scr.prog.abap` | 139 | The five selection fields, plus the manual-steps checklist as a trailer comment. |
 | `zfi_tds_cl34_forms.prog.abap` | 2158 | Every form routine. |
 
 Companion docs: `docs/TS_ZFI_TDS_CL34.md` (the TS), `docs/DDIC_FACTS.md` (the verified
