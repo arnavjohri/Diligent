@@ -182,7 +182,7 @@ DATA: gv_waers TYPE t001-waers,
 
 *BOC By Arnav on 07/09/26
 *&---------------------------------------------------------------------*
-*& Sales hierarchy source - NOT CONFIRMED BY FUNCTIONAL (open issue 1)
+*& Sales hierarchy source - PROGRAM CONFIRMED, FIELD NAMES ARE NOT
 *&---------------------------------------------------------------------*
 * The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
 * 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
