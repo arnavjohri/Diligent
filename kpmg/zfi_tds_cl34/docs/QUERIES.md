@@ -80,6 +80,31 @@ Confirmed across all 93 rows of the 07/09/26 run: every positive row is a vendor
 posting. `1700000000` is **negative** although it is a `17*` document, which rules out the
 number range as the driver.
 
+**Proved in SE16 on 07/09/26 — the signs are in the table, not in the code or the view.**
+
+| `WITH_ITEM` row | `BUZEI` | `WT_QSSHH` | `WT_QBSHH` | Code |
+|---|---|---|---|---|
+| 1000 / 1900000001 / 2026 | **1** | `4,500.00-` | `90.00-` | C1 @ 2.0000 |
+| 1000 / 1500000010 / 2026 | **2** | `10,000.00` | `2,000.00` | C8 @ 20.0000 |
+
+`BUZEI` settles which line the record hangs off: item 1 of `1900000001` is the vendor line
+(key 31, `4,410.00-`) and item 2 of `1500000010` is the vendor line (key 29 / SGL `J`,
+`10,000.00`). The TDS Payable posting is item **3** in both documents and `BUZEI` points at
+neither. So the withholding record is anchored to the vendor line and carries that line's
+direction — which is why the report differs between two documents whose TDS Payable line is
+an identical key 50 credit. That credit is a constant (a liability is credited on every
+deduction) and therefore cannot be what varies.
+
+This also rules out `I_WithholdingTaxItem` deriving the sign with a CASE on `SHKZG`: the
+raw table already holds it. The driver may stay on the CDS view.
+
+Incidental, noted for later: in the `1900000001` row the amounts read `90.00- 90.00- 90.00-`
+and then a further group reads `90.00 90.00 90.00`, so `WITH_ITEM` carries **unsigned
+counterparts** beside the signed fields. If an all-positive column is ever wanted sourced
+from the table rather than computed, those are the candidates — identify them in SE11
+(`WT_QBSH*` family) before using one; they are not named here because the dump was
+positional.
+
 **Decision taken 07/09/26 (Arnav), final:** columns P and T are left **as stored** — the
 signs are the SAP debit/credit convention (debit positive, credit negative), the same as
 FBL1N and FAGLL03. A new **column Z "Debit/Credit"** (`S` / `H`) states the direction
