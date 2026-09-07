@@ -20,8 +20,8 @@ string, plus the two status literals). The `(BSID)` on line 93 and the `(4)` / `
 are comment prose and substring offsets (`lv_clean+lv_pos(1)`, `lv_clean(4)`,
 `ls_appr-datefr+4(2)`), so they are excluded.
 
-That leaves 38 distinct IDs: `001`, `002`, `C01`–`C19`, `M01`–`M15`, `S01`, `S02`. Every
-one of the 38 appears in Table 1 below, each exactly once, with the literal text taken
+That leaves 39 distinct IDs: `001`, `002`, `C01`–`C19`, `M01`–`M16`, `S01`, `S02`. Every
+one of the 39 appears in Table 1 below, each exactly once, with the literal text taken
 verbatim from the source as the default. Nothing is listed that the source does not
 reference, and nothing the source references is missing. The two `(m09)` occurrences
 (lines 247 and 328) are the same symbol used twice — one row, not two.
@@ -74,6 +74,7 @@ before letters, so `001`, `002` come before `C01…`).
 | M13 | Sales hierarchy report not found - L4/L5/L6 left blank | 54 | message, F_GET_HIERARCHY |
 | M14 | Hierarchy source is not an executable report - see TS | 53 | message, F_GET_HIERARCHY |
 | M15 | Hierarchy report returned no ALV data - L4/L5/L6 blank | 54 | message, F_GET_HIERARCHY |
+| M16 | Hierarchy field names do not match the report output | 52 | message, F_GET_HIERARCHY |
 | S01 | Not Fulfilled | 13 | status literal, F_BUILD_OUTPUT |
 | S02 | Fulfilled | 9 | status literal, F_BUILD_OUTPUT |
 

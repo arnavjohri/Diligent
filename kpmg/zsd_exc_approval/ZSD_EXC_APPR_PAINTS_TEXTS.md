@@ -20,8 +20,8 @@ literals). The `+4(2)` substring offsets on lines 746 and 748
 (`ls_appr-zexc_appr_month+4(2)`) are **not** text-symbol references — they are ABAP
 offset/length notation, so they are excluded.
 
-That leaves 41 distinct IDs: `001`–`003`, `C01`–`C21`, `M01`–`M09`, `S01`–`S05`,
-`T01`–`T03`. Every one of the 41 appears in Table 1 below, each exactly once, with the
+That leaves 42 distinct IDs: `001`–`003`, `C01`–`C21`, `M01`–`M10`, `S01`–`S05`,
+`T01`–`T03`. Every one of the 42 appears in Table 1 below, each exactly once, with the
 literal text taken verbatim from the source as the default. Nothing is listed that the
 source does not reference, and nothing the source references is missing. `M01` occurs
 three times in the source (twice in `F_GET_CUSTOMERS`, once in `F_GET_APPROVALS`) — one
@@ -44,8 +44,8 @@ Cross-checked against `ZSD_EXC_APPR_ADHESIVE_TEXTS.md` in both directions (build
   currency-not-found, ALV-display-failed, no-data-to-display) renumbered contiguously
   since the Info Category/Type messages are absent — same wording, different IDs, so do
   not copy Adhesive's numbering across by hand.
-- Paints' `M07`–`M09` are the three `F_GET_HIERARCHY` messages added on 07/09/26. Same
-  wording as Adhesive's `M13`–`M15`, different IDs for the same renumbering reason.
+- Paints' `M07`–`M10` are the four `F_GET_HIERARCHY` messages added on 07/09/26. Same
+  wording as Adhesive's `M13`–`M16`, different IDs for the same renumbering reason.
 - Paints adds three columns and their headings that Adhesive does not carry:
   `T01`–`T03` (approval-type literals — Adhesive has no approval-type column) and the
   `C12` "Collection Commitment" / `C15` "Actual Collection" pair, which replace
@@ -102,6 +102,7 @@ before letters, so `001`–`003` come before `C01`…).
 | M07 | Sales hierarchy report not found - L4/L5/L6 left blank | 54 | message, F_GET_HIERARCHY |
 | M08 | Hierarchy source is not an executable report - see TS | 53 | message, F_GET_HIERARCHY |
 | M09 | Hierarchy report returned no ALV data - L4/L5/L6 blank | 54 | message, F_GET_HIERARCHY |
+| M10 | Hierarchy field names do not match the report output | 52 | message, F_GET_HIERARCHY |
 | S01 | Collection Received | 19 | status-1 literal, F_CALC_STATUS |
 | S02 | Commitment Not due | 18 | status-1 literal, F_CALC_STATUS |
 | S03 | Commitment Overdue | 18 | status-1 literal, F_CALC_STATUS |
@@ -111,7 +112,7 @@ before letters, so `001`–`003` come before `C01`…).
 | T02 | Overdue | 7 | approval-type literal, F_BUILD_OUTPUT (ZEXC_APPR_TYPE = '2') |
 | T03 | Credit Limit & Overdue | 22 | approval-type literal, F_BUILD_OUTPUT (ZEXC_APPR_TYPE = '3') |
 
-41 rows, 41 distinct IDs referenced in the source — the two sets match.
+42 rows, 42 distinct IDs referenced in the source — the two sets match.
 
 ## 2. Selection Texts
 

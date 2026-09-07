@@ -168,8 +168,9 @@ Functional confirmed on 07/09/26 that the hierarchy report is to be run in backg
 and its output read, and that the program name printed in the FS is wrong and will be
 corrected. The call is therefore built in full:
 
-1. `TRDIR` is read for `GC_HIER_PROG`. Unless it exists **and** is `SUBC = '1'`
-   (executable), the FORM issues one status message and returns with the columns blank.
+1. `TRDIR` is read for `GC_HIER_PROG` (`ZSD_CUSTOMER_DATA`). Unless it exists **and** is
+   `SUBC = '1'` (executable), the FORM issues one status message and returns with the
+   columns blank, and no `SUBMIT` is attempted.
 2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
    under the name `GC_HIER_SELNAME`.
 3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
@@ -180,14 +181,25 @@ corrected. The call is therefore built in full:
    structure does not have to be known at compile time, and are merged into `GT_CUST`
    on customer number after `CONVERSION_EXIT_ALPHA_INPUT`.
 
-The six unconfirmed names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above
-the selection screen. Correcting the source is a change to that block and nothing else.
+All six source names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
+selection screen. Correcting any of them is a change to that block and nothing else.
 
-**Today the guard fires.** `SAPLSLVC_FULLSCREEN`, the name the FS gives, is `TRDIR`
-type `F` — a function group main program, not an executable report. So step 1 stops,
-message `M14` appears in the status bar, and L4/L5/L6 are blank on every row while every
-other column is correct. Nothing dumps. See §7 deviation 1 / `ISSUES.md` #1 for the four
-values needed to finish it.
+**Program name confirmed 07/09/26.** `GC_HIER_PROG` is `ZSD_CUSTOMER_DATA`, not the
+`SAPLSLVC_FULLSCREEN` the FS printed. That name was the generic ALV full-screen function
+group, `TRDIR` type `F`, which is neither a report nor `SUBMIT`-able. The guard now passes
+and the call genuinely runs.
+
+The remaining four constants are **placeholders**, not confirmed values, and nothing else in
+the program guesses them. A wrong one degrades, it never dumps: a wrong select-option name
+makes the callee run unfiltered (slower, same names reported, because the merge is on
+customer key); a wrong customer field means nothing keys, and a status message says so
+rather than leaving columns that look like missing master data; a wrong level field leaves
+that level blank. See §7 deviation 1 / `ISSUES.md` #1 for how to read the real names off the
+report's own layout.
+
+**Watch in functional testing.** If `ZSD_CUSTOMER_DATA` carries an obligatory selection
+field other than sales organisation, the `SUBMIT` stops on its own selection screen. That is
+the one case the guards cannot cover, because its screen is not known here.
 
 ### 5.7 `F_GET_OPEN_ITEMS`
 
@@ -318,7 +330,7 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 | # | FS says | Build does | Why | `ISSUES.md` |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` + ALV capture built in full; source names held in the `GC_HIER_*` constants. Columns blank until the real report name is given | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; its select-option and ALV field names are still placeholders in `GC_HIER_*` | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 part-open |
 | 2 | Actual OS from `BSID` by `GJAHR` | `BSID` + `BSAD`, bounded by `BUDAT`/`AUGDT`, no `GJAHR` filter | `BSID` holds items open **now**; an item cleared after the commitment date must still count as open on that date. Open items also span fiscal years, so a `GJAHR` filter drops valid rows | #4 |
 | 3 | Fetch `WRBTR` | `WRBTR` is selected for reference; the arithmetic uses `DMBTR` | `WRBTR` is document currency; the credit limit is not. `DMBTR` (company-code currency) is the comparable figure. Switching back is a one-line change | #4 |
 | 4 | `REBZG` blank / not blank as two separate steps | Single read, `REBZG` selected but not filtered | The two FS steps together are simply "all items" — filtering on `REBZG` would not change the sum | related to #4 |

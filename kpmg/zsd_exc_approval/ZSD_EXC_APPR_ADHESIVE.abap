@@ -186,22 +186,31 @@ DATA: gv_waers TYPE t001-waers,
 *&---------------------------------------------------------------------*
 *& Sales hierarchy source - NOT CONFIRMED BY FUNCTIONAL (open issue 1)
 *&---------------------------------------------------------------------*
-* ASSUMPTION: the FS says "Submit program SAPLSLVC_FULLSCREEN pass
-* VKORG = 1000, 1100, 1200, 1300 fetch L4 Name". SAPLSLVC_FULLSCREEN is
-* the generic ALV full-screen FUNCTION GROUP. It is not an executable
-* report, it cannot be SUBMITted, and it holds no hierarchy data. The
-* name is carried here EXACTLY as the FS gives it so that the reading
-* logic below can be tested end to end, and so that correcting it is a
-* change to this block alone. All six values are unconfirmed and must
-* be replaced when functional names the real source:
-*   GC_HIER_PROG     the executable report that lists the hierarchy
+* The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
+* 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
+* generic ALV full-screen FUNCTION GROUP, not an executable report.
+* Arnav gave the real source on 07/09/26: ZSD_CUSTOMER_DATA.
+*
+* GC_HIER_PROG is therefore CONFIRMED. The other four are still
+* PLACEHOLDERS - nobody has confirmed what ZSD_CUSTOMER_DATA calls its
+* sales-organisation select-option or its ALV output fields, and this
+* program deliberately does not guess:
 *   GC_HIER_SELNAME  its SELECT-OPTION name for sales organisation
 *   GC_HIER_F_KUNNR  the customer field in its ALV output
 *   GC_HIER_F_L4/5/6 the three level name fields in its ALV output
-* Until they are replaced F_GET_HIERARCHY finds no executable report,
-* issues ONE status message and leaves L4/L5/L6 blank. It never dumps
-* and it never guesses a table.
-CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'SAPLSLVC_FULLSCREEN',
+*
+* What a wrong placeholder costs, none of it a dump:
+*   GC_HIER_SELNAME wrong - SUBMIT ignores the unknown SELNAME, so the
+*     callee runs unfiltered. Slower, but the merge is on customer key
+*     so the reported names are still right.
+*   GC_HIER_F_KUNNR wrong - nothing maps. F_GET_HIERARCHY says so with
+*     one status message rather than silently showing blank columns.
+*   GC_HIER_F_L4/5/6 wrong - that level comes back blank.
+*
+* To confirm them: run ZSD_CUSTOMER_DATA, then on its ALV use
+* Settings -> Layout -> Current for the technical field names, and F1
+* on its sales organisation field for the select-option name.
+CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
            gc_hier_selname TYPE rsparams-selname VALUE 'S_VKORG',
            gc_hier_f_kunnr TYPE dfies-fieldname  VALUE 'KUNNR',
            gc_hier_f_l4    TYPE dfies-fieldname  VALUE 'L4_NAME',
@@ -664,23 +673,25 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 * GC_HIER_* above. Correcting the source is a change to that block.
 *
 * HOW IT WORKS
-*   1. TRDIR is checked first. SAPLSLVC_FULLSCREEN is SUBC 'F' (function
-*      group), not '1' (executable), so today the check fails, one status
-*      message is issued and L4/L5/L6 stay blank. No dump.
-*   2. Once GC_HIER_PROG names a real report, the sales organisations
-*      from S_VKORG are passed to it in a RSPARAMS selection table under
-*      the name GC_HIER_SELNAME.
+*   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
+*      '1' (executable), one status message is issued and L4/L5/L6 stay
+*      blank. No SUBMIT is attempted and nothing dumps.
+*   2. The sales organisations from S_VKORG are passed to the callee in
+*      a RSPARAMS selection table under the name GC_HIER_SELNAME. An
+*      unknown SELNAME is ignored by SUBMIT, it does not dump.
 *   3. CL_SALV_BS_RUNTIME_INFO suppresses the callee display and hands
 *      back its ALV result table, which is read by field NAME through
 *      ASSIGN COMPONENT - so the callee structure need not be known at
 *      compile time.
 *   4. The result is keyed on customer and merged into CT_CUST.
 *
-* ASSUMPTION: the callee is an ALV report. A classic WRITE list returns
-* no ALV data and lands on message (m15) - blank columns, no dump.
-* ASSUMPTION: the callee has no OBLIGATORY selection field other than
-* the sales organisation. If it has, SUBMIT stops on its own selection
-* screen and functional must tell us what else to pass.
+* ASSUMPTION: ZSD_CUSTOMER_DATA is an ALV report. A classic WRITE list
+* returns no ALV data and lands on message (m15) - blank columns, no dump.
+* ASSUMPTION: ZSD_CUSTOMER_DATA has no OBLIGATORY selection field other
+* than the sales organisation. If it has, SUBMIT stops on its own
+* selection screen and functional must tell us what else to pass. This
+* is the one case that needs watching in functional testing, because the
+* program name is now real and the SUBMIT genuinely runs.
 
   DATA: lv_subc TYPE trdir-subc,
         lt_selt TYPE TABLE OF rsparams,
@@ -688,7 +699,8 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
         lr_data TYPE REF TO data,
         lt_hier TYPE SORTED TABLE OF ty_cust
                      WITH NON-UNIQUE KEY kunnr,
-        ls_hier TYPE ty_cust.
+        ls_hier TYPE ty_cust,
+        lv_mapped TYPE abap_bool.
 
   FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
                  <ls_any>  TYPE any,
@@ -763,6 +775,7 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
     IF sy-subrc = 0.
       ls_hier-kunnr = <lv_fld>.
+      lv_mapped     = abap_true.
     ENDIF.
 
     ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
@@ -793,6 +806,15 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     INSERT ls_hier INTO TABLE lt_hier.
 
   ENDLOOP.
+
+* GC_HIER_F_KUNNR did not match any component of the callee output, so
+* nothing could be keyed. Say so - a silent blank column would look like
+* missing master data rather than a wrong field name.
+  IF lv_mapped <> abap_true.
+    MESSAGE 'Hierarchy field names do not match the report output'(m16)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
 
   IF lt_hier IS INITIAL.
     RETURN.

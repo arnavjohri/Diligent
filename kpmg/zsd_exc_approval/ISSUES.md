@@ -28,21 +28,34 @@
 | 16 | Credit segment is **2000** | `P_SEGMNT` on both selection screens now defaults to `2000`. Kept as an overridable parameter, not a constant. | **Closed** |
 | 1 | The hierarchy report is to be called in background and its output read. The program name in the FS is wrong and will be corrected. | `F_GET_HIERARCHY` in both reports now builds the call in full: TRDIR check, `SUBMIT ... WITH SELECTION-TABLE ... AND RETURN`, ALV capture via `CL_SALV_BS_RUNTIME_INFO`, dynamic field mapping, merge into the customer list. The unconfirmed names sit in one `GC_HIER_*` constants block. | **Partly answered — still blocked on the name** |
 
-### Issue 1 — what is still needed
+### Issue 1 — program name given 07/09/26, field names still placeholders
 
-`SAPLSLVC_FULLSCREEN` is TRDIR type `F` (function group), not `1` (executable), so the
-guard fires today, one status message is issued and L4/L5/L6 stay blank. The report runs
-and every other column is correct. To finish it, functional must supply four values:
+Arnav supplied the real source: **`ZSD_CUSTOMER_DATA`**. `GC_HIER_PROG` now carries it,
+so the TRDIR guard passes and the `SUBMIT` genuinely runs. The other four constants are
+still unconfirmed and are **not** guessed anywhere else in the code.
 
-| Constant | Needs | Today's placeholder |
+| Constant | Needs | Status |
 |---|---|---|
-| `GC_HIER_PROG` | the executable report that lists the sales hierarchy | `SAPLSLVC_FULLSCREEN` (wrong, per above) |
-| `GC_HIER_SELNAME` | that report's SELECT-OPTION name for sales organisation | `S_VKORG` |
-| `GC_HIER_F_KUNNR` | the customer field in its ALV output | `KUNNR` |
-| `GC_HIER_F_L4` / `_L5` / `_L6` | the three level-name fields in its ALV output | `L4_NAME` / `L5_NAME` / `L6_NAME` |
+| `GC_HIER_PROG` | the executable report that lists the sales hierarchy | **`ZSD_CUSTOMER_DATA` — confirmed 07/09/26** |
+| `GC_HIER_SELNAME` | that report's SELECT-OPTION name for sales organisation | placeholder `S_VKORG` |
+| `GC_HIER_F_KUNNR` | the customer field in its ALV output | placeholder `KUNNR` |
+| `GC_HIER_F_L4` / `_L5` / `_L6` | the three level-name fields in its ALV output | placeholder `L4_NAME` / `L5_NAME` / `L6_NAME` |
 
-Fastest way to get them: run the hierarchy report, then System → Status for the program
-name, and on the ALV use Settings → Layout → Current for the technical field names.
+What a wrong placeholder costs, none of it a dump:
+
+- **`GC_HIER_SELNAME` wrong.** `SUBMIT` ignores an unknown `SELNAME`, so `ZSD_CUSTOMER_DATA`
+  runs unfiltered. Slower, but the merge is on customer key so the names reported are still
+  right for the customers on the report.
+- **`GC_HIER_F_KUNNR` wrong.** Nothing keys. `F_GET_HIERARCHY` says so with a status message
+  rather than showing blank columns that look like missing master data.
+- **`GC_HIER_F_L4` / `_L5` / `_L6` wrong.** That level comes back blank.
+
+To confirm them: run `ZSD_CUSTOMER_DATA`, use Settings → Layout → Current on its ALV for the
+technical field names, and F1 on its sales-organisation field for the select-option name.
+
+**Watch in functional testing:** if `ZSD_CUSTOMER_DATA` has an obligatory selection field
+other than sales organisation, the `SUBMIT` stops on its own selection screen. That is the
+one behaviour the placeholders cannot protect against, because we do not know its screen.
 
 ## Still open and genuinely blocking a correct number
 
