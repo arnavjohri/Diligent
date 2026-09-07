@@ -854,6 +854,17 @@ FORM build_output.
     ls_out-rate_ded = <ls_wi>-qsatz.              " col S  rate actually deducted
     ls_out-base_amt = abs( <ls_wi>-wt_qsshh ).    " col P  magnitude
     ls_out-tds_amt  = abs( <ls_wi>-wt_qbshh ).    " col T  magnitude
+
+*   Col Z. The direction the magnitudes above no longer carry. Taken
+*   off the base amount, which is non-zero on every surviving row -
+*   build contract D5 keeps a row when base OR tax is non-zero, so the
+*   tax amount is used only where the base itself is zero.
+    IF <ls_wi>-wt_qsshh < 0
+    OR ( <ls_wi>-wt_qsshh = 0 AND <ls_wi>-wt_qbshh < 0 ).
+      ls_out-drcr = gc_shkzg_credit.              " H  invoice
+    ELSE.
+      ls_out-drcr = gc_shkzg_debit.               " S  down payment, payment, cancellation
+    ENDIF.
 *EOC By Arnav on 07/09/26
 
 *   Company code - country, currency, chart of accounts.
@@ -2356,6 +2367,9 @@ FORM display_alv.
       PERFORM txt USING lo_cols 'THRESHOLD' 'Threshold Applicability (Y/N)'.
       PERFORM txt USING lo_cols 'CERT_NO'   'Certificate Number'.
       PERFORM txt USING lo_cols 'CUM_AMT'   'Cumulative Amount as of now for FY'.
+*BOC By Arnav on 07/09/26
+      PERFORM txt USING lo_cols 'DRCR'      'Debit/Credit'.
+*EOC By Arnav on 07/09/26
 
 *     Company code currency of the row. Carried in the structure but
 *     neither shown nor linked to the amount columns - the contract is

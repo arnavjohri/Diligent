@@ -86,6 +86,18 @@ TYPES: BEGIN OF ty_output,
          threshold TYPE fiwtin_tan_exem-fiwtin_exem_thr," col W  " ASSUMPTION: threshold shown as an amount, not as Y/N
          cert_no   TYPE fiwtin_tan_exem-wt_exnr,        " col X  exemption certificate number
          cum_amt   TYPE fiwtin_acc_exem-acc_amt,        " col Y  accumulated base amount held by the exemption table
+*BOC By Arnav on 07/09/26
+*        Col Z. Columns P and T are now reported as magnitudes, and the
+*        sign they used to carry was the only thing on the report that
+*        said which way the vendor was posted. This restores it as its
+*        own column instead of leaving it to be inferred from the
+*        document number range, which does not hold - 1700000000 is a
+*        17* document posted the other way.
+*        Derived from the RAW amount before ABS( ), not from a second
+*        read of BSEG-SHKZG: the raw sign is by definition exactly what
+*        was lost, so the column cannot disagree with the amount.
+         drcr      TYPE bseg-shkzg,                     " col Z  S = vendor debited, H = vendor credited
+*EOC By Arnav on 07/09/26
          waers     TYPE t001-waers,                     " hidden - company code currency of the row, see DISPLAY_ALV
        END OF ty_output,
        tt_output TYPE STANDARD TABLE OF ty_output WITH DEFAULT KEY.
@@ -545,6 +557,15 @@ CONSTANTS: gc_koart_vendor TYPE bseg-koart  VALUE 'K',      " account type vendo
            gc_ktosl_bsx    TYPE t030-ktosl  VALUE 'BSX',    " transaction key of the inventory posting
            gc_awtyp_rmrp   TYPE bkpf-awtyp  VALUE 'RMRP',   " reference transaction of a logistics invoice
            gc_x            TYPE c LENGTH 1  VALUE 'X'.      " generic tick, e.g. the MBEW deletion flag
+
+*BOC By Arnav on 07/09/26
+*&---------------------------------------------------------------------*
+*& Debit / credit indicator for column Z. The SAP values, so the column
+*& reads the way every other FI report does.
+*&---------------------------------------------------------------------*
+CONSTANTS: gc_shkzg_debit  TYPE bseg-shkzg VALUE 'S',       " vendor debited
+           gc_shkzg_credit TYPE bseg-shkzg VALUE 'H'.       " vendor credited
+*EOC By Arnav on 07/09/26
 
 *BOC By Arnav on 07/09/26
 *&---------------------------------------------------------------------*
