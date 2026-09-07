@@ -543,6 +543,25 @@ CONSTANTS: gc_koart_vendor TYPE bseg-koart  VALUE 'K',      " account type vendo
            gc_awtyp_rmrp   TYPE bkpf-awtyp  VALUE 'RMRP',   " reference transaction of a logistics invoice
            gc_x            TYPE c LENGTH 1  VALUE 'X'.      " generic tick, e.g. the MBEW deletion flag
 
+*BOC By Arnav on 07/09/26
+*&---------------------------------------------------------------------*
+*& Withholding tax item statuses that are NOT reportable - the values of
+*& I_WITHHOLDINGTAXITEM-WHLDGTAXITEMSTATUS excluded on instruction of
+*& 07/09/26. Global rather than local because TWO reads apply them: the
+*& driver in FETCH_WT_ITEMS and the section code F4 in F4_SECTION_CODE.
+*& If the F4 offered a code whose only items are excluded ones, it would
+*& offer a code that returns no rows.
+*&
+*& " ASSUMPTION: WHLDGTAXITEMSTATUS is a CHAR 1 element of the view. If
+*& the view declares it longer, widen LENGTH here - these four are the
+*& only place the codes are written down.
+*&---------------------------------------------------------------------*
+CONSTANTS: gc_wtstat_v TYPE c LENGTH 1  VALUE 'V',
+           gc_wtstat_d TYPE c LENGTH 1  VALUE 'D',
+           gc_wtstat_m TYPE c LENGTH 1  VALUE 'M',
+           gc_wtstat_s TYPE c LENGTH 1  VALUE 'S'.
+*EOC By Arnav on 07/09/26
+
 *&---------------------------------------------------------------------*
 *& Offsets used to cut the logistics invoice number and year out of
 *& BKPF-AWKEY. AWKEY is CHAR 20: positions 0-9 hold the invoice number,

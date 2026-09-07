@@ -229,9 +229,28 @@ ENDFORM.
 *& F4 for the Section Code select-option.
 *&
 *& BSEG-SECCO brings no value help of its own, so the list is built from
-*& the section codes that ACTUALLY OCCUR in the documents the user is
-*& about to report on. That is more use than a master list: every code it
-*& offers will return rows.
+*& the data. It must be built from the SAME place the filter is applied,
+*& or the F4 offers codes the report cannot return.
+*&
+*& Where the filter is applied: the section code is taken off the VENDOR
+*& line - KOART 'K' with a non-blank LIFNR - of a document that carries a
+*& reportable withholding tax item, and only then compared with S_SECCO
+*& (see the IF S_SECCO IS NOT INITIAL block in FETCH_WT_ITEMS, which
+*& tests LS_VLINE-SECCO from READ_VENDOR_LINE).
+*&
+*& So this SELECT joins BSEG to I_WITHHOLDINGTAXITEM and repeats all
+*& three conditions. A plain DISTINCT over BSEG does NOT work: it returns
+*& the section code of every GL, tax and customer line, and of every
+*& document with no withholding tax at all, so the list fills up with
+*& codes the report will never show. That was the first version's defect.
+*&
+*& Still wider than the report by two hairs, both of which can only add a
+*& code, never hide one:
+*&   - the posting date is not applied. It lives on the header and would
+*&     need a third join plus a date conversion off the screen; the fiscal
+*&     year already bounds the read.
+*&   - where a document holds two vendor lines with different section
+*&     codes, READ_VENDOR_LINE picks one and this offers both.
 *&
 *& Company code and fiscal year are read off the SCREEN with
 *& DYNP_VALUES_READ, not from S_BUKRS / P_GJAHR. At ON VALUE-REQUEST the
@@ -261,7 +280,8 @@ FORM f4_section_code USING pv_field TYPE clike.
              lc_bt     TYPE c LENGTH 2  VALUE 'BT',
 *            Typed as the column itself, so the comparison below needs
 *            no implicit length conversion.
-             lc_nosecc TYPE bseg-secco  VALUE IS INITIAL.
+             lc_nosecc TYPE bseg-secco  VALUE IS INITIAL,
+             lc_nolifn TYPE bseg-lifnr  VALUE IS INITIAL.
 
   DATA: lt_dynp  TYPE STANDARD TABLE OF dynpread    WITH DEFAULT KEY,
         lt_val   TYPE STANDARD TABLE OF ty_f4       WITH DEFAULT KEY,
@@ -328,19 +348,28 @@ FORM f4_section_code USING pv_field TYPE clike.
     <ls_rng>-high   = lv_high.
   ENDIF.
 
-* Bounded by company code and fiscal year, and DISTINCT on one CHAR 4
-* column, so what comes back is a handful of rows however large the
+* Vendor lines of documents that carry a reportable withholding tax
+* item, in the company code and fiscal year on the screen. DISTINCT on
+* one CHAR 4 column, so a handful of rows come back however large the
 * company code is.
-  SELECT DISTINCT secco
-    FROM bseg
-    WHERE bukrs IN @lr_bukrs
-      AND gjahr =  @lv_gjahr
-      AND secco <> @lc_nosecc
-    ORDER BY secco
+  SELECT DISTINCT b~secco
+    FROM bseg AS b
+    INNER JOIN i_withholdingtaxitem AS w
+            ON  w~companycode        = b~bukrs
+            AND w~accountingdocument = b~belnr
+            AND w~fiscalyear         = b~gjahr
+    WHERE b~bukrs IN @lr_bukrs
+      AND b~gjahr =  @lv_gjahr
+      AND b~koart =  @gc_koart_vendor
+      AND b~lifnr <> @lc_nolifn
+      AND b~secco <> @lc_nosecc
+      AND w~whldgtaxitemstatus NOT IN ( @gc_wtstat_v, @gc_wtstat_d,
+                                        @gc_wtstat_m, @gc_wtstat_s )
+    ORDER BY b~secco
     INTO TABLE @lt_val.
 
   IF lt_val IS INITIAL.
-    MESSAGE 'No section code is posted in this company code and year' TYPE 'S'.
+    MESSAGE 'No TDS document in this company code and year carries a section code' TYPE 'S'.
     RETURN.
   ENDIF.
 
@@ -415,20 +444,6 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM fetch_wt_items.
 
-*BOC By Arnav on 07/09/26
-* Withholding tax item statuses that are NOT reportable. These are the
-* values of I_WITHHOLDINGTAXITEM-WHLDGTAXITEMSTATUS and are excluded in
-* the driver SELECT below, so nothing downstream ever sees such an item.
-*
-* " ASSUMPTION: WHLDGTAXITEMSTATUS is a CHAR 1 element of the view. If
-* the view declares it longer, widen LENGTH here - the driver SELECT is
-* the only place these four constants are used.
-  CONSTANTS: lc_stat_v TYPE c LENGTH 1 VALUE 'V',
-             lc_stat_d TYPE c LENGTH 1 VALUE 'D',
-             lc_stat_m TYPE c LENGTH 1 VALUE 'M',
-             lc_stat_s TYPE c LENGTH 1 VALUE 'S'.
-*EOC By Arnav on 07/09/26
-
   CLEAR: gt_witem, gt_bkpf, gt_bseg, gt_dockey, gv_nobseg.
 
 * Driver. FS [B2]: inner join the two views, apply the mandatory filter
@@ -469,8 +484,8 @@ FORM fetch_wt_items.
 *     itself, on the inner-joined side, so a NULL can only come from a
 *     CASE or a left outer join inside the view - check the view's own
 *     definition in ADT if a document you expect goes missing.
-      AND w~whldgtaxitemstatus  NOT IN ( @lc_stat_v, @lc_stat_d,
-                                         @lc_stat_m, @lc_stat_s )
+      AND w~whldgtaxitemstatus  NOT IN ( @gc_wtstat_v, @gc_wtstat_d,
+                                         @gc_wtstat_m, @gc_wtstat_s )
 *EOC By Arnav on 07/09/26
     INTO TABLE @gt_witem.
 
