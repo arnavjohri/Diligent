@@ -409,3 +409,30 @@ Two things worth remembering:
   - Tonnage now joins its own month rather than sitting in a block of its own.
 
 TR: not yet · Files: `kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap`
+
+## 03/09/26 — AUTHORITY CHECKS DISABLED FOR QAS TESTING — MUST BE RESTORED
+
+**This is a temporary change and it must not go past QAS initial testing.**
+
+Both methods in `ZCL_PP_FCST_UTIL` now return `abap_true` immediately:
+
+  CHECK_AUTHORITY          AUTHORITY-CHECK OBJECT 'ZPP_FCST' commented out
+  CHECK_LEGACY_AUTHORITY   the ZPPT_FCST_CFG / TVARVC reads commented out
+
+Done at source, not at the call sites. Six callers go through these two methods —
+`ZCL_PP_FCST=>SAVE`, `ZPP_FORECAST` (AT SELECTION-SCREEN, SAVE_ALL, DISPLAY),
+`ZPP_FORECAST_REPORT` (AT SELECTION-SCREEN) and `ZPP_FORECAST_UPLOAD` (CHECK_MARC).
+All six keep their code exactly as QA has it, so nothing has to be unpicked later and
+no call site can be missed.
+
+TO RESTORE: in each method delete the `RETURN` and uncomment the block beneath it.
+Two edits, one object, nothing else changes.
+
+Note for the record: these were NOT previously commented out. `ZCL_PP_FCST_UTIL` was
+byte-identical to the QA copy until now, and the checks were active in QA - the pasted
+QA source shows `CHECK_MARC` calling `CHECK_AUTHORITY` with ACTVT 02.
+
+`ZCL_PP_FCST_UTIL` is therefore now a changed object and is in ZPP_FORECAST1.zip, which
+grows from 15 files to 17.
+
+TR: not yet · Files: `kpmg/zpp_forecast_v2/src/zcl_pp_fcst_util.clas.abap`

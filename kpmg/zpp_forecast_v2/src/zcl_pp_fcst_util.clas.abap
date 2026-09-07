@@ -316,34 +316,65 @@ CLASS zcl_pp_fcst_util IMPLEMENTATION.
 
   METHOD check_authority.
 
+*BOC By Arnav on 03/09/26
+*=====================================================================*
+* AUTHORITY CHECK DISABLED FOR QAS INITIAL TESTING - MUST BE RESTORED
+* BEFORE THE OBJECT GOES ANY FURTHER.
+*
+* Auth object ZPP_FCST is not yet maintained in QAS, so every plant
+* would be refused and nothing could be tested. Switched off HERE, in
+* the one method every caller goes through, rather than at the six call
+* sites in ZCL_PP_FCST, ZPP_FORECAST, ZPP_FORECAST_REPORT and
+* ZPP_FORECAST_UPLOAD - those keep their code intact and are unchanged.
+*
+* TO RESTORE: delete the RETURN below and uncomment the AUTHORITY-CHECK.
+* Nothing else has to change.
+*=====================================================================*
     rv_ok = abap_true.
+    RETURN.
 
-    AUTHORITY-CHECK OBJECT 'ZPP_FCST'
-      ID 'WERKS' FIELD iv_werks
-      ID 'ACTVT' FIELD iv_actvt.
-
-    IF sy-subrc <> 0.
-      rv_ok = abap_false.
-    ENDIF.
+*   AUTHORITY-CHECK OBJECT 'ZPP_FCST'
+*     ID 'WERKS' FIELD iv_werks
+*     ID 'ACTVT' FIELD iv_actvt.
+*
+*   IF sy-subrc <> 0.
+*     rv_ok = abap_false.
+*   ENDIF.
+*EOC By Arnav on 03/09/26
 
   ENDMETHOD.
 
 
   METHOD check_legacy_authority.
 
-    " The TVARVC variable name is held in configuration rather than
-    " hardcoded, so it can be changed without a transport.
-    SELECT SINGLE tvarv_legacy FROM zppt_fcst_cfg INTO @DATA(lv_name)
-      WHERE werks = @iv_werks.
+*BOC By Arnav on 03/09/26
+*=====================================================================*
+* LEGACY AUTHORITY DISABLED FOR QAS INITIAL TESTING - RESTORE BEFORE
+* THE OBJECT GOES ANY FURTHER.
+*
+* Without this the Legacy Data checkbox is refused with message 011 for
+* every user, because the TVARVC list of permitted users does not exist
+* in QAS yet.
+*
+* TO RESTORE: delete the RETURN below and uncomment the two SELECTs.
+*=====================================================================*
+    rv_ok = abap_true.
+    RETURN.
 
-    IF sy-subrc <> 0 OR lv_name IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE @abap_true FROM tvarvc INTO @rv_ok
-      WHERE name = @lv_name
-        AND type = 'S'
-        AND low  = @sy-uname.
+*   " The TVARVC variable name is held in configuration rather than
+*   " hardcoded, so it can be changed without a transport.
+*   SELECT SINGLE tvarv_legacy FROM zppt_fcst_cfg INTO @DATA(lv_name)
+*     WHERE werks = @iv_werks.
+*
+*   IF sy-subrc <> 0 OR lv_name IS INITIAL.
+*     RETURN.
+*   ENDIF.
+*
+*   SELECT SINGLE @abap_true FROM tvarvc INTO @rv_ok
+*     WHERE name = @lv_name
+*       AND type = 'S'
+*       AND low  = @sy-uname.
+*EOC By Arnav on 03/09/26
 
   ENDMETHOD.
 
