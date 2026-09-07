@@ -80,13 +80,19 @@ Confirmed across all 93 rows of the 07/09/26 run: every positive row is a vendor
 posting. `1700000000` is **negative** although it is a `17*` document, which rules out the
 number range as the driver.
 
-**Decision taken 07/09/26 (Arnav):** columns P and T report `abs( )` magnitudes. A flat
-`x -1` was rejected — it turns invoices positive but down payments negative, and both are
-real deductions.
+**Decision taken 07/09/26 (Arnav), final:** columns P and T are left **as stored** — the
+signs are the SAP debit/credit convention (debit positive, credit negative), the same as
+FBL1N and FAGLL03. A new **column Z "Debit/Credit"** (`S` / `H`) states the direction
+explicitly so a negative amount is not mistaken for a defect.
 
-**What this hands to Q6, unchanged:** with `abs( )`, a reversal ADDS rather than nets off.
-On that run: 5 rows, 400,100.00 of base and 2.00 of tax (four carry code `C8` at
-`0.0000`). If reversed documents should net off or be excluded, the sign must come from a
+Two rules were tried and reverted the same day, recorded so they are not re-tried:
+`x -1` turns invoices positive but down payments negative, and both are real deductions;
+`abs( )` is uniform but destroys the convention and makes a reversal add instead of net
+off.
+
+**What still sits with Q6:** whether reversed / cancelled documents belong on the report
+at all. With the signs restored they at least net off correctly — the 5 rows on that run
+(`5110000004/5/6`, `5110000018`, `5110000012`) offset their originals. If reversed documents should net off or be excluded, the sign must come from a
 reversal indicator on `BKPF` — **not** from the `MR8M` text visible in Nature of Payment,
 which is `BSEG-SGTXT` typed by hand; `5110000012` is a reversal that does not carry it.
 

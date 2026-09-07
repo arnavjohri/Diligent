@@ -815,10 +815,13 @@ FORM build_output.
     ls_out-belnr    = <ls_wi>-belnr.              " col B
     ls_out-lifnr    = <ls_wi>-wt_acco.            " col C
 *BOC By Arnav on 07/09/26
-* Columns P and T are reported as MAGNITUDES.
+* Columns P and T carry the SAP debit/credit convention: a debit posting
+* is positive, a credit posting is negative. That is how FBL1N, FAGLL03
+* and every other FI line item report reads, so the report follows it.
 *
-* WITH_ITEM stores the base and tax with the sign of the VENDOR LINE the
-* tax was calculated on - BSEG-SHKZG, not the document type:
+* WITH_ITEM already stores the amounts that way, with the sign of the
+* VENDOR LINE the tax was calculated on - BSEG-SHKZG, not the document
+* type:
 *   vendor CREDITED (invoice, posting key 31)          -> negative
 *   vendor DEBITED  (down payment key 29 / SGL J,
 *                    payment, invoice cancellation)    -> positive
@@ -826,39 +829,32 @@ FORM build_output.
 * 90.00-) and 1500000010 (key 29 SGL J, base 10,000.00 and tax 2,000.00),
 * and consistent across all 93 rows of that run: every positive row is a
 * vendor-debit posting, and 1700000000 is negative despite being a 17*
-* document, which rules out the number range as the driver.
+* document, which rules out the number range as the driver. Note also
+* that the TDS Payable line is a CREDIT in BOTH documents - so the sign
+* does not follow the tax line, only the vendor line.
 *
-* Neither raw signs nor a flat x -1 is reportable:
-*   raw    - invoices and down payments read opposite ways although both
-*            ARE deductions, which is the defect being fixed;
-*   x -1   - would turn invoices positive but down payments negative.
-* ABS( ) is the only rule that makes every deduction read the same way,
-* which is what a clause 34(a) disclosure needs.
-*
-* " ASSUMPTION: the cost of ABS( ) is that a REVERSAL adds instead of
-* subtracting - it is a vendor-debit posting too. On the 07/09/26 run
-* that is 5 rows (5110000004/5/6, 5110000018, 5110000012), 400,100.00 of
-* base and 2.00 of tax, because four of them carry code C8 at 0.0000.
-* Whether reversed documents belong on the report at all is QUERIES Q6,
-* open with Ankita Parikh; ABS( ) does not decide it. If she wants them
-* to net off, the sign has to be driven off a reversal indicator on BKPF
-* rather than off the amount - note that the "MR8M" visible in Nature of
-* Payment is BSEG-SGTXT, free text somebody typed, and 5110000012 is a
-* reversal without it, so that text is NOT a usable marker.
-*
-* Columns W and Y are left alone - they come from the FIWTIN exemption
-* tables as positive accumulations already.
-*    ls_out-base_amt = <ls_wi>-wt_qsshh.           " col P  company code currency
-*    ls_out-tds_amt  = <ls_wi>-wt_qbshh.           " col T  company code currency
+* So the values are passed through untouched. Two rules were tried on
+* 07/09/26 and both are wrong here, recorded so they are not re-tried:
+*   x -1    - turns invoices positive but down payments negative, and
+*             both are genuine deductions;
+*   abs( )  - uniform, but it destroys the convention, and a reversal
+*             then ADDS instead of netting off. It was applied for part
+*             of 07/09/26 and reverted the same day.
+* Column Z below states the direction in words of its own, so a negative
+* amount cannot be mistaken for a defect by someone reading the list.
+*    ls_out-base_amt = abs( <ls_wi>-wt_qsshh ).    " reverted 07/09/26
+*    ls_out-tds_amt  = abs( <ls_wi>-wt_qbshh ).    " reverted 07/09/26
     ls_out-taxcode  = <ls_wi>-wt_withcd.          " col Q
     ls_out-rate_ded = <ls_wi>-qsatz.              " col S  rate actually deducted
-    ls_out-base_amt = abs( <ls_wi>-wt_qsshh ).    " col P  magnitude
-    ls_out-tds_amt  = abs( <ls_wi>-wt_qbshh ).    " col T  magnitude
+    ls_out-base_amt = <ls_wi>-wt_qsshh.           " col P  company code currency
+    ls_out-tds_amt  = <ls_wi>-wt_qbshh.           " col T  company code currency
 
-*   Col Z. The direction the magnitudes above no longer carry. Taken
-*   off the base amount, which is non-zero on every surviving row -
-*   build contract D5 keeps a row when base OR tax is non-zero, so the
-*   tax amount is used only where the base itself is zero.
+*   Col Z. The direction, stated rather than left to be read off the
+*   sign. Taken from the same fields the amounts come from, so the
+*   column and the amount beside it can never disagree. The base is
+*   non-zero on every surviving row - build contract D5 keeps a row when
+*   base OR tax is non-zero - so the tax amount is consulted only where
+*   the base itself is zero.
     IF <ls_wi>-wt_qsshh < 0
     OR ( <ls_wi>-wt_qsshh = 0 AND <ls_wi>-wt_qbshh < 0 ).
       ls_out-drcr = gc_shkzg_credit.              " H  invoice
