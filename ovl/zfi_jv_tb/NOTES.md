@@ -6,7 +6,8 @@ Users export the ALV to an Excel template workbook whose `RawData` sheet feeds t
 BS/PL summary sheets.
 
 ## Shipping method
-Paste-only for now. Single report, no includes (`REPORT` statement in the supplied
+Paste-only for now. Corrected copy: `ovl/zfi_jv_tb/ZFI_JV_TB.abap`
+(loose file at folder root; overwritten by each fix, git history keeps earlier ones). Single report, no includes (`REPORT` statement in the supplied
 download reads `zzjvtb_test`, so the download may have been taken from a test copy —
 **confirm the real object name before any edit**).
 
@@ -34,6 +35,12 @@ and vice versa.
 That is the "73 venture codes" list the business quotes; the posted-totals view is not.
 
 ## Gotchas
+- **Ledger.** All reads of `JV_JVTO1_ACDOCA_4A_4C_SWITCH` were `RLDNR = '4A'`. JV data on
+  this landscape spans 4A **and** 4C (`ZOCV_OVL_TRANSFER_F01` reads both). Reading 4A alone
+  drops the carry-forward (`HSLVT`) → blank opening balance. Corrected copy uses
+  `IN ( '4A', '4C' )` on the totals view only; the `JV_JVSO1_ACDOCA` line-item reads stay
+  on 4A. Whether 4A/4C are split or parallel ledgers is unconfirmed — see ISSUES #2.
+- Opening balance is `HSLVT` (`KSLVT` for USD) from the totals view and nothing else.
 - `break abapuser02.` is left in `get_data` and in `disp_data` — hard-coded user
   breakpoint in a productive report.
 - In the single-currency data-fill loop the `READ TABLE lt_fieldcat ... WITH KEY coltext`

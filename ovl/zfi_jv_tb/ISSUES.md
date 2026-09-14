@@ -3,6 +3,7 @@
 | # | Date | Issue | Cause | Fix | TR | Status |
 |---|------|-------|-------|-----|----|--------|
 | 1 | 26/08/26 | Q1 FY27 run: last venture **VN2012** not populated in the Excel output (`RawData` sheet). Reported by Gitesh S Lad, Corporate Accounts. | **Still open.** The Excel-template theory was wrong — see "Retraction" below. Current lead: the export is truncated at a fixed `BAL_CLO<k>`, consistent with a saved ALV layout hiding every venture field above the number the layout was saved with. | Not yet determined. | n/a | **RETRACTED 27/08/26 — see below. Reopened.** |
+| 2 | 13/09/26 | Opening balance blank in every venture column since the program was moved from `JVTO1`/`JVSO1` to the ACDOCA compatibility views. Dr/Cr still correct. | Opening balance is `HSLVT` from `JV_JVTO1_ACDOCA_4A_4C_SWITCH` and nothing else (all 8 write sites traced). The view is read with `RLDNR = '4A'`; JV data on this landscape spans ledgers 4A **and** 4C (`ZOCV_OVL_TRANSFER_F01` reads both, and the view is named `_4A_4C_SWITCH`), so the carry-forward rows are filtered out. Second, independent defect: the `Index Based USD` branch was converted as `SUM( hslvt )` where the original was `SUM( kslvt ) AS hslvt` — USD opening read the INR carry-forward. | `ovl/zfi_jv_tb/ZFI_JV_TB.abap`: every read of the totals view (venture list in `AT SELECTION-SCREEN`, account list and the three balance reads in `get_data`) now takes `RLDNR IN ( '4A', '4C' )`; USD branch restored to `SUM( kslvt ) AS hslvt`. Tag `SAP_ABAP 14/09/26`. `JV_JVSO1_ACDOCA` reads left on 4A. **Unverified assumption in code:** 4A/4C are split, not parallel — if parallel the opening doubles and the fix becomes 4C-only. Arnav to confirm with SE16 before paste. | n/a | **Proposed — awaiting SE16 check and a fresh download** |
 
 ## How it was localised (26–27/08/26)
 
@@ -71,3 +72,18 @@ ever meant the Excel file in the export dialog.
 
 The widened template in `template/` is harmless but does nothing. Do not ship it.
 The draft mail in `MAIL-2026-08-27-gitesh.md` must not be sent.
+
+## Issue 2 — notes (13–14/09/26)
+
+- Base for the corrected file is the 26/08 download. It does **not** contain the ATC change
+  dated 08.08.2026 (`SKA1` → `I_GLAccountInChartOfAccounts`, in
+  `ovl/atc/corrections/ZFI_JV_TB.abap`). Two divergent versions exist; which one is live is
+  unconfirmed. **Paste the six change sites, not the whole file**, unless the live program is
+  confirmed to match 26/08 — a whole-file paste would silently revert the ATC change.
+- The 26/08 repo copy carries `ls_jvt-racctrjvnam` (missing space) at three `READ TABLE
+  lt_jvto1` lines in `set_data`. That does not activate, so it is a transcription defect in
+  the filed copy, not the live source. Restored in the corrected file without markers.
+- Not touched, deliberately: the `READ TABLE lt_jvto1` at those same three sites has no
+  `sy-subrc` check and the following `READ TABLE lt_ska1` keys off the possibly stale
+  `ls_jvto1-racct`. Real defect in the same path, separate from what was reported.
+- `break abapuser02.` ×4 still in place (see "Separate defects" above).
