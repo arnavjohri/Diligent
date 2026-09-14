@@ -26,7 +26,10 @@ Do **not** build a ZIP for:
 - SE54 event routines, or any fragment-level patch
 
 Paste-only in this repo today: `zmb5b/`, `zmmims/`, `zmm_me35k_release/`, `zsd_scheme/`,
-`zpp_forecast/`, `zmm_po_budget_deferred/`.
+`zpp_forecast/`, `zmm_po_budget_deferred/`. `zfi_tds_cl34/` is screen-free and carries
+`src/` + `.abapgit.xml`, but its hand-written ZIP never imported (four `XML_FORMAT_ERROR`
+dumps, see its `NOTES.md`) — it shipped by paste, and so will its next fix unless a
+serialised-from-system ZIP exists.
 
 **If the object is paste-only:** commit the source, then produce a paste sheet anchored
 on FORM / MODULE / METHOD names — never on line numbers, which are snapshot-bound.
@@ -37,10 +40,16 @@ Skip steps 2 and 5 entirely and say why.
 `.abapgit.xml` must sit at the **ZIP root** with `src/` beneath it — abapGit reads the
 descriptor from the archive root, never from a subfolder.
 
-There is **no `zip` binary on this machine.** Use PowerShell:
+On Arnav's Windows laptop there is **no `zip` binary** — use PowerShell:
 
 ```powershell
 Compress-Archive -Path "<object>\.abapgit.xml","<object>\src" -DestinationPath "<OBJECT>.zip" -Force
+```
+
+In a Linux / remote Claude Code session `zip` is available:
+
+```bash
+cd <object> && zip -r ../<OBJECT>.zip .abapgit.xml src && cd - >/dev/null
 ```
 
 If `.abapgit.xml` is missing, model it on `ztest_t001/.abapgit.xml`, with the correct
@@ -51,7 +60,9 @@ and every changed file is present.
 
 ## 3. Commit and push
 
-Branch per the layout in `CLAUDE.md` — delivered code goes to `claude`.
+Single branch — everything lands on `main` (`CLAUDE.md`). If the session started on
+another branch, merge it into `main` and push that. Use `./scripts/sync.sh "<message>"`:
+commit, pull, push in one go.
 
 Commit message: object, issue in one line, reporter. Example:
 
@@ -80,6 +91,6 @@ generation, SNRO, SU21, SCDO. If the fix touched any of those, list the manual s
 ## Never
 
 - Never release a transport.
-- Never push to `main`.
+- Never leave the fix off `main` — a commit on a session branch alone is not shipped.
 - Never import anything yourself. You have no connection to that system.
 - Never build a ZIP for a paste-only object. Re-read step 1b if unsure.

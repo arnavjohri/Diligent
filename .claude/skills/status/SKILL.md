@@ -35,8 +35,9 @@ same work must not be claimed in two reports.
 
 ## 2. Collect the evidence
 
-**Git — all branches.** Work lands on `claude`, `documents` and `draft-code`, not just
-`main`. A log of `main` alone will show almost nothing and read as a dead week.
+**Git.** Single branch — everything is on `main` (`CLAUDE.md`). The old `claude`,
+`documents` and `draft-code` branches were merged in and no longer exist on origin, so
+`--all` is harmless but adds nothing.
 
 ```bash
 git log --all --author="Arnav" --since=<start> --until=<end> \
@@ -62,20 +63,22 @@ Reconcile the three and keep the mismatches visible:
 
 | Project | Belongs to it |
 |---|---|
-| **OVL** | ZPRA*, ZPP_*, ZMM_ME35K, ZMMIMS, ZSD_*, ATC remediation, Mock-2/ECC work |
-| **KPMG** | ZMM_VEND_UPLOAD, ZMB5B / ZRM07MLBD, FSD and TS documents, CR/FS/BRD items |
+| **OVL** | anything under `ovl/` — ZPRA DPR, ZFI_JV_TB, ZFI_CP_MASS_VEN_PAY, ZBNK_APP1/2, ZAA_IMPAIRMENTLOSS, CJ88/FLQ, ATC remediation, JV cash call, OCV transfer, ZF01 exchange rate |
+| **KPMG** | anything under `kpmg/` — ZFI_TDS_CL34, ZSD_EXC_APPROVAL (WRICEF 141), ZPP_FORECAST / v2, ZMM_PO_BUDGET, ZMM_ME35K, ZMMIMS, ZSD_SCHEME, ZMM_VEND_UPLOAD, ZMB5B / ZRM07MLBD, FSD/TS documents |
+| **GAIL / MWC / RWS** | `gail/`, `mwc/`, `rws/` — their own heading, only if the window touches them |
 
-If an item's project is not obvious, put it under **Other** and say it was unclear. Do
-not assign it to a group to make that group look fuller.
+The top-level folder of the changed path decides the project. A commit that touches no
+client folder (`scripts/`, `CLAUDE.md`, `.claude/skills/`) goes under **Repo / tooling**.
+Never move an item to a group to make that group look fuller.
 
 ## 4. Classify each item — the wording matters
 
 | State | Evidence | Say |
 |---|---|---|
-| Delivered | commit on `claude` + ISSUES.md entry with TR filled | "delivered, TR \<n\>" |
+| Delivered | commit on `main` + ISSUES.md entry with TR filled | "delivered, TR \<n\>" |
 | Fix ready | commit exists, TR blank in ISSUES.md | "fix ready for verification" |
 | Packaged | ZIP built, not imported | "packaged; import pending" |
-| Analysis / doc | commit on `documents` or `draft-code` | "TS drafted", "FS reviewed" |
+| Analysis / doc | commit that touches only `docs/`, `*.md` or `.docx` files | "TS drafted", "FS reviewed" |
 | In flight | open in INBOX.md, no commit | "in progress" — In flight section only |
 
 The blank TR is the tell. `/ship-fix` leaves it blank until Arnav fills it in after
