@@ -23,7 +23,8 @@ mapping this file does not spell out.
 | `ovl/atc/AUDIT-2026-08-23.md` + `AUDIT-detail-2026-08-23.md` | Rule audit of the 51 corrected OVL objects: 433 findings, 46 expected activation failures. | Current, machine-generated, **candidates for review** — the auditor reads source, it does not compile. |
 | `ovl/atc/corrections/ONGC_abapgit/UPLOAD_PROCESS.md` | How the 51 objects go back into SAP (export → overlay → import, per package). | Current. |
 | `CLAUDE.md` (repo root) | Shared marker / correction / delivery rules for all work, not just ATC. | Authoritative; the skill adds to it, never overrides it — except the author tag (§2). |
-| memory `atc-ovl-project-context.md`, `atc-knowledge-base-files.md` | Project identity, and where the KB lives. | Current. |
+| `ovl/atc/kb/atc-ovl-project-context.md` | Project identity. Repo copy of the laptop memory file of the same name (same content). | Current. |
+| `ovl/atc/kb/atc-knowledge-base-files.md` | Where the KB lives. Repo copy of the laptop memory file of the same name (same content). | Current. |
 
 The KB and handoff were originally read from `C:\Users\ArnavJohri\Downloads\`; copies now
 live in `ovl/atc/kb/` so they survive the machine. The KB blows the Read token cap if read

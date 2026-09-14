@@ -150,10 +150,12 @@ Drafting is fine; sending stays manual.
 ## Release constraints
 
 This landscape is an older S/4 release. Before writing CDS or RAP, read
-`~/.claude/projects/.../memory/sap-release-cds-constraints.md` — it records confirmed
-failures for `year()`/`month()`, INT→NUMC casts, `@Semantics.*` in view entities,
-`@Analytics.query` in OData bindings, key contiguity, and unmanaged-RAP handler placement.
-Do not re-derive these; they were established by activation failures on the real system.
+`ovl/zpra_dpr/docs/sap-release-cds-constraints.md` (repo copy; the laptop memory file
+`~/.claude/projects/.../memory/sap-release-cds-constraints.md` is the same content, and a
+remote session cannot see it) — it records confirmed failures for `year()`/`month()`,
+INT→NUMC casts, `@Semantics.*` in view entities, `@Analytics.query` in OData bindings, key
+contiguity, and unmanaged-RAP handler placement. Do not re-derive these; they were
+established by activation failures on the real system (the ZPRA DPR RAP build on OCQ).
 
 ## Repository layout
 

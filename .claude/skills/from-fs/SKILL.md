@@ -14,10 +14,11 @@ Read the FS end to end before anything else. `.doc`/`.docx` are read directly wi
 `docx` skill — never ask Arnav to convert a file.
 
 Ask which system and client this is for. The constraints in
-`~/.claude/projects/.../memory/sap-release-cds-constraints.md` were established by real
-activation failures on OCQ (an older S/4). On a newer release, avoiding valid syntax makes
-the code worse. **When the release is unknown, apply every constraint** — code that avoids
-`year()` works everywhere, code that uses it fails on half his systems.
+`ovl/zpra_dpr/docs/sap-release-cds-constraints.md` (repo copy; the laptop memory file
+`~/.claude/projects/.../memory/sap-release-cds-constraints.md` is the same content) were
+established by real activation failures on OCQ (an older S/4). On a newer release, avoiding
+valid syntax makes the code worse. **When the release is unknown, apply every constraint**
+— code that avoids `year()` works everywhere, code that uses it fails on half his systems.
 
 Give Arnav this probe to run in SE38 on the **target** system and paste the output back:
 
