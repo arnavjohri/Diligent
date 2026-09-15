@@ -510,3 +510,26 @@ one-word fix if the functional side wants base-unit figures.
 
 Files: `src/zcl_pp_fcst.clas.abap` only (`zcl_pp_fcst_nocomments.abap` regenerated).
 TR: not yet transported.
+
+## 15/09/26 — pre-handover check before functional testing (static, no data in DEV)
+
+Re-read every 15/09 block in `ZCL_PP_FCST` and `ZPP_FORECAST` after the last paste:
+
+- Tonnage: every `Mn_TON` / `Mn_TON_VAL` / `M4_TON` / `M4_TON_VAL` append in `VISIBLE_COLUMNS`
+  sits under `IF p_tonn = abap_true`; `iv_tonnage = p_tonn` on all three generate calls.
+  The tonnage *values* are computed regardless and only hidden, and the quarterly save
+  stores them (03/09 behaviour, unchanged).
+- Price: `READ_PRICES` called after `BUILD_SCOPE` in quarterly and monthly; `ls_alv-price`
+  set before the quarterly split (so `Mn_VAL` / `Mn_TON_VAL` / `TOTAL_VAL` multiply by it)
+  and in the monthly row (`M4_VAL`, `M4_TON_VAL`). Values are final quantity × price
+  throughout. No duplicate inline declarations (each `lt_price` is in its own method).
+- Monthly history from billing, same as quarterly. Message 025 present in the msag.
+
+**Open, seen during the check — not part of any request:** `ZPP_FORECAST_REPORT` declares
+and heads a `PRICE` column (31/08) but never fills it. The quarterly save now stores `PRICE`
+on `ZPPT_FCST_QT`, so the report could read it back for quarterly rows; monthly rows have
+no stored price. Testers will see a blank Price column on the Final ALV until this is built.
+
+QAS setup the testers need: STVARV `ZPP_FORECAST_MTART` (TVARVC is client-specific — maintain
+it in QAS, it does not travel with the code), A923 condition records for the test materials,
+and the transport carrying message 025.
