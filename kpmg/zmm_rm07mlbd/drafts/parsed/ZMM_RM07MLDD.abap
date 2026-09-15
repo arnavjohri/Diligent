@@ -159,7 +159,7 @@ DATA: imcsdx TYPE mcsd_typ  OCCURS 0 WITH HEADER LINE.
 ** A&D IS-ADEC-SUB customer stock with vendor             "n_v_GA1551829
 TYPES: BEGIN OF mscd_typ,
          werks LIKE mscd-werks,
-*        LIFNR LIKE MSCD-LIFNR,"2686185
+*        LIFNR LIKE MSCD-LIFNR, "2686185
          matnr LIKE mscd-matnr,
          sobkz LIKE mscd-sobkz,
          cdlab LIKE mscd-cdlab,
@@ -175,7 +175,7 @@ TYPES: END OF cmscd_typ.
 ** A&D IS-ADEC-SUB sales order stock with vendor
 TYPES: BEGIN OF msfd_typ,
          werks LIKE msfd-werks,
-*        LIFNR LIKE MSFD-LIFNR,"2686185
+*        LIFNR LIKE MSFD-LIFNR, "2686185
          matnr LIKE msfd-matnr,
          sobkz LIKE msfd-sobkz,
          fdlab LIKE msfd-fdlab,
@@ -191,7 +191,7 @@ TYPES: END OF cmsfd_typ.
 ** A&D IS-ADEC-SUB project stock with vendor
 TYPES: BEGIN OF msrd_typ,
          werks LIKE msrd-werks,
-*         LIFNR LIKE MSRD-LIFNR,"2686185
+*         LIFNR LIKE MSRD-LIFNR, "2686185
          matnr LIKE msrd-matnr,
          sobkz LIKE msrd-sobkz,
          rdlab LIKE msrd-rdlab,
@@ -207,7 +207,7 @@ TYPES: END OF cmsrd_typ.
 ** A&D IS-ADEC-SUB vendor consignment / RTP stock with vendor
 TYPES: BEGIN OF msid_typ,
          werks LIKE msid-werks,
-*        LIFNR LIKE MSID-LIFNR,"2686185
+*        LIFNR LIKE MSID-LIFNR, "2686185
          matnr LIKE msid-matnr,
          sobkz LIKE msid-sobkz,
          idlab LIKE msid-idlab,
@@ -492,7 +492,7 @@ DATA: BEGIN OF imchb OCCURS 100,    "aktueller Chargenbestand
 DATA: /cwm/clabs LIKE mchb-/cwm/clabs,           "frei verwendbarer Chargenbestand
       /cwm/cumlm LIKE mchb-/cwm/cumlm,         "Umlagerungsbestand
       /cwm/cinsm LIKE mchb-/cwm/cinsm,         "Qualitätsprüfbestand
-      /cwm/ceinm LIKE mchb-/cwm/ceinm,         "nicht frei verwendbarerBestand
+      /cwm/ceinm LIKE mchb-/cwm/ceinm,         "nicht frei verwendbarer Bestand
       /cwm/cspem LIKE mchb-/cwm/cspem,         "gesperrter Bestand
       /cwm/cretm LIKE mchb-/cwm/cretm.         "gesperrter Bestand
 *ENHANCEMENT-POINT ehp605_rm07mldd_08 SPOTS es_rm07mlbd STATIC .
@@ -570,7 +570,7 @@ DATA: BEGIN OF bestand OCCURS 100,
         anfwert(09)   TYPE p    DECIMALS 2,                 "n497992
 
 *(DEL)  soll  like mseg-menge,                                     "XJD
-        soll(09)      TYPE p DECIMALS 3,"XJD
+        soll(09)      TYPE p DECIMALS 3, "XJD
 *(DEL)  haben like mseg-menge,                                     "XJD
         haben(09)     TYPE p DECIMALS 3,                               "XJD
         sollwert(09)  TYPE p    DECIMALS 2,                 "n497992
@@ -607,7 +607,7 @@ DATA: BEGIN OF bestand1 OCCURS 100,
         endwert(09)   TYPE p    DECIMALS 2,                 "n497992
         anfwert(09)   TYPE p    DECIMALS 2,                 "n497992
 *(DEL)  soll  like mseg-menge,                                     "XJD
-        soll(09)      TYPE p DECIMALS 3,"XJD
+        soll(09)      TYPE p DECIMALS 3, "XJD
 *(DEL)  haben like mseg-menge,                                     "XJD
         haben(09)     TYPE p DECIMALS 3,                               "XJD
         sollwert(09)  TYPE p    DECIMALS 2,                 "n497992

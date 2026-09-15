@@ -5547,7 +5547,7 @@ FORM check_matnr_pa_sumfl  CHANGING p_g_t_totals_flat LIKE g_t_totals_flat.
       AUTHORITY-CHECK OBJECT 'ZMB5B_NEW1' ID 'MTART' FIELD ls_mara-mtart ID 'ACTVT' FIELD '03'.
       IF sy-subrc <> 0.
         CLEAR: <ls>-waers,<ls>-anfwert,<ls>-waers ,<ls>-sollwert,<ls>-habenwert,<ls>-endwert,<ls>-color.
-**               <ls>-anfmenge , <ls>-soll , <ls>-haben , <ls>-endmenge, <ls>-meins.
+**               <ls>-anfmenge , <ls>-soll , <ls>-haben , <ls>-endmenge , <ls>-meins.
       ENDIF.
 
       "Adding Start by Rahul Vasita on 26.07.2024 18:49:47
@@ -5795,7 +5795,7 @@ FORM get_variant_tab .
     it_dat1[] = it_tableS[].
 
 
-    SELECT SINGLE name , low FROM tvarvc INTO @DATA(ls_path) WHERE name= 'ZMM_MB5B' AND type = 'P'.
+    SELECT SINGLE name , low FROM tvarvc INTO @DATA(ls_path) WHERE name = 'ZMM_MB5B' AND type = 'P'.
 
     CONCATENATE ls_path-low sy-datum+6(2) '.' sy-datum+4(2) '.' sy-datum+0(4) '.CSV' INTO f_path.
 
@@ -5906,7 +5906,7 @@ FORM get_variant_tab .
         EXCEPTIONS
           OTHERS          = 1.
       IF it_dat1[] IS NOT INITIAL.
-*FTP_R3_TO_SERVER:used to transfer the internal table data as a file toother system in the character mode."FOR NEFT FILE
+*FTP_R3_TO_SERVER:used to transfer the internal table data as a file to other system in the character mode."FOR NEFT FILE
         CALL FUNCTION 'FTP_R3_TO_SERVER'
           EXPORTING
             handle         = w_hdl

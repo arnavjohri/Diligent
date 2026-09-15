@@ -234,7 +234,7 @@ TYPES : BEGIN OF STYPE_MB5B_ADD,
 *         LSMNG    LIKE      MSEG-LSMNG,    " Menge in Mengeneinheit
 *         LSMEH    LIKE      MSEG-LSMEH,    " Mengeneinheit aus
 *
-* Excise duty fields - IS-OIL             "v_n_1337790
+* Excise duty fields - IS-OIL              "v_n_1337790
 *         OITAXFROM LIKE MSEG-OITAXFROM,     " Excise duty tax key for 'from' location
 *         OITAXTO   LIKE MSEG-OITAXTO,       " Excise duty tax key for 'to' location
 *         OIHANTYP  LIKE MSEG-OIHANTYP,      " Excise Duty Handling Type - Denotes Use of Material
@@ -245,8 +245,8 @@ TYPES : BEGIN OF STYPE_MB5B_ADD,
 *         OIOILCON2 LIKE MSEG-OIOILCON2,     " Oil content of a material as a percentage (2)
 *         OIFUTDT   LIKE MSEG-OIFUTDT,       " Future tax date
 *         OIFUTDT2  LIKE MSEG-OIFUTDT2,      " Future tax date 2
-*         OIUOMQT   LIKE MSEG-OIUOMQT,       " Base quantity for exciseduty rate (e.g.per 1 or 100 UoM)
-*         OITAXQT   LIKE MSEG-OITAXQT,       " Excise duty tax quantityin STBME
+*         OIUOMQT   LIKE MSEG-OIUOMQT,       " Base quantity for excise duty rate (e.g.per 1 or 100 UoM)
+*         OITAXQT   LIKE MSEG-OITAXQT,       " Excise duty tax quantity in STBME
 *         OIFUTQT   LIKE MSEG-OIFUTQT,       " Future tax quantity
 *         OIFUTQT2  LIKE MSEG-OIFUTQT2,      " Future tax quantity 2
 *         OITAXGRP2 LIKE MSEG-OITAXGRP2,     " Excise duty tax group for material(s) "^_n_1337790
