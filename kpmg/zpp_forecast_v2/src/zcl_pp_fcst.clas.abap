@@ -14,6 +14,9 @@ CLASS zcl_pp_fcst DEFINITION
 *"*   Monthly     MATDOC BWART 601   sum MATDOC-MENGE
 *"*   Old codes   MATDOC             sum MATDOC-MENGE   (all three modes)
 *"*   Legacy flag ZPPT_SLS_HIST      M01 to M12
+*"*   Since 15/09/26 monthly and its old codes read VBRK / VBRP like the
+*"*   other two modes (Arnav's call, deviates from the FS). READ_MATDOC
+*"*   and ZPPT_FCST_CFG-BWART are kept but no longer used.
 *"*
 *"* Formulae - see section 9 of 00_TECHNICAL_OBJECTS.md for the two places
 *"* where the document's prose and its worked example disagree.
@@ -803,6 +806,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *& Source is MATDOC movement 601, and the load factor is applied to the
 *& average BEFORE the max. See 9.1 - this is the reading that reproduces
 *& the document's own figure of 1,200 for product M2.
+*& Since 15/09/26 the source is billing (VBRP-FKIMG), the same as
+*& quarterly - see the note at the read below. The formula is unchanged.
 *&---------------------------------------------------------------------*
   METHOD generate_monthly.
 
@@ -857,13 +862,23 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr
-                          iv_from = lv_from iv_to = lv_to ).
+*   Monthly reads the SAME source as quarterly since 15/09/26 - billing
+*   documents, VBRP-FKIMG - so the history months agree between the two
+*   runs (May-26 read 3600 from billing and 300 from MATDOC 601 in the
+*   same unit conversion). MATDOC is no longer read here; the old-code
+*   quantities follow the successor onto billing as well. Arnav's call
+*   of 15/09/26; deviates from the FS, which names MATDOC 601 for this
+*   mode - to be corrected in the FS.
+*    lt_std = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr   "Changes by Arnav on 15/09/26
+*                          iv_from = lv_from iv_to = lv_to ).
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr    "Changes by Arnav on 15/09/26
+                           iv_from = lv_from iv_to = lv_to ).
     add_old_material_qty( EXPORTING ir_werks       = ir_werks
                                     ir_matnr       = ir_matnr
                                     iv_from        = lv_from
                                     iv_to          = lv_to
-                                    iv_use_billing = abap_false
+*                                   iv_use_billing = abap_false        "Changes by Arnav on 15/09/26
+                                    iv_use_billing = abap_true         "Changes by Arnav on 15/09/26
                           CHANGING  ct_hist        = lt_std ).
 
     IF iv_legacy = abap_true.

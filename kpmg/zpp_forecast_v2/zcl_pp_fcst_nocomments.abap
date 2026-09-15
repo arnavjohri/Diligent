@@ -632,13 +632,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr
-                          iv_from = lv_from iv_to = lv_to ).
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+                           iv_from = lv_from iv_to = lv_to ).
     add_old_material_qty( EXPORTING ir_werks       = ir_werks
                                     ir_matnr       = ir_matnr
                                     iv_from        = lv_from
                                     iv_to          = lv_to
-                                    iv_use_billing = abap_false
+                                    iv_use_billing = abap_true
                           CHANGING  ct_hist        = lt_std ).
 
     IF iv_legacy = abap_true.

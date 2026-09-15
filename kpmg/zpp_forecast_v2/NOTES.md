@@ -31,7 +31,10 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
 - Sources are exactly as the document specifies: annual and quarterly from VBRK / VBRP
   summing `VBRP-FKIMG`; monthly from MATDOC `BWART 601` summing `MATDOC-MENGE`; old material
   codes from MATDOC; legacy flag from `ZPPT_SLS_HIST` M01–M12. `VBRP-SHKZG` was verified in
-  the system on 21.08.2026 against the FS wording.
+  the system on 21.08.2026 against the FS wording. **Since 15/09/26 monthly reads VBRK / VBRP
+  too** (Arnav's call, so the history months agree with quarterly — see ISSUES.md 15/09/26).
+  `READ_MATDOC` and `ZPPT_FCST_CFG-BWART` are still in place but nothing calls them; the FS
+  still says MATDOC 601 for monthly and needs correcting.
 - Two places where the document's prose and its worked example disagree are documented in
   `00_TECHNICAL_OBJECTS.md` §9 — **read that before "fixing" a formula**.
 - `ZPPT_FCST_CFG` holds what the document hardcodes (VKORG default 1100, BWART default 601,
