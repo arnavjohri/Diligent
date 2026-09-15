@@ -533,3 +533,38 @@ no stored price. Testers will see a blank Price column on the Final ALV until th
 QAS setup the testers need: STVARV `ZPP_FORECAST_MTART` (TVARVC is client-specific — maintain
 it in QAS, it does not travel with the code), A923 condition records for the test materials,
 and the transport carrying message 025.
+
+## 15/09/26 PM — quarterly and monthly save without an annual forecast; material type on annual too
+
+Two issues from Arnav's own test, both in `ZCL_PP_FCST` only.
+
+**1. Quarterly and monthly rows would not save until annual was saved; forecast number blank.**
+Cause: SAVE took the number from `ZPPT_FCST_YR` only (`ANNUAL_NUMBER`) and refused the row
+with message 005 when there was none — the FS reading "insert with the same forecast number
+by passing the fiscal year to the annual table". Arnav's call: the three modes must save
+independently under one shared number.
+
+- New `SHARED_NUMBER`: the number already carried by any of the three tables for the plant,
+  material and financial year — annual first (keyed on FYEAR), then quarterly, then monthly
+  (keyed on the start year GJAHR); blank numbers on a row are skipped.
+- SAVE, all three branches: shared number first; if none, a new one from ZPPFCST via
+  `NUMBER_GET` (the same call annual used); if that fails, message 021 as annual already
+  did. Message 005 is no longer raised at save. Old lines commented in place.
+- Generation, quarterly and monthly: `SHARED_NUMBER` instead of `ANNUAL_NUMBER`, so a number
+  drawn by an earlier quarterly save shows on the next run. Annual generation still checks
+  `ZPPT_FCST_YR` alone — its "already saved, will be overwritten" flag must mean the annual
+  row, not a quarterly one.
+- `NUMBER_FROM_TABLE` (the 31/08 fallback when SNRO is not there) now takes the maximum over
+  all three tables, otherwise it could re-issue a number a quarterly save had already used.
+
+Consequence for the data: the number on `ZPPT_FCST_QT` / `_MN` no longer proves an annual
+forecast exists. `ZPP_FORECAST_REPORT` consolidates by plant, material and year, not by
+number, so it is unaffected.
+
+**2. Material type restriction was not applied to annual.** Built that morning for quarterly
+and monthly only, as the request was headed. `FILTER_MTART` is now called after `BUILD_SCOPE`
+in `GENERATE_ANNUAL` as well; comments updated to say all three modes.
+
+Files: `src/zcl_pp_fcst.clas.abap` (`zcl_pp_fcst_nocomments.abap` regenerated). No DDIC, no
+message change, no program change.
+TR: not yet transported.

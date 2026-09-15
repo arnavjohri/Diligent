@@ -269,6 +269,12 @@ CLASS zcl_pp_fcst DEFINITION
                 iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
 
+    METHODS shared_number
+      IMPORTING iv_werks     TYPE werks_d
+                iv_matnr     TYPE matnr
+                iv_fyear     TYPE zde_fyear
+      RETURNING VALUE(rv_no) TYPE zde_fcst_no.
+
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
@@ -335,6 +341,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
@@ -470,7 +478,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
-      DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+      DATA(lv_no) = shared_number( iv_werks = ls_scope-werks
                                    iv_matnr = ls_scope-matnr
                                    iv_fyear = iv_fyear ).
 
@@ -660,7 +668,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
-      DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+      DATA(lv_no) = shared_number( iv_werks = ls_scope-werks
                                    iv_matnr = ls_scope-matnr
                                    iv_fyear = iv_fyear ).
 
@@ -768,6 +776,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         WHEN gc_mode-annual.
 
           IF <ls>-fcst_no IS INITIAL.
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
+                                          iv_matnr = <ls>-matnr
+                                          iv_fyear = <ls>-fyear ).
+          ENDIF.
+          IF <ls>-fcst_no IS INITIAL.
             <ls>-fcst_no = number_get( <ls>-fyear ).
           ENDIF.
 
@@ -795,13 +808,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         WHEN gc_mode-quarterly.
 
           IF <ls>-fcst_no IS INITIAL.
-            <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
                                           iv_matnr = <ls>-matnr
                                           iv_fyear = <ls>-fyear ).
           ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
-                               iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+            <ls>-fcst_no = number_get( <ls>-fyear ).
+          ENDIF.
+          IF <ls>-fcst_no IS INITIAL.
+            add_msg( EXPORTING iv_number = 021 iv_v1 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
             lv_refused = lv_refused + 1.
@@ -816,13 +831,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         WHEN gc_mode-monthly.
 
           IF <ls>-fcst_no IS INITIAL.
-            <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
                                           iv_matnr = <ls>-matnr
                                           iv_fyear = <ls>-fyear ).
           ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
-                               iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+            <ls>-fcst_no = number_get( <ls>-fyear ).
+          ENDIF.
+          IF <ls>-fcst_no IS INITIAL.
+            add_msg( EXPORTING iv_number = 021 iv_v1 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
             lv_refused = lv_refused + 1.
@@ -1273,6 +1290,40 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD shared_number.
+
+    rv_no = annual_number( iv_werks = iv_werks
+                           iv_matnr = iv_matnr
+                           iv_fyear = iv_fyear ).
+    IF rv_no IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear     = iv_fyear
+                                   IMPORTING ev_year_from = DATA(lv_gjahr) ).
+    CHECK lv_gjahr IS NOT INITIAL.
+
+    SELECT SINGLE fcst_no
+      FROM zppt_fcst_qt
+      WHERE werks   = @iv_werks
+        AND matnr   = @iv_matnr
+        AND gjahr   = @lv_gjahr
+        AND fcst_no <> @space
+      INTO @rv_no.
+    IF rv_no IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE fcst_no
+      FROM zppt_fcst_mn
+      WHERE werks   = @iv_werks
+        AND matnr   = @iv_matnr
+        AND gjahr   = @lv_gjahr
+        AND fcst_no <> @space
+      INTO @rv_no.
+
+  ENDMETHOD.
+
   METHOD number_get.
 
     zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear = iv_fyear
@@ -1308,6 +1359,22 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     SELECT MAX( fcst_no ) FROM zppt_fcst_yr INTO @lv_max
       WHERE fyear = @iv_fyear.
+    zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear     = iv_fyear
+                                   IMPORTING ev_year_from = DATA(lv_gjahr) ).
+    IF lv_gjahr IS NOT INITIAL.
+      SELECT MAX( fcst_no ) FROM zppt_fcst_qt
+        WHERE gjahr = @lv_gjahr
+        INTO @DATA(lv_max_qt).
+      SELECT MAX( fcst_no ) FROM zppt_fcst_mn
+        WHERE gjahr = @lv_gjahr
+        INTO @DATA(lv_max_mn).
+      IF lv_max_qt > lv_max.
+        lv_max = lv_max_qt.
+      ENDIF.
+      IF lv_max_mn > lv_max.
+        lv_max = lv_max_mn.
+      ENDIF.
+    ENDIF.
 
     IF lv_max IS INITIAL.
 

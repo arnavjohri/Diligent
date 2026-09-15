@@ -41,8 +41,9 @@ CLASS zcl_pp_fcst DEFINITION
                gc_msgid         TYPE symsgid VALUE 'ZPP_FCST'.
 
 *BOC By Arnav on 15/09/26
-*   TVARVC variable naming the material types the quarterly and monthly
-*   runs are restricted to (FERT and HAWA). Read as a range, so it can be
+*   TVARVC variable naming the material types every run is restricted
+*   to (FERT and HAWA) - annual included since 15/09/26 PM, it was
+*   quarterly and monthly only that morning. Read as a range, so it can be
 *   maintained as several EQ rows or one BT row in STVARV.
     CONSTANTS gc_tvarv_mtart TYPE rvari_vnam VALUE 'ZPP_FORECAST_MTART'.
 *EOC By Arnav on 15/09/26
@@ -323,7 +324,7 @@ CLASS zcl_pp_fcst DEFINITION
 
 *BOC By Arnav on 15/09/26
     "! Drops every material whose MARA-MTART is not in TVARVC
-    "! ZPP_FORECAST_MTART. Quarterly and monthly only.
+    "! ZPP_FORECAST_MTART. All three modes.
     METHODS filter_mtart
       CHANGING ct_scope TYPE tt_scope
                ct_msg   TYPE bapiret2_t.
@@ -367,6 +368,18 @@ CLASS zcl_pp_fcst DEFINITION
                 iv_matnr     TYPE matnr
                 iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
+
+*BOC By Arnav on 15/09/26
+    "! The forecast number already carried by ANY of the three forecast
+    "! tables for the plant, material and financial year - annual first,
+    "! then quarterly, then monthly - so one number is shared whatever
+    "! order the three are saved in. Blank when none has been saved yet.
+    METHODS shared_number
+      IMPORTING iv_werks     TYPE werks_d
+                iv_matnr     TYPE matnr
+                iv_fyear     TYPE zde_fyear
+      RETURNING VALUE(rv_no) TYPE zde_fcst_no.
+*EOC By Arnav on 15/09/26
 
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
@@ -465,6 +478,12 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *EOC By Arnav on 31/08/26
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+
+*BOC By Arnav on 15/09/26
+*   Material type restriction on annual as well - the morning's build
+*   applied it to quarterly and monthly only, as the request was headed
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
+*EOC By Arnav on 15/09/26
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
@@ -639,9 +658,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *     not draw the forecast number at all - so a material with no annual
 *     forecast is still calculated and shown here. SAVE is where it is
 *     refused.
-      DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+*BOC By Arnav on 15/09/26
+*     The number shared by all three tables, so a quarterly forecast
+*     saved before the annual one shows its number on the next run.
+*     DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+*                                  iv_matnr = ls_scope-matnr
+*                                  iv_fyear = iv_fyear ).
+      DATA(lv_no) = shared_number( iv_werks = ls_scope-werks
                                    iv_matnr = ls_scope-matnr
                                    iv_fyear = iv_fyear ).
+*EOC By Arnav on 15/09/26
 
       DATA(ls_alv) = VALUE ty_alv( werks   = ls_scope-werks
                                    matnr   = ls_scope-matnr
@@ -906,9 +932,14 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
 *     Same as quarterly - read the number if it is there, but do not
 *     refuse to calculate without it. SAVE enforces the dependency.
-      DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+*BOC By Arnav on 15/09/26
+*     DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
+*                                  iv_matnr = ls_scope-matnr
+*                                  iv_fyear = iv_fyear ).
+      DATA(lv_no) = shared_number( iv_werks = ls_scope-werks
                                    iv_matnr = ls_scope-matnr
                                    iv_fyear = iv_fyear ).
+*EOC By Arnav on 15/09/26
 
       DATA(ls_alv) = VALUE ty_alv( werks   = ls_scope-werks
                                    matnr   = ls_scope-matnr
@@ -1035,6 +1066,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         WHEN gc_mode-annual.
 
           " Reuse the existing number, or draw a new one
+*BOC By Arnav on 15/09/26
+*         A quarterly or monthly forecast saved before the annual one has
+*         already drawn the number for this plant, material and year -
+*         it is reused here, so all three tables carry the same number.
+          IF <ls>-fcst_no IS INITIAL.
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
+                                          iv_matnr = <ls>-matnr
+                                          iv_fyear = <ls>-fyear ).
+          ENDIF.
+*EOC By Arnav on 15/09/26
           IF <ls>-fcst_no IS INITIAL.
             <ls>-fcst_no = number_get( <ls>-fyear ).
           ENDIF.
@@ -1070,19 +1111,42 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *         The FS stores the quarterly row under the annual forecast
 *         number, so there has to be one. Refused here rather than at
 *         generation, so the user can still see and check the figures.
+*BOC By Arnav on 15/09/26
+*         Quarterly no longer waits for the annual forecast (Arnav's
+*         call, 15/09/26 - the rows would not save and the number stayed
+*         blank until annual was run). The number is whichever of the
+*         three tables already carries one for the plant, material and
+*         year; if none does, a new one is drawn from ZPPFCST exactly as
+*         annual draws it, and annual reuses it later.
+*         IF <ls>-fcst_no IS INITIAL.
+*           <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+*                                         iv_matnr = <ls>-matnr
+*                                         iv_fyear = <ls>-fyear ).
+*         ENDIF.
+*         IF <ls>-fcst_no IS INITIAL.
+*           add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
+*                              iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+*                    CHANGING  ct_msg = rt_msg ).
+*           <ls>-light = '1'.
+*           lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
+*           CONTINUE.
+*         ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
                                           iv_matnr = <ls>-matnr
                                           iv_fyear = <ls>-fyear ).
           ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
-                               iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+            <ls>-fcst_no = number_get( <ls>-fyear ).
+          ENDIF.
+          IF <ls>-fcst_no IS INITIAL.
+            add_msg( EXPORTING iv_number = 021 iv_v1 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
-            lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
+            lv_refused = lv_refused + 1.
             CONTINUE.
           ENDIF.
+*EOC By Arnav on 15/09/26
 
           DATA(ls_qt) = CORRESPONDING zppt_fcst_qt( <ls> ).
           ls_qt-aenam = sy-uname.
@@ -1091,19 +1155,38 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
         WHEN gc_mode-monthly.
 
+*BOC By Arnav on 15/09/26
+*         Same as quarterly above - no longer waits for the annual
+*         forecast; shared number first, otherwise a new one.
+*         IF <ls>-fcst_no IS INITIAL.
+*           <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+*                                         iv_matnr = <ls>-matnr
+*                                         iv_fyear = <ls>-fyear ).
+*         ENDIF.
+*         IF <ls>-fcst_no IS INITIAL.
+*           add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
+*                              iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+*                    CHANGING  ct_msg = rt_msg ).
+*           <ls>-light = '1'.
+*           lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
+*           CONTINUE.
+*         ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            <ls>-fcst_no = annual_number( iv_werks = <ls>-werks
+            <ls>-fcst_no = shared_number( iv_werks = <ls>-werks
                                           iv_matnr = <ls>-matnr
                                           iv_fyear = <ls>-fyear ).
           ENDIF.
           IF <ls>-fcst_no IS INITIAL.
-            add_msg( EXPORTING iv_number = 005 iv_v1 = <ls>-werks
-                               iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
+            <ls>-fcst_no = number_get( <ls>-fyear ).
+          ENDIF.
+          IF <ls>-fcst_no IS INITIAL.
+            add_msg( EXPORTING iv_number = 021 iv_v1 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
-            lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
+            lv_refused = lv_refused + 1.
             CONTINUE.
           ENDIF.
+*EOC By Arnav on 15/09/26
 
           DATA(ls_mn) = CORRESPONDING zppt_fcst_mn( <ls> ).
           ls_mn-aenam = sy-uname.
@@ -1483,7 +1566,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
 *BOC By Arnav on 15/09/26
 *&---------------------------------------------------------------------*
-*& Material type restriction - quarterly and monthly only.
+*& Material type restriction - all three modes (annual since 15/09/26 PM).
 *& TVARVC ZPP_FORECAST_MTART names the permitted types (FERT, HAWA).
 *& An unmaintained variable does not silently empty the list: nothing is
 *& filtered and message 025 goes to the log.
@@ -1672,6 +1755,51 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
   ENDMETHOD.
 
 
+*BOC By Arnav on 15/09/26
+*&---------------------------------------------------------------------*
+*& One forecast number per plant, material and financial year across
+*& all three tables. Annual is asked first (its key is the financial
+*& year), then quarterly and monthly (keyed on the year the financial
+*& year starts in). A blank number on a row is skipped, so a row written
+*& without one by an earlier release cannot be handed back as "the"
+*& number.
+*&---------------------------------------------------------------------*
+  METHOD shared_number.
+
+    rv_no = annual_number( iv_werks = iv_werks
+                           iv_matnr = iv_matnr
+                           iv_fyear = iv_fyear ).
+    IF rv_no IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear     = iv_fyear
+                                   IMPORTING ev_year_from = DATA(lv_gjahr) ).
+    CHECK lv_gjahr IS NOT INITIAL.
+
+    SELECT SINGLE fcst_no
+      FROM zppt_fcst_qt
+      WHERE werks   = @iv_werks
+        AND matnr   = @iv_matnr
+        AND gjahr   = @lv_gjahr
+        AND fcst_no <> @space
+      INTO @rv_no.
+    IF rv_no IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE fcst_no
+      FROM zppt_fcst_mn
+      WHERE werks   = @iv_werks
+        AND matnr   = @iv_matnr
+        AND gjahr   = @lv_gjahr
+        AND fcst_no <> @space
+      INTO @rv_no.
+
+  ENDMETHOD.
+*EOC By Arnav on 15/09/26
+
+
 *&---------------------------------------------------------------------*
 *& Forecast number, financial year dependent. The interval number is the
 *& last two digits of the year the financial year starts in, so
@@ -1734,6 +1862,27 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     SELECT MAX( fcst_no ) FROM zppt_fcst_yr INTO @lv_max
       WHERE fyear = @iv_fyear.
+*BOC By Arnav on 15/09/26
+*   Quarterly and monthly draw numbers of their own now, so this
+*   fallback has to look at all three tables, or it would hand out a
+*   number a quarterly save has already used.
+    zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear     = iv_fyear
+                                   IMPORTING ev_year_from = DATA(lv_gjahr) ).
+    IF lv_gjahr IS NOT INITIAL.
+      SELECT MAX( fcst_no ) FROM zppt_fcst_qt
+        WHERE gjahr = @lv_gjahr
+        INTO @DATA(lv_max_qt).
+      SELECT MAX( fcst_no ) FROM zppt_fcst_mn
+        WHERE gjahr = @lv_gjahr
+        INTO @DATA(lv_max_mn).
+      IF lv_max_qt > lv_max.
+        lv_max = lv_max_qt.
+      ENDIF.
+      IF lv_max_mn > lv_max.
+        lv_max = lv_max_mn.
+      ENDIF.
+    ENDIF.
+*EOC By Arnav on 15/09/26
 
     IF lv_max IS INITIAL.
 

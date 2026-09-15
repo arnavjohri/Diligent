@@ -47,9 +47,15 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   forecast folder between 03/09 and 15/09 started from the 26/08 copy (no `BUS_FCST_ADD1/2/3`,
   no value columns, single `BUS_FCST_ADD` on the quarterly table) and does not activate
   against the QAS tables. `git log --all -- kpmg/zpp_forecast_v2` before trusting `main`.
-- **Since 15/09/26, quarterly and monthly only:** the scope is cut to the material types in
+- **Since 15/09/26, all three modes:** the scope is cut to the material types in
   TVARVC `ZPP_FORECAST_MTART` (FERT, HAWA) by `ZCL_PP_FCST=>FILTER_MTART`; an unmaintained
-  variable filters nothing and logs message 025. `PRICE` is derived by `READ_PRICES` from
+  variable filters nothing and logs message 025. (Annual was added the same afternoon; the
+  morning build had quarterly and monthly only.)
+- **Since 15/09/26 PM the forecast number is shared across the three tables in any save
+  order.** `SHARED_NUMBER` looks in `ZPPT_FCST_YR`, then `_QT`, then `_MN`; a quarterly or
+  monthly save with no number anywhere draws one from ZPPFCST exactly as annual does, and
+  annual reuses it later. Message 005 ("annual forecast does not exist") is no longer raised
+  at save. The SNRO fallback `NUMBER_FROM_TABLE` takes the maximum over all three tables. `PRICE` is derived by `READ_PRICES` from
   `A923` (latest `DATAB`) → `KONP-KBETR`, read on material alone as the change request words
   it — no condition type, sales organisation, valid-to, `KPEIN` or `KONWA`. The quarterly
   row still reads `PRICE` back from `ZPPT_FCST_QT` only so SAVE cannot blank it; the figure
