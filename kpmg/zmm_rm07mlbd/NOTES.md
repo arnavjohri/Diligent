@@ -41,6 +41,8 @@ Same seven units as `kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap`, minus unit
 5. `create_table_totals_flat` — sign and colour for the two values.
 6. `create_table_totals_hq` / `_hq_1` — GR and GI value lines and colour for LGBST.
 7. `f0400_create_fieldcat` — DMBTR column in the detail list for LGBST (the July ZMB5B change).
+8. **`gv_newdb = abap_false` for LGBST** after the `CASE p_aut` block (unit 11 in the sheet).
+   Without it the amounts are blank on HANA — see Gotchas.
 
 **Deliberately not ported: the header-block values (ZMB5B unit 7).** In this program
 Rahul commented out every value line in the per-material header (`***` lines in the
@@ -49,6 +51,14 @@ title — and the header is not covered by the `ZMB5B_NEW1` authorization check.
 LGBST values there would reverse his design and bypass the check. Ask before adding.
 
 ## Gotchas
+
+- **Why the amounts were blank on the first activation (15/09/26).** This copy predates
+  the standard's "Deactivate old MMIM optimization in SAPSCORE" line, so on HANA the BAdI
+  `RM07MLBD_DBSYS_OPT` sets `gv_newdb = 'X'`, the stocks come from `FORM new_db_run`
+  (stored procedure) and the whole classic block `summen_bilden` / `bestaende_berechnen` /
+  `zf_lgbst_wert_ergaenzen` is skipped. `ZRM07MLBD` was copied from the current standard,
+  which forces `gv_newdb = abap_false`, so it never hit this. Fixed by forcing it off for the
+  storage location view only; the standard does it for every view.
 
 - **Authorization gating already exists and now covers the new values.**
   `check_matnr_pa_sumfl` clears `sollwert/habenwert/waers` in the flat totals list and

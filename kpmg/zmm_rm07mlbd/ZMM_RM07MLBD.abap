@@ -1154,6 +1154,22 @@ START-OF-SELECTION.
     ENDCASE.
   ENDIF.                       " w/o New DB feature  "^ hana_20120821
 
+*BOC By Arnav on 15/09/26
+* ZMB5B 195_BRD_FS : with the HANA stored-procedure optimisation
+* (BAdI RM07MLBD_DBSYS_OPT, GV_NEWDB = 'X') the stocks come from
+* FORM NEW_DB_RUN and the whole classic block SUMMEN_BILDEN /
+* BESTAENDE_BERECHNEN / ZF_LGBST_WERT_ERGAENZEN is skipped, so the
+* receipt and issue amounts stay empty. The current standard RM07MLBD
+* (and ZRM07MLBD) switch this optimisation off unconditionally
+* ("Deactivate old MMIM optimization in SAPSCORE ... gv_newdb =
+* abap_false") because the AMDP path is not redirected to the S/4
+* data model. Done here for the storage location view only, where
+* the amounts are needed.
+  IF  lgbst = 'X'.
+    gv_newdb = abap_false.
+  ENDIF.
+*EOC By Arnav on 15/09/26
+
 * it makes no sence to carry out this report with an old    "n921165
 * and incorrect selection variant                           "n921165
   IF  g_cnt_error_dba > 0.                                  "n921165
