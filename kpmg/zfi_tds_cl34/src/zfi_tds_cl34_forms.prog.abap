@@ -31,7 +31,10 @@
 *&                                  F4 on section code
 *&   15.09.2026  Arnav Johri  <TR>  DERIVE_GL_DIRECT: GL falls back to the
 *&                                  vendor line's GHKON where the document
-*&                                  has no WIT line or its GHKON is blank
+*&                                  has no WIT line or its GHKON is blank;
+*&                                  cleared down payments excluded in the
+*&                                  driver and the F4; one row per
+*&                                  document + tax code, P and T summed
 *&---------------------------------------------------------------------*
 
 *&---------------------------------------------------------------------*
@@ -369,6 +372,11 @@ FORM f4_section_code USING pv_field TYPE clike.
       AND z~qscod      <> @lc_noqsc
       AND w~whldgtaxitemstatus NOT IN ( @gc_wtstat_v, @gc_wtstat_d,
                                         @gc_wtstat_m, @gc_wtstat_s )
+*BOC By Arnav on 15/09/26
+*     Same exclusion as the driver in FETCH_WT_ITEMS, so the F4 never
+*     offers a key whose only items are cleared down payments.
+      AND w~downpaymentiscleared <> @gc_x
+*EOC By Arnav on 15/09/26
     ORDER BY c~land1, z~qscod
     INTO TABLE @lt_key.
 
@@ -526,6 +534,18 @@ FORM fetch_wt_items.
       AND w~whldgtaxitemstatus  NOT IN ( @gc_wtstat_v, @gc_wtstat_d,
                                          @gc_wtstat_m, @gc_wtstat_s )
 *EOC By Arnav on 07/09/26
+*BOC By Arnav on 15/09/26
+*     A down payment whose withholding has been cleared is not
+*     reportable (instruction of 15/09/26) - the deduction is carried by
+*     the clearing document. Filtered in the database like the status
+*     exclusion above, so it is absent from every buffer downstream.
+*     " ASSUMPTION: DOWNPAYMENTISCLEARED is the element name as given on
+*     15/09/26 and is a CHAR 1 flag ('X' / blank) that is never NULL in
+*     the view. Neither can be verified here; a wrong name stops
+*     activation and the fix is this one line. The same condition is
+*     repeated in F4_SECTION_CODE. QUERIES Q28.
+      AND w~downpaymentiscleared <> @gc_x
+*EOC By Arnav on 15/09/26
     INTO TABLE @gt_witem.
 
   IF gt_witem IS INITIAL.
@@ -791,6 +811,16 @@ FORM build_output.
         lv_secco  TYPE bseg-secco,
         lv_budat  TYPE bkpf-budat,
         lv_hidate TYPE bkpf-budat.
+*BOC By Arnav on 15/09/26
+* Key of the row appended last - the only merge candidate, see below.
+  DATA: lv_prev_bukrs TYPE with_item-bukrs,
+        lv_prev_belnr TYPE with_item-belnr,
+        lv_prev_gjahr TYPE with_item-gjahr,
+        lv_prev_cd    TYPE with_item-wt_withcd,
+        lv_last       TYPE sy-tabix.
+
+  CLEAR: lv_prev_bukrs, lv_prev_belnr, lv_prev_gjahr, lv_prev_cd, lv_last.
+*EOC By Arnav on 15/09/26
 
   CLEAR gt_output.
 
@@ -798,9 +828,18 @@ FORM build_output.
     RETURN.
   ENDIF.
 
-* Document order, so the running number reads as a document list. Only a
-* SORT - the withholding items are never de-duplicated, each one is a row.
-  SORT gt_witem BY bukrs belnr gjahr buzei witht wt_withcd.
+* Document order, so the running number reads as a document list.
+*BOC By Arnav on 15/09/26
+** Only a SORT - the withholding items are never de-duplicated, each one
+** is a row.
+*  SORT gt_witem BY bukrs belnr gjahr buzei witht wt_withcd.
+*
+* Tax code now sorts BEFORE item number, so the items of one document
+* that share a tax code sit next to each other and the merge at the end
+* of the row loop only ever has to look at the row appended last.
+* Document order is unchanged.
+  SORT gt_witem BY bukrs belnr gjahr wt_withcd buzei witht.
+*EOC By Arnav on 15/09/26
 
   PERFORM fetch_company_data.
   PERFORM fetch_vendor_data.
@@ -1022,7 +1061,46 @@ FORM build_output.
                                      lv_hidate
                             CHANGING ls_out-cum_amt.
 
+*BOC By Arnav on 15/09/26
+*    APPEND ls_out TO gt_output.
+
+* One row per document AND tax code (instruction of 15/09/26). A further
+* withholding item of the SAME document with the SAME tax code adds its
+* base and TDS to the row appended last; every other column keeps the
+* first item's value. A different tax code on the same document stays a
+* row of its own. The sort above guarantees the candidates are adjacent.
+* " ASSUMPTION: the merge key is the tax code (WT_WITHCD) only, as
+* instructed - the tax type (WITHT) is not part of it. Two items of one
+* document with the same code under different types therefore merge.
+    IF  gt_output IS NOT INITIAL
+    AND <ls_wi>-bukrs     = lv_prev_bukrs
+    AND <ls_wi>-belnr     = lv_prev_belnr
+    AND <ls_wi>-gjahr     = lv_prev_gjahr
+    AND <ls_wi>-wt_withcd = lv_prev_cd.
+
+      lv_last = lines( gt_output ).
+      READ TABLE gt_output ASSIGNING FIELD-SYMBOL(<ls_sum>) INDEX lv_last.
+      IF sy-subrc = 0.
+        <ls_sum>-base_amt = <ls_sum>-base_amt + ls_out-base_amt.  " col P
+        <ls_sum>-tds_amt  = <ls_sum>-tds_amt  + ls_out-tds_amt.   " col T
+*       Column Z follows the summed amount so it can never contradict it.
+        IF <ls_sum>-base_amt < 0
+        OR ( <ls_sum>-base_amt = 0 AND <ls_sum>-tds_amt < 0 ).
+          <ls_sum>-drcr = gc_shkzg_credit.
+        ELSE.
+          <ls_sum>-drcr = gc_shkzg_debit.
+        ENDIF.
+        CONTINUE.
+      ENDIF.
+
+    ENDIF.
+
     APPEND ls_out TO gt_output.
+    lv_prev_bukrs = <ls_wi>-bukrs.
+    lv_prev_belnr = <ls_wi>-belnr.
+    lv_prev_gjahr = <ls_wi>-gjahr.
+    lv_prev_cd    = <ls_wi>-wt_withcd.
+*EOC By Arnav on 15/09/26
 
   ENDLOOP.
 
