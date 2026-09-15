@@ -4,9 +4,9 @@
   <asx:values>
    <PROGDIR>
     <NAME>ZPP_FORECAST_UPLOAD</NAME>
+    <VARCL>X</VARCL>
     <SUBC>1</SUBC>
     <FIXPT>X</FIXPT>
-    <VARCL>X</VARCL>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>
@@ -78,14 +78,14 @@
     <item>
      <ID>S</ID>
      <KEY>P_FILE</KEY>
-     <ENTRY>File Name</ENTRY>
-     <LENGTH>9</LENGTH>
+     <ENTRY>Excel / CSV File</ENTRY>
+     <LENGTH>16</LENGTH>
     </item>
     <item>
      <ID>S</ID>
      <KEY>P_HEAD</KEY>
-     <ENTRY>File has Header Row</ENTRY>
-     <LENGTH>19</LENGTH>
+     <ENTRY>Text File has Header Row</ENTRY>
+     <LENGTH>24</LENGTH>
     </item>
     <item>
      <ID>S</ID>

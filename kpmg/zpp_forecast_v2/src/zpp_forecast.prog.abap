@@ -28,6 +28,17 @@ TYPES tt_fname TYPE STANDARD TABLE OF lvc_fname WITH DEFAULT KEY.
 * them back, which also restores the traffic light column.
 CONSTANTS gc_show_extras TYPE abap_bool VALUE abap_false.
 
+*BOC By Arnav on 03/09/26
+* Switch deciding whether legacy history may be used at all. Read once
+* in INITIALIZATION; the Legacy checkbox is drawn only when it is set.
+DATA g_legc_on TYPE abap_bool.
+
+* ASSUMPTION: the switch is TVARVC parameter ZPP_FCST_LEGACY, value 'X'
+* or blank. FORM LEGACY_SWITCH is the only reader, so the source can be
+* swapped there alone.
+CONSTANTS gc_tv_legacy TYPE rvari_vnam VALUE 'ZPP_FCST_LEGACY'.
+*EOC By Arnav on 03/09/26
+
 * GUI status of THIS program carrying ZSAVE, ZSELALL, ZDESEL and ZEXCEL.
 * Change here only - it is used to set the status and to report it when
 * it cannot be found.
@@ -38,7 +49,13 @@ DATA: gt_msg  TYPE bapiret2_t,
       gt_alv  TYPE zcl_pp_fcst=>tt_alv,
       go_fcst TYPE REF TO zcl_pp_fcst,
       go_alv  TYPE REF TO cl_salv_table,
-      g_mode  TYPE char1.
+      g_mode  TYPE char1,
+*BOC By Arnav on 31/08/26
+*     The quarter actually being planned. It is P_QUART when a quarter
+*     was typed and is worked out from the date range when one was not,
+*     so the column headings and the generation always agree.
+      g_quart TYPE zde_quarter.
+*EOC By Arnav on 31/08/26
 
 *&---------------------------------------------------------------------*
 SELECTION-SCREEN BEGIN OF BLOCK b0 WITH FRAME TITLE TEXT-b00.
@@ -63,9 +80,15 @@ SELECT-OPTIONS: s_datum FOR sy-datum NO-EXTENSION MODIF ID dat.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-b02.
+*BOC By Arnav on 03/09/26
+*PARAMETERS: p_tonn AS CHECKBOX,
+*            p_legc AS CHECKBOX,
+*            p_save AS CHECKBOX.
+* Save is the toolbar button only - no checkbox and no confirm popup.
+* Legacy carries MODIF ID LGC so it can be hidden when the switch is off.
 PARAMETERS: p_tonn AS CHECKBOX,
-            p_legc AS CHECKBOX,
-            p_save AS CHECKBOX.
+            p_legc AS CHECKBOX MODIF ID lgc.
+*EOC By Arnav on 03/09/26
 SELECTION-SCREEN END OF BLOCK b2.
 
 
@@ -94,6 +117,11 @@ CLASS lcl_handler DEFINITION.
     CLASS-METHODS select_all
       IMPORTING iv_on TYPE abap_bool.
     CLASS-METHODS export.
+*BOC By Arnav on 03/09/26
+    CLASS-METHODS show_result.
+    CLASS-METHODS result_message
+      IMPORTING it_msg TYPE bapiret2_t.
+*EOC By Arnav on 03/09/26
 
 ENDCLASS.
 
@@ -158,10 +186,86 @@ CLASS lcl_handler IMPLEMENTATION.
     DATA(lt_msg) = go_fcst->save( EXPORTING iv_mode = g_mode
                                   CHANGING  ct_alv  = gt_alv ).
 
+*BOC By Arnav on 03/09/26
+*   show_log( lt_msg ) put the outcome in a popup. One status line
+*   instead - the per row result is already in the MESSAGE column.
+*   show_log( lt_msg ).
+    show_result( ).
     go_alv->refresh( ).
-    show_log( lt_msg ).
+    result_message( lt_msg ).
+*EOC By Arnav on 03/09/26
 
   ENDMETHOD.
+
+
+*BOC By Arnav on 03/09/26
+  METHOD show_result.
+
+*   Forecast number and message are hidden while the list is only a
+*   proposal. Once Save has run they are the point of having pressed it,
+*   so they come out of hiding at the end of the list.
+    DATA: lv_col TYPE lvc_fname,
+          lv_pos TYPE i,
+          lt_res TYPE tt_fname.
+
+    CHECK go_alv IS BOUND.
+
+    DATA(lo_cols) = go_alv->get_columns( ).
+
+    APPEND 'FCST_NO' TO lt_res.
+    APPEND 'MESSAGE' TO lt_res.
+
+    LOOP AT lt_res INTO lv_col.
+
+      READ TABLE gt_show TRANSPORTING NO FIELDS
+        WITH KEY table_line = lv_col.
+
+      IF sy-subrc = 0.
+*       Already there from an earlier Save. lines( gt_show ) would hand
+*       both columns the same slot on the second press.
+        lv_pos = sy-tabix.
+      ELSE.
+        APPEND lv_col TO gt_show.
+        lv_pos = lines( gt_show ).
+      ENDIF.
+
+      TRY.
+          lo_cols->get_column( lv_col )->set_technical( abap_false ).
+          lo_cols->set_column_position( columnname = lv_col
+                                        position   = lv_pos ).
+        CATCH cx_salv_error.
+      ENDTRY.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD result_message.
+
+    DATA: lv_err TYPE i,
+          lv_n   TYPE char10,
+          lv_txt TYPE string.
+
+    LOOP AT it_msg INTO DATA(ls_msg).
+      IF ls_msg-type CA 'AEX'.
+        lv_err = lv_err + 1.
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_err = 0.
+      lv_txt = 'Save completed'.
+      MESSAGE lv_txt TYPE 'S'.
+    ELSE.
+      lv_n = lv_err.
+      CONDENSE lv_n.
+      CONCATENATE 'Save completed,' lv_n 'row(s) not saved'
+             INTO lv_txt SEPARATED BY space.
+      MESSAGE lv_txt TYPE 'S' DISPLAY LIKE 'W'.
+    ENDIF.
+
+  ENDMETHOD.
+*EOC By Arnav on 03/09/26
 
 
   METHOD select_all.
@@ -313,6 +417,13 @@ INITIALIZATION.
   ENDIF.
   p_fyear = |{ gv_y }-{ gv_y + 1 }|.
 
+*BOC By Arnav on 03/09/26
+  PERFORM legacy_switch CHANGING g_legc_on.
+  IF g_legc_on = abap_false.
+    CLEAR p_legc.
+  ENDIF.
+*EOC By Arnav on 03/09/26
+
 *&---------------------------------------------------------------------*
 AT SELECTION-SCREEN OUTPUT.
 
@@ -321,6 +432,9 @@ AT SELECTION-SCREEN OUTPUT.
       WHEN 'QTR'. screen-active = COND #( WHEN p_qtr = abap_true THEN 1 ELSE 0 ).
       WHEN 'MTH'. screen-active = COND #( WHEN p_mth = abap_true THEN 1 ELSE 0 ).
       WHEN 'DAT'. screen-active = COND #( WHEN p_ann = abap_true THEN 0 ELSE 1 ).
+*BOC By Arnav on 03/09/26
+      WHEN 'LGC'. screen-active = COND #( WHEN g_legc_on = abap_true THEN 1 ELSE 0 ).
+*EOC By Arnav on 03/09/26
     ENDCASE.
     MODIFY SCREEN.
   ENDLOOP.
@@ -385,6 +499,16 @@ AT SELECTION-SCREEN.
 *&---------------------------------------------------------------------*
 START-OF-SELECTION.
 
+*BOC By Arnav on 03/09/26
+* INITIALIZATION runs BEFORE a selection screen variant is transferred,
+* so the CLEAR there loses to a variant carrying Legacy ticked, and to
+* SUBMIT ... WITH p_legc = 'X'. Hiding the checkbox only stops it being
+* typed. Re-asserted here, which runs last and in background too.
+  IF g_legc_on = abap_false.
+    CLEAR p_legc.
+  ENDIF.
+*EOC By Arnav on 03/09/26
+
   PERFORM generate.
 
 * Always written, whether the run produced rows or not. This is the
@@ -398,11 +522,28 @@ START-OF-SELECTION.
 
 * Saved before the list is drawn, so the forecast number and the result
 * of each row are already on the rows the list shows.
-  IF p_save = abap_true.
-    PERFORM save_all.
-  ENDIF.
+*BOC By Arnav on 03/09/26
+* IF p_save = abap_true.
+*   PERFORM save_all.
+* ENDIF.
+* The run no longer saves anything by itself.
+*EOC By Arnav on 03/09/26
 
   PERFORM display.
+
+*BOC By Arnav on 31/08/26
+* The Save button lives on a GUI status, and this program deliberately
+* has none - it is screen free so that the whole object can ship by
+* abapGit, and SE41 statuses are not serialised. The button therefore
+* never appeared and the user was left with no way of saving from the
+* list at all. The question is asked once the list is closed instead.
+*BOC By Arnav on 03/09/26
+* PERFORM save_prompt.
+* The confirm popup is withdrawn - the user presses Save on the toolbar
+* if they want to keep the run. FORM SAVE_PROMPT is left in place but is
+* no longer called.
+*EOC By Arnav on 03/09/26
+*EOC By Arnav on 31/08/26
 
 
 *&---------------------------------------------------------------------*
@@ -415,6 +556,32 @@ START-OF-SELECTION.
 *& If the log object has not been created in SLG0 the run carries on
 *& without a log rather than failing. The list is what matters, and the
 *& Show message log checkbox still puts the same messages on screen.
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Legacy switch - 'X' means legacy history is loaded and may be used,
+*& blank means the checkbox is not drawn at all.
+*&
+*& ASSUMPTION: TVARVC parameter ZPP_FCST_LEGACY (STVARV, Parameters
+*& tab). Confirm the variable actually used - this is the only reader.
+*&---------------------------------------------------------------------*
+*BOC By Arnav on 03/09/26
+FORM legacy_switch CHANGING cv_on TYPE abap_bool.
+
+  CLEAR cv_on.
+
+  SELECT SINGLE low FROM tvarvc INTO @DATA(lv_low)
+    WHERE name = @gc_tv_legacy
+      AND type = 'P'
+      AND numb = '0000'.
+
+  IF sy-subrc = 0 AND lv_low IS NOT INITIAL.
+    cv_on = abap_true.
+  ENDIF.
+
+ENDFORM.
+*EOC By Arnav on 03/09/26
+
+
 *&---------------------------------------------------------------------*
 FORM save_log.
 
@@ -485,6 +652,8 @@ FORM generate.
                    WHEN p_qtr = abap_true THEN zcl_pp_fcst=>gc_mode-quarterly
                    ELSE                        zcl_pp_fcst=>gc_mode-monthly ).
 
+  PERFORM resolve_quarter.   "Changes by Arnav on 31/08/26
+
   CASE g_mode.
 
     WHEN zcl_pp_fcst=>gc_mode-annual.
@@ -497,10 +666,16 @@ FORM generate.
                                           et_msg     = lt_msg ).
 
     WHEN zcl_pp_fcst=>gc_mode-quarterly.
+*BOC By Arnav on 31/08/26
+*     P_QUART is blank when the user gave a date range instead, and the
+*     class was then asked to plan quarter "". G_QUART carries the
+*     quarter either way.
+*                                             iv_quarter = p_quart
       go_fcst->generate_quarterly( EXPORTING ir_werks   = s_werks[]
                                              ir_matnr   = s_matnr[]
                                              iv_fyear   = p_fyear
-                                             iv_quarter = p_quart
+                                             iv_quarter = g_quart
+*EOC By Arnav on 31/08/26
                                              iv_legacy  = p_legc
                                              iv_tonnage = p_tonn
                                    IMPORTING et_alv     = gt_alv
@@ -656,14 +831,37 @@ ENDFORM.
 FORM visible_columns CHANGING ct_show TYPE tt_fname.
 
   DATA lv_p TYPE numc2.
+*BOC By Arnav on 03/09/26
+* Typed I and not NUMC2: a NUMC in a string template keeps its leading
+* zero, which would build BUS_FCST_ADD01 instead of BUS_FCST_ADD1.
+  DATA: lv_q TYPE i,
+        lv_m TYPE i.
+*EOC By Arnav on 03/09/26
 
   CLEAR ct_show.
 
 * ---- leading block, identical on all three FS sheets ----------------
-  ct_show = VALUE tt_fname(
-    ( 'WERKS' ) ( 'MATNR' ) ( 'MAKTX' ) ( 'MATKL' ) ( 'NTGEW' )
-    ( 'MVGR1_TXT' ) ( 'MVGR2_TXT' ) ( 'MVGR3_TXT' )
-    ( 'MVGR4_TXT' ) ( 'MVGR5_TXT' ) ).
+*BOC By Arnav on 31/08/26
+* The rows of a VALUE table constructor have to be COMPATIBLE with the
+* row type on this release, not merely convertible, so a C literal into
+* a row typed LVC_FNAME is refused - the same syntax error the upload
+* program threw sixteen times over STRING_TABLE. APPEND converts, and it
+* is what the rest of this routine already uses.
+*  ct_show = VALUE tt_fname(
+*    ( 'WERKS' ) ( 'MATNR' ) ( 'MAKTX' ) ( 'MATKL' ) ( 'NTGEW' )
+*    ( 'MVGR1_TXT' ) ( 'MVGR2_TXT' ) ( 'MVGR3_TXT' )
+*    ( 'MVGR4_TXT' ) ( 'MVGR5_TXT' ) ).
+  APPEND 'WERKS'     TO ct_show.
+  APPEND 'MATNR'     TO ct_show.
+  APPEND 'MAKTX'     TO ct_show.
+  APPEND 'MATKL'     TO ct_show.
+  APPEND 'NTGEW'     TO ct_show.
+  APPEND 'MVGR1_TXT' TO ct_show.
+  APPEND 'MVGR2_TXT' TO ct_show.
+  APPEND 'MVGR3_TXT' TO ct_show.
+  APPEND 'MVGR4_TXT' TO ct_show.
+  APPEND 'MVGR5_TXT' TO ct_show.
+*EOC By Arnav on 31/08/26
 
   CASE g_mode.
 
@@ -678,6 +876,12 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
 
       APPEND 'LY_TOTAL'   TO ct_show.   " Total LY Sales Qty
       APPEND 'PROD_CAT'   TO ct_show.   " Product Cat.
+*BOC By Arnav on 31/08/26
+*     MTS / MTO was drawn on the quarterly sheet only. It is asked for on
+*     annual as well, next to the product category it is maintained with
+*     on ZPPT_PROD_CAT.
+      APPEND 'MTS_MTO'    TO ct_show.   " MTS / MTO
+*EOC By Arnav on 31/08/26
       APPEND 'LOAD_FCT'   TO ct_show.   " Load Factor
       APPEND 'FCST_TOTAL' TO ct_show.   " Forecast Qty_FY2026-27
 
@@ -711,29 +915,35 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
       APPEND 'FCST_QTY'   TO ct_show.   " Forecast (Max * Growth %)
       APPEND 'BUS_FCST'   TO ct_show.   " Business Forecast
       APPEND 'FINAL_QTY'  TO ct_show.   " Final Forecast Qty
-      APPEND 'M4_FCST'    TO ct_show.   " July'26
-      APPEND 'M5_FCST'    TO ct_show.   " Aug'26
-      APPEND 'M6_FCST'    TO ct_show.   " Sep'26
+*BOC By Arnav on 03/09/26
+*     Month by month, so everything belonging to July stands together
+*     and is followed by everything belonging to August:
+*
+*       Jul-26 · Jul-26 additional · Jul-26 final · Jul-26 value
+*       Aug-26 · Aug-26 additional · Aug-26 final · Aug-26 value
+*       Sep-26 · Sep-26 additional · Sep-26 final · Sep-26 value
+*
+*     Final = forecast + additional, value = final x PRICE, so a figure
+*     is checked by reading along its own month rather than counting
+*     three columns across. Tonnage joins its month when the Tonnage
+*     checkbox is ticked.
+      DO 3 TIMES.
 
-*BOC By Arnav on 15/09/26
-*     Price and the values in EA, change request of 15/09/26
-      APPEND 'PRICE'      TO ct_show.   " KONP-KBETR via A923
-      APPEND 'VAL_M4'     TO ct_show.   " Price for July 26 in EA
-      APPEND 'VAL_M5'     TO ct_show.   " Price for Aug 26 in EA
-      APPEND 'VAL_M6'     TO ct_show.   " Price for Sep 26 in EA
-      APPEND 'VAL_TOTAL'  TO ct_show.   " Final forecast qty x Price
-*EOC By Arnav on 15/09/26
+        lv_q = sy-index.        " 1, 2, 3 - the additional plan columns
+        lv_m = lv_q + 3.        " 4, 5, 6 - the Mn_ columns
 
-      IF p_tonn = abap_true.
-        APPEND 'M4_TON' TO ct_show.
-        APPEND 'M5_TON' TO ct_show.
-        APPEND 'M6_TON' TO ct_show.
-*BOC By Arnav on 15/09/26
-        APPEND 'VAL_M4_TON' TO ct_show.   " Price for July 26 in Tonnage
-        APPEND 'VAL_M5_TON' TO ct_show.   " Price for Aug 26 in Tonnage
-        APPEND 'VAL_M6_TON' TO ct_show.   " Price for Sep 26 in Tonnage
-*EOC By Arnav on 15/09/26
-      ENDIF.
+        APPEND CONV lvc_fname( |M{ lv_m }_FCST| )       TO ct_show.
+        APPEND CONV lvc_fname( |BUS_FCST_ADD{ lv_q }| ) TO ct_show.
+        APPEND CONV lvc_fname( |M{ lv_m }_FCST_FINAL| ) TO ct_show.
+        APPEND CONV lvc_fname( |M{ lv_m }_VAL| )        TO ct_show.
+
+        IF p_tonn = abap_true.
+          APPEND CONV lvc_fname( |M{ lv_m }_TON| )     TO ct_show.
+          APPEND CONV lvc_fname( |M{ lv_m }_TON_VAL| ) TO ct_show.
+        ENDIF.
+
+      ENDDO.
+*EOC By Arnav on 03/09/26
 
       APPEND 'MTS_MTO'    TO ct_show.   " AE17, the last FS column
 
@@ -757,30 +967,48 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
       APPEND 'BUS_FCST_ADD' TO ct_show.   " Additonal plan qty july 26
       APPEND 'TOTAL_QTY'    TO ct_show.   " final forecast qty, column Q
 
-*BOC By Arnav on 15/09/26
-*     Price and the values, change request of 15/09/26 - one month, so
-*     one value in EA, the total, and the tonnage value below
-      APPEND 'PRICE'        TO ct_show.   " KONP-KBETR via A923
-      APPEND 'VAL_M4'       TO ct_show.   " Price for <month> in EA
-      APPEND 'VAL_TOTAL'    TO ct_show.   " Final forecast qty x Price
-*EOC By Arnav on 15/09/26
-
       IF p_tonn = abap_true.
         APPEND 'M4_TON' TO ct_show.
-        APPEND 'VAL_M4_TON' TO ct_show.   "Changes by Arnav on 15/09/26 - Price in Tonnage
       ENDIF.
 
   ENDCASE.
+
+*BOC By Arnav on 31/08/26
+* Price, asked for on all three radio buttons. The column is drawn on
+* every mode; it stays empty until the functional team confirm where the
+* figure comes from - see the note on TY_ALV-PRICE in ZCL_PP_FCST.
+  APPEND 'PRICE' TO ct_show.
+*EOC By Arnav on 31/08/26
+
+*BOC By Arnav on 15/09/26
+* Request of 15/09/26. Quarterly: the whole-quarter value, "Final
+* forecast qty x Price", after the price. Monthly: the value in EA and,
+* with Tonnage ticked, the value in tonnage - the quarterly sheet had
+* these since 03/09, the monthly sheet had nothing.
+  CASE g_mode.
+    WHEN zcl_pp_fcst=>gc_mode-quarterly.
+      APPEND 'TOTAL_VAL'  TO ct_show.   " Final forecast qty x Price
+    WHEN zcl_pp_fcst=>gc_mode-monthly.
+      APPEND 'M4_VAL'     TO ct_show.   " Price for <month> in EA
+      IF p_tonn = abap_true.
+        APPEND 'M4_TON_VAL' TO ct_show. " Price for <month> in Tonnage
+      ENDIF.
+  ENDCASE.
+*EOC By Arnav on 15/09/26
 
 * ---- the result of a save --------------------------------------------
 * Only when the run actually saved. The forecast number and the per row
 * outcome are the point of pressing save, so they are shown then and
 * only then. The traffic light stays off - an exception column is drawn
 * in front of Plant whatever position it is given.
-  IF p_save = abap_true.
-    APPEND 'FCST_NO' TO ct_show.
-    APPEND 'MESSAGE' TO ct_show.
-  ENDIF.
+*BOC By Arnav on 03/09/26
+* IF p_save = abap_true.
+*   APPEND 'FCST_NO' TO ct_show.
+*   APPEND 'MESSAGE' TO ct_show.
+* ENDIF.
+* The run no longer saves, so nothing is known here. LCL_HANDLER=>
+* SHOW_RESULT brings the two out of hiding once Save has actually run.
+*EOC By Arnav on 03/09/26
 
 * ---- not drawn on this FS sheet, kept at the end --------------------
   IF gc_show_extras = abap_true.
@@ -788,10 +1016,19 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
     IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
 *     Sheet 2 shows Business Forecast but not the additional column.
 *     The Final ALV sheet carries it and the change upload writes it.
-      APPEND 'BUS_FCST_ADD' TO ct_show.
-    ELSE.
-*     MTS / MTO is drawn on sheet 2 only
+*BOC By Arnav on 03/09/26
+*     BUS_FCST_ADD is a monthly field now - the quarterly sheet already
+*     draws ADD1, ADD2 and ADD3 above, so nothing is added here.
+*     APPEND 'BUS_FCST_ADD' TO ct_show.
+*EOC By Arnav on 03/09/26
+*BOC By Arnav on 31/08/26
+*   Annual now carries MTS / MTO in its own right, so appending it here
+*   as well would list the column twice and give it two positions.
+*    ELSE.
+*      APPEND 'MTS_MTO' TO ct_show.
+    ELSEIF g_mode = zcl_pp_fcst=>gc_mode-monthly.
       APPEND 'MTS_MTO' TO ct_show.
+*EOC By Arnav on 31/08/26
     ENDIF.
 
     APPEND 'MEINS'   TO ct_show.   " unit for every quantity column
@@ -918,6 +1155,11 @@ FORM setup_columns USING pt_show TYPE tt_fname.
     PERFORM txt USING 'LOAD_FCT'     'Growth Based on Category'.
     PERFORM txt USING 'BUS_FCST'     'Business Forecast'.
     PERFORM txt USING 'BUS_FCST_ADD' 'Additional Plan Qty'.
+*BOC By Arnav on 03/09/26
+*   The new quarterly columns are named from the financial calendar by
+*   MONTH_HEADINGS, the same routine that names M4_FCST and M4_TON, so
+*   they read Jul-26 rather than "Month 1". Nothing static here.
+*EOC By Arnav on 03/09/26
     PERFORM txt USING 'FINAL_QTY'    'Final Forecast Qty'.
 *   The FS heads both column O and column Q "Final Forecast Qty". The
 *   second is qualified here so the two can be told apart on screen.
@@ -929,15 +1171,6 @@ FORM setup_columns USING pt_show TYPE tt_fname.
     PERFORM txt USING 'M5_TON'       'Month 2 tonnage'.
     PERFORM txt USING 'M6_TON'       'Month 3 tonnage'.
 
-*BOC By Arnav on 15/09/26
-*   Price and value headings carry the real month - "Price for Jul 26
-*   in EA" - as the change request words them. Built in PRICE_HEADINGS
-*   from the quarter, or from the one period entered in monthly mode.
-    PERFORM txt USING 'PRICE'        'Price'.
-    PERFORM txt USING 'VAL_TOTAL'    'Final Fcst Qty x Price'.
-    PERFORM price_headings.
-*EOC By Arnav on 15/09/26
-
     IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
       PERFORM txt USING 'MAX_QTY'  'Max. Qty'.
       PERFORM txt USING 'FCST_QTY' 'Forecast (Max * Growth %)'.
@@ -946,10 +1179,24 @@ FORM setup_columns USING pt_show TYPE tt_fname.
       PERFORM txt USING 'FCST_QTY' 'LY vs Current Requirement Qty'.
     ENDIF.
 
+*BOC By Arnav on 31/08/26
+*   The headings above are the neutral ones. On quarter and month based
+*   planning the calendar month behind each column is known, so it is
+*   drawn instead - "Jul-25" rather than "LY Month 1". The neutral texts
+*   stay as the fallback for a run where the quarter cannot be worked
+*   out. Annual already names its months and is untouched.
+    PERFORM month_headings.
+*EOC By Arnav on 31/08/26
+
   ENDIF.
 
   PERFORM txt USING 'PROD_CAT'  'Product Cat.'.
   PERFORM txt USING 'MTS_MTO'   'MTS / MTO'.
+*BOC By Arnav on 31/08/26
+  PERFORM txt USING 'NTGEW'     'Net Weight'.
+  PERFORM txt USING 'PRICE'     'Price'.
+*EOC By Arnav on 31/08/26
+  PERFORM txt USING 'TOTAL_VAL' 'Final Fcst Qty x Price'.   "Changes by Arnav on 15/09/26
   PERFORM txt USING 'MVGR1_TXT' 'Material Group 1'.
   PERFORM txt USING 'MVGR2_TXT' 'Material Group 2'.
   PERFORM txt USING 'MVGR3_TXT' 'Material Group 3'.
@@ -958,6 +1205,263 @@ FORM setup_columns USING pt_show TYPE tt_fname.
   PERFORM txt USING 'FCST_NO'   'Forecast Number'.
 
 ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& BOC By Arnav on 31/08/26
+*&
+*& The quarter actually being planned
+*&
+*& Quarter based planning takes either a quarter or a date range. When a
+*& date range was given P_QUART is blank, and the class was being asked
+*& to plan quarter "" - which produced a list whose columns belonged to
+*& no month at all. The quarter of the first date of the range is used
+*& instead, so generation and headings agree.
+*&---------------------------------------------------------------------*
+FORM resolve_quarter.
+
+  DATA: lv_month TYPE numc2,
+        lv_per   TYPE numc2,
+        lv_date  TYPE dats.
+
+  CLEAR g_quart.
+
+  CASE g_mode.
+
+    WHEN zcl_pp_fcst=>gc_mode-quarterly.
+
+      IF p_quart IS NOT INITIAL.
+        g_quart = p_quart.
+        RETURN.
+      ENDIF.
+
+      READ TABLE s_datum INTO DATA(ls_dt) INDEX 1.
+      CHECK sy-subrc = 0.
+
+      lv_date = ls_dt-low.
+      CHECK lv_date IS NOT INITIAL.
+
+      lv_month = lv_date+4(2).
+      lv_per   = zcl_pp_fcst_util=>month_to_period( lv_month ).
+      g_quart  = zcl_pp_fcst_util=>period_to_quarter( lv_per ).
+
+    WHEN zcl_pp_fcst=>gc_mode-monthly.
+
+      CHECK p_perio IS NOT INITIAL.
+      lv_per  = p_perio.
+      g_quart = zcl_pp_fcst_util=>period_to_quarter( lv_per ).
+
+  ENDCASE.
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& Calendar month headings for quarter and month based planning
+*&
+*& "M1", "M2", "LY Month 1" mean nothing to a planner. Every month
+*& column is headed with the month it actually holds - Jul-25, Aug-25,
+*& Sep-25 for the comparison quarter, Apr-26 to Jun-26 for the three
+*& months before the plan, and the planned months themselves.
+*&
+*& Called after the neutral headings, so anything that cannot be worked
+*& out keeps the text it already had.
+*&---------------------------------------------------------------------*
+FORM month_headings.
+
+  DATA: lv_nam TYPE char3,
+        lv_hdr TYPE string,
+        lv_col TYPE lvc_fname,
+        lv_ix  TYPE i,
+        lv_qi  TYPE i,
+        lv_ai  TYPE i,   "Changes by Arnav on 03/09/26
+        lv_per TYPE numc2,
+        lv_yy  TYPE gjahr,
+        lv_mm  TYPE numc2.
+
+  CHECK g_quart IS NOT INITIAL.
+
+* ---- last year, the same quarter -------------------------------------
+  DATA(lt_ly) = zcl_pp_fcst_util=>last_year_quarter( iv_fyear   = p_fyear
+                                                     iv_quarter = g_quart ).
+
+  lv_ix = 3.
+  LOOP AT lt_ly INTO DATA(ls_ly).
+    lv_ix  = lv_ix + 1.
+    lv_yy  = ls_ly-gjahr.
+    lv_mm  = ls_ly-month.
+    PERFORM month_name USING lv_mm CHANGING lv_nam.
+    lv_hdr = |{ lv_nam }-{ lv_yy+2(2) }|.
+    lv_col = |M{ lv_ix }_LAST|.
+    PERFORM txt USING lv_col lv_hdr.
+  ENDLOOP.
+
+  lv_hdr = |Total LY Q{ g_quart } Sales Qty|.
+  PERFORM txt USING 'LY_QTR_TOT' lv_hdr.
+
+* ---- the three months immediately before the plan --------------------
+  IF g_mode = zcl_pp_fcst=>gc_mode-monthly.
+    lv_per = p_perio.
+  ELSE.
+    lv_qi  = g_quart.
+    lv_per = ( lv_qi - 1 ) * 3 + 1.
+  ENDIF.
+
+  DATA(lt_l3m) = zcl_pp_fcst_util=>last_three_months( iv_fyear  = p_fyear
+                                                      iv_period = lv_per ).
+
+  lv_ix = 0.
+  LOOP AT lt_l3m INTO DATA(ls_l3).
+    lv_ix  = lv_ix + 1.
+    lv_yy  = ls_l3-gjahr.
+    lv_mm  = ls_l3-month.
+    PERFORM month_name USING lv_mm CHANGING lv_nam.
+    lv_hdr = |{ lv_nam }-{ lv_yy+2(2) }|.
+    lv_col = |M{ lv_ix }_CURR|.
+    PERFORM txt USING lv_col lv_hdr.
+  ENDLOOP.
+
+* ---- the months being planned ----------------------------------------
+  IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
+
+    DATA(lt_qtr) = zcl_pp_fcst_util=>quarter_periods( iv_fyear   = p_fyear
+                                                      iv_quarter = g_quart ).
+
+    lv_ix = 3.
+    LOOP AT lt_qtr INTO DATA(ls_q).
+      lv_ix  = lv_ix + 1.
+      lv_yy  = ls_q-gjahr.
+      lv_mm  = ls_q-month.
+      PERFORM month_name USING lv_mm CHANGING lv_nam.
+
+      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) }|.
+      lv_col = |M{ lv_ix }_FCST|.
+      PERFORM txt USING lv_col lv_hdr.
+
+      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } tonnage|.
+      lv_col = |M{ lv_ix }_TON|.
+      PERFORM txt USING lv_col lv_hdr.
+
+*BOC By Arnav on 03/09/26
+*     The additional plan quantity, the final and the two value columns
+*     are named from the same month, so a quarter 4 run reads Jan-27
+*     rather than "Month 1".
+      lv_ai  = lv_ix - 3.
+      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } additional|.
+      lv_col = |BUS_FCST_ADD{ lv_ai }|.
+      PERFORM txt USING lv_col lv_hdr.
+
+      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } final|.
+      lv_col = |M{ lv_ix }_FCST_FINAL|.
+      PERFORM txt USING lv_col lv_hdr.
+
+*     Headed as the request of 15/09/26 names them
+*     lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } value|.                 "Changes by Arnav on 15/09/26
+      lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.        "Changes by Arnav on 15/09/26
+      lv_col = |M{ lv_ix }_VAL|.
+      PERFORM txt USING lv_col lv_hdr.
+
+*     lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } tonnage value|.         "Changes by Arnav on 15/09/26
+      lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.   "Changes by Arnav on 15/09/26
+      lv_col = |M{ lv_ix }_TON_VAL|.
+      PERFORM txt USING lv_col lv_hdr.
+*EOC By Arnav on 03/09/26
+    ENDLOOP.
+
+  ELSE.
+
+*   Month based planning forecasts one month, drawn in M4_FCST
+    lv_per = p_perio.
+    zcl_pp_fcst_util=>period_to_yearmonth( EXPORTING iv_fyear  = p_fyear
+                                                     iv_period = lv_per
+                                           IMPORTING ev_gjahr  = lv_yy
+                                                     ev_month  = lv_mm ).
+    PERFORM month_name USING lv_mm CHANGING lv_nam.
+
+    lv_hdr = |{ lv_nam }-{ lv_yy+2(2) }|.
+    PERFORM txt USING 'M4_FCST' lv_hdr.
+
+    lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } tonnage|.
+    PERFORM txt USING 'M4_TON' lv_hdr.
+
+    lv_hdr = |Additional Plan Qty { lv_nam }-{ lv_yy+2(2) }|.
+    PERFORM txt USING 'BUS_FCST_ADD' lv_hdr.
+
+*BOC By Arnav on 15/09/26
+*   The two value columns of the month, named as the request of
+*   15/09/26 names them
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.
+    PERFORM txt USING 'M4_VAL' lv_hdr.
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.
+    PERFORM txt USING 'M4_TON_VAL' lv_hdr.
+*EOC By Arnav on 15/09/26
+
+  ENDIF.
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& Save from the list
+*&
+*& There is no GUI status in this program and there cannot be one - it
+*& is screen free so that the object ships by abapGit, and SE41 statuses
+*& are not serialised. SET_SCREEN_STATUS therefore always failed and the
+*& Save button never reached the toolbar, which is why the list looked
+*& like it refused to save. The list is closed first and the question is
+*& asked afterwards, which needs no status at all.
+*&
+*& Skipped when the Save checkbox already saved the run, when there is
+*& nothing to save, and when the user has no create authority - there is
+*& no point asking a question whose answer can only be refused.
+*&---------------------------------------------------------------------*
+*BOC By Arnav on 03/09/26
+* The confirm popup is withdrawn and this routine is no longer
+* called. Commented out whole rather than left in place, because it
+* still reads P_SAVE, which no longer exists.
+*FORM save_prompt.
+*
+** LV_Q is CHAR 100 and not a STRING: TEXT_QUESTION of POPUP_TO_CONFIRM
+** is typed generic C, which a STRING is not compatible with.
+*  DATA: lv_ans  TYPE c LENGTH 1,
+*        lv_q    TYPE char100,
+*        lv_rows TYPE char10.
+*
+*  CHECK p_save = abap_false.
+*  CHECK gt_alv IS NOT INITIAL.
+*  CHECK go_fcst IS BOUND.
+*
+*  LOOP AT s_werks INTO DATA(ls_w3).
+*    IF zcl_pp_fcst_util=>check_authority( iv_werks = ls_w3-low
+*                                          iv_actvt = '01' ) = abap_false.
+*      RETURN.
+*    ENDIF.
+*  ENDLOOP.
+*
+*  lv_rows = lines( gt_alv ).
+*  CONDENSE lv_rows.
+*  CONCATENATE 'Save' lv_rows 'forecast row(s) for' p_fyear
+*         INTO lv_q SEPARATED BY space.
+*  CONCATENATE lv_q '?' INTO lv_q.
+*
+*  CALL FUNCTION 'POPUP_TO_CONFIRM'
+*    EXPORTING  titlebar              = 'Save forecast'
+*               text_question         = lv_q
+*               text_button_1         = 'Save'
+*               text_button_2         = 'Do not save'
+*               default_button        = '2'
+*               display_cancel_button = abap_false
+*    IMPORTING  answer                = lv_ans
+*    EXCEPTIONS text_not_found        = 1
+*               OTHERS                = 2.
+*
+*  CHECK sy-subrc = 0 AND lv_ans = '1'.
+*
+*  PERFORM save_all.
+*
+*ENDFORM.
+*EOC By Arnav on 03/09/26
+*& EOC By Arnav on 31/08/26
 
 
 *&---------------------------------------------------------------------*
@@ -1242,53 +1746,3 @@ FORM txt USING pv_name TYPE any
   ENDTRY.
 
 ENDFORM.
-
-
-*BOC By Arnav on 15/09/26
-*&---------------------------------------------------------------------*
-*& Headings of the value columns, with the calendar month behind them:
-*&   VAL_M4 .. VAL_M6          Price for Jul 26 in EA
-*&   VAL_M4_TON .. VAL_M6_TON  Price for Jul 26 in Tonnage
-*& Quarterly names the three months of the quarter; monthly has one
-*& month, so only VAL_M4 and VAL_M4_TON are headed (the others are
-*& hidden in that mode anyway).
-*&---------------------------------------------------------------------*
-FORM price_headings.
-
-  DATA: lt_per TYPE zcl_pp_fcst_util=>tt_period,
-        lv_col TYPE lvc_fname,
-        lv_hdr TYPE string,
-        lv_nam TYPE char3,
-        lv_yy  TYPE gjahr,
-        lv_mm  TYPE numc2,
-        lv_i   TYPE i.
-
-  IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
-    lt_per = zcl_pp_fcst_util=>quarter_periods( iv_fyear   = p_fyear
-                                                iv_quarter = p_quart ).
-  ELSE.
-    zcl_pp_fcst_util=>period_to_yearmonth( EXPORTING iv_fyear  = p_fyear
-                                                     iv_period = CONV #( p_perio )
-                                           IMPORTING ev_gjahr  = lv_yy
-                                                     ev_month  = lv_mm ).
-    APPEND VALUE #( gjahr = lv_yy month = lv_mm ) TO lt_per.
-  ENDIF.
-
-  LOOP AT lt_per INTO DATA(ls_per).
-
-    lv_i  = sy-tabix + 3.
-    lv_yy = ls_per-gjahr.
-    PERFORM month_name USING ls_per-month CHANGING lv_nam.
-
-    lv_col = |VAL_M{ lv_i }|.
-    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.
-    PERFORM txt USING lv_col lv_hdr.
-
-    lv_col = |VAL_M{ lv_i }_TON|.
-    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.
-    PERFORM txt USING lv_col lv_hdr.
-
-  ENDLOOP.
-
-ENDFORM.
-*EOC By Arnav on 15/09/26

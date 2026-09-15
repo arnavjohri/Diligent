@@ -185,7 +185,10 @@ All        Tonnage    = forecast qty × MARA-NTGEW
 | 019 | E | Save is only allowed when the selected period condition is met |
 | 020 | W | Material &1 is excluded from forecasting |
 | 021 | E | Number range ZPPFCST has no interval for financial year &1 |
-| 022 | W | TVARVC variable &1 not maintained, material type not restricted |
+| 022 | E | Nothing was saved, &1 row(s) refused - see the messages above |
+| 023 | W | &1 month(s) had no legacy data and were read from the standard tables |
+| 024 | E | &1 could not be read as Excel, save it as CSV or tab separated text |
+| 025 | W | TVARVC variable &1 not maintained, material type not restricted |
 
 ---
 
@@ -282,7 +285,8 @@ logic.
 Quarterly and monthly only. `READ_PRICES`: A923 on `MATNR` alone, record with the latest
 `DATAB`, its `KONP-KBETR` (lowest `KOPOS`). No condition type, sales organisation, valid-to
 check, `KPEIN` or `KONWA` — built exactly as worded and flagged `ASSUMPTION` in the code.
-Values: `VAL_Mn = Mn_FCST × PRICE`, `VAL_Mn_TON = Mn_TON × PRICE` (the sample gives
-189.045 × 1.2 = 226.854, so tonnage times the per-piece price, dimensionally odd but as
-shown), `VAL_TOTAL = TOTAL_QTY × PRICE`. All display only. `FILTER_MTART`: TVARVC
-`ZPP_FORECAST_MTART` as a range over `MARA-MTART`; empty variable → message 022, no filter.
+Values: `Mn_VAL = Mn_FCST_FINAL × PRICE`, `Mn_TON_VAL = tonnage of Mn_FCST_FINAL × PRICE`
+(the sample gives 189.045 × 1.2 = 226.854, so tonnage times the per-piece price,
+dimensionally odd but as shown), `TOTAL_VAL = TOTAL_QTY × PRICE`; monthly `M4_VAL` and
+`M4_TON_VAL` on `TOTAL_QTY`. `FILTER_MTART`: TVARVC `ZPP_FORECAST_MTART` as a range over
+`MARA-MTART`; empty variable → message 025, no filter.

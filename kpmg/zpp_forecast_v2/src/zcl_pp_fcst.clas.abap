@@ -78,6 +78,22 @@ CLASS zcl_pp_fcst DEFINITION
              prod_cat  TYPE zde_prod_cat,
              load_fct  TYPE zde_load_fct,
              mts_mto   TYPE zde_mts_mto,
+*BOC By Arnav on 31/08/26
+*            Price column asked for on all three radio buttons. Where it
+*            comes from and how it is worked out is still open with the
+*            functional team, so the column is declared and displayed but
+*            nothing fills it yet.
+*
+*            Typed as a plain packed field and NOT over a CURR data
+*            element on purpose: a CURR column with no currency reference
+*            field makes SALV raise CX_SALV_DATA_ERROR. It is display
+*            only and is written to no table, so no DDIC change is needed
+*            and the abapGit ZIP is unaffected.
+*            " ASSUMPTION: price is per base unit of measure, in the
+*            " company code currency. To be confirmed before the logic
+*            " is written.
+             price     TYPE p LENGTH 13 DECIMALS 2,
+*EOC By Arnav on 31/08/26
 
              "--- annual -------------------------------------------------
              m01        TYPE zde_fcst_qty,
@@ -148,22 +164,40 @@ CLASS zcl_pp_fcst DEFINITION
              m5_ton       TYPE zde_fcst_qty,
              m6_ton       TYPE zde_fcst_qty,
              reason       TYPE zde_fcst_reason,
+*BOC By Arnav on 03/09/26
+*            Quarterly splits the additional plan quantity by month.
+*            BUS_FCST_ADD above is left for the MONTHLY sheet -
+*            ZPPT_FCST_MN is one row per month already and has nothing
+*            to split. REASON stays SINGLE on both tables: the CR did
+*            not ask for one per month. A quarter changed three times
+*            therefore keeps the reason from the LAST row uploaded.
+             bus_fcst_add1 TYPE zde_fcst_qty,
+             bus_fcst_add2 TYPE zde_fcst_qty,
+             bus_fcst_add3 TYPE zde_fcst_qty,
+             m4_fcst_final TYPE zde_fcst_qty,
+             m5_fcst_final TYPE zde_fcst_qty,
+             m6_fcst_final TYPE zde_fcst_qty,
+*            Final quantity x PRICE, and final tonnage x PRICE. Both are
+*            0 until the price logic lands.
+*
+*            Typed the same way as PRICE above and NOT over the CURR
+*            data element ZDE_FCST_VAL, for the reason the 31/08 note
+*            gives: a CURR column with no currency reference field in
+*            the structure makes SALV raise CX_SALV_DATA_ERROR. The
+*            table fields are CURR; these are display only and
+*            CORRESPONDING converts between them.
+             m4_val        TYPE p LENGTH 13 DECIMALS 2,
+             m5_val        TYPE p LENGTH 13 DECIMALS 2,
+             m6_val        TYPE p LENGTH 13 DECIMALS 2,
+             m4_ton_val    TYPE p LENGTH 13 DECIMALS 2,
+             m5_ton_val    TYPE p LENGTH 13 DECIMALS 2,
+             m6_ton_val    TYPE p LENGTH 13 DECIMALS 2,
+*EOC By Arnav on 03/09/26
 *BOC By Arnav on 15/09/26
-*            Price from A923 -> KONP-KBETR and the values derived from
-*            it, change request of 15/09/26. Display only: none of these
-*            is stored, CORRESPONDING on save ignores them because the
-*            forecast tables carry no such fields.
-*              VAL_Mn     = Mn_FCST   x PRICE   "Price for <month> in EA"
-*              VAL_Mn_TON = Mn_TON    x PRICE   "Price for <month> in Tonnage"
-*              VAL_TOTAL  = TOTAL_QTY x PRICE   "Final forecast qty x Price"
-             price        TYPE kbetr_kond,
-             val_m4       TYPE zde_fcst_qty,
-             val_m5       TYPE zde_fcst_qty,
-             val_m6       TYPE zde_fcst_qty,
-             val_m4_ton   TYPE zde_fcst_qty,
-             val_m5_ton   TYPE zde_fcst_qty,
-             val_m6_ton   TYPE zde_fcst_qty,
-             val_total    TYPE zde_fcst_qty,
+*            Whole-quarter value, TOTAL_QTY x PRICE - the "Final forecast
+*            qty x Price" column of the 15/09/26 request. Display only,
+*            typed like PRICE for the SALV reason given above.
+             total_val     TYPE p LENGTH 13 DECIMALS 2,
 *EOC By Arnav on 15/09/26
            END OF ty_alv,
            tt_alv   TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY,
@@ -297,11 +331,17 @@ CLASS zcl_pp_fcst DEFINITION
     METHODS read_prices
       IMPORTING it_scope        TYPE tt_scope
       RETURNING VALUE(rt_price) TYPE tt_price.
-
-    "! The value columns - quantity times price.
-    METHODS fill_values
-      CHANGING cs_alv TYPE ty_alv.
 *EOC By Arnav on 15/09/26
+
+*BOC By Arnav on 31/08/26
+    "! Adds the buckets of IT_FROM that CT_HIST does not already carry.
+    "! Nothing already in CT_HIST is touched, so the legacy figure always
+    "! wins over the standard one for the same plant, material and month.
+    METHODS merge_missing
+      IMPORTING it_from  TYPE tt_hist
+      EXPORTING ev_added TYPE i
+      CHANGING  ct_hist  TYPE tt_hist.
+*EOC By Arnav on 31/08/26
 
     METHODS fill_master_data
       CHANGING cs_alv TYPE ty_alv.
@@ -328,6 +368,15 @@ CLASS zcl_pp_fcst DEFINITION
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
+
+*BOC By Arnav on 31/08/26
+    "! Next forecast number derived from ZPPT_FCST_YR itself. Used only
+    "! when number range object ZPPFCST is not available, so that a
+    "! missing SNRO entry does not stop the user saving.
+    METHODS number_from_table
+      IMPORTING iv_fyear     TYPE zde_fyear
+      RETURNING VALUE(rv_no) TYPE zde_fcst_no.
+*EOC By Arnav on 31/08/26
 
     METHODS add_msg
       IMPORTING iv_type   TYPE bapi_mtype DEFAULT 'E'
@@ -364,16 +413,53 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                                    IMPORTING ev_from  = DATA(lv_from)
                                              ev_to    = DATA(lv_to) ).
 
+*BOC By Arnav on 31/08/26
+*   Legacy used to be exclusive - a plant, material and month that
+*   ZPPT_SLS_HIST did not carry was reported as zero, and a material with
+*   no legacy row at all disappeared from the run:
+*
+*    IF iv_legacy = abap_true.
+*      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*                             iv_from = lv_from iv_to = lv_to ).
+*    ELSE.
+*      mt_hist = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+*                              iv_from = lv_from iv_to = lv_to ).
+*      add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+*                                      iv_from = lv_from iv_to = lv_to
+*                            CHANGING  ct_hist = mt_hist ).
+*    ENDIF.
+*
+*   Legacy is now the PREFERRED source rather than the only one. Every
+*   bucket legacy does not cover is filled from the standard tables, so a
+*   part loaded legacy file no longer hides the SAP history behind it.
+    DATA: lt_std   TYPE tt_hist,
+          lv_gaps  TYPE i.
+
+    CLEAR: mt_hist, lt_std, lv_gaps.
+
     IF iv_legacy = abap_true.
       mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
                              iv_from = lv_from iv_to = lv_to ).
-    ELSE.
-      mt_hist = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
-                              iv_from = lv_from iv_to = lv_to ).
-      add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
-                                      iv_from = lv_from iv_to = lv_to
-                            CHANGING  ct_hist = mt_hist ).
     ENDIF.
+
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+                           iv_from = lv_from iv_to = lv_to ).
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = lt_std ).
+
+    IF iv_legacy = abap_true.
+      merge_missing( EXPORTING it_from  = lt_std
+                     IMPORTING ev_added = lv_gaps
+                     CHANGING  ct_hist  = mt_hist ).
+      IF lv_gaps > 0.
+        add_msg( EXPORTING iv_type = 'W' iv_number = 023 iv_v1 = lv_gaps
+                 CHANGING  ct_msg = et_msg ).
+      ENDIF.
+    ELSE.
+      mt_hist = lt_std.
+    ENDIF.
+*EOC By Arnav on 31/08/26
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
 
@@ -489,16 +575,49 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       DATA(lv_swap) = lv_from. lv_from = lv_to. lv_to = lv_swap.
     ENDIF.
 
+*BOC By Arnav on 31/08/26
+*   Legacy is the preferred source, not the only one - see the note in
+*   GENERATE_ANNUAL. The standard tables fill every plant, material and
+*   month the legacy upload does not carry.
+*
+*    IF iv_legacy = abap_true.
+*      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*                             iv_from = lv_from iv_to = lv_to ).
+*    ELSE.
+*      mt_hist = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+*                              iv_from = lv_from iv_to = lv_to ).
+*      add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+*                                      iv_from = lv_from iv_to = lv_to
+*                            CHANGING  ct_hist = mt_hist ).
+*    ENDIF.
+    DATA: lt_std  TYPE tt_hist,
+          lv_gaps TYPE i.
+
+    CLEAR: mt_hist, lt_std, lv_gaps.
+
     IF iv_legacy = abap_true.
       mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
                              iv_from = lv_from iv_to = lv_to ).
-    ELSE.
-      mt_hist = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
-                              iv_from = lv_from iv_to = lv_to ).
-      add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
-                                      iv_from = lv_from iv_to = lv_to
-                            CHANGING  ct_hist = mt_hist ).
     ENDIF.
+
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+                           iv_from = lv_from iv_to = lv_to ).
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = lt_std ).
+
+    IF iv_legacy = abap_true.
+      merge_missing( EXPORTING it_from  = lt_std
+                     IMPORTING ev_added = lv_gaps
+                     CHANGING  ct_hist  = mt_hist ).
+      IF lv_gaps > 0.
+        add_msg( EXPORTING iv_type = 'W' iv_number = 023 iv_v1 = lv_gaps
+                 CHANGING  ct_msg = et_msg ).
+      ENDIF.
+    ELSE.
+      mt_hist = lt_std.
+    ENDIF.
+*EOC By Arnav on 31/08/26
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
 
@@ -569,13 +688,41 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       ls_alv-fcst_qty = ls_alv-max_qty * ls_alv-load_fct.
 
       "--- Business forecast already uploaded ----------------------------
-      SELECT SINGLE bus_fcst, bus_fcst_add FROM zppt_fcst_qt
-        INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add )
+*BOC By Arnav on 03/09/26
+*     SELECT SINGLE bus_fcst, bus_fcst_add FROM zppt_fcst_qt
+*       INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add )
+*       WHERE werks = @ls_scope-werks AND matnr = @ls_scope-matnr
+*         AND gjahr = @ls_alv-gjahr   AND quarter = @iv_quarter.
+*
+*     ls_alv-final_qty = nmax( val1 = ls_alv-fcst_qty val2 = ls_alv-bus_fcst ).
+*     ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add.
+*     The additional plan quantity is per month now. REASON, WAERS and
+*     PRICE are read back too - SAVE writes the row with CORRESPONDING,
+*     so anything not read here would be blanked by the next save.
+      SELECT SINGLE bus_fcst, bus_fcst_add1, bus_fcst_add2, bus_fcst_add3,
+                    reason, price
+        FROM zppt_fcst_qt
+        INTO ( @ls_alv-bus_fcst,
+               @ls_alv-bus_fcst_add1, @ls_alv-bus_fcst_add2,
+               @ls_alv-bus_fcst_add3,
+               @ls_alv-reason, @ls_alv-price )
         WHERE werks = @ls_scope-werks AND matnr = @ls_scope-matnr
           AND gjahr = @ls_alv-gjahr   AND quarter = @iv_quarter.
 
       ls_alv-final_qty = nmax( val1 = ls_alv-fcst_qty val2 = ls_alv-bus_fcst ).
-      ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add.
+      ls_alv-total_qty = ls_alv-final_qty
+                       + ls_alv-bus_fcst_add1
+                       + ls_alv-bus_fcst_add2
+                       + ls_alv-bus_fcst_add3.
+*EOC By Arnav on 03/09/26
+
+*BOC By Arnav on 15/09/26
+*     PRICE comes from A923 / KONP-KBETR (request of 15/09/26), not from
+*     the row saved earlier - the read above only stops SAVE blanking the
+*     column, the figure is overwritten here. The value columns in the
+*     split below multiply by it; no condition record leaves it at zero.
+      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+*EOC By Arnav on 15/09/26
 
       "--- Split back into the three months ------------------------------
       DO 3 TIMES.
@@ -600,11 +747,43 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
           <lv_t> = zcl_pp_fcst_util=>to_tonnage( iv_qty = lv_share iv_ntgew = ls_alv-ntgew ).
         ENDIF.
 
+*BOC By Arnav on 03/09/26
+*       Final of a month = that month's forecast plus that month's
+*       additional plan quantity. The value columns are the final
+*       quantity, and the final quantity in tonnes, times PRICE. PRICE
+*       is still not filled by anything, so both read 0.
+        ASSIGN COMPONENT |BUS_FCST_ADD{ lv_i }|      OF STRUCTURE ls_alv
+          TO FIELD-SYMBOL(<lv_a>).
+        ASSIGN COMPONENT |M{ lv_i + 3 }_FCST_FINAL|  OF STRUCTURE ls_alv
+          TO FIELD-SYMBOL(<lv_ff>).
+        ASSIGN COMPONENT |M{ lv_i + 3 }_VAL|         OF STRUCTURE ls_alv
+          TO FIELD-SYMBOL(<lv_v>).
+        ASSIGN COMPONENT |M{ lv_i + 3 }_TON_VAL|     OF STRUCTURE ls_alv
+          TO FIELD-SYMBOL(<lv_tv>).
+
+        IF <lv_a> IS ASSIGNED AND <lv_ff> IS ASSIGNED.
+
+          DATA(lv_final) = CONV zde_fcst_qty( lv_share + <lv_a> ).
+          <lv_ff> = lv_final.
+
+          IF <lv_v> IS ASSIGNED.
+            <lv_v> = lv_final * ls_alv-price.
+          ENDIF.
+
+          IF <lv_tv> IS ASSIGNED.
+            DATA(lv_fton) = zcl_pp_fcst_util=>to_tonnage( iv_qty   = lv_final
+                                                          iv_ntgew = ls_alv-ntgew ).
+            <lv_tv> = lv_fton * ls_alv-price.
+          ENDIF.
+
+        ENDIF.
+*EOC By Arnav on 03/09/26
+
       ENDDO.
 
 *BOC By Arnav on 15/09/26
-      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
-      fill_values( CHANGING cs_alv = ls_alv ).
+*     Whole quarter: final of all three months (TOTAL_QTY) times PRICE
+      ls_alv-total_val = ls_alv-total_qty * ls_alv-price.
 *EOC By Arnav on 15/09/26
 
       ls_alv-light = '2'.
@@ -650,19 +829,55 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       DATA(lv_swap) = lv_from. lv_from = lv_to. lv_to = lv_swap.
     ENDIF.
 
+*BOC By Arnav on 31/08/26
+*   Legacy is the preferred source, not the only one - see the note in
+*   GENERATE_ANNUAL. Monthly reads material documents rather than
+*   invoices, so the gaps are filled from MATDOC.
+*
+*    IF iv_legacy = abap_true.
+*      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*                             iv_from = lv_from iv_to = lv_to ).
+*    ELSE.
+*      mt_hist = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr
+*                             iv_from = lv_from iv_to = lv_to ).
+*      add_old_material_qty( EXPORTING ir_werks       = ir_werks
+*                                      ir_matnr       = ir_matnr
+*                                      iv_from        = lv_from
+*                                      iv_to          = lv_to
+*                                      iv_use_billing = abap_false
+*                            CHANGING  ct_hist        = mt_hist ).
+*    ENDIF.
+    DATA: lt_std  TYPE tt_hist,
+          lv_gaps TYPE i.
+
+    CLEAR: mt_hist, lt_std, lv_gaps.
+
     IF iv_legacy = abap_true.
       mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
                              iv_from = lv_from iv_to = lv_to ).
-    ELSE.
-      mt_hist = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr
-                             iv_from = lv_from iv_to = lv_to ).
-      add_old_material_qty( EXPORTING ir_werks       = ir_werks
-                                      ir_matnr       = ir_matnr
-                                      iv_from        = lv_from
-                                      iv_to          = lv_to
-                                      iv_use_billing = abap_false
-                            CHANGING  ct_hist        = mt_hist ).
     ENDIF.
+
+    lt_std = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr
+                          iv_from = lv_from iv_to = lv_to ).
+    add_old_material_qty( EXPORTING ir_werks       = ir_werks
+                                    ir_matnr       = ir_matnr
+                                    iv_from        = lv_from
+                                    iv_to          = lv_to
+                                    iv_use_billing = abap_false
+                          CHANGING  ct_hist        = lt_std ).
+
+    IF iv_legacy = abap_true.
+      merge_missing( EXPORTING it_from  = lt_std
+                     IMPORTING ev_added = lv_gaps
+                     CHANGING  ct_hist  = mt_hist ).
+      IF lv_gaps > 0.
+        add_msg( EXPORTING iv_type = 'W' iv_number = 023 iv_v1 = lv_gaps
+                 CHANGING  ct_msg = et_msg ).
+      ENDIF.
+    ELSE.
+      mt_hist = lt_std.
+    ENDIF.
+*EOC By Arnav on 31/08/26
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
 
@@ -750,8 +965,18 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       ENDIF.
 
 *BOC By Arnav on 15/09/26
-      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
-      fill_values( CHANGING cs_alv = ls_alv ).
+*     Price and value for the one month planned (request of 15/09/26).
+*     The quarterly sheet already had these; monthly showed nothing,
+*     which is the "values in quarterly but not in monthly" of the
+*     request. Same rule as quarterly: the value is the final INCLUDING
+*     the additional plan quantity (TOTAL_QTY), and the tonnage value is
+*     that quantity in tonnes times the same price. Display only -
+*     ZPPT_FCST_MN has no price or value fields, so SAVE stores none.
+      ls_alv-price      = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+      ls_alv-m4_val     = ls_alv-total_qty * ls_alv-price.
+      ls_alv-m4_ton_val = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
+                                                        iv_ntgew = ls_alv-ntgew )
+                        * ls_alv-price.
 *EOC By Arnav on 15/09/26
 
       ls_alv-light = '2'.
@@ -772,6 +997,9 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
   METHOD save.
 
     DATA lv_saved TYPE i.
+*BOC By Arnav on 31/08/26
+    DATA lv_refused TYPE i.
+*EOC By Arnav on 31/08/26
 
     LOOP AT ct_alv ASSIGNING FIELD-SYMBOL(<ls>) WHERE mark = abap_true.
 
@@ -780,6 +1008,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         add_msg( EXPORTING iv_number = 010 iv_v1 = <ls>-werks iv_v2 = '01'
                  CHANGING  ct_msg = rt_msg ).
         <ls>-light = '1'.
+        lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
         CONTINUE.
       ENDIF.
 
@@ -801,6 +1030,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
             add_msg( EXPORTING iv_number = 021 iv_v1 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
+            lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
             CONTINUE.
           ENDIF.
 
@@ -832,6 +1062,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                                iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
+            lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
             CONTINUE.
           ENDIF.
 
@@ -852,6 +1083,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                                iv_v2 = <ls>-matnr iv_v3 = <ls>-fyear
                      CHANGING  ct_msg = rt_msg ).
             <ls>-light = '1'.
+            lv_refused = lv_refused + 1.   "Changes by Arnav on 31/08/26
             CONTINUE.
           ENDIF.
 
@@ -871,6 +1103,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       ELSE.
         <ls>-light   = '1'.
         <ls>-message = |Save failed|.
+        lv_refused   = lv_refused + 1.   "Changes by Arnav on 31/08/26
       ENDIF.
 
     ENDLOOP.
@@ -887,7 +1120,19 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                CHANGING  ct_msg = rt_msg ).
     ELSE.
       ROLLBACK WORK.
-      add_msg( EXPORTING iv_number = 017 CHANGING ct_msg = rt_msg ).
+*BOC By Arnav on 31/08/26
+*     017 is "Select at least one line", which is what the user was told
+*     even when they had selected rows and every one of them had been
+*     refused for a reason already sitting in RT_MSG. The two cases are
+*     now told apart.
+*      add_msg( EXPORTING iv_number = 017 CHANGING ct_msg = rt_msg ).
+      IF lv_refused > 0.
+        add_msg( EXPORTING iv_number = 022 iv_v1 = lv_refused
+                 CHANGING  ct_msg = rt_msg ).
+      ELSE.
+        add_msg( EXPORTING iv_number = 017 CHANGING ct_msg = rt_msg ).
+      ENDIF.
+*EOC By Arnav on 31/08/26
     ENDIF.
 
   ENDMETHOD.
@@ -1034,7 +1279,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *&---------------------------------------------------------------------*
   METHOD add_old_material_qty.
 
-    SELECT werks, new_matnr, old_matnr1, old_matnr2
+*BOC By Arnav on 03/09/26  - five superseded codes per successor, not two
+*   SELECT werks, new_matnr, old_matnr1, old_matnr2
+    SELECT werks, new_matnr,
+           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+*EOC By Arnav on 03/09/26
       FROM zppt_mat_track
       INTO TABLE @DATA(lt_track)
       WHERE werks     IN @ir_werks
@@ -1050,14 +1299,25 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
       CLEAR: lr_old, lr_wrk, lt_old.
 
-      IF ls_track-old_matnr1 IS NOT INITIAL
-     AND ls_track-old_matnr1 <> ls_track-new_matnr.
-        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr1 ) TO lr_old.
-      ENDIF.
-      IF ls_track-old_matnr2 IS NOT INITIAL
-     AND ls_track-old_matnr2 <> ls_track-new_matnr.
-        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr2 ) TO lr_old.
-      ENDIF.
+*BOC By Arnav on 03/09/26
+*     IF ls_track-old_matnr1 IS NOT INITIAL
+*    AND ls_track-old_matnr1 <> ls_track-new_matnr.
+*       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr1 ) TO lr_old.
+*     ENDIF.
+*     IF ls_track-old_matnr2 IS NOT INITIAL
+*    AND ls_track-old_matnr2 <> ls_track-new_matnr.
+*       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr2 ) TO lr_old.
+*     ENDIF.
+*     Walked, so a sixth old code is one number and not another block.
+      DO 5 TIMES.
+        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_track
+          TO FIELD-SYMBOL(<lv_o>).
+        CHECK sy-subrc = 0.
+        IF <lv_o> IS NOT INITIAL AND <lv_o> <> ls_track-new_matnr.
+          APPEND VALUE #( sign = 'I' option = 'EQ' low = <lv_o> ) TO lr_old.
+        ENDIF.
+      ENDDO.
+*EOC By Arnav on 03/09/26
       CHECK lr_old IS NOT INITIAL.
 
       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-werks ) TO lr_wrk.
@@ -1099,16 +1359,26 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *     The old code is retired and its history now belongs to the
 *     successor, so it must not remain in its own right. Without this it
 *     would be counted twice and would receive a forecast of its own.
-      IF ls_track-old_matnr1 IS NOT INITIAL
-     AND ls_track-old_matnr1 <> ls_track-new_matnr.
-        DELETE ct_hist WHERE werks = ls_track-werks
-                         AND matnr = ls_track-old_matnr1.
-      ENDIF.
-      IF ls_track-old_matnr2 IS NOT INITIAL
-     AND ls_track-old_matnr2 <> ls_track-new_matnr.
-        DELETE ct_hist WHERE werks = ls_track-werks
-                         AND matnr = ls_track-old_matnr2.
-      ENDIF.
+*BOC By Arnav on 03/09/26
+*     IF ls_track-old_matnr1 IS NOT INITIAL
+*    AND ls_track-old_matnr1 <> ls_track-new_matnr.
+*       DELETE ct_hist WHERE werks = ls_track-werks
+*                        AND matnr = ls_track-old_matnr1.
+*     ENDIF.
+*     IF ls_track-old_matnr2 IS NOT INITIAL
+*    AND ls_track-old_matnr2 <> ls_track-new_matnr.
+*       DELETE ct_hist WHERE werks = ls_track-werks
+*                        AND matnr = ls_track-old_matnr2.
+*     ENDIF.
+      DO 5 TIMES.
+        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_track
+          TO FIELD-SYMBOL(<lv_d>).
+        CHECK sy-subrc = 0.
+        IF <lv_d> IS NOT INITIAL AND <lv_d> <> ls_track-new_matnr.
+          DELETE ct_hist WHERE werks = ls_track-werks AND matnr = <lv_d>.
+        ENDIF.
+      ENDDO.
+*EOC By Arnav on 03/09/26
 
     ENDLOOP.
 
@@ -1160,20 +1430,34 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   shown for the successor carrying the full twelve months. This also
 *   covers the case where the old code still has a category maintained,
 *   which would otherwise add it back.
-    SELECT werks, old_matnr1, old_matnr2
+*BOC By Arnav on 03/09/26
+*   SELECT werks, old_matnr1, old_matnr2
+    SELECT werks,
+           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+*EOC By Arnav on 03/09/26
       FROM zppt_mat_track
       INTO TABLE @DATA(lt_trk)
       WHERE werks IN @ir_werks.
 
     LOOP AT lt_trk INTO DATA(ls_trk).
-      IF ls_trk-old_matnr1 IS NOT INITIAL.
-        DELETE rt_scope WHERE werks = ls_trk-werks
-                          AND matnr = ls_trk-old_matnr1.
-      ENDIF.
-      IF ls_trk-old_matnr2 IS NOT INITIAL.
-        DELETE rt_scope WHERE werks = ls_trk-werks
-                          AND matnr = ls_trk-old_matnr2.
-      ENDIF.
+*BOC By Arnav on 03/09/26
+*     IF ls_trk-old_matnr1 IS NOT INITIAL.
+*       DELETE rt_scope WHERE werks = ls_trk-werks
+*                         AND matnr = ls_trk-old_matnr1.
+*     ENDIF.
+*     IF ls_trk-old_matnr2 IS NOT INITIAL.
+*       DELETE rt_scope WHERE werks = ls_trk-werks
+*                         AND matnr = ls_trk-old_matnr2.
+*     ENDIF.
+      DO 5 TIMES.
+        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
+          TO FIELD-SYMBOL(<lv_s>).
+        CHECK sy-subrc = 0.
+        IF <lv_s> IS NOT INITIAL.
+          DELETE rt_scope WHERE werks = ls_trk-werks AND matnr = <lv_s>.
+        ENDIF.
+      ENDDO.
+*EOC By Arnav on 03/09/26
     ENDLOOP.
 
   ENDMETHOD.
@@ -1184,7 +1468,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *& Material type restriction - quarterly and monthly only.
 *& TVARVC ZPP_FORECAST_MTART names the permitted types (FERT, HAWA).
 *& An unmaintained variable does not silently empty the list: nothing is
-*& filtered and message 022 goes to the log.
+*& filtered and message 025 goes to the log.
 *&---------------------------------------------------------------------*
   METHOD filter_mtart.
 
@@ -1206,7 +1490,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDLOOP.
 
     IF lr_mtart IS INITIAL.
-      add_msg( EXPORTING iv_type = 'W' iv_number = 022 iv_v1 = gc_tvarv_mtart
+      add_msg( EXPORTING iv_type = 'W' iv_number = 025 iv_v1 = gc_tvarv_mtart
                CHANGING  ct_msg  = ct_msg ).
       RETURN.
     ENDIF.
@@ -1231,7 +1515,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
 
 *&---------------------------------------------------------------------*
-*& Price per material, change request of 15/09/26:
+*& Price per material, request of 15/09/26:
 *&   A923-MATNR -> KNUMH of the record with the latest DATAB
 *&   KONP-KNUMH -> KBETR
 *& ASSUMPTION: A923 is read on the material alone - no condition type,
@@ -1276,30 +1560,21 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-*&---------------------------------------------------------------------*
-*& Value columns. "In Tonnage" is the tonnage figure times the same
-*& price, which is what the sample of 15/09/26 shows:
-*& 189.045 t x 1.2 = 226.854.
-*&---------------------------------------------------------------------*
-  METHOD fill_values.
-
-    cs_alv-val_m4     = cs_alv-m4_fcst   * cs_alv-price.
-    cs_alv-val_m5     = cs_alv-m5_fcst   * cs_alv-price.
-    cs_alv-val_m6     = cs_alv-m6_fcst   * cs_alv-price.
-    cs_alv-val_m4_ton = cs_alv-m4_ton    * cs_alv-price.
-    cs_alv-val_m5_ton = cs_alv-m5_ton    * cs_alv-price.
-    cs_alv-val_m6_ton = cs_alv-m6_ton    * cs_alv-price.
-    cs_alv-val_total  = cs_alv-total_qty * cs_alv-price.
-
-  ENDMETHOD.
 *EOC By Arnav on 15/09/26
 
 
 *&---------------------------------------------------------------------*
   METHOD fill_master_data.
 
+*BOC By Arnav on 31/08/26
+*   Net weight is MARA-NTGEW and its unit MARA-GEWEI, confirmed with the
+*   functional team on 31/08/26. It is read here, shown in the Net Weight
+*   column of all three modes and is the only figure ZCL_PP_FCST_UTIL
+*   =>TO_TONNAGE multiplies by, so a material with no net weight in MARA
+*   reports zero tonnage rather than a wrong one.
+*   Field list and target list are matched by POSITION - MATKL, MEINS,
+*   NTGEW, GEWEI in both.
+*EOC By Arnav on 31/08/26
     SELECT SINGLE matkl, meins, ntgew, gewei FROM mara
       INTO ( @cs_alv-matkl, @cs_alv-meins, @cs_alv-ntgew, @cs_alv-gewei )
       WHERE matnr = @cs_alv-matnr.
@@ -1402,10 +1677,94 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                  OTHERS                  = 4.
 
     IF sy-subrc <> 0.
-      CLEAR rv_no.
+*BOC By Arnav on 31/08/26
+*     A missing SNRO object or interval used to clear the number, the row
+*     was then refused, and the user reported that the system would not
+*     let them save anything at all. SNRO stays the right source and is
+*     still tried first; when it is not there the number is derived from
+*     ZPPT_FCST_YR so the forecast can still be saved.
+*      CLEAR rv_no.
+      rv_no = number_from_table( iv_fyear ).
+*EOC By Arnav on 31/08/26
     ELSE.
       rv_no = |{ rv_no ALPHA = IN }|.
     ENDIF.
+
+  ENDMETHOD.
+
+
+*&---------------------------------------------------------------------*
+*& Forecast number without SNRO
+*&
+*& Only reached when NUMBER_GET_NEXT could not serve the number. The
+*& highest number already stored for the financial year is taken and one
+*& is added; the first number of a year is the last two digits of the
+*& year the financial year starts in followed by 00000001, which is the
+*& shape the number range gives.
+*&
+*& " ASSUMPTION: this is a fallback, not a replacement. Two users saving
+*& " in the same second could draw the same number, so number range
+*& " object ZPPFCST must still be created in SNRO - see NOTES.md.
+*&---------------------------------------------------------------------*
+  METHOD number_from_table.
+
+    DATA: lv_max  TYPE zde_fcst_no,
+          lv_char TYPE char10,
+          lv_num  TYPE n LENGTH 10.
+
+    CLEAR rv_no.
+
+    SELECT MAX( fcst_no ) FROM zppt_fcst_yr INTO @lv_max
+      WHERE fyear = @iv_fyear.
+
+    IF lv_max IS INITIAL.
+
+      zcl_pp_fcst_util=>split_fyear( EXPORTING iv_fyear     = iv_fyear
+                                     IMPORTING ev_year_from = DATA(lv_year) ).
+      CHECK lv_year IS NOT INITIAL.
+
+      CONCATENATE lv_year+2(2) '00000001' INTO lv_char.
+      rv_no = lv_char.
+      RETURN.
+
+    ENDIF.
+
+*   A number written by an earlier release, or by hand, may not be
+*   numeric. Rather than dump, the row is refused as it was before.
+    TRY.
+        lv_num = lv_max.
+      CATCH cx_sy_conversion_no_number.
+        RETURN.
+    ENDTRY.
+
+    lv_num = lv_num + 1.
+    rv_no  = lv_num.
+
+  ENDMETHOD.
+
+
+*&---------------------------------------------------------------------*
+*& Fill the buckets one source does not cover from another
+*&---------------------------------------------------------------------*
+  METHOD merge_missing.
+
+    CLEAR ev_added.
+
+    LOOP AT it_from INTO DATA(ls_from).
+
+      READ TABLE ct_hist TRANSPORTING NO FIELDS
+        WITH TABLE KEY werks = ls_from-werks
+                       matnr = ls_from-matnr
+                       gjahr = ls_from-gjahr
+                       month = ls_from-month.
+
+*     Already carried by the preferred source, which wins
+      CHECK sy-subrc <> 0.
+
+      INSERT ls_from INTO TABLE ct_hist.
+      ev_added = ev_added + 1.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
