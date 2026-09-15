@@ -39,6 +39,21 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   `ZPPT_PROD_CAT`, not in a table of its own.
 - Do not mix DDIC or class names with v1 — the inventories genuinely differ (see
   `zpp_forecast/NOTES.md`).
+- **The 02–03/09 CR build lived on branch `claude/forecast-adhesive-refinements-5asxec`
+  until 15/09/26** and was merged into `main` only then. Anything built against `main`'s
+  forecast folder between 03/09 and 15/09 started from the 26/08 copy (no `BUS_FCST_ADD1/2/3`,
+  no value columns, single `BUS_FCST_ADD` on the quarterly table) and does not activate
+  against the QAS tables. `git log --all -- kpmg/zpp_forecast_v2` before trusting `main`.
+- **Since 15/09/26, quarterly and monthly only:** the scope is cut to the material types in
+  TVARVC `ZPP_FORECAST_MTART` (FERT, HAWA) by `ZCL_PP_FCST=>FILTER_MTART`; an unmaintained
+  variable filters nothing and logs message 025. `PRICE` is derived by `READ_PRICES` from
+  `A923` (latest `DATAB`) → `KONP-KBETR`, read on material alone as the change request words
+  it — no condition type, sales organisation, valid-to, `KPEIN` or `KONWA`. The quarterly
+  row still reads `PRICE` back from `ZPPT_FCST_QT` only so SAVE cannot blank it; the figure
+  is overwritten by the A923 result every run. Monthly now carries `M4_VAL` / `M4_TON_VAL`
+  (display only, `ZPPT_FCST_MN` has no such fields); quarterly gains `TOTAL_VAL`.
+- **`ZCL_PP_FCST_UTIL` still has both authority checks bypassed** (07/09, for QAS initial
+  testing). Restore before release — see ISSUES.md 03/09/26, last entry.
 
 ## Dependencies
 

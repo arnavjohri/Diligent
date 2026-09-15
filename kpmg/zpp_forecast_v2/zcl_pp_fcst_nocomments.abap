@@ -16,6 +16,8 @@ CLASS zcl_pp_fcst DEFINITION
                gc_vkorg_default TYPE vkorg   VALUE '1100',
                gc_msgid         TYPE symsgid VALUE 'ZPP_FCST'.
 
+    CONSTANTS gc_tvarv_mtart TYPE rvari_vnam VALUE 'ZPP_FORECAST_MTART'.
+
     TYPES: BEGIN OF ty_alv,
              mark      TYPE abap_bool,
              light     TYPE char1,
@@ -125,6 +127,7 @@ CLASS zcl_pp_fcst DEFINITION
              m4_ton_val    TYPE p LENGTH 13 DECIMALS 2,
              m5_ton_val    TYPE p LENGTH 13 DECIMALS 2,
              m6_ton_val    TYPE p LENGTH 13 DECIMALS 2,
+             total_val     TYPE p LENGTH 13 DECIMALS 2,
            END OF ty_alv,
            tt_alv   TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY,
            tr_werks TYPE RANGE OF werks_d,
@@ -184,6 +187,12 @@ CLASS zcl_pp_fcst DEFINITION
            END OF ty_scope,
            tt_scope TYPE STANDARD TABLE OF ty_scope WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_price,
+             matnr TYPE matnr,
+             kbetr TYPE kbetr_kond,
+           END OF ty_price,
+           tt_price TYPE SORTED TABLE OF ty_price WITH UNIQUE KEY matnr.
+
     DATA: mt_hist TYPE tt_hist,
           mv_vkorg TYPE vkorg,
           mv_bwart TYPE bwart.
@@ -224,6 +233,14 @@ CLASS zcl_pp_fcst DEFINITION
       IMPORTING ir_werks        TYPE tr_werks
                 ir_matnr        TYPE tr_matnr
       RETURNING VALUE(rt_scope) TYPE tt_scope.
+
+    METHODS filter_mtart
+      CHANGING ct_scope TYPE tt_scope
+               ct_msg   TYPE bapiret2_t.
+
+    METHODS read_prices
+      IMPORTING it_scope        TYPE tt_scope
+      RETURNING VALUE(rt_price) TYPE tt_price.
 
     METHODS merge_missing
       IMPORTING it_from  TYPE tt_hist
@@ -448,6 +465,9 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
 
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
+    DATA(lt_price) = read_prices( lt_scope ).
+
     LOOP AT lt_scope INTO DATA(ls_scope).
 
       DATA(lv_no) = annual_number( iv_werks = ls_scope-werks
@@ -513,6 +533,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                        + ls_alv-bus_fcst_add2
                        + ls_alv-bus_fcst_add3.
 
+      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+
       DO 3 TIMES.
 
         DATA(lv_i) = sy-index.
@@ -562,6 +584,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         ENDIF.
 
       ENDDO.
+
+      ls_alv-total_val = ls_alv-total_qty * ls_alv-price.
 
       ls_alv-light = '2'.
       APPEND ls_alv TO et_alv.
@@ -630,6 +654,9 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
+    DATA(lt_price) = read_prices( lt_scope ).
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
@@ -702,6 +729,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         ls_alv-m4_ton = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-final_qty
                                                       iv_ntgew = ls_alv-ntgew ).
       ENDIF.
+
+      ls_alv-price      = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+      ls_alv-m4_val     = ls_alv-total_qty * ls_alv-price.
+      ls_alv-m4_ton_val = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
+                                                        iv_ntgew = ls_alv-ntgew )
 
       ls_alv-light = '2'.
       APPEND ls_alv TO et_alv.
@@ -1083,6 +1115,86 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
           DELETE rt_scope WHERE werks = ls_trk-werks AND matnr = <lv_s>.
         ENDIF.
       ENDDO.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD filter_mtart.
+
+    DATA lr_mtart TYPE RANGE OF mtart.
+
+    CHECK ct_scope IS NOT INITIAL.
+
+    SELECT sign, opti, low, high
+      FROM tvarvc
+      WHERE name = @gc_tvarv_mtart
+      INTO TABLE @DATA(lt_tvarv).
+
+    LOOP AT lt_tvarv INTO DATA(ls_tv).
+      CHECK ls_tv-low IS NOT INITIAL OR ls_tv-high IS NOT INITIAL.
+      APPEND VALUE #( sign   = COND #( WHEN ls_tv-sign IS INITIAL THEN 'I'  ELSE ls_tv-sign )
+                      option = COND #( WHEN ls_tv-opti IS INITIAL THEN 'EQ' ELSE ls_tv-opti )
+                      low    = ls_tv-low
+                      high   = ls_tv-high ) TO lr_mtart.
+    ENDLOOP.
+
+    IF lr_mtart IS INITIAL.
+      add_msg( EXPORTING iv_type = 'W' iv_number = 025 iv_v1 = gc_tvarv_mtart
+               CHANGING  ct_msg  = ct_msg ).
+      RETURN.
+    ENDIF.
+
+    SELECT matnr, mtart
+      FROM mara
+      FOR ALL ENTRIES IN @ct_scope
+      WHERE matnr = @ct_scope-matnr
+      INTO TABLE @DATA(lt_mara).
+
+    SORT lt_mara BY matnr.
+
+    LOOP AT ct_scope INTO DATA(ls_scope).
+      READ TABLE lt_mara INTO DATA(ls_mara)
+        WITH KEY matnr = ls_scope-matnr BINARY SEARCH.
+      IF sy-subrc <> 0 OR ls_mara-mtart NOT IN lr_mtart.
+        DELETE ct_scope.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+  METHOD read_prices.
+
+    CLEAR rt_price.
+
+    CHECK it_scope IS NOT INITIAL.
+
+    SELECT matnr, datab, knumh
+      FROM a923
+      FOR ALL ENTRIES IN @it_scope
+      WHERE matnr = @it_scope-matnr
+      INTO TABLE @DATA(lt_a923).
+
+    CHECK lt_a923 IS NOT INITIAL.
+
+    SORT lt_a923 BY matnr datab DESCENDING knumh DESCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_a923 COMPARING matnr.
+
+    SELECT knumh, kopos, kbetr
+      FROM konp
+      FOR ALL ENTRIES IN @lt_a923
+      WHERE knumh = @lt_a923-knumh
+      INTO TABLE @DATA(lt_konp).
+
+    SORT lt_konp BY knumh kopos.
+    DELETE ADJACENT DUPLICATES FROM lt_konp COMPARING knumh.
+
+    LOOP AT lt_a923 INTO DATA(ls_a923).
+      READ TABLE lt_konp INTO DATA(ls_konp)
+        WITH KEY knumh = ls_a923-knumh BINARY SEARCH.
+      IF sy-subrc = 0.
+        INSERT VALUE #( matnr = ls_a923-matnr
+                        kbetr = ls_konp-kbetr ) INTO TABLE rt_price.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

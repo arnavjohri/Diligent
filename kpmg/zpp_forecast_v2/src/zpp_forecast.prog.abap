@@ -980,6 +980,22 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
   APPEND 'PRICE' TO ct_show.
 *EOC By Arnav on 31/08/26
 
+*BOC By Arnav on 15/09/26
+* Request of 15/09/26. Quarterly: the whole-quarter value, "Final
+* forecast qty x Price", after the price. Monthly: the value in EA and,
+* with Tonnage ticked, the value in tonnage - the quarterly sheet had
+* these since 03/09, the monthly sheet had nothing.
+  CASE g_mode.
+    WHEN zcl_pp_fcst=>gc_mode-quarterly.
+      APPEND 'TOTAL_VAL'  TO ct_show.   " Final forecast qty x Price
+    WHEN zcl_pp_fcst=>gc_mode-monthly.
+      APPEND 'M4_VAL'     TO ct_show.   " Price for <month> in EA
+      IF p_tonn = abap_true.
+        APPEND 'M4_TON_VAL' TO ct_show. " Price for <month> in Tonnage
+      ENDIF.
+  ENDCASE.
+*EOC By Arnav on 15/09/26
+
 * ---- the result of a save --------------------------------------------
 * Only when the run actually saved. The forecast number and the per row
 * outcome are the point of pressing save, so they are shown then and
@@ -1180,6 +1196,7 @@ FORM setup_columns USING pt_show TYPE tt_fname.
   PERFORM txt USING 'NTGEW'     'Net Weight'.
   PERFORM txt USING 'PRICE'     'Price'.
 *EOC By Arnav on 31/08/26
+  PERFORM txt USING 'TOTAL_VAL' 'Final Fcst Qty x Price'.   "Changes by Arnav on 15/09/26
   PERFORM txt USING 'MVGR1_TXT' 'Material Group 1'.
   PERFORM txt USING 'MVGR2_TXT' 'Material Group 2'.
   PERFORM txt USING 'MVGR3_TXT' 'Material Group 3'.
@@ -1338,11 +1355,14 @@ FORM month_headings.
       lv_col = |M{ lv_ix }_FCST_FINAL|.
       PERFORM txt USING lv_col lv_hdr.
 
-      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } value|.
+*     Headed as the request of 15/09/26 names them
+*     lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } value|.                 "Changes by Arnav on 15/09/26
+      lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.        "Changes by Arnav on 15/09/26
       lv_col = |M{ lv_ix }_VAL|.
       PERFORM txt USING lv_col lv_hdr.
 
-      lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } tonnage value|.
+*     lv_hdr = |{ lv_nam }-{ lv_yy+2(2) } tonnage value|.         "Changes by Arnav on 15/09/26
+      lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.   "Changes by Arnav on 15/09/26
       lv_col = |M{ lv_ix }_TON_VAL|.
       PERFORM txt USING lv_col lv_hdr.
 *EOC By Arnav on 03/09/26
@@ -1366,6 +1386,15 @@ FORM month_headings.
 
     lv_hdr = |Additional Plan Qty { lv_nam }-{ lv_yy+2(2) }|.
     PERFORM txt USING 'BUS_FCST_ADD' lv_hdr.
+
+*BOC By Arnav on 15/09/26
+*   The two value columns of the month, named as the request of
+*   15/09/26 names them
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.
+    PERFORM txt USING 'M4_VAL' lv_hdr.
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.
+    PERFORM txt USING 'M4_TON_VAL' lv_hdr.
+*EOC By Arnav on 15/09/26
 
   ENDIF.
 

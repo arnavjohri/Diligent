@@ -152,6 +152,12 @@
      <MSGNR>024</MSGNR>
      <TEXT>&amp;1 could not be read as Excel, save it as CSV or tab separated text</TEXT>
     </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZPP_FCST</ARBGB>
+     <MSGNR>025</MSGNR>
+     <TEXT>TVARVC variable &amp;1 not maintained, material type not restricted</TEXT>
+    </T100>
    </T100_TEXTS>
   </asx:values>
  </asx:abap>

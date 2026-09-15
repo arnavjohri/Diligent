@@ -184,6 +184,11 @@ All        Tonnage    = forecast qty × MARA-NTGEW
 | 018 | E | Configuration missing for plant &1 |
 | 019 | E | Save is only allowed when the selected period condition is met |
 | 020 | W | Material &1 is excluded from forecasting |
+| 021 | E | Number range ZPPFCST has no interval for financial year &1 |
+| 022 | E | Nothing was saved, &1 row(s) refused - see the messages above |
+| 023 | W | &1 month(s) had no legacy data and were read from the standard tables |
+| 024 | E | &1 could not be read as Excel, save it as CSV or tab separated text |
+| 025 | W | TVARVC variable &1 not maintained, material type not restricted |
 
 ---
 
@@ -274,3 +279,14 @@ names as the three forecast tables, so `CORRESPONDING #( )` maps straight to
 them on save. This avoids a second DDIC import cycle. If a dictionary structure
 is preferred for the field catalogue it can be added later without touching the
 logic.
+
+### 9.7 Price, value columns and material type — change request of 15/09/26
+
+Quarterly and monthly only. `READ_PRICES`: A923 on `MATNR` alone, record with the latest
+`DATAB`, its `KONP-KBETR` (lowest `KOPOS`). No condition type, sales organisation, valid-to
+check, `KPEIN` or `KONWA` — built exactly as worded and flagged `ASSUMPTION` in the code.
+Values: `Mn_VAL = Mn_FCST_FINAL × PRICE`, `Mn_TON_VAL = tonnage of Mn_FCST_FINAL × PRICE`
+(the sample gives 189.045 × 1.2 = 226.854, so tonnage times the per-piece price,
+dimensionally odd but as shown), `TOTAL_VAL = TOTAL_QTY × PRICE`; monthly `M4_VAL` and
+`M4_TON_VAL` on `TOTAL_QTY`. `FILTER_MTART`: TVARVC `ZPP_FORECAST_MTART` as a range over
+`MARA-MTART`; empty variable → message 025, no filter.

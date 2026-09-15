@@ -436,3 +436,51 @@ QA source shows `CHECK_MARC` calling `CHECK_AUTHORITY` with ACTVT 02.
 grows from 15 files to 17.
 
 TR: not yet · Files: `kpmg/zpp_forecast_v2/src/zcl_pp_fcst_util.clas.abap`
+
+## 15/09/26 — wrong base: main never had the 02–03/09 CR build
+
+`main`'s forecast folder was still the 26/08 state — the whole 02–03/09 CR build (per-month
+`BUS_FCST_ADD1/2/3`, price and value columns, five old codes, PROGDIR fix, 07/09 auth
+bypass) sat on branch `claude/forecast-adhesive-refinements-5asxec`, 28 commits never
+merged. The first 15/09 build (commits `8f31877`, `d611203`) was made on that stale copy and
+failed activation with `Unknown column name "BUS_FCST_ADD"` in `GENERATE_QUARTERLY` — the
+QAS table has `BUS_FCST_ADD1/2/3` and no `BUS_FCST_ADD`, exactly as the branch's DDIC says.
+**The advice given at that point, to add `BUS_FCST_ADD` back to `ZPPT_FCST_QT` in SE11, was
+wrong and is withdrawn — the table is right, the file was not.**
+
+Recovery: branch merged into `main` (merge commit `3c7d7d6`, forecast folder taken wholesale
+from the branch), then the 15/09 request re-applied on that base below. Same lesson as the
+03/09 entry: `git log --all -- kpmg/zpp_forecast_v2` before trusting `main`, and ask for the
+SE80 download.
+
+## 15/09/26 — ZPP_FORECAST / ZCL_PP_FCST, quarterly and monthly: price logic, value columns, material type
+
+Change request received 15/09/26, three points under "Quarter and Month". Built on the
+03/09 base (branch above). **No fresh SE80 download was supplied** — diff the running
+`ZCL_PP_FCST` and `ZPP_FORECAST` against `src/` before pasting.
+
+| # | Request | What was built | Where |
+|---|---|---|---|
+| 1 | Price logic: A923-MATNR → KNUMH by DATAB descending; KONP-KNUMH → KBETR | This is the "price logic still pending" of the 03/09 entry. `READ_PRICES`, one read per run, latest DATAB per material, lowest KOPOS line of that KNUMH. Read on material alone — no condition type, VKORG, valid-to, KPEIN or KONWA — as worded, flagged `ASSUMPTION` in the method header. `PRICE` is overwritten with the result every run; the existing read-back from `ZPPT_FCST_QT` stays only so SAVE does not blank the column. No condition record → price 0, values 0 (the first row of the sample) | `ZCL_PP_FCST` private method, called after `BUILD_SCOPE` in `GENERATE_QUARTERLY` and `GENERATE_MONTHLY`; price assigned before the quarterly split loop and in the monthly row |
+| 2 | Columns "Price for <month> in EA" ×3, "Price for <month> in Tonnage" ×3, "Final forecast qty × Price" | Quarterly already had `M4/5/6_VAL` (final incl. additional × price) and `M4/5/6_TON_VAL` since 03/09 — re-headed as the request names them, and new `TOTAL_VAL` = `TOTAL_QTY` × price at the end. Monthly gains `M4_VAL` = `TOTAL_QTY` × price and `M4_TON_VAL` = tonnage of `TOTAL_QTY` × price (sample: 189.045 × 1.2 = 226.854), the tonnage value following the Tonnage Wise checkbox. Display only — `ZPPT_FCST_MN` has no price or value fields | `ZCL_PP_FCST` `TY_ALV-TOTAL_VAL`; `ZPP_FORECAST` `VISIBLE_COLUMNS` (after the PRICE append), `MONTH_HEADINGS`, `SETUP_COLUMNS` |
+| 3 | Material type only FERT and HAWA, TVARVC `ZPP_FORECAST_MTART` | `FILTER_MTART` reads the variable as a range (EQ rows or BT), drops every scope material whose MARA-MTART is outside it. Quarterly and monthly only, annual untouched. Unmaintained variable → no filter + new message **ZPP_FCST 025** (W) in the log | `ZCL_PP_FCST` private method |
+
+**"Values come in quarterly but not in monthly"** — on the real base this is simply that the
+03/09 CR added price and value columns to the quarterly sheet only; `GENERATE_MONTHLY` never
+computed a value and `VISIBLE_COLUMNS` never listed one. Point 2 above closes it. (The earlier
+diagnosis blaming the MATDOC source was made against the stale base and is withdrawn.)
+
+Column order after the change — quarterly: … `MTS_MTO`, `PRICE`, `TOTAL_VAL`; monthly: …
+`TOTAL_QTY`, [`M4_TON`], `PRICE`, `M4_VAL`, [`M4_TON_VAL`].
+
+Not touched: `ZPP_FORECAST_REPORT`, `ZPP_FORECAST_UPLOAD` (its `qt_finals` recomputes the
+quarterly values from the stored `PRICE`, which the ALV save now fills), `ZCL_PP_FCST_UTIL`
+(auth bypass of 07/09 still in place). Annual unchanged. ZIPs not rebuilt. The
+`zcl_pp_fcst_nocomments.abap` copy regenerated; `zpp_forecast_v2_nocomments.abap` is a
+stale 31/08 class copy and was left alone.
+
+Manual steps: SE91 message `ZPP_FCST 025`; STVARV selection variable `ZPP_FORECAST_MTART`
+with rows FERT and HAWA; confirm `A923` exists with fields MATNR, DATAB, KNUMH (SE11).
+Do NOT change `ZPPT_FCST_QT`.
+
+TR: not yet transported.
