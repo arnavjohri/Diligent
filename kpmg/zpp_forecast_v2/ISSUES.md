@@ -483,4 +483,7 @@ Manual steps: SE91 message `ZPP_FCST 025`; STVARV selection variable `ZPP_FORECA
 with rows FERT and HAWA; confirm `A923` exists with fields MATNR, DATAB, KNUMH (SE11).
 Do NOT change `ZPPT_FCST_QT`.
 
+**Activated by Arnav on 15/09/26** — `ZCL_PP_FCST`, `ZPP_FORECAST`, message `ZPP_FCST 025`.
+Commit `7388be0` on `main`.
+
 TR: not yet transported.
