@@ -29,6 +29,9 @@
 *&   07.09.2026  Arnav Johri  <TR>  WhldgTaxItemStatus V/D/M/S excluded;
 *&                                  vendor code F4 + ALPHA conversion;
 *&                                  F4 on section code
+*&   15.09.2026  Arnav Johri  <TR>  DERIVE_GL_DIRECT: GL falls back to the
+*&                                  vendor line's GHKON where the document
+*&                                  has no WIT line or its GHKON is blank
 *&---------------------------------------------------------------------*
 
 *&---------------------------------------------------------------------*
@@ -1588,6 +1591,21 @@ ENDFORM.
 *& " ASSUMPTION: on a document with several withholding lines pointing at
 *& different offsetting accounts, the lowest item number is shown - the
 *& row granularity of this report allows exactly one GL per document.
+*&
+*BOC By Arnav on 15/09/26
+*& Fallback, 15/09/26: a document with NO withholding line - or one whose
+*& withholding line carries no GHKON - takes the GHKON of its VENDOR line
+*& instead. Proven on 1700000053 (key 21, TDS 0.00, lines EGK / JIC /
+*& JIS, no WIT line at all): the vendor line's G/L Offset is 62210005,
+*& the expense account the posting hit, which is the GL the report is
+*& meant to group by. 1700000055 failed for the same reason.
+*& READ_VENDOR_LINE picks the line by the FS [J2] rule (KOART 'K',
+*& LIFNR filled), so columns F / J / N / O come off the same line.
+*& " ASSUMPTION: the FS names only the WIT line's GHKON. The fallback is
+*& a departure taken so a zero-tax withholding item is not left without
+*& a GL; if the business would rather EXCLUDE zero-tax rows (QUERIES
+*& Q22) this fallback becomes moot for them. Registered as Q27.
+*EOC By Arnav on 15/09/26
 *&---------------------------------------------------------------------*
 FORM derive_gl_direct USING    ps_dockey TYPE ty_dockey
                       CHANGING pv_gl     TYPE bseg-hkont
@@ -1595,6 +1613,12 @@ FORM derive_gl_direct USING    ps_dockey TYPE ty_dockey
 
   DATA: lv_idx TYPE sy-tabix,
         lv_wit TYPE abap_bool.
+*BOC By Arnav on 15/09/26
+  DATA: ls_vline TYPE ty_bseg,
+        lv_buzei TYPE bseg-buzei.         " stays initial - no item to prefer
+
+  CLEAR: ls_vline, lv_buzei.
+*EOC By Arnav on 15/09/26
 
   CLEAR: pv_gl, pv_reason, lv_wit.
 
@@ -1628,16 +1652,50 @@ FORM derive_gl_direct USING    ps_dockey TYPE ty_dockey
 
   ENDLOOP.
 
+*BOC By Arnav on 15/09/26
+*  IF pv_gl IS INITIAL.
+*    IF lv_wit = abap_true.
+*      pv_reason = 'Withholding line carries no offsetting GL account'.
+*    ELSE.
+**     KTOSL is filled by automatic account determination. A manually
+**     posted withholding line can carry a blank transaction key, which
+**     lands here rather than in an incorrect GL.
+*      pv_reason = 'Document has no withholding line with transaction key WIT'.
+*    ENDIF.
+*  ENDIF.
+
+* No usable WIT line - fall back to the offsetting GL of the vendor line.
+* LV_BUZEI is passed initial: the derivation is per document, not per
+* withholding item, so READ_VENDOR_LINE goes straight to the lowest
+* numbered vendor line (KOART 'K', LIFNR filled) of the document.
+  IF pv_gl IS INITIAL.
+
+    PERFORM read_vendor_line USING    ps_dockey-bukrs
+                                      ps_dockey-belnr
+                                      ps_dockey-gjahr
+                                      lv_buzei
+                             CHANGING ls_vline.
+
+    IF ls_vline-ghkon IS NOT INITIAL.
+      pv_gl = ls_vline-ghkon.
+    ENDIF.
+
+  ENDIF.
+
+* Both routes exhausted. The reason still says which one was tried
+* first, so REPORT_GL_GAPS keeps telling a missing WIT line apart from
+* a WIT line without an account.
   IF pv_gl IS INITIAL.
     IF lv_wit = abap_true.
-      pv_reason = 'Withholding line carries no offsetting GL account'.
+      pv_reason = 'Withholding and vendor lines carry no offsetting GL account'.
     ELSE.
 *     KTOSL is filled by automatic account determination. A manually
 *     posted withholding line can carry a blank transaction key, which
 *     lands here rather than in an incorrect GL.
-      pv_reason = 'Document has no withholding line with transaction key WIT'.
+      pv_reason = 'No WIT line, and vendor line carries no offsetting GL account'.
     ENDIF.
   ENDIF.
+*EOC By Arnav on 15/09/26
 
 ENDFORM.
 
