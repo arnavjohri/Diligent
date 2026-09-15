@@ -732,8 +732,9 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
       ls_alv-price      = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
       ls_alv-m4_val     = ls_alv-total_qty * ls_alv-price.
-      ls_alv-m4_ton_val = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
-                                                        iv_ntgew = ls_alv-ntgew )
+      DATA(lv_tot_ton)  = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
+                                                        iv_ntgew = ls_alv-ntgew ).
+      ls_alv-m4_ton_val = lv_tot_ton * ls_alv-price.
 
       ls_alv-light = '2'.
       APPEND ls_alv TO et_alv.

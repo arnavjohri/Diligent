@@ -989,9 +989,12 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *     ZPPT_FCST_MN has no price or value fields, so SAVE stores none.
       ls_alv-price      = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
       ls_alv-m4_val     = ls_alv-total_qty * ls_alv-price.
-      ls_alv-m4_ton_val = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
-                                                        iv_ntgew = ls_alv-ntgew )
-                        * ls_alv-price.
+*     Tonnage taken into a variable first: a continuation line that
+*     begins with "*" is code here but reads as a comment line the
+*     moment it loses its indentation, e.g. in a paste copy.
+      DATA(lv_tot_ton)  = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-total_qty
+                                                        iv_ntgew = ls_alv-ntgew ).
+      ls_alv-m4_ton_val = lv_tot_ton * ls_alv-price.
 *EOC By Arnav on 15/09/26
 
       ls_alv-light = '2'.
