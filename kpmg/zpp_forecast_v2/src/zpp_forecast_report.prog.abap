@@ -15,6 +15,12 @@ TYPES: BEGIN OF ty_out,
          matnr      TYPE matnr,
          maktx      TYPE maktx,
          matkl      TYPE matkl,
+*BOC By Arnav on 31/08/26
+*        MTS / MTO on the Final ALV as well as on the three planning
+*        modes. It sits with the material attributes, which is where the
+*        annual sheet draws it.
+         mts_mto    TYPE zde_mts_mto,
+*EOC By Arnav on 31/08/26
          mvgr1_txt  TYPE bezei20,
          mvgr2_txt  TYPE bezei20,
          mvgr3_txt  TYPE bezei20,
@@ -31,6 +37,17 @@ TYPES: BEGIN OF ty_out,
          mth_add    TYPE zde_fcst_qty,
          mth_total  TYPE zde_fcst_qty,
          meins      TYPE meins,
+*BOC By Arnav on 31/08/26
+*        Price, asked for on the Final ALV as well. Drawn last, as it is
+*        on the three planning modes, and EMPTY for the same reason -
+*        where the figure comes from is still open with the functional
+*        team. Typed as a plain packed field and not over a CURR data
+*        element: a CURR column with no currency reference field makes
+*        SALV raise CX_SALV_DATA_ERROR.
+*        " ASSUMPTION: price is per base unit of measure, in the company
+*        " code currency. To be confirmed before the logic is written.
+         price      TYPE p LENGTH 13 DECIMALS 2,
+*EOC By Arnav on 31/08/26
        END OF ty_out,
        tt_out TYPE STANDARD TABLE OF ty_out WITH DEFAULT KEY.
 
@@ -120,9 +137,34 @@ FORM collect.
     FOR ALL ENTRIES IN @lt_yr
     WHERE werks = @lt_yr-werks AND matnr = @lt_yr-matnr.
 
+*BOC By Arnav on 31/08/26
+* MTS / MTO is stored with the annual forecast, so most rows cost
+* nothing. A forecast saved before the category was maintained carries a
+* blank, and ZPPT_PROD_CAT fills it in - read ONCE with FOR ALL ENTRIES
+* rather than a SELECT SINGLE per row. LT_YR is guaranteed non-initial
+* by the RETURN a few lines above, which is the guard for all three of
+* these reads.
+  SELECT werks, matnr, mts_mto FROM zppt_prod_cat
+    INTO TABLE @DATA(lt_cat)
+    FOR ALL ENTRIES IN @lt_yr
+    WHERE werks = @lt_yr-werks AND matnr = @lt_yr-matnr.
+*EOC By Arnav on 31/08/26
+
   LOOP AT lt_yr INTO DATA(ls_yr).
 
     CHECK s_matkl[] IS INITIAL OR ls_yr-matkl IN s_matkl.
+
+*BOC By Arnav on 31/08/26
+*   Worked out once per material rather than inside the month loop below
+    DATA(lv_mts) = ls_yr-mts_mto.
+    IF lv_mts IS INITIAL.
+      READ TABLE lt_cat INTO DATA(ls_cat) WITH KEY werks = ls_yr-werks
+                                                   matnr = ls_yr-matnr.
+      IF sy-subrc = 0.
+        lv_mts = ls_cat-mts_mto.
+      ENDIF.
+    ENDIF.
+*EOC By Arnav on 31/08/26
 
     " One output row per monthly forecast, so the report reads month wise
     " as the Final ALV layout shows. Where no monthly forecast exists the
@@ -142,6 +184,7 @@ FORM collect.
                                    matnr   = ls_yr-matnr
                                    maktx   = ls_yr-maktx
                                    matkl   = ls_yr-matkl
+                                   mts_mto = lv_mts   "Changes by Arnav on 31/08/26
                                    fyear   = ls_yr-fyear
                                    meins   = ls_yr-meins
                                    annual  = ls_yr-fcst_total
@@ -157,7 +200,15 @@ FORM collect.
                                                  quarter = lv_qtr.
       IF sy-subrc = 0.
         ls_out-qtr_fcst = ls_qt-final_qty.
-        ls_out-qtr_add  = ls_qt-bus_fcst_add.
+*BOC By Arnav on 03/09/26
+*       ls_out-qtr_add  = ls_qt-bus_fcst_add.
+*       The quarterly table splits the additional plan quantity across
+*       the three months. This report shows the quarter on one line, so
+*       the three are added back together here.
+        ls_out-qtr_add  = ls_qt-bus_fcst_add1
+                        + ls_qt-bus_fcst_add2
+                        + ls_qt-bus_fcst_add3.
+*EOC By Arnav on 03/09/26
       ENDIF.
       ls_out-qtr_total = ls_out-qtr_fcst + ls_out-qtr_add.
 
@@ -174,6 +225,7 @@ FORM collect.
                              matnr   = ls_yr-matnr
                              maktx   = ls_yr-maktx
                              matkl   = ls_yr-matkl
+                             mts_mto = lv_mts   "Changes by Arnav on 31/08/26
                              fyear   = ls_yr-fyear
                              meins   = ls_yr-meins
                              annual  = ls_yr-fcst_total ).
@@ -245,6 +297,10 @@ FORM display.
       PERFORM txt USING lo_cols 'MATNR'     'Material'.
       PERFORM txt USING lo_cols 'MAKTX'     'Material Description'.
       PERFORM txt USING lo_cols 'MATKL'     'Material Group'.
+*BOC By Arnav on 31/08/26
+      PERFORM txt USING lo_cols 'MTS_MTO'   'MTS / MTO'.
+      PERFORM txt USING lo_cols 'PRICE'     'Price'.
+*EOC By Arnav on 31/08/26
       PERFORM txt USING lo_cols 'MVGR1_TXT' 'Material Group 1'.
       PERFORM txt USING lo_cols 'MVGR2_TXT' 'Material Group 2'.
       PERFORM txt USING lo_cols 'MVGR3_TXT' 'Material Group 3'.

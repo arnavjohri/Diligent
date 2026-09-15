@@ -4,9 +4,9 @@
   <asx:values>
    <PROGDIR>
     <NAME>ZPP_FORECAST_REPORT</NAME>
+    <VARCL>X</VARCL>
     <SUBC>1</SUBC>
     <FIXPT>X</FIXPT>
-    <VARCL>X</VARCL>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>

@@ -1,0 +1,1227 @@
+diff --git a/kpmg/zpp_forecast_v2/src/zcl_pp_fcst.clas.abap b/kpmg/zpp_forecast_v2/src/zcl_pp_fcst.clas.abap
+index b481859..8eaa815 100644
+--- a/kpmg/zpp_forecast_v2/src/zcl_pp_fcst.clas.abap
++++ b/kpmg/zpp_forecast_v2/src/zcl_pp_fcst.clas.abap
+@@ -141,6 +141,31 @@ CLASS zcl_pp_fcst DEFINITION
+              m5_ton       TYPE zde_fcst_qty,
+              m6_ton       TYPE zde_fcst_qty,
+              reason       TYPE zde_fcst_reason,
++*BOC By Arnav on 03/09/26
++*            Quarterly splits by month. BUS_FCST_ADD above is left for
++*            the MONTHLY sheet, which is one row per month already and
++*            has nothing to split. The three below belong to quarterly.
++             bus_fcst_add1 TYPE zde_fcst_qty,
++             bus_fcst_add2 TYPE zde_fcst_qty,
++             bus_fcst_add3 TYPE zde_fcst_qty,
++             m4_fcst_final TYPE zde_fcst_qty,
++             m5_fcst_final TYPE zde_fcst_qty,
++             m6_fcst_final TYPE zde_fcst_qty,
++             reason1       TYPE zde_fcst_reason,
++             reason2       TYPE zde_fcst_reason,
++             reason3       TYPE zde_fcst_reason,
++*            PRICE is 0 until the price logic is supplied, so every
++*            value below computes to 0. WAERS stays blank until the
++*            same source tells us which currency the price is in.
++             waers         TYPE waers,
++             price         TYPE zde_fcst_price,
++             m4_val        TYPE zde_fcst_val,
++             m5_val        TYPE zde_fcst_val,
++             m6_val        TYPE zde_fcst_val,
++             m4_ton_val    TYPE zde_fcst_val,
++             m5_ton_val    TYPE zde_fcst_val,
++             m6_ton_val    TYPE zde_fcst_val,
++*EOC By Arnav on 03/09/26
+            END OF ty_alv,
+            tt_alv   TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY,
+            tr_werks TYPE RANGE OF werks_d,
+@@ -512,13 +537,35 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+       ls_alv-fcst_qty = ls_alv-max_qty * ls_alv-load_fct.
+ 
+       "--- Business forecast already uploaded ----------------------------
+-      SELECT SINGLE bus_fcst, bus_fcst_add FROM zppt_fcst_qt
+-        INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add )
++*BOC By Arnav on 03/09/26
++*     SELECT SINGLE bus_fcst, bus_fcst_add FROM zppt_fcst_qt
++*       INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add )
++*       WHERE werks = @ls_scope-werks AND matnr = @ls_scope-matnr
++*         AND gjahr = @ls_alv-gjahr   AND quarter = @iv_quarter.
++*
++*     ls_alv-final_qty = nmax( val1 = ls_alv-fcst_qty val2 = ls_alv-bus_fcst ).
++*     ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add.
++*     The additional plan quantity is per month now. The reasons and the
++*     price are read back as well - SAVE writes the row with
++*     CORRESPONDING, so anything not read here would be blanked out by
++*     the next save.
++      SELECT SINGLE bus_fcst, bus_fcst_add1, bus_fcst_add2, bus_fcst_add3,
++                    reason1, reason2, reason3, waers, price
++        FROM zppt_fcst_qt
++        INTO ( @ls_alv-bus_fcst,
++               @ls_alv-bus_fcst_add1, @ls_alv-bus_fcst_add2,
++               @ls_alv-bus_fcst_add3,
++               @ls_alv-reason1, @ls_alv-reason2, @ls_alv-reason3,
++               @ls_alv-waers, @ls_alv-price )
+         WHERE werks = @ls_scope-werks AND matnr = @ls_scope-matnr
+           AND gjahr = @ls_alv-gjahr   AND quarter = @iv_quarter.
+ 
+       ls_alv-final_qty = nmax( val1 = ls_alv-fcst_qty val2 = ls_alv-bus_fcst ).
+-      ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add.
++      ls_alv-total_qty = ls_alv-final_qty
++                       + ls_alv-bus_fcst_add1
++                       + ls_alv-bus_fcst_add2
++                       + ls_alv-bus_fcst_add3.
++*EOC By Arnav on 03/09/26
+ 
+       "--- Split back into the three months ------------------------------
+       DO 3 TIMES.
+@@ -543,6 +590,38 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+           <lv_t> = zcl_pp_fcst_util=>to_tonnage( iv_qty = lv_share iv_ntgew = ls_alv-ntgew ).
+         ENDIF.
+ 
++*BOC By Arnav on 03/09/26
++*       Final per month = that month's forecast plus that month's
++*       additional plan quantity. The value columns are the final
++*       quantity, and the final quantity in tonnes, times the price.
++*       PRICE is 0 until the price logic arrives, so both are 0 today.
++        ASSIGN COMPONENT |BUS_FCST_ADD{ lv_i }|      OF STRUCTURE ls_alv
++          TO FIELD-SYMBOL(<lv_a>).
++        ASSIGN COMPONENT |M{ lv_i + 3 }_FCST_FINAL|  OF STRUCTURE ls_alv
++          TO FIELD-SYMBOL(<lv_ff>).
++        ASSIGN COMPONENT |M{ lv_i + 3 }_VAL|         OF STRUCTURE ls_alv
++          TO FIELD-SYMBOL(<lv_v>).
++        ASSIGN COMPONENT |M{ lv_i + 3 }_TON_VAL|     OF STRUCTURE ls_alv
++          TO FIELD-SYMBOL(<lv_tv>).
++
++        IF <lv_a> IS ASSIGNED AND <lv_ff> IS ASSIGNED.
++
++          DATA(lv_final) = CONV zde_fcst_qty( lv_share + <lv_a> ).
++          <lv_ff> = lv_final.
++
++          IF <lv_v> IS ASSIGNED.
++            <lv_v> = lv_final * ls_alv-price.
++          ENDIF.
++
++          IF <lv_tv> IS ASSIGNED.
++            DATA(lv_fton) = zcl_pp_fcst_util=>to_tonnage( iv_qty   = lv_final
++                                                          iv_ntgew = ls_alv-ntgew ).
++            <lv_tv> = lv_fton * ls_alv-price.
++          ENDIF.
++
++        ENDIF.
++*EOC By Arnav on 03/09/26
++
+       ENDDO.
+ 
+       ls_alv-light = '2'.
+@@ -961,11 +1040,20 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+ *&---------------------------------------------------------------------*
+   METHOD add_old_material_qty.
+ 
+-    SELECT werks, new_matnr, old_matnr1, old_matnr2
++*BOC By Arnav on 03/09/26
++*   SELECT werks, new_matnr, old_matnr1, old_matnr2
++*     FROM zppt_mat_track
++*     INTO TABLE @DATA(lt_track)
++*     WHERE werks     IN @ir_werks
++*       AND new_matnr IN @ir_matnr.
++*   Five superseded codes per successor, not two.
++    SELECT werks, new_matnr,
++           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+       FROM zppt_mat_track
+       INTO TABLE @DATA(lt_track)
+       WHERE werks     IN @ir_werks
+         AND new_matnr IN @ir_matnr.
++*EOC By Arnav on 03/09/26
+ 
+     CHECK lt_track IS NOT INITIAL.
+ 
+@@ -977,14 +1065,25 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+ 
+       CLEAR: lr_old, lr_wrk, lt_old.
+ 
+-      IF ls_track-old_matnr1 IS NOT INITIAL
+-     AND ls_track-old_matnr1 <> ls_track-new_matnr.
+-        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr1 ) TO lr_old.
+-      ENDIF.
+-      IF ls_track-old_matnr2 IS NOT INITIAL
+-     AND ls_track-old_matnr2 <> ls_track-new_matnr.
+-        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr2 ) TO lr_old.
+-      ENDIF.
++*BOC By Arnav on 03/09/26
++*     IF ls_track-old_matnr1 IS NOT INITIAL
++*    AND ls_track-old_matnr1 <> ls_track-new_matnr.
++*       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr1 ) TO lr_old.
++*     ENDIF.
++*     IF ls_track-old_matnr2 IS NOT INITIAL
++*    AND ls_track-old_matnr2 <> ls_track-new_matnr.
++*       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-old_matnr2 ) TO lr_old.
++*     ENDIF.
++*     Written as a loop so a sixth old code is one number, not a block.
++      DO 5 TIMES.
++        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_track
++          TO FIELD-SYMBOL(<lv_o>).
++        CHECK sy-subrc = 0.
++        IF <lv_o> IS NOT INITIAL AND <lv_o> <> ls_track-new_matnr.
++          APPEND VALUE #( sign = 'I' option = 'EQ' low = <lv_o> ) TO lr_old.
++        ENDIF.
++      ENDDO.
++*EOC By Arnav on 03/09/26
+       CHECK lr_old IS NOT INITIAL.
+ 
+       APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_track-werks ) TO lr_wrk.
+@@ -1026,16 +1125,26 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+ *     The old code is retired and its history now belongs to the
+ *     successor, so it must not remain in its own right. Without this it
+ *     would be counted twice and would receive a forecast of its own.
+-      IF ls_track-old_matnr1 IS NOT INITIAL
+-     AND ls_track-old_matnr1 <> ls_track-new_matnr.
+-        DELETE ct_hist WHERE werks = ls_track-werks
+-                         AND matnr = ls_track-old_matnr1.
+-      ENDIF.
+-      IF ls_track-old_matnr2 IS NOT INITIAL
+-     AND ls_track-old_matnr2 <> ls_track-new_matnr.
+-        DELETE ct_hist WHERE werks = ls_track-werks
+-                         AND matnr = ls_track-old_matnr2.
+-      ENDIF.
++*BOC By Arnav on 03/09/26
++*     IF ls_track-old_matnr1 IS NOT INITIAL
++*    AND ls_track-old_matnr1 <> ls_track-new_matnr.
++*       DELETE ct_hist WHERE werks = ls_track-werks
++*                        AND matnr = ls_track-old_matnr1.
++*     ENDIF.
++*     IF ls_track-old_matnr2 IS NOT INITIAL
++*    AND ls_track-old_matnr2 <> ls_track-new_matnr.
++*       DELETE ct_hist WHERE werks = ls_track-werks
++*                        AND matnr = ls_track-old_matnr2.
++*     ENDIF.
++      DO 5 TIMES.
++        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_track
++          TO FIELD-SYMBOL(<lv_d>).
++        CHECK sy-subrc = 0.
++        IF <lv_d> IS NOT INITIAL AND <lv_d> <> ls_track-new_matnr.
++          DELETE ct_hist WHERE werks = ls_track-werks AND matnr = <lv_d>.
++        ENDIF.
++      ENDDO.
++*EOC By Arnav on 03/09/26
+ 
+     ENDLOOP.
+ 
+@@ -1087,21 +1196,39 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
+ *   shown for the successor carrying the full twelve months. This also
+ *   covers the case where the old code still has a category maintained,
+ *   which would otherwise add it back.
+-    SELECT werks, old_matnr1, old_matnr2
++*BOC By Arnav on 03/09/26
++*   SELECT werks, old_matnr1, old_matnr2
++*     FROM zppt_mat_track
++*     INTO TABLE @DATA(lt_trk)
++*     WHERE werks IN @ir_werks.
++*
++*   LOOP AT lt_trk INTO DATA(ls_trk).
++*     IF ls_trk-old_matnr1 IS NOT INITIAL.
++*       DELETE rt_scope WHERE werks = ls_trk-werks
++*                         AND matnr = ls_trk-old_matnr1.
++*     ENDIF.
++*     IF ls_trk-old_matnr2 IS NOT INITIAL.
++*       DELETE rt_scope WHERE werks = ls_trk-werks
++*                         AND matnr = ls_trk-old_matnr2.
++*     ENDIF.
++*   ENDLOOP.
++    SELECT werks,
++           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+       FROM zppt_mat_track
+       INTO TABLE @DATA(lt_trk)
+       WHERE werks IN @ir_werks.
+ 
+     LOOP AT lt_trk INTO DATA(ls_trk).
+-      IF ls_trk-old_matnr1 IS NOT INITIAL.
+-        DELETE rt_scope WHERE werks = ls_trk-werks
+-                          AND matnr = ls_trk-old_matnr1.
+-      ENDIF.
+-      IF ls_trk-old_matnr2 IS NOT INITIAL.
+-        DELETE rt_scope WHERE werks = ls_trk-werks
+-                          AND matnr = ls_trk-old_matnr2.
+-      ENDIF.
++      DO 5 TIMES.
++        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
++          TO FIELD-SYMBOL(<lv_s>).
++        CHECK sy-subrc = 0.
++        IF <lv_s> IS NOT INITIAL.
++          DELETE rt_scope WHERE werks = ls_trk-werks AND matnr = <lv_s>.
++        ENDIF.
++      ENDDO.
+     ENDLOOP.
++*EOC By Arnav on 03/09/26
+ 
+   ENDMETHOD.
+ 
+diff --git a/kpmg/zpp_forecast_v2/src/zde_fcst_price.dtel.xml b/kpmg/zpp_forecast_v2/src/zde_fcst_price.dtel.xml
+new file mode 100644
+index 0000000..d9174e6
+--- /dev/null
++++ b/kpmg/zpp_forecast_v2/src/zde_fcst_price.dtel.xml
+@@ -0,0 +1,22 @@
++<?xml version="1.0" encoding="utf-8"?>
++<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
++ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
++  <asx:values>
++   <DD04V>
++    <ROLLNAME>ZDE_FCST_PRICE</ROLLNAME>
++    <DDLANGUAGE>E</DDLANGUAGE>
++    <DOMNAME>ZDO_FCST_VAL</DOMNAME>
++    <HEADLEN>20</HEADLEN>
++    <SCRLEN1>10</SCRLEN1>
++    <SCRLEN2>20</SCRLEN2>
++    <SCRLEN3>40</SCRLEN3>
++    <DDTEXT>Price</DDTEXT>
++    <REPTEXT>Price</REPTEXT>
++    <SCRTEXT_S>Price</SCRTEXT_S>
++    <SCRTEXT_M>Price</SCRTEXT_M>
++    <SCRTEXT_L>Price</SCRTEXT_L>
++    <DTELMASTER>E</DTELMASTER>
++   </DD04V>
++  </asx:values>
++ </asx:abap>
++</abapGit>
+diff --git a/kpmg/zpp_forecast_v2/src/zde_fcst_val.dtel.xml b/kpmg/zpp_forecast_v2/src/zde_fcst_val.dtel.xml
+new file mode 100644
+index 0000000..f684867
+--- /dev/null
++++ b/kpmg/zpp_forecast_v2/src/zde_fcst_val.dtel.xml
+@@ -0,0 +1,22 @@
++<?xml version="1.0" encoding="utf-8"?>
++<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
++ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
++  <asx:values>
++   <DD04V>
++    <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++    <DDLANGUAGE>E</DDLANGUAGE>
++    <DOMNAME>ZDO_FCST_VAL</DOMNAME>
++    <HEADLEN>20</HEADLEN>
++    <SCRLEN1>10</SCRLEN1>
++    <SCRLEN2>20</SCRLEN2>
++    <SCRLEN3>40</SCRLEN3>
++    <DDTEXT>Forecast Value</DDTEXT>
++    <REPTEXT>Forecast Value</REPTEXT>
++    <SCRTEXT_S>Fcst Val</SCRTEXT_S>
++    <SCRTEXT_M>Forecast Value</SCRTEXT_M>
++    <SCRTEXT_L>Forecast Value</SCRTEXT_L>
++    <DTELMASTER>E</DTELMASTER>
++   </DD04V>
++  </asx:values>
++ </asx:abap>
++</abapGit>
+diff --git a/kpmg/zpp_forecast_v2/src/zdo_fcst_val.doma.xml b/kpmg/zpp_forecast_v2/src/zdo_fcst_val.doma.xml
+new file mode 100644
+index 0000000..d386cb6
+--- /dev/null
++++ b/kpmg/zpp_forecast_v2/src/zdo_fcst_val.doma.xml
+@@ -0,0 +1,17 @@
++<?xml version="1.0" encoding="utf-8"?>
++<abapGit version="v1.0.0" serializer="LCL_OBJECT_DOMA" serializer_version="v1.0.0">
++ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
++  <asx:values>
++   <DD01V>
++    <DOMNAME>ZDO_FCST_VAL</DOMNAME>
++    <DDLANGUAGE>E</DDLANGUAGE>
++    <DATATYPE>CURR</DATATYPE>
++    <LENG>000015</LENG>
++    <DECIMALS>000002</DECIMALS>
++    <OUTPUTLEN>000021</OUTPUTLEN>
++    <DDTEXT>Forecast Value</DDTEXT>
++    <SIGNFLAG>X</SIGNFLAG>
++   </DD01V>
++  </asx:values>
++ </asx:abap>
++</abapGit>
+diff --git a/kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap b/kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap
+index 983eb59..c1bffc4 100644
+--- a/kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap
++++ b/kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap
+@@ -892,19 +892,45 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
+ *     Additional plan quantity now sits in front of Final Forecast Qty,
+ *     which is the higher of Forecast (Max * Growth %) and Business
+ *     Forecast, so the two inputs are read before the result.
+-      APPEND 'BUS_FCST_ADD' TO ct_show. " Additional Plan Qty
++*     03/09/26 - the single additional column is replaced by one per
++*     month. The quarter is split three ways now.
++*     APPEND 'BUS_FCST_ADD' TO ct_show. " Additional Plan Qty
++      APPEND 'BUS_FCST_ADD1' TO ct_show.  " Additional Plan Qty M1
++      APPEND 'BUS_FCST_ADD2' TO ct_show.  " Additional Plan Qty M2
++      APPEND 'BUS_FCST_ADD3' TO ct_show.  " Additional Plan Qty M3
+ *EOC By Arnav on 02/09/26
+       APPEND 'FINAL_QTY'  TO ct_show.   " Final Forecast Qty
+       APPEND 'M4_FCST'    TO ct_show.   " July'26
+       APPEND 'M5_FCST'    TO ct_show.   " Aug'26
+       APPEND 'M6_FCST'    TO ct_show.   " Sep'26
+ 
++*BOC By Arnav on 03/09/26
++*     Final per month, then the value columns. PRICE is 0 until the
++*     price logic is supplied, so the six value columns read 0 today.
++*     They are drawn on the quarterly sheet only - the annual sheet
++*     above carries no price.
++      APPEND 'M4_FCST_FINAL' TO ct_show.
++      APPEND 'M5_FCST_FINAL' TO ct_show.
++      APPEND 'M6_FCST_FINAL' TO ct_show.
++*EOC By Arnav on 03/09/26
++
+       IF p_tonn = abap_true.
+         APPEND 'M4_TON' TO ct_show.
+         APPEND 'M5_TON' TO ct_show.
+         APPEND 'M6_TON' TO ct_show.
+       ENDIF.
+ 
++*BOC By Arnav on 03/09/26
++      APPEND 'PRICE'      TO ct_show.
++      APPEND 'M4_VAL'     TO ct_show.
++      APPEND 'M5_VAL'     TO ct_show.
++      APPEND 'M6_VAL'     TO ct_show.
++      APPEND 'M4_TON_VAL' TO ct_show.
++      APPEND 'M5_TON_VAL' TO ct_show.
++      APPEND 'M6_TON_VAL' TO ct_show.
++      APPEND 'WAERS'      TO ct_show.
++*EOC By Arnav on 03/09/26
++
+       APPEND 'MTS_MTO'    TO ct_show.   " AE17, the last FS column
+ 
+ *   ---- FS radio button 3, row 25 ------------------------------------
+@@ -1093,6 +1119,22 @@ FORM setup_columns USING pt_show TYPE tt_fname.
+     PERFORM txt USING 'LOAD_FCT'     'Growth Based on Category'.
+     PERFORM txt USING 'BUS_FCST'     'Business Forecast'.
+     PERFORM txt USING 'BUS_FCST_ADD' 'Additional Plan Qty'.
++*BOC By Arnav on 03/09/26
++    PERFORM txt USING 'BUS_FCST_ADD1'  'Additional Plan Qty Month 1'.
++    PERFORM txt USING 'BUS_FCST_ADD2'  'Additional Plan Qty Month 2'.
++    PERFORM txt USING 'BUS_FCST_ADD3'  'Additional Plan Qty Month 3'.
++    PERFORM txt USING 'M4_FCST_FINAL'  'Final Forecast Month 1'.
++    PERFORM txt USING 'M5_FCST_FINAL'  'Final Forecast Month 2'.
++    PERFORM txt USING 'M6_FCST_FINAL'  'Final Forecast Month 3'.
++    PERFORM txt USING 'PRICE'          'Price'.
++    PERFORM txt USING 'M4_VAL'         'Value Month 1'.
++    PERFORM txt USING 'M5_VAL'         'Value Month 2'.
++    PERFORM txt USING 'M6_VAL'         'Value Month 3'.
++    PERFORM txt USING 'M4_TON_VAL'     'Tonnage Value Month 1'.
++    PERFORM txt USING 'M5_TON_VAL'     'Tonnage Value Month 2'.
++    PERFORM txt USING 'M6_TON_VAL'     'Tonnage Value Month 3'.
++    PERFORM txt USING 'WAERS'          'Currency'.
++*EOC By Arnav on 03/09/26
+     PERFORM txt USING 'FINAL_QTY'    'Final Forecast Qty'.
+ *   The FS heads both column O and column Q "Final Forecast Qty". The
+ *   second is qualified here so the two can be told apart on screen.
+diff --git a/kpmg/zpp_forecast_v2/src/zpp_forecast_report.prog.abap b/kpmg/zpp_forecast_v2/src/zpp_forecast_report.prog.abap
+index 882f72a..6cfb4c5 100644
+--- a/kpmg/zpp_forecast_v2/src/zpp_forecast_report.prog.abap
++++ b/kpmg/zpp_forecast_v2/src/zpp_forecast_report.prog.abap
+@@ -157,7 +157,15 @@ FORM collect.
+                                                  quarter = lv_qtr.
+       IF sy-subrc = 0.
+         ls_out-qtr_fcst = ls_qt-final_qty.
+-        ls_out-qtr_add  = ls_qt-bus_fcst_add.
++*BOC By Arnav on 03/09/26
++*       ls_out-qtr_add  = ls_qt-bus_fcst_add.
++*       The quarterly table splits the additional plan quantity across
++*       the three months of the quarter. This report shows the quarter
++*       as one line, so the three are added back together here.
++        ls_out-qtr_add  = ls_qt-bus_fcst_add1
++                        + ls_qt-bus_fcst_add2
++                        + ls_qt-bus_fcst_add3.
++*EOC By Arnav on 03/09/26
+       ENDIF.
+       ls_out-qtr_total = ls_out-qtr_fcst + ls_out-qtr_add.
+ 
+diff --git a/kpmg/zpp_forecast_v2/src/zpp_forecast_upload.prog.abap b/kpmg/zpp_forecast_v2/src/zpp_forecast_upload.prog.abap
+index c311a24..14cbb4d 100644
+--- a/kpmg/zpp_forecast_v2/src/zpp_forecast_upload.prog.abap
++++ b/kpmg/zpp_forecast_v2/src/zpp_forecast_upload.prog.abap
+@@ -47,6 +47,15 @@ CONSTANTS: gc_new  TYPE char14 VALUE 'Created',
+            gc_tnew TYPE char14 VALUE 'Would create',
+            gc_tchg TYPE char14 VALUE 'Would change'.
+ 
++*BOC By Arnav on 03/09/26
++* Used by DO_CHANGE to reach BUS_FCST_ADDn / REASONn / Mn_FCST_FINAL by
++* name. Declared here because a FORM may not declare a field symbol
++* inside a loop it re-enters per row.
++FIELD-SYMBOLS: <gv_add> TYPE any,
++               <gv_rsn> TYPE any,
++               <gv_fin> TYPE any.
++*EOC By Arnav on 03/09/26
++
+ DATA: gt_raw TYPE STANDARD TABLE OF ty_raw,
+       gt_log TYPE STANDARD TABLE OF ty_log,
+       g_new  TYPE i,
+@@ -236,10 +245,20 @@ FORM template_columns CHANGING ct_head TYPE string_table
+     APPEND 'NEW MATERIAL'   TO ct_head.
+     APPEND 'OLD MATERIAL 1' TO ct_head.
+     APPEND 'OLD MATERIAL 2' TO ct_head.
++*BOC By Arnav on 03/09/26
++    APPEND 'OLD MATERIAL 3' TO ct_head.
++    APPEND 'OLD MATERIAL 4' TO ct_head.
++    APPEND 'OLD MATERIAL 5' TO ct_head.
++*EOC By Arnav on 03/09/26
+     APPEND '1001'          TO ct_demo.
+     APPEND 'FG00000000002' TO ct_demo.
+     APPEND 'FG00000000001' TO ct_demo.
+     APPEND lv_blank        TO ct_demo.
++*BOC By Arnav on 03/09/26
++    APPEND lv_blank        TO ct_demo.
++    APPEND lv_blank        TO ct_demo.
++    APPEND lv_blank        TO ct_demo.
++*EOC By Arnav on 03/09/26
+ 
+   ELSEIF p_exc = 'X'.
+     cv_name = 'ZFCST_Material_Exclusion'.
+@@ -311,18 +330,27 @@ FORM template_columns CHANGING ct_head TYPE string_table
+ 
+   ELSEIF p_chgq = 'X'.
+     cv_name = 'ZFCST_Forecast_Change_Quarterly'.
++*BOC By Arnav on 03/09/26
++*   MONTH is new, between QUARTER and YEAR. It is the FISCAL PERIOD,
++*   1 to 12, where 1 is April and 12 is March - the same numbering the
++*   monthly templates use - and it must fall inside the quarter on the
++*   same row. Q2 takes 4, 5 or 6; Q4 takes 10, 11 or 12. Every column
++*   after it has moved one place right.
+     APPEND 'MATERIAL'   TO ct_head.
+     APPEND 'PLANT'      TO ct_head.
+     APPEND 'QUARTER'    TO ct_head.
++    APPEND 'MONTH'      TO ct_head.
+     APPEND 'YEAR'       TO ct_head.
+     APPEND 'CHANGE QTY' TO ct_head.
+     APPEND 'REASON'     TO ct_head.
+     APPEND 'FG00000000001'   TO ct_demo.
+     APPEND '1001'            TO ct_demo.
+     APPEND '2'               TO ct_demo.
++    APPEND '4'               TO ct_demo.
+     APPEND '2026'            TO ct_demo.
+     APPEND '10'              TO ct_demo.
+     APPEND 'Additional plan' TO ct_demo.
++*EOC By Arnav on 03/09/26
+ 
+   ELSEIF p_chgm = 'X'.
+     cv_name = 'ZFCST_Forecast_Change_Monthly'.
+@@ -579,11 +607,26 @@ FORM do_tracking.
+         lv_new   TYPE matnr,
+         lv_old1  TYPE matnr,
+         lv_old2  TYPE matnr,
++*BOC By Arnav on 03/09/26
++        lv_old3  TYPE matnr,
++        lv_old4  TYPE matnr,
++        lv_old5  TYPE matnr,
++*       The five codes as read, used for the checks and for CHECK_CHAIN
++*       before the stored row is fetched
++        ls_chk   TYPE zppt_mat_track,
++        lv_cnt   TYPE i,
++        lv_j     TYPE i,
++*EOC By Arnav on 03/09/26
+         lv_ex    TYPE abap_bool,
+         lv_err   TYPE string,
+         lv_txt   TYPE string,
+         lv_blank TYPE char12.
+ 
++*BOC By Arnav on 03/09/26
++  FIELD-SYMBOLS: <lv_a> TYPE any,
++                 <lv_b> TYPE any.
++*EOC By Arnav on 03/09/26
++
+   LOOP AT gt_raw INTO ls_raw.
+ 
+     lv_row = sy-tabix.
+@@ -591,6 +634,18 @@ FORM do_tracking.
+     PERFORM to_material USING ls_raw-f02 CHANGING lv_new.
+     PERFORM to_material USING ls_raw-f03 CHANGING lv_old1.
+     PERFORM to_material USING ls_raw-f04 CHANGING lv_old2.
++*BOC By Arnav on 03/09/26
++    PERFORM to_material USING ls_raw-f05 CHANGING lv_old3.
++    PERFORM to_material USING ls_raw-f06 CHANGING lv_old4.
++    PERFORM to_material USING ls_raw-f07 CHANGING lv_old5.
++
++    CLEAR ls_chk.
++    ls_chk-old_matnr1 = lv_old1.
++    ls_chk-old_matnr2 = lv_old2.
++    ls_chk-old_matnr3 = lv_old3.
++    ls_chk-old_matnr4 = lv_old4.
++    ls_chk-old_matnr5 = lv_old5.
++*EOC By Arnav on 03/09/26
+ 
+     PERFORM check_marc USING lv_werks lv_new CHANGING lv_err.
+     IF lv_err IS NOT INITIAL.
+@@ -598,27 +653,64 @@ FORM do_tracking.
+       CONTINUE.
+     ENDIF.
+ 
+-    IF lv_old1 IS INITIAL AND lv_old2 IS INITIAL.
+-      lv_err = 'At least one old material code must be given'.
+-      PERFORM log USING lv_row lv_werks lv_new lv_blank gc_err lv_err.
+-      CONTINUE.
+-    ENDIF.
++*BOC By Arnav on 03/09/26
++*   IF lv_old1 IS INITIAL AND lv_old2 IS INITIAL.
++*     lv_err = 'At least one old material code must be given'.
++*     ...
++*   IF lv_old1 = lv_new OR lv_old2 = lv_new.
++*     ...
++*   IF lv_old1 IS NOT INITIAL AND lv_old1 = lv_old2.
++*     lv_err = 'Old material 1 and old material 2 are the same code'.
++*     ...
++*   The same three checks, over five codes instead of two.
++    CLEAR: lv_cnt, lv_err.
++
++    DO 5 TIMES.
++      UNASSIGN <lv_a>.
++      ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_chk TO <lv_a>.
++      CHECK sy-subrc = 0.
++      CHECK <lv_a> IS NOT INITIAL.
++
++      lv_cnt = lv_cnt + 1.
++
++      IF <lv_a> = lv_new.
++        lv_err = 'An old material code must be different from the new code'.
++        EXIT.
++      ENDIF.
+ 
+-    IF lv_old1 = lv_new OR lv_old2 = lv_new.
+-      lv_err = 'The old material code must be different from the new code'.
+-      PERFORM log USING lv_row lv_werks lv_new lv_blank gc_err lv_err.
+-      CONTINUE.
++      lv_j = sy-index.
++      DO 5 TIMES.
++        CHECK sy-index > lv_j.
++        UNASSIGN <lv_b>.
++        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_chk TO <lv_b>.
++        CHECK sy-subrc = 0.
++        IF <lv_b> IS NOT INITIAL AND <lv_b> = <lv_a>.
++          lv_err = 'The same old material code is given twice'.
++          EXIT.
++        ENDIF.
++      ENDDO.
++
++      IF lv_err IS NOT INITIAL.
++        EXIT.
++      ENDIF.
++    ENDDO.
++
++    IF lv_err IS INITIAL AND lv_cnt = 0.
++      lv_err = 'At least one old material code must be given'.
+     ENDIF.
+ 
+-    IF lv_old1 IS NOT INITIAL AND lv_old1 = lv_old2.
+-      lv_err = 'Old material 1 and old material 2 are the same code'.
++    IF lv_err IS NOT INITIAL.
+       PERFORM log USING lv_row lv_werks lv_new lv_blank gc_err lv_err.
+       CONTINUE.
+     ENDIF.
++*EOC By Arnav on 03/09/26
+ 
+ *   An old code that is itself a successor would make the chain
+ *   ambiguous, so it is refused rather than silently mis-added
+-    PERFORM check_chain USING lv_werks lv_old1 lv_old2 CHANGING lv_err.
++*BOC By Arnav on 03/09/26
++*   PERFORM check_chain USING lv_werks lv_old1 lv_old2 CHANGING lv_err.
++    PERFORM check_chain USING lv_werks ls_chk CHANGING lv_err.
++*EOC By Arnav on 03/09/26
+     IF lv_err IS NOT INITIAL.
+       PERFORM log USING lv_row lv_werks lv_new lv_blank gc_err lv_err.
+       CONTINUE.
+@@ -636,6 +728,11 @@ FORM do_tracking.
+     ls_trk-new_matnr  = lv_new.
+     ls_trk-old_matnr1 = lv_old1.
+     ls_trk-old_matnr2 = lv_old2.
++*BOC By Arnav on 03/09/26
++    ls_trk-old_matnr3 = lv_old3.
++    ls_trk-old_matnr4 = lv_old4.
++    ls_trk-old_matnr5 = lv_old5.
++*EOC By Arnav on 03/09/26
+     PERFORM stamp USING lv_ex CHANGING ls_trk-ernam ls_trk-erdat
+                                        ls_trk-aenam ls_trk-aedat.
+ 
+@@ -660,31 +757,63 @@ ENDFORM.
+ 
+ 
+ *&---------------------------------------------------------------------*
++*BOC By Arnav on 03/09/26
++*FORM check_chain USING pv_werks TYPE werks_d
++*                       pv_old1  TYPE matnr
++*                       pv_old2  TYPE matnr
++*                 CHANGING pv_err TYPE string.
++*
++*  DATA lv_hit TYPE matnr.
++*
++*  CLEAR pv_err.
++*
++*  IF pv_old1 IS NOT INITIAL.
++*    SELECT SINGLE new_matnr FROM zppt_mat_track INTO @lv_hit
++*      WHERE werks = @pv_werks AND new_matnr = @pv_old1.
++*    IF sy-subrc = 0.
++*      pv_err = |{ pv_old1 } is already a new code in this table, a chain is not supported|.
++*      RETURN.
++*    ENDIF.
++*  ENDIF.
++*
++*  IF pv_old2 IS NOT INITIAL.
++*    SELECT SINGLE new_matnr FROM zppt_mat_track INTO @lv_hit
++*      WHERE werks = @pv_werks AND new_matnr = @pv_old2.
++*    IF sy-subrc = 0.
++*      pv_err = |{ pv_old2 } is already a new code in this table, a chain is not supported|.
++*    ENDIF.
++*  ENDIF.
++* Five old codes now, so the row is passed in whole and walked, rather
++* than one parameter per code.
+ FORM check_chain USING pv_werks TYPE werks_d
+-                       pv_old1  TYPE matnr
+-                       pv_old2  TYPE matnr
++                       ps_trk   TYPE zppt_mat_track
+                  CHANGING pv_err TYPE string.
+ 
+-  DATA lv_hit TYPE matnr.
++  DATA: lv_hit TYPE matnr,
++        lv_old TYPE matnr.
++
++  FIELD-SYMBOLS <lv_o> TYPE any.
+ 
+   CLEAR pv_err.
+ 
+-  IF pv_old1 IS NOT INITIAL.
++  DO 5 TIMES.
++
++    UNASSIGN <lv_o>.
++    ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ps_trk TO <lv_o>.
++    CHECK sy-subrc = 0.
++
++    lv_old = <lv_o>.
++    CHECK lv_old IS NOT INITIAL.
++
+     SELECT SINGLE new_matnr FROM zppt_mat_track INTO @lv_hit
+-      WHERE werks = @pv_werks AND new_matnr = @pv_old1.
++      WHERE werks = @pv_werks AND new_matnr = @lv_old.
+     IF sy-subrc = 0.
+-      pv_err = |{ pv_old1 } is already a new code in this table, a chain is not supported|.
++      pv_err = |{ lv_old } is already a new code in this table, a chain is not supported|.
+       RETURN.
+     ENDIF.
+-  ENDIF.
+ 
+-  IF pv_old2 IS NOT INITIAL.
+-    SELECT SINGLE new_matnr FROM zppt_mat_track INTO @lv_hit
+-      WHERE werks = @pv_werks AND new_matnr = @pv_old2.
+-    IF sy-subrc = 0.
+-      pv_err = |{ pv_old2 } is already a new code in this table, a chain is not supported|.
+-    ENDIF.
+-  ENDIF.
++  ENDDO.
++*EOC By Arnav on 03/09/26
+ 
+ ENDFORM.
+ 
+@@ -959,8 +1088,13 @@ FORM do_business USING pv_mode TYPE char1.
+       ENDIF.
+ 
+       ls_qt-bus_fcst = lv_qty.
++*BOC By Arnav on 03/09/26
++*     PERFORM final_qty CHANGING ls_qt-fcst_qty ls_qt-bus_fcst
++*                                ls_qt-bus_fcst_add ls_qt-final_qty.
+       PERFORM final_qty CHANGING ls_qt-fcst_qty ls_qt-bus_fcst
+-                                 ls_qt-bus_fcst_add ls_qt-final_qty.
++                                 ls_qt-final_qty.
++      PERFORM qt_finals CHANGING ls_qt.
++*EOC By Arnav on 03/09/26
+       PERFORM stamp USING lv_ex CHANGING ls_qt-ernam ls_qt-erdat
+                                          ls_qt-aenam ls_qt-aedat.
+ 
+@@ -998,8 +1132,12 @@ FORM do_business USING pv_mode TYPE char1.
+       ENDIF.
+ 
+       ls_mn-bus_fcst = lv_qty.
++*BOC By Arnav on 03/09/26
++*     PERFORM final_qty CHANGING ls_mn-fcst_qty ls_mn-bus_fcst
++*                                ls_mn-bus_fcst_add ls_mn-final_qty.
+       PERFORM final_qty CHANGING ls_mn-fcst_qty ls_mn-bus_fcst
+-                                 ls_mn-bus_fcst_add ls_mn-final_qty.
++                                 ls_mn-final_qty.
++*EOC By Arnav on 03/09/26
+       PERFORM stamp USING lv_ex CHANGING ls_mn-ernam ls_mn-erdat
+                                          ls_mn-aenam ls_mn-aedat.
+ 
+@@ -1050,6 +1188,19 @@ FORM do_change USING pv_mode TYPE char1.
+         lv_txt   TYPE string,
+         lv_tmp   TYPE char40,
+         lv_per   TYPE char12,
++*BOC By Arnav on 03/09/26
++*       The quarterly file carries MONTH in column 4, so YEAR, QUANTITY
++*       and REASON all sit one column further right than in the monthly
++*       file. The four below hold whichever column applies to this mode,
++*       so the checks underneath do not have to know.
++        lv_c_mon  TYPE char40,
++        lv_c_year TYPE char40,
++        lv_c_qty  TYPE char40,
++        lv_c_rsn  TYPE char40,
++        lv_mi     TYPE i,
++        lv_slot   TYPE i,
++        lv_qchk   TYPE zde_quarter,
++*EOC By Arnav on 03/09/26
+         lv_yes   TYPE abap_bool.
+ 
+   lv_yes = abap_true.
+@@ -1061,6 +1212,21 @@ FORM do_change USING pv_mode TYPE char1.
+     PERFORM to_plant    USING ls_raw-f02 CHANGING lv_werks.
+     PERFORM period_text USING pv_mode ls_raw-f03 CHANGING lv_per.
+ 
++*BOC By Arnav on 03/09/26
++    CLEAR: lv_c_mon, lv_c_year, lv_c_qty, lv_c_rsn, lv_mi.
++
++    IF pv_mode = 'Q'.
++      lv_c_mon  = ls_raw-f04.
++      lv_c_year = ls_raw-f05.
++      lv_c_qty  = ls_raw-f06.
++      lv_c_rsn  = ls_raw-f07.
++    ELSE.
++      lv_c_year = ls_raw-f04.
++      lv_c_qty  = ls_raw-f05.
++      lv_c_rsn  = ls_raw-f06.
++    ENDIF.
++*EOC By Arnav on 03/09/26
++
+     PERFORM check_marc USING lv_werks lv_matnr CHANGING lv_err.
+     IF lv_err IS NOT INITIAL.
+       PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
+@@ -1074,7 +1240,53 @@ FORM do_change USING pv_mode TYPE char1.
+       CONTINUE.
+     ENDIF.
+ 
+-    PERFORM to_int USING ls_raw-f04 CHANGING lv_year.
++*BOC By Arnav on 03/09/26
++*   MONTH is the FISCAL PERIOD, 1 to 12, where 1 is April and 12 is
++*   March - the SAME numbering the monthly change and monthly business
++*   forecast files already use, so the word MONTH means one thing across
++*   every template. It must fall inside the quarter given on the same
++*   row: Q1 takes 1-3, Q2 takes 4-6, Q3 takes 7-9, Q4 takes 10-12.
++*
++*   The earlier reading - MONTH as 1, 2 or 3 within the quarter - is
++*   commented out below. It differs from this one for every quarter
++*   except Q1, where both give April, May, June.
++    CLEAR lv_slot.
++
++    IF pv_mode = 'Q'.
++
++      PERFORM to_int USING lv_c_mon CHANGING lv_mi.
++
++*     IF lv_mi < 1 OR lv_mi > 3.
++*       lv_err = 'Month must be 1, 2 or 3 - the first, second or third month of the quarter'.
++*       PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
++*       CONTINUE.
++*     ENDIF.
++*
++*     lv_slot = lv_mi.
++
++      IF lv_mi < 1 OR lv_mi > 12.
++        lv_err = 'Month must be a period 1 to 12, where 1 is April and 12 is March'.
++        PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
++        CONTINUE.
++      ENDIF.
++
++      lv_qchk = zcl_pp_fcst_util=>period_to_quarter( CONV #( lv_mi ) ).
++      IF lv_qchk <> lv_pi.
++        lv_err = |Month { lv_mi } is not in quarter { lv_pi }|.
++        PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
++        CONTINUE.
++      ENDIF.
++
++*     Which of the three columns the period lands in - 1, 2 or 3
++      lv_slot = lv_mi - ( lv_pi - 1 ) * 3.
++
++    ENDIF.
++*EOC By Arnav on 03/09/26
++
++*BOC By Arnav on 03/09/26
++*   PERFORM to_int USING ls_raw-f04 CHANGING lv_year.
++    PERFORM to_int USING lv_c_year CHANGING lv_year.
++*EOC By Arnav on 03/09/26
+     IF lv_year < 1900 OR lv_year > 2999.
+       lv_err = 'Year must be the four digit year the financial year starts in'.
+       PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
+@@ -1082,7 +1294,10 @@ FORM do_change USING pv_mode TYPE char1.
+     ENDIF.
+     lv_gjahr = lv_year.
+ 
+-    lv_tmp = ls_raw-f06.
++*BOC By Arnav on 03/09/26
++*   lv_tmp = ls_raw-f06.
++    lv_tmp = lv_c_rsn.
++*EOC By Arnav on 03/09/26
+     CONDENSE lv_tmp.
+     lv_rsn = lv_tmp.
+     IF lv_rsn IS INITIAL.
+@@ -1091,7 +1306,10 @@ FORM do_change USING pv_mode TYPE char1.
+       CONTINUE.
+     ENDIF.
+ 
+-    PERFORM to_dec USING ls_raw-f05 CHANGING lv_qty.
++*BOC By Arnav on 03/09/26
++*   PERFORM to_dec USING ls_raw-f05 CHANGING lv_qty.
++    PERFORM to_dec USING lv_c_qty CHANGING lv_qty.
++*EOC By Arnav on 03/09/26
+     IF lv_qty = 0.
+       lv_err = 'Change quantity is zero or not numeric, nothing to apply'.
+       PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
+@@ -1114,19 +1332,55 @@ FORM do_change USING pv_mode TYPE char1.
+         CONTINUE.
+       ENDIF.
+ 
+-      ls_qt-bus_fcst_add = lv_qty.
+-      ls_qt-reason       = lv_rsn.
+-      PERFORM final_qty CHANGING ls_qt-fcst_qty ls_qt-bus_fcst
+-                                 ls_qt-bus_fcst_add ls_qt-final_qty.
++*BOC By Arnav on 03/09/26
++*     ls_qt-bus_fcst_add = lv_qty.
++*     ls_qt-reason       = lv_rsn.
++*     PERFORM final_qty CHANGING ls_qt-fcst_qty ls_qt-bus_fcst
++*                                ls_qt-bus_fcst_add ls_qt-final_qty.
++*
++**    FINAL_QTY no longer carries the change, so the guard tests the
++**    total the change actually moves
++*     lv_total = ls_qt-final_qty + ls_qt-bus_fcst_add.
++*     IF lv_total < 0.
++*       lv_err = 'The reduction is larger than the forecast, the final quantity would be negative'.
++*       PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
++*       CONTINUE.
++*     ENDIF.
++*     The change lands on the month it names, and only that month. The
++*     other two additional quantities and their reasons are left as the
++*     row already holds them.
++      UNASSIGN: <gv_add>, <gv_rsn>.
++      ASSIGN COMPONENT |BUS_FCST_ADD{ lv_slot }| OF STRUCTURE ls_qt TO <gv_add>.
++      ASSIGN COMPONENT |REASON{ lv_slot }|       OF STRUCTURE ls_qt TO <gv_rsn>.
++
++      IF <gv_add> IS NOT ASSIGNED OR <gv_rsn> IS NOT ASSIGNED.
++        lv_err = 'Month is outside the three months of the quarter'.
++        PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
++        CONTINUE.
++      ENDIF.
++
++      <gv_add> = lv_qty.
++      <gv_rsn> = lv_rsn.
+ 
+-*     FINAL_QTY no longer carries the change, so the guard tests the
+-*     total the change actually moves
+-      lv_total = ls_qt-final_qty + ls_qt-bus_fcst_add.
++      PERFORM final_qty CHANGING ls_qt-fcst_qty ls_qt-bus_fcst
++                                 ls_qt-final_qty.
++      PERFORM qt_finals CHANGING ls_qt.
++
++*     A reduction may not take THAT MONTH below zero. The quarter total
++*     is no longer the thing being guarded - each month stands alone.
++      CLEAR lv_total.
++      UNASSIGN <gv_fin>.
++      ASSIGN COMPONENT |M{ lv_slot + 3 }_FCST_FINAL| OF STRUCTURE ls_qt
++        TO <gv_fin>.
++      IF <gv_fin> IS ASSIGNED.
++        lv_total = <gv_fin>.
++      ENDIF.
+       IF lv_total < 0.
+-        lv_err = 'The reduction is larger than the forecast, the final quantity would be negative'.
++        lv_err = 'The reduction is larger than the forecast for that month, the final quantity would be negative'.
+         PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
+         CONTINUE.
+       ENDIF.
++*EOC By Arnav on 03/09/26
+ 
+       PERFORM stamp USING lv_yes CHANGING ls_qt-ernam ls_qt-erdat
+                                           ls_qt-aenam ls_qt-aedat.
+@@ -1161,8 +1415,12 @@ FORM do_change USING pv_mode TYPE char1.
+ 
+       ls_mn-bus_fcst_add = lv_qty.
+       ls_mn-reason       = lv_rsn.
++*BOC By Arnav on 03/09/26
++*     PERFORM final_qty CHANGING ls_mn-fcst_qty ls_mn-bus_fcst
++*                                ls_mn-bus_fcst_add ls_mn-final_qty.
+       PERFORM final_qty CHANGING ls_mn-fcst_qty ls_mn-bus_fcst
+-                                 ls_mn-bus_fcst_add ls_mn-final_qty.
++                                 ls_mn-final_qty.
++*EOC By Arnav on 03/09/26
+ 
+       lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add.
+       IF lv_total < 0.
+@@ -1211,9 +1469,15 @@ ENDFORM.
+ *& This previously added all three together, which inflated every
+ *& uploaded row.
+ *&---------------------------------------------------------------------*
++*BOC By Arnav on 03/09/26
++*FORM final_qty CHANGING cv_gen TYPE zde_fcst_qty
++*                        cv_bus TYPE zde_fcst_qty
++*                        cv_add TYPE zde_fcst_qty
++*                        cv_fin TYPE zde_fcst_qty.
++* CV_ADD was never read, and the quarterly table has no single
++* BUS_FCST_ADD to pass any more. The parameter is dropped.
+ FORM final_qty CHANGING cv_gen TYPE zde_fcst_qty
+                         cv_bus TYPE zde_fcst_qty
+-                        cv_add TYPE zde_fcst_qty
+                         cv_fin TYPE zde_fcst_qty.
+ 
+   cv_fin = nmax( val1 = cv_gen val2 = cv_bus ).
+@@ -1221,6 +1485,61 @@ FORM final_qty CHANGING cv_gen TYPE zde_fcst_qty
+ ENDFORM.
+ 
+ 
++*&---------------------------------------------------------------------*
++*& Quarterly per month finals and values
++*&
++*& Final of a month  = that month's forecast + that month's additional
++*&                     plan quantity
++*& Value             = final quantity x PRICE
++*& Tonnage value     = final quantity x net weight x PRICE
++*&
++*& PRICE is 0 until the price logic is supplied, so both value columns
++*& compute to 0 today. Nothing else has to change when it arrives.
++*&---------------------------------------------------------------------*
++FORM qt_finals CHANGING cs_qt TYPE zppt_fcst_qt.
++
++  DATA: lv_i   TYPE i,
++        lv_fin TYPE zde_fcst_qty,
++        lv_ton TYPE zde_fcst_qty.
++
++  FIELD-SYMBOLS: <lv_f>  TYPE any,
++                 <lv_a>  TYPE any,
++                 <lv_ff> TYPE any,
++                 <lv_v>  TYPE any,
++                 <lv_tv> TYPE any.
++
++  DO 3 TIMES.
++
++    lv_i = sy-index.
++
++    UNASSIGN: <lv_f>, <lv_a>, <lv_ff>, <lv_v>, <lv_tv>.
++
++    ASSIGN COMPONENT |M{ lv_i + 3 }_FCST|       OF STRUCTURE cs_qt TO <lv_f>.
++    ASSIGN COMPONENT |BUS_FCST_ADD{ lv_i }|     OF STRUCTURE cs_qt TO <lv_a>.
++    ASSIGN COMPONENT |M{ lv_i + 3 }_FCST_FINAL| OF STRUCTURE cs_qt TO <lv_ff>.
++    ASSIGN COMPONENT |M{ lv_i + 3 }_VAL|        OF STRUCTURE cs_qt TO <lv_v>.
++    ASSIGN COMPONENT |M{ lv_i + 3 }_TON_VAL|    OF STRUCTURE cs_qt TO <lv_tv>.
++
++    CHECK <lv_f> IS ASSIGNED AND <lv_a> IS ASSIGNED AND <lv_ff> IS ASSIGNED.
++
++    lv_fin  = <lv_f> + <lv_a>.
++    <lv_ff> = lv_fin.
++
++    IF <lv_v> IS ASSIGNED.
++      <lv_v> = lv_fin * cs_qt-price.
++    ENDIF.
++
++    IF <lv_tv> IS ASSIGNED.
++      lv_ton = lv_fin * cs_qt-ntgew.
++      <lv_tv> = lv_ton * cs_qt-price.
++    ENDIF.
++
++  ENDDO.
++
++ENDFORM.
++*EOC By Arnav on 03/09/26
++
++
+ *&---------------------------------------------------------------------*
+ FORM stamp USING pv_exists TYPE abap_bool
+            CHANGING cv_ernam TYPE any
+diff --git a/kpmg/zpp_forecast_v2/src/zppt_fcst_qt.tabl.xml b/kpmg/zpp_forecast_v2/src/zppt_fcst_qt.tabl.xml
+index f31af4c..f743fb3 100644
+--- a/kpmg/zpp_forecast_v2/src/zppt_fcst_qt.tabl.xml
++++ b/kpmg/zpp_forecast_v2/src/zppt_fcst_qt.tabl.xml
+@@ -283,7 +283,27 @@
+      <REFFIELD>MEINS</REFFIELD>
+     </DD03P>
+     <DD03P>
+-     <FIELDNAME>BUS_FCST_ADD</FIELDNAME>
++     <FIELDNAME>BUS_FCST_ADD1</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>MEINS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>BUS_FCST_ADD2</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>MEINS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>BUS_FCST_ADD3</FIELDNAME>
+      <KEYFLAG></KEYFLAG>
+      <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
+      <ADMINFIELD>0</ADMINFIELD>
+@@ -332,6 +352,36 @@
+      <REFTABLE>ZPPT_FCST_QT</REFTABLE>
+      <REFFIELD>MEINS</REFFIELD>
+     </DD03P>
++    <DD03P>
++     <FIELDNAME>M4_FCST_FINAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>MEINS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M5_FCST_FINAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>MEINS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M6_FCST_FINAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_QTY</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>MEINS</REFFIELD>
++    </DD03P>
+     <DD03P>
+      <FIELDNAME>M4_TON</FIELDNAME>
+      <KEYFLAG></KEYFLAG>
+@@ -363,7 +413,101 @@
+      <REFFIELD>MEINS</REFFIELD>
+     </DD03P>
+     <DD03P>
+-     <FIELDNAME>REASON</FIELDNAME>
++     <FIELDNAME>WAERS</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>WAERS</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>PRICE</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_PRICE</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M4_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M5_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M6_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M4_TON_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M5_TON_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>M6_TON_VAL</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_VAL</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++     <REFTABLE>ZPPT_FCST_QT</REFTABLE>
++     <REFFIELD>WAERS</REFFIELD>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>REASON1</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_REASON</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>REASON2</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>ZDE_FCST_REASON</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>REASON3</FIELDNAME>
+      <KEYFLAG></KEYFLAG>
+      <ROLLNAME>ZDE_FCST_REASON</ROLLNAME>
+      <ADMINFIELD>0</ADMINFIELD>
+diff --git a/kpmg/zpp_forecast_v2/src/zppt_mat_track.tabl.xml b/kpmg/zpp_forecast_v2/src/zppt_mat_track.tabl.xml
+index 45bb550..7513cb0 100644
+--- a/kpmg/zpp_forecast_v2/src/zppt_mat_track.tabl.xml
++++ b/kpmg/zpp_forecast_v2/src/zppt_mat_track.tabl.xml
+@@ -59,6 +59,30 @@
+      <NOTNULL></NOTNULL>
+      <COMPTYPE>E</COMPTYPE>
+     </DD03P>
++    <DD03P>
++     <FIELDNAME>OLD_MATNR3</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>MATNR</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>OLD_MATNR4</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>MATNR</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
++    <DD03P>
++     <FIELDNAME>OLD_MATNR5</FIELDNAME>
++     <KEYFLAG></KEYFLAG>
++     <ROLLNAME>MATNR</ROLLNAME>
++     <ADMINFIELD>0</ADMINFIELD>
++     <NOTNULL></NOTNULL>
++     <COMPTYPE>E</COMPTYPE>
++    </DD03P>
+     <DD03P>
+      <FIELDNAME>ERNAM</FIELDNAME>
+      <KEYFLAG></KEYFLAG>
