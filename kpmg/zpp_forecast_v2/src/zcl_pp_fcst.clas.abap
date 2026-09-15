@@ -37,6 +37,13 @@ CLASS zcl_pp_fcst DEFINITION
                gc_vkorg_default TYPE vkorg   VALUE '1100',
                gc_msgid         TYPE symsgid VALUE 'ZPP_FCST'.
 
+*BOC By Arnav on 15/09/26
+*   TVARVC variable naming the material types the quarterly and monthly
+*   runs are restricted to (FERT and HAWA). Read as a range, so it can be
+*   maintained as several EQ rows or one BT row in STVARV.
+    CONSTANTS gc_tvarv_mtart TYPE rvari_vnam VALUE 'ZPP_FORECAST_MTART'.
+*EOC By Arnav on 15/09/26
+
     TYPES: BEGIN OF ty_alv,
              mark      TYPE abap_bool,
              light     TYPE char1,
@@ -141,6 +148,23 @@ CLASS zcl_pp_fcst DEFINITION
              m5_ton       TYPE zde_fcst_qty,
              m6_ton       TYPE zde_fcst_qty,
              reason       TYPE zde_fcst_reason,
+*BOC By Arnav on 15/09/26
+*            Price from A923 -> KONP-KBETR and the values derived from
+*            it, change request of 15/09/26. Display only: none of these
+*            is stored, CORRESPONDING on save ignores them because the
+*            forecast tables carry no such fields.
+*              VAL_Mn     = Mn_FCST   x PRICE   "Price for <month> in EA"
+*              VAL_Mn_TON = Mn_TON    x PRICE   "Price for <month> in Tonnage"
+*              VAL_TOTAL  = TOTAL_QTY x PRICE   "Final forecast qty x Price"
+             price        TYPE kbetr_kond,
+             val_m4       TYPE zde_fcst_qty,
+             val_m5       TYPE zde_fcst_qty,
+             val_m6       TYPE zde_fcst_qty,
+             val_m4_ton   TYPE zde_fcst_qty,
+             val_m5_ton   TYPE zde_fcst_qty,
+             val_m6_ton   TYPE zde_fcst_qty,
+             val_total    TYPE zde_fcst_qty,
+*EOC By Arnav on 15/09/26
            END OF ty_alv,
            tt_alv   TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY,
            tr_werks TYPE RANGE OF werks_d,
@@ -206,6 +230,14 @@ CLASS zcl_pp_fcst DEFINITION
            END OF ty_scope,
            tt_scope TYPE STANDARD TABLE OF ty_scope WITH DEFAULT KEY.
 
+*BOC By Arnav on 15/09/26
+    TYPES: BEGIN OF ty_price,
+             matnr TYPE matnr,
+             kbetr TYPE kbetr_kond,
+           END OF ty_price,
+           tt_price TYPE SORTED TABLE OF ty_price WITH UNIQUE KEY matnr.
+*EOC By Arnav on 15/09/26
+
     DATA: mt_hist TYPE tt_hist,
           mv_vkorg TYPE vkorg,
           mv_bwart TYPE bwart.
@@ -251,6 +283,25 @@ CLASS zcl_pp_fcst DEFINITION
       IMPORTING ir_werks        TYPE tr_werks
                 ir_matnr        TYPE tr_matnr
       RETURNING VALUE(rt_scope) TYPE tt_scope.
+
+*BOC By Arnav on 15/09/26
+    "! Drops every material whose MARA-MTART is not in TVARVC
+    "! ZPP_FORECAST_MTART. Quarterly and monthly only.
+    METHODS filter_mtart
+      CHANGING ct_scope TYPE tt_scope
+               ct_msg   TYPE bapiret2_t.
+
+    "! One price per material: the A923 record with the latest DATAB,
+    "! then KONP-KBETR of that KNUMH. A material without a condition
+    "! record is absent from the result and prices at zero.
+    METHODS read_prices
+      IMPORTING it_scope        TYPE tt_scope
+      RETURNING VALUE(rt_price) TYPE tt_price.
+
+    "! The value columns - quantity times price.
+    METHODS fill_values
+      CHANGING cs_alv TYPE ty_alv.
+*EOC By Arnav on 15/09/26
 
     METHODS fill_master_data
       CHANGING cs_alv TYPE ty_alv.
@@ -451,6 +502,12 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
 
+*BOC By Arnav on 15/09/26
+*   Material type restriction and the price list, each read once per run
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
+    DATA(lt_price) = read_prices( lt_scope ).
+*EOC By Arnav on 15/09/26
+
     LOOP AT lt_scope INTO DATA(ls_scope).
 
 *     The forecast number is carried across from the annual table, per
@@ -545,6 +602,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
       ENDDO.
 
+*BOC By Arnav on 15/09/26
+      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+      fill_values( CHANGING cs_alv = ls_alv ).
+*EOC By Arnav on 15/09/26
+
       ls_alv-light = '2'.
       APPEND ls_alv TO et_alv.
 
@@ -603,6 +665,12 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+
+*BOC By Arnav on 15/09/26
+*   Material type restriction and the price list, each read once per run
+    filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
+    DATA(lt_price) = read_prices( lt_scope ).
+*EOC By Arnav on 15/09/26
 
     LOOP AT lt_scope INTO DATA(ls_scope).
 
@@ -680,6 +748,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         ls_alv-m4_ton = zcl_pp_fcst_util=>to_tonnage( iv_qty   = ls_alv-final_qty
                                                       iv_ntgew = ls_alv-ntgew ).
       ENDIF.
+
+*BOC By Arnav on 15/09/26
+      ls_alv-price = VALUE #( lt_price[ matnr = ls_scope-matnr ]-kbetr OPTIONAL ).
+      fill_values( CHANGING cs_alv = ls_alv ).
+*EOC By Arnav on 15/09/26
 
       ls_alv-light = '2'.
       APPEND ls_alv TO et_alv.
@@ -1104,6 +1177,124 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+*BOC By Arnav on 15/09/26
+*&---------------------------------------------------------------------*
+*& Material type restriction - quarterly and monthly only.
+*& TVARVC ZPP_FORECAST_MTART names the permitted types (FERT, HAWA).
+*& An unmaintained variable does not silently empty the list: nothing is
+*& filtered and message 022 goes to the log.
+*&---------------------------------------------------------------------*
+  METHOD filter_mtart.
+
+    DATA lr_mtart TYPE RANGE OF mtart.
+
+    CHECK ct_scope IS NOT INITIAL.
+
+    SELECT sign, opti, low, high
+      FROM tvarvc
+      WHERE name = @gc_tvarv_mtart
+      INTO TABLE @DATA(lt_tvarv).
+
+    LOOP AT lt_tvarv INTO DATA(ls_tv).
+      CHECK ls_tv-low IS NOT INITIAL OR ls_tv-high IS NOT INITIAL.
+      APPEND VALUE #( sign   = COND #( WHEN ls_tv-sign IS INITIAL THEN 'I'  ELSE ls_tv-sign )
+                      option = COND #( WHEN ls_tv-opti IS INITIAL THEN 'EQ' ELSE ls_tv-opti )
+                      low    = ls_tv-low
+                      high   = ls_tv-high ) TO lr_mtart.
+    ENDLOOP.
+
+    IF lr_mtart IS INITIAL.
+      add_msg( EXPORTING iv_type = 'W' iv_number = 022 iv_v1 = gc_tvarv_mtart
+               CHANGING  ct_msg  = ct_msg ).
+      RETURN.
+    ENDIF.
+
+    SELECT matnr, mtart
+      FROM mara
+      FOR ALL ENTRIES IN @ct_scope
+      WHERE matnr = @ct_scope-matnr
+      INTO TABLE @DATA(lt_mara).
+
+    SORT lt_mara BY matnr.
+
+    LOOP AT ct_scope INTO DATA(ls_scope).
+      READ TABLE lt_mara INTO DATA(ls_mara)
+        WITH KEY matnr = ls_scope-matnr BINARY SEARCH.
+      IF sy-subrc <> 0 OR ls_mara-mtart NOT IN lr_mtart.
+        DELETE ct_scope.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+*&---------------------------------------------------------------------*
+*& Price per material, change request of 15/09/26:
+*&   A923-MATNR -> KNUMH of the record with the latest DATAB
+*&   KONP-KNUMH -> KBETR
+*& ASSUMPTION: A923 is read on the material alone - no condition type,
+*& sales organisation or valid-to check - exactly as the request is
+*& worded. The first KONP line (lowest KOPOS) of that record is taken and
+*& KBETR is used as it stands, without KPEIN or KONWA.
+*&---------------------------------------------------------------------*
+  METHOD read_prices.
+
+    CLEAR rt_price.
+
+    CHECK it_scope IS NOT INITIAL.
+
+    SELECT matnr, datab, knumh
+      FROM a923
+      FOR ALL ENTRIES IN @it_scope
+      WHERE matnr = @it_scope-matnr
+      INTO TABLE @DATA(lt_a923).
+
+    CHECK lt_a923 IS NOT INITIAL.
+
+*   Latest valid-from wins - one record per material
+    SORT lt_a923 BY matnr datab DESCENDING knumh DESCENDING.
+    DELETE ADJACENT DUPLICATES FROM lt_a923 COMPARING matnr.
+
+    SELECT knumh, kopos, kbetr
+      FROM konp
+      FOR ALL ENTRIES IN @lt_a923
+      WHERE knumh = @lt_a923-knumh
+      INTO TABLE @DATA(lt_konp).
+
+    SORT lt_konp BY knumh kopos.
+    DELETE ADJACENT DUPLICATES FROM lt_konp COMPARING knumh.
+
+    LOOP AT lt_a923 INTO DATA(ls_a923).
+      READ TABLE lt_konp INTO DATA(ls_konp)
+        WITH KEY knumh = ls_a923-knumh BINARY SEARCH.
+      IF sy-subrc = 0.
+        INSERT VALUE #( matnr = ls_a923-matnr
+                        kbetr = ls_konp-kbetr ) INTO TABLE rt_price.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+*&---------------------------------------------------------------------*
+*& Value columns. "In Tonnage" is the tonnage figure times the same
+*& price, which is what the sample of 15/09/26 shows:
+*& 189.045 t x 1.2 = 226.854.
+*&---------------------------------------------------------------------*
+  METHOD fill_values.
+
+    cs_alv-val_m4     = cs_alv-m4_fcst   * cs_alv-price.
+    cs_alv-val_m5     = cs_alv-m5_fcst   * cs_alv-price.
+    cs_alv-val_m6     = cs_alv-m6_fcst   * cs_alv-price.
+    cs_alv-val_m4_ton = cs_alv-m4_ton    * cs_alv-price.
+    cs_alv-val_m5_ton = cs_alv-m5_ton    * cs_alv-price.
+    cs_alv-val_m6_ton = cs_alv-m6_ton    * cs_alv-price.
+    cs_alv-val_total  = cs_alv-total_qty * cs_alv-price.
+
+  ENDMETHOD.
+*EOC By Arnav on 15/09/26
 
 
 *&---------------------------------------------------------------------*

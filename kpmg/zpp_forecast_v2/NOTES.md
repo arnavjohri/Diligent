@@ -39,6 +39,14 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   `ZPPT_PROD_CAT`, not in a table of its own.
 - Do not mix DDIC or class names with v1 — the inventories genuinely differ (see
   `zpp_forecast/NOTES.md`).
+- **Since 15/09/26, quarterly and monthly only:** the scope is cut to the material types in
+  TVARVC `ZPP_FORECAST_MTART` (FERT, HAWA) by `ZCL_PP_FCST=>FILTER_MTART`; an unmaintained
+  variable filters nothing and logs message 022. A price per material comes from `A923`
+  (latest `DATAB`) → `KONP-KBETR` in `READ_PRICES`, read on material alone as the change
+  request words it — no condition type, sales organisation, valid-to, `KPEIN` or `KONWA`.
+  The `PRICE` / `VAL_*` columns of `TY_ALV` are display only and are never saved. Annual is
+  untouched by both. See ISSUES.md 15/09/26 for why "no values in monthly" is the MATDOC
+  source and not a code defect.
 
 ## Dependencies
 

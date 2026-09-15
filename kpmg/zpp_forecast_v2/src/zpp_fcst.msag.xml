@@ -134,6 +134,12 @@
      <MSGNR>020</MSGNR>
      <TEXT>Material &amp;1 is excluded from forecasting</TEXT>
     </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZPP_FCST</ARBGB>
+     <MSGNR>022</MSGNR>
+     <TEXT>TVARVC variable &amp;1 not maintained, material type not restricted</TEXT>
+    </T100>
    </T100_TEXTS>
   </asx:values>
  </asx:abap>

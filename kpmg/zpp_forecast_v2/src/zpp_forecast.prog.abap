@@ -715,10 +715,24 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
       APPEND 'M5_FCST'    TO ct_show.   " Aug'26
       APPEND 'M6_FCST'    TO ct_show.   " Sep'26
 
+*BOC By Arnav on 15/09/26
+*     Price and the values in EA, change request of 15/09/26
+      APPEND 'PRICE'      TO ct_show.   " KONP-KBETR via A923
+      APPEND 'VAL_M4'     TO ct_show.   " Price for July 26 in EA
+      APPEND 'VAL_M5'     TO ct_show.   " Price for Aug 26 in EA
+      APPEND 'VAL_M6'     TO ct_show.   " Price for Sep 26 in EA
+      APPEND 'VAL_TOTAL'  TO ct_show.   " Final forecast qty x Price
+*EOC By Arnav on 15/09/26
+
       IF p_tonn = abap_true.
         APPEND 'M4_TON' TO ct_show.
         APPEND 'M5_TON' TO ct_show.
         APPEND 'M6_TON' TO ct_show.
+*BOC By Arnav on 15/09/26
+        APPEND 'VAL_M4_TON' TO ct_show.   " Price for July 26 in Tonnage
+        APPEND 'VAL_M5_TON' TO ct_show.   " Price for Aug 26 in Tonnage
+        APPEND 'VAL_M6_TON' TO ct_show.   " Price for Sep 26 in Tonnage
+*EOC By Arnav on 15/09/26
       ENDIF.
 
       APPEND 'MTS_MTO'    TO ct_show.   " AE17, the last FS column
@@ -743,8 +757,17 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
       APPEND 'BUS_FCST_ADD' TO ct_show.   " Additonal plan qty july 26
       APPEND 'TOTAL_QTY'    TO ct_show.   " final forecast qty, column Q
 
+*BOC By Arnav on 15/09/26
+*     Price and the values, change request of 15/09/26 - one month, so
+*     one value in EA, the total, and the tonnage value below
+      APPEND 'PRICE'        TO ct_show.   " KONP-KBETR via A923
+      APPEND 'VAL_M4'       TO ct_show.   " Price for <month> in EA
+      APPEND 'VAL_TOTAL'    TO ct_show.   " Final forecast qty x Price
+*EOC By Arnav on 15/09/26
+
       IF p_tonn = abap_true.
         APPEND 'M4_TON' TO ct_show.
+        APPEND 'VAL_M4_TON' TO ct_show.   "Changes by Arnav on 15/09/26 - Price in Tonnage
       ENDIF.
 
   ENDCASE.
@@ -905,6 +928,15 @@ FORM setup_columns USING pt_show TYPE tt_fname.
     PERFORM txt USING 'M4_TON'       'Month 1 tonnage'.
     PERFORM txt USING 'M5_TON'       'Month 2 tonnage'.
     PERFORM txt USING 'M6_TON'       'Month 3 tonnage'.
+
+*BOC By Arnav on 15/09/26
+*   Price and value headings carry the real month - "Price for Jul 26
+*   in EA" - as the change request words them. Built in PRICE_HEADINGS
+*   from the quarter, or from the one period entered in monthly mode.
+    PERFORM txt USING 'PRICE'        'Price'.
+    PERFORM txt USING 'VAL_TOTAL'    'Final Fcst Qty x Price'.
+    PERFORM price_headings.
+*EOC By Arnav on 15/09/26
 
     IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
       PERFORM txt USING 'MAX_QTY'  'Max. Qty'.
@@ -1210,3 +1242,53 @@ FORM txt USING pv_name TYPE any
   ENDTRY.
 
 ENDFORM.
+
+
+*BOC By Arnav on 15/09/26
+*&---------------------------------------------------------------------*
+*& Headings of the value columns, with the calendar month behind them:
+*&   VAL_M4 .. VAL_M6          Price for Jul 26 in EA
+*&   VAL_M4_TON .. VAL_M6_TON  Price for Jul 26 in Tonnage
+*& Quarterly names the three months of the quarter; monthly has one
+*& month, so only VAL_M4 and VAL_M4_TON are headed (the others are
+*& hidden in that mode anyway).
+*&---------------------------------------------------------------------*
+FORM price_headings.
+
+  DATA: lt_per TYPE zcl_pp_fcst_util=>tt_period,
+        lv_col TYPE lvc_fname,
+        lv_hdr TYPE string,
+        lv_nam TYPE char3,
+        lv_yy  TYPE gjahr,
+        lv_mm  TYPE numc2,
+        lv_i   TYPE i.
+
+  IF g_mode = zcl_pp_fcst=>gc_mode-quarterly.
+    lt_per = zcl_pp_fcst_util=>quarter_periods( iv_fyear   = p_fyear
+                                                iv_quarter = p_quart ).
+  ELSE.
+    zcl_pp_fcst_util=>period_to_yearmonth( EXPORTING iv_fyear  = p_fyear
+                                                     iv_period = CONV #( p_perio )
+                                           IMPORTING ev_gjahr  = lv_yy
+                                                     ev_month  = lv_mm ).
+    APPEND VALUE #( gjahr = lv_yy month = lv_mm ) TO lt_per.
+  ENDIF.
+
+  LOOP AT lt_per INTO DATA(ls_per).
+
+    lv_i  = sy-tabix + 3.
+    lv_yy = ls_per-gjahr.
+    PERFORM month_name USING ls_per-month CHANGING lv_nam.
+
+    lv_col = |VAL_M{ lv_i }|.
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in EA|.
+    PERFORM txt USING lv_col lv_hdr.
+
+    lv_col = |VAL_M{ lv_i }_TON|.
+    lv_hdr = |Price for { lv_nam } { lv_yy+2(2) } in Tonnage|.
+    PERFORM txt USING lv_col lv_hdr.
+
+  ENDLOOP.
+
+ENDFORM.
+*EOC By Arnav on 15/09/26
