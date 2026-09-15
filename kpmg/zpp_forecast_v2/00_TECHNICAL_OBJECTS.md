@@ -131,8 +131,8 @@ then `M4_LAST` `M5_LAST` `M6_LAST` · `LY_QTR_TOT` · `M1_CURR` `M2_CURR` `M3_CU
 |---|---|---|
 | Annual | `VBRK` ⋈ `VBRP` | `VBRP-FKIMG` |
 | Quarterly | `VBRK` ⋈ `VBRP` | `VBRP-FKIMG` |
-| Monthly | `MATDOC`, `BWART = 601` | `MATDOC-MENGE` |
-| Superseded codes | `MATDOC` | `MATDOC-MENGE` |
+| Monthly | `MATDOC`, `BWART = 601` — **since 15/09/26 `VBRK` ⋈ `VBRP`, same as quarterly** | `MATDOC-MENGE` → `VBRP-FKIMG` |
+| Superseded codes | `MATDOC` — since 15/09/26 the successor's source (billing in all three modes) | `MATDOC-MENGE` → `VBRP-FKIMG` |
 | Legacy checkbox | `ZPPT_SLS_HIST` | `M01`…`M12` |
 
 Billing filters: `VBRK-FKSTO ≠ 'X'`, `VBTYP ≠ 'U'`, `VBRP-SHKZG` per the document.

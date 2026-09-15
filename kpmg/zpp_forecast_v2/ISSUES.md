@@ -487,3 +487,26 @@ Do NOT change `ZPPT_FCST_QT`.
 Commit `7388be0` on `main`.
 
 TR: not yet transported.
+
+## 15/09/26 — monthly history read from billing, same as quarterly
+
+Test case: quarter 2 run showed May-26 = 3600, period 4 run showed May-26 = 300 for the same
+material; most materials had figures in quarterly and none in monthly. Cause: by design (FS
+and mandatory query M1, never answered) quarterly read `VBRP-FKIMG` from billing while monthly
+read `MATDOC-MENGE` for movement 601 — different documents and, at 12×, different units.
+
+Arnav's call: one source. `GENERATE_MONTHLY` now reads `READ_BILLING` instead of
+`READ_MATDOC`, and passes `iv_use_billing = abap_true` so superseded codes follow the
+successor onto billing too. Old lines commented in place inside the 31/08 block (single-line
+markers, no nesting). The monthly formula (average × load, max with LY same month, max with
+business forecast) is untouched; only the history figures change. `READ_MATDOC` and
+`ZPPT_FCST_CFG-BWART` remain but are no longer called. **Deviates from the FS, which names
+MATDOC 601 for this mode — to be corrected in the FS.**
+
+Not changed, flagged: both modes now sum `FKIMG`, the sales-unit quantity, while tonnage
+multiplies by `MARA-NTGEW`, which is per base unit. Wherever sales unit ≠ base unit the
+tonnage is off by the conversion factor. `VBRP-FKLMG` (billed quantity in base unit) is the
+one-word fix if the functional side wants base-unit figures.
+
+Files: `src/zcl_pp_fcst.clas.abap` only (`zcl_pp_fcst_nocomments.abap` regenerated).
+TR: not yet transported.
