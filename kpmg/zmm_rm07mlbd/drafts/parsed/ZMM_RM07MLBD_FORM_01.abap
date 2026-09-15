@@ -133,7 +133,7 @@ FORM aktuelle_bestaende.
                                      ( auth_field = 'WERKS'
                                        view_field = VALUE #( table_ddic_name = 'T001W'
                                                              table_alias = ''
-                                                             field_name= 'WERKS' ) )
+                                                             field_name = 'WERKS' ) )
                                                         ) ).
     CLEAR: gv_where_clause, gv_not_authorized.
     TRY.
@@ -151,7 +151,7 @@ FORM aktuelle_bestaende.
 
 * Begin of correction 1916359
 * Retrieve plant records for which the user has no authority to issue the corresponding authority message
-* Only for compatibility reasons after code pushdown of authority checkto DB
+* Only for compatibility reasons after code pushdown of authority check to DB
   IF gv_where_clause IS NOT INITIAL AND gv_not_authorized = abap_false AND NOT bwbst = 'X'.
     IF lgbst = 'X' AND xchar = ' '.
       PERFORM hdb_check_table USING 'MARD' ''.
@@ -2994,8 +2994,8 @@ FORM build_bklas_selection
 * if selection is restricted by valuation grouping code(BWMOD) also restrict valuation area selection
   IF lv_bwmod_restricted = abap_true.
     CLEAR g_ra_bwkey-low.
-    LOOP AT lt_rules ASSIGNING <fs_standart_account_rule> WHERE XBWMO ='X'.
-        LOOP AT lt_accounts ASSIGNING <fs_selected_account> WHERE ktopl= <fs_standart_account_rule>-ktopl.
+    LOOP AT lt_rules ASSIGNING <fs_standart_account_rule> WHERE XBWMO = 'X'.
+        LOOP AT lt_accounts ASSIGNING <fs_selected_account> WHERE ktopl = <fs_standart_account_rule>-ktopl.
           LOOP AT lt_valuation_areas ASSIGNING <fs_valuation_area> WHERE bwmod = <fs_selected_account>-bwmod.
             g_ra_bwkey-low = <fs_valuation_area>-bwkey.
             APPEND g_ra_bwkey TO g_ra_bwkey.

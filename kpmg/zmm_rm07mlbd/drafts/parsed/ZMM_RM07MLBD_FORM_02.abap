@@ -1163,7 +1163,7 @@ FORM f1000_select_mseg_mkpf.
             lv_year = ls_mseg_key-mjahr.
           ENDIF.
         ENDLOOP.
-        DATA(lv_temperature) = CONV data_temperature( lv_year && '0101').
+        DATA(lv_temperature) = CONV data_temperature( lv_year && '0101' ).
         IF cl_nsdm_matdoc_aging_helper=>is_cold_store_relevant( lv_temperature ).
           cl_abap_stack_temperature=>set_temperature( lv_temperature ).
         ENDIF.
