@@ -273,7 +273,7 @@
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
           "defaultSpan": {
             "rows": 25,
-            "cols": 2
+            "cols": 3
           }
         }
       },
@@ -313,7 +313,7 @@
           ],
           "defaultSpan": {
             "rows": 20,
-            "cols": 1
+            "cols": 2
           }
         }
       },
@@ -360,7 +360,7 @@
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TopAssets",
           "defaultSpan": {
             "rows": 20,
-            "cols": 1
+            "cols": 2
           }
         }
       }
