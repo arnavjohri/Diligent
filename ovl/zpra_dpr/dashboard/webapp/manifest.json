@@ -18,39 +18,39 @@
           "localUri": "localService/mainService/metadata.xml"
         }
       },
-      "boepd": {
+      "ZDPR_Q_BOEPD_TREND_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/",
         "type": "OData",
         "settings": {
           "odataVersion": "2.0",
-          "localUri": "localService/boepd/metadata.xml",
+          "localUri": "localService/ZDPR_Q_BOEPD_TREND_CDS/metadata.xml",
           "annotations": [
             "boepdAnnotation"
           ]
         }
       },
-      "target": {
+      "ZDPR_Q_TARGET_QUERY_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_TARGET_QUERY_CDS/",
         "type": "OData",
         "settings": {
           "odataVersion": "2.0",
-          "localUri": "localService/target/metadata.xml"
+          "localUri": "localService/ZDPR_Q_TARGET_QUERY_CDS/metadata.xml"
         }
       },
-      "daily": {
+      "ZDPR_Q_DAILY_TREND_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_DAILY_TREND_CDS/",
         "type": "OData",
         "settings": {
           "odataVersion": "2.0",
-          "localUri": "localService/daily/metadata.xml"
+          "localUri": "localService/ZDPR_Q_DAILY_TREND_CDS/metadata.xml"
         }
       },
-      "prod": {
+      "ZDPR_Q_PROD_QUERY_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_PROD_QUERY_CDS/",
         "type": "OData",
         "settings": {
           "odataVersion": "2.0",
-          "localUri": "localService/prod/metadata.xml"
+          "localUri": "localService/ZDPR_Q_PROD_QUERY_CDS/metadata.xml"
         }
       },
       "boepdAnnotation": {
@@ -117,29 +117,29 @@
           "defaultCountMode": "Inline"
         }
       },
-      "boepd": {
-        "dataSource": "boepd",
+      "ZDPR_Q_BOEPD_TREND_CDS": {
+        "dataSource": "ZDPR_Q_BOEPD_TREND_CDS",
         "preload": true,
         "settings": {
           "defaultCountMode": "Inline"
         }
       },
-      "target": {
-        "dataSource": "target",
+      "ZDPR_Q_TARGET_QUERY_CDS": {
+        "dataSource": "ZDPR_Q_TARGET_QUERY_CDS",
         "preload": true,
         "settings": {
           "defaultCountMode": "Inline"
         }
       },
-      "daily": {
-        "dataSource": "daily",
+      "ZDPR_Q_DAILY_TREND_CDS": {
+        "dataSource": "ZDPR_Q_DAILY_TREND_CDS",
         "preload": true,
         "settings": {
           "defaultCountMode": "Inline"
         }
       },
-      "prod": {
-        "dataSource": "prod",
+      "ZDPR_Q_PROD_QUERY_CDS": {
+        "dataSource": "ZDPR_Q_PROD_QUERY_CDS",
         "preload": true,
         "settings": {
           "defaultCountMode": "Inline"
@@ -161,7 +161,7 @@
     "smartVariantRequired": false,
     "cards": {
       "card01_boepdTrend": {
-        "model": "boepd",
+        "model": "ZDPR_Q_BOEPD_TREND_CDS",
         "template": "sap.ovp.cards.charts.analytical",
         "settings": {
           "title": "{{card01Title}}",

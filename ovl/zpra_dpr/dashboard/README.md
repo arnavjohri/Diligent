@@ -62,29 +62,32 @@ entity built for the page.
    action `display`.
 6. Finish. The generator creates the project with no cards.
 
-### 1.3 Add the second service
-*Application Info* → *Add Data Source* (or *Application Modeler → Data Sources
-→ Add*): destination `ZDPR_S4_BACKEND`, service **ZDPR_Q_BOEPD_TREND_CDS**,
-data source name `boepd`, model name `boepd`. This also downloads its metadata
-to `webapp/localService/boepd/metadata.xml` and adds an entry in `xs-app.json`.
+### 1.3 Add the other four services
+*Application Info* → *Manage Service Models* → *Add Service*, destination
+`ZDPR_S4_BACKEND`, one per service. BAS names each data source and model after
+the service (`ZDPR_Q_BOEPD_TREND_CDS`, `ZDPR_Q_TARGET_QUERY_CDS`,
+`ZDPR_Q_DAILY_TREND_CDS`, `ZDPR_Q_PROD_QUERY_CDS`); `manifest.json` here uses
+those names. Metadata lands in `webapp/localService/<service>/metadata.xml`.
+URIs are the plain `/sap/opu/odata/sap/<service>/` paths (confirmed 16/09/26).
 
-The other three services (`target`, `daily`, `prod`) are already declared in
-`manifest.json` here so later steps only add cards. Either add them the same
-way now (recommended, so the local metadata files exist), or delete the three
-entries from `dataSources` and `models` until their step.
+### 1.4 Merge the repo files in — do not overwrite the generated manifest
+The generator's `manifest.json` already has the five data sources and models,
+plus the backend-annotation entries it created for each. Keep all of that.
+Change only two places:
 
-### 1.4 Copy the files from this folder
-Overwrite the generated `webapp/manifest.json`, add
-`webapp/annotations/annotation_boepd.xml`, replace `webapp/i18n/i18n.properties`.
-Keep the generated `Component.js`, `index.html`, `xs-app.json`, `ui5.yaml`,
-`localService/**` untouched.
+1. In `sap.app.dataSources`, add the local annotation source
+   `boepdAnnotation` (copy the block from the repo manifest) and add
+   `"boepdAnnotation"` to the `settings.annotations` array of
+   `ZDPR_Q_BOEPD_TREND_CDS` (create the array if the generator made none).
+2. Replace the whole `sap.ovp` section with the one from the repo manifest.
+
+Then add `webapp/annotations/annotation_boepd.xml` and replace
+`webapp/i18n/i18n.properties` with the repo copies. Keep `Component.js`,
+`index.html`, `xs-app.json`, `ui5.yaml`, `localService/**` untouched.
 
 ### 1.5 Checks before the first preview
-1. **Service URIs**: `manifest.json` data-source `uri` values are the on-prem
-   paths. The generator may rewrite them to the destination-prefixed form
-   (`/ZDPR_S4_BACKEND/sap/opu/odata/...`) depending on the `xs-app.json`
-   routing it generated. Whatever the generator wrote for `mainService`, apply
-   the same prefix to the other four.
+1. **Service URIs**: confirmed plain `/sap/opu/odata/sap/<service>/`, no
+   destination prefix. Nothing to change.
 2. **Entity set and type names** (the one real assumption in this step). Open
    `/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata` in the browser and
    confirm:
