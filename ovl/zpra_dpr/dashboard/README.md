@@ -110,7 +110,7 @@ Then add `webapp/annotations/annotation_boepd.xml` and replace
    to `20240401` / `20240414` and retry. Once the filter bar supplies the
    dates this default is not used.
 
-### 1.6 Preview
+### 1.6 Preview — DONE 16/09/26 (card 1 renders, filter bar drives it; target line zero for Sep 2024 = data coverage to check)
 *Preview Application* → `start`. The filter bar shows three mandatory fields
 (Production date from, to, Fiscal year) coming from the analytical parameters.
 Enter 01.04.2024, 14.04.2024, 2024 and *Go*. Card 1 must show two lines: a

@@ -246,7 +246,6 @@
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#ActualBoepd",
           "defaultSpan": {
             "rows": 25,
             "cols": 2

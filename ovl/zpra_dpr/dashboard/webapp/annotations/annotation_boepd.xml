@@ -37,7 +37,6 @@
              P_DateFrom / P_DateTo are Edm.DateTime (CDS type datum). -->
         <Annotation Term="UI.SelectionVariant" Qualifier="Params">
           <Record Type="UI.SelectionVariantType">
-            <PropertyValue Property="Text" String="Report window"/>
             <PropertyValue Property="Parameters">
               <Collection>
                 <Record Type="UI.Parameter">
