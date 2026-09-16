@@ -1,0 +1,182 @@
+{
+  "_version": "1.49.0",
+  "sap.app": {
+    "id": "zdprdashboard",
+    "type": "application",
+    "i18n": "i18n/i18n.properties",
+    "applicationVersion": {
+      "version": "1.0.0"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "mainService": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_PROD_PERF_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/mainService/metadata.xml"
+        }
+      },
+      "boepd": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/boepd/metadata.xml",
+          "annotations": [
+            "boepdAnnotation"
+          ]
+        }
+      },
+      "target": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_TARGET_QUERY_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/target/metadata.xml"
+        }
+      },
+      "daily": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_DAILY_TREND_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/daily/metadata.xml"
+        }
+      },
+      "prod": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_PROD_QUERY_CDS/",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0",
+          "localUri": "localService/prod/metadata.xml"
+        }
+      },
+      "boepdAnnotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation_boepd.xml",
+        "settings": {
+          "localUri": "annotations/annotation_boepd.xml"
+        }
+      }
+    },
+    "crossNavigation": {
+      "inbounds": {
+        "DPRDashboard-display": {
+          "semanticObject": "DPRDashboard",
+          "action": "display",
+          "title": "{{flpTitle}}",
+          "subTitle": "{{flpSubtitle}}",
+          "signature": {
+            "parameters": {},
+            "additionalParameters": "allowed"
+          }
+        }
+      }
+    }
+  },
+  "sap.ui": {
+    "technology": "UI5",
+    "icons": {
+      "icon": "sap-icon://business-objects-experience"
+    },
+    "deviceTypes": {
+      "desktop": true,
+      "tablet": true,
+      "phone": true
+    }
+  },
+  "sap.ui5": {
+    "flexEnabled": true,
+    "dependencies": {
+      "minUI5Version": "1.96.0",
+      "libs": {
+        "sap.ui.core": {},
+        "sap.m": {},
+        "sap.ui.comp": {},
+        "sap.ui.generic.app": {},
+        "sap.ovp": {}
+      }
+    },
+    "contentDensities": {
+      "compact": true,
+      "cozy": true
+    },
+    "models": {
+      "i18n": {
+        "type": "sap.ui.model.resource.ResourceModel",
+        "settings": {
+          "bundleName": "zdprdashboard.i18n.i18n"
+        }
+      },
+      "": {
+        "dataSource": "mainService",
+        "preload": true,
+        "settings": {
+          "defaultCountMode": "Inline"
+        }
+      },
+      "boepd": {
+        "dataSource": "boepd",
+        "preload": true,
+        "settings": {
+          "defaultCountMode": "Inline"
+        }
+      },
+      "target": {
+        "dataSource": "target",
+        "preload": true,
+        "settings": {
+          "defaultCountMode": "Inline"
+        }
+      },
+      "daily": {
+        "dataSource": "daily",
+        "preload": true,
+        "settings": {
+          "defaultCountMode": "Inline"
+        }
+      },
+      "prod": {
+        "dataSource": "prod",
+        "preload": true,
+        "settings": {
+          "defaultCountMode": "Inline"
+        }
+      }
+    },
+    "extends": {
+      "component": "sap.ovp.app"
+    }
+  },
+  "sap.ovp": {
+    "globalFilterModel": "",
+    "globalFilterEntitySet": "ZDPR_Q_PROD_PERFSet",
+    "considerAnalyticalParameters": true,
+    "containerLayout": "resizable",
+    "enableLiveFilter": false,
+    "showDateInRelativeFormat": false,
+    "useDateRangeType": false,
+    "smartVariantRequired": false,
+    "cards": {
+      "card01_boepdTrend": {
+        "model": "boepd",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card01Title}}",
+          "subTitle": "{{card01Subtitle}}",
+          "entitySet": "ZDPR_Q_BOEPD_TRENDSet",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "dataPointAnnotationPath": "com.sap.vocabularies.UI.v1.DataPoint#ActualBoepd",
+          "defaultSpan": {
+            "rows": 25,
+            "cols": 2
+          }
+        }
+      }
+    }
+  }
+}

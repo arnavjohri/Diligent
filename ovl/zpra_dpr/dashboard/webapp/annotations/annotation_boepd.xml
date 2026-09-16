@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Local annotations for the OData V2 service ZDPR_Q_BOEPD_TREND_CDS
+  (analytical query ZDPR_Q_BOEPD_TREND, @OData.publish: true).
+
+  Card 1  "Actual Production vs BE Target (BOEPD)"  - line chart over ProductionDate
+  Card 5  "Daily Production Trend by Business Unit" - added in step 5
+
+  ASSUMPTION (verify against $metadata, see README step 1 check 2):
+    entity type of the result rows  = ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDType
+    entity set  of the result rows  = ZDPR_Q_BOEPD_TRENDSet
+    parameter entity set            = ZDPR_Q_BOEPD_TREND  (navigation "Set")
+  If the system generated "...Results" instead of "...Set", replace the two
+  names here and in manifest.json - nothing else changes.
+
+  The chart is defined here with its own qualifier (BoepdVsTargetOvp) so the
+  card works whether or not the backend DDLX ZDPR_Q_BOEPD_TREND is active.
+-->
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata">
+    <edmx:Include Namespace="ZDPR_Q_BOEPD_TREND_CDS" Alias="SAP"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="zdprdashboard.annotations.boepd">
+
+      <Annotations Target="ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDType">
+
+        <!-- Parameters of the query. Values here are defaults for the first
+             load; the global filter bar overrides them at runtime because it
+             carries parameters with the same names (P_DateFrom, P_DateTo).
+             P_DateFrom / P_DateTo are Edm.DateTime (CDS type datum). -->
+        <Annotation Term="UI.SelectionVariant" Qualifier="Params">
+          <Record Type="UI.SelectionVariantType">
+            <PropertyValue Property="Text" String="Report window"/>
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-01T00:00:00"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-14T00:00:00"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="SelectOptions">
+              <Collection/>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- Excel tab 2: two lines over the production date.
+             Line chart + Edm.DateTime dimension = time axis (automatic). -->
+        <Annotation Term="UI.Chart" Qualifier="BoepdVsTargetOvp">
+          <Record Type="UI.ChartDefinitionType">
+            <PropertyValue Property="Title" String="Actual Production vs BE Target (BOEPD)"/>
+            <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Line"/>
+            <PropertyValue Property="Dimensions">
+              <Collection>
+                <PropertyPath>ProductionDate</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="DimensionAttributes">
+              <Collection>
+                <Record Type="UI.ChartDimensionAttributeType">
+                  <PropertyValue Property="Dimension" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Measures">
+              <Collection>
+                <PropertyPath>ActualBoepdOvl</PropertyPath>
+                <PropertyPath>TargetBoepd</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="MeasureAttributes">
+              <Collection>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="ActualBoepdOvl"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                  <PropertyValue Property="DataPoint" AnnotationPath="@UI.DataPoint#ActualBoepd"/>
+                </Record>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="TargetBoepd"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                  <PropertyValue Property="DataPoint" AnnotationPath="@UI.DataPoint#TargetBoepd"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- Sort ascending by date so the line runs left to right. -->
+        <Annotation Term="UI.PresentationVariant" Qualifier="ByDate">
+          <Record Type="UI.PresentationVariantType">
+            <PropertyValue Property="SortOrder">
+              <Collection>
+                <Record Type="Common.SortOrderType">
+                  <PropertyValue Property="Property" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Descending" Bool="false"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Visualizations">
+              <Collection>
+                <AnnotationPath>@UI.Chart#BoepdVsTargetOvp</AnnotationPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- Card header KPI: the aggregated actual over the window,
+             compared with the aggregated BE target. -->
+        <Annotation Term="UI.DataPoint" Qualifier="ActualBoepd">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Title" String="Actual Production (BOEPD)"/>
+            <PropertyValue Property="Value" Path="ActualBoepdOvl"/>
+            <PropertyValue Property="ValueFormat">
+              <Record Type="UI.NumberFormat">
+                <PropertyValue Property="ScaleFactor" Decimal="1000"/>
+                <PropertyValue Property="NumberOfFractionalDigits" Int="1"/>
+              </Record>
+            </PropertyValue>
+            <PropertyValue Property="CriticalityCalculation">
+              <Record Type="UI.CriticalityCalculationType">
+                <PropertyValue Property="ImprovementDirection" EnumMember="UI.ImprovementDirectionType/Maximize"/>
+                <PropertyValue Property="DeviationRangeLowValue" Path="TargetBoepd"/>
+                <PropertyValue Property="ToleranceRangeLowValue" Path="TargetBoepd"/>
+              </Record>
+            </PropertyValue>
+            <PropertyValue Property="TrendCalculation">
+              <Record Type="UI.TrendCalculationType">
+                <PropertyValue Property="ReferenceValue" Path="TargetBoepd"/>
+                <PropertyValue Property="DownDifference" Decimal="0"/>
+                <PropertyValue Property="UpDifference" Decimal="0"/>
+              </Record>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.DataPoint" Qualifier="TargetBoepd">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Title" String="BE Target (BOEPD)"/>
+            <PropertyValue Property="Value" Path="TargetBoepd"/>
+          </Record>
+        </Annotation>
+
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
