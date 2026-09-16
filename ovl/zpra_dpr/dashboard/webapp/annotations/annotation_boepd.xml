@@ -26,11 +26,11 @@
               <Collection>
                 <Record Type="UI.Parameter">
                   <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
-                  <PropertyValue Property="PropertyValue" String="2024-04-01T00:00:00"/>
+                  <PropertyValue Property="PropertyValue" String="20240401"/>
                 </Record>
                 <Record Type="UI.Parameter">
                   <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
-                  <PropertyValue Property="PropertyValue" String="2024-04-14T00:00:00"/>
+                  <PropertyValue Property="PropertyValue" String="20240414"/>
                 </Record>
               </Collection>
             </PropertyValue>

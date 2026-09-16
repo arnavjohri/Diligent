@@ -254,9 +254,10 @@
   "sap.ovp": {
     "globalFilterModel": "mainModel",
     "globalFilterEntitySet": "ZDPR_Q_PROD_PERFSet",
+    "considerAnalyticalParameters": true,
+    "enableODataSelect": true,
     "containerLayout": "resizable",
     "enableLiveFilter": false,
-    "considerAnalyticalParameters": false,
     "showDateInRelativeFormat": false,
     "useDateRangeType": false,
     "cards": {
