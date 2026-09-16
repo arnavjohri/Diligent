@@ -22,7 +22,7 @@ pasted in ADT because abapGit cannot import DDLX on this system.
 | 05 | ZDPR_P_BOEPD_ROWS | new | union: actual rows (A) from ZDPR_P_DAY_BASE + target rows (T) from ZDPR_P_TARGET_DAY |
 | 06 | ZDPR_C_BOEPD_DAY | changed | now a plain select on 05 (no join); new key RowType; new ProductionDateText |
 | 07 | ZDPR_C_PROD_CUBE | changed | + ProductionDateText (YYYY-MM-DD) |
-| 08 | ZDPR_P_PERF_AGG | changed | ANNUAL branch from ZDPR_I_TARGET_FY, divisor = days in FY |
+| 08 | ZDPR_P_PERF_AGG | changed | ANNUAL branch from ZDPR_I_TARGET_FY, divisor = days in FY; + SumTargetBoepd90 (Arnav, 16/09) so the classic query needs no arithmetic in conditions |
 | 09 | ZDPR_Q_PROD_PERF | changed | Arnav's activated classic view + RowLabel (the senior's arithmetic form `SumActualBoepd * 100` inside division() and `cast(division())` failed the classic-view check with "* unexpected"; the morning form with typed casts activates) |
 | 10 | ZDPR_Q_BOEPD_TREND | changed | + ProductionDateText |
 | 11 | ZDPR_Q_DAILY_TREND | changed | + ProductionDateText |

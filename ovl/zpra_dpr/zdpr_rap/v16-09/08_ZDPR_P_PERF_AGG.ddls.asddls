@@ -34,6 +34,13 @@ define view entity ZDPR_P_PERF_AGG
       cast( sum( TargetQty )      as abap.dec( 23, 7 ) ) as SumTargetQty,
       cast( sum( TargetBoepd )    as abap.dec( 23, 3 ) ) as SumTargetBoepd,
 
+// BOC By Arnav on 16/09/26
+      /* 90 % of the target, pre-computed here because the classic view
+         ZDPR_Q_PROD_PERF may not use arithmetic inside a CASE condition */
+      cast( sum( TargetBoepd ) * cast( '0.9' as abap.dec( 2, 1 ) )
+            as abap.dec( 23, 3 ) )                     as SumTargetBoepd90,
+// EOC By Arnav on 16/09/26
+
       /* production days in the window */
       cast( count( distinct ProductionDate ) as abap.dec( 10, 0 ) ) as Divisor
 }
@@ -60,6 +67,11 @@ union all
       cast( sum( Tar.AnnualTargetVolume ) as abap.dec( 23, 7 ) ) as SumTargetQty,
 
       cast( sum( Tar.AnnualTargetBoe )    as abap.dec( 23, 3 ) ) as SumTargetBoepd,
+
+// BOC By Arnav on 16/09/26
+      /* not used on ANNUAL rows (criticality is 0 there) */
+      cast( 0 as abap.dec( 23, 3 ) )                  as SumTargetBoepd90,
+// EOC By Arnav on 16/09/26
 
       /* days in the fiscal year (365 / 366) */
       cast( max( Tar.DaysInFiscalYear ) as abap.dec( 10, 0 ) ) as Divisor

@@ -147,11 +147,22 @@ define view ZDPR_Q_PROD_PERF
       /* UI criticality for the % cell: 3=green >=100, 2=amber >=90, 1=red,
          0=neutral (ANNUAL rows - no actual, Excel shows "-") */
       @EndUserText.label: 'Achievement Criticality'
+// BOC By Arnav on 16/09/26
+//      cast( case
+//              when ScopeType <> 'YTD' or SumTargetBoepd <= 0        then 0
+//              when SumActualBoepd >= SumTargetBoepd                 then 3
+//              when SumActualBoepd * cast( 100 as abap.dec( 4, 0 ) )
+//                   >= SumTargetBoepd * cast( 90 as abap.dec( 4, 0 ) ) then 2
+//              else 1
+//            end as abap.int1 )                        as AchievementCriticality
+      /* a classic view may not use arithmetic inside a CASE condition
+         ("* unexpected"); the 90 % threshold comes pre-computed from
+         ZDPR_P_PERF_AGG as SumTargetBoepd90 */
       cast( case
               when ScopeType <> 'YTD' or SumTargetBoepd <= 0        then 0
               when SumActualBoepd >= SumTargetBoepd                 then 3
-              when SumActualBoepd * cast( 100 as abap.dec( 4, 0 ) )
-                   >= SumTargetBoepd * cast( 90 as abap.dec( 4, 0 ) ) then 2
+              when SumActualBoepd >= SumTargetBoepd90               then 2
               else 1
             end as abap.int1 )                        as AchievementCriticality
+// EOC By Arnav on 16/09/26
 }
