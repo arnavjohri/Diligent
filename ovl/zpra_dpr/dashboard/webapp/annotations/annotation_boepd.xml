@@ -7,7 +7,7 @@
   Card 5  "Daily Production Trend by Business Unit" - added in step 5
 
   ASSUMPTION (verify against $metadata, see README step 1 check 2):
-    entity type of the result rows  = ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDType
+    entity type of the result rows  = ZDPR_Q_BOEPD_TREND_cds.ZDPR_Q_BOEPD_TRENDType
     entity set  of the result rows  = ZDPR_Q_BOEPD_TRENDSet
     parameter entity set            = ZDPR_Q_BOEPD_TREND  (navigation "Set")
   If the system generated "...Results" instead of "...Set", replace the two
@@ -24,12 +24,12 @@
     <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
   </edmx:Reference>
   <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata">
-    <edmx:Include Namespace="ZDPR_Q_BOEPD_TREND_CDS" Alias="SAP"/>
+    <edmx:Include Namespace="ZDPR_Q_BOEPD_TREND_cds" Alias="SAP"/>
   </edmx:Reference>
   <edmx:DataServices>
     <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="zdprdashboard.annotations.boepd">
 
-      <Annotations Target="ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDType">
+      <Annotations Target="ZDPR_Q_BOEPD_TREND_cds.ZDPR_Q_BOEPD_TRENDType">
 
         <!-- Parameters of the query. Values here are defaults for the first
              load; the global filter bar overrides them at runtime because it

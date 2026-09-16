@@ -92,7 +92,7 @@ Keep the generated `Component.js`, `index.html`, `xs-app.json`, `ui5.yaml`,
    | Expected | Where used |
    |---|---|
    | entity set `ZDPR_Q_BOEPD_TRENDSet` (result rows) | manifest card01 `entitySet` |
-   | entity type `ZDPR_Q_BOEPD_TRENDType` | annotation `Target=` |
+   | entity type `ZDPR_Q_BOEPD_TREND_cds.ZDPR_Q_BOEPD_TRENDType` (namespace suffix `_cds` is lowercase, confirmed 16/09/26) | annotation `Target=` |
    | entity set `ZDPR_Q_PROD_PERFSet` | manifest `globalFilterEntitySet` |
    | parameter set `ZDPR_Q_BOEPD_TREND` with navigation `Set` | not referenced, informational |
 
