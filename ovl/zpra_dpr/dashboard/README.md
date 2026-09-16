@@ -21,10 +21,15 @@ usual and are listed in the step.
     webapp/annotations/annotation_prod.xml   ZDPR_Q_PROD_QUERY_CDS   - card 6
     webapp/i18n/i18n.properties              all card titles
 
-## Status 16/09/26
-Step 1 verified in preview (card 1 renders, filter bar drives it). Cards 2-6
-written in one go on Arnav's request; awaiting preview. Data check (BE target
-zero for Sep 2024) deferred.
+## Status 16/09/26 (evening)
+All six cards render in the BAS preview. The senior released backend revision
+v16-09 (see `../zdpr_rap/README.md`): BE target now computed like the classic
+report (annual TAR_BE ÷ days in FY, ZPRA_T_TAR_CF conversion), readable
+ProductionDateText for chart axes, RowLabel in ZDPR_Q_PROD_PERF. The app files
+here are already adapted to it: charts on ProductionDateText, card 3 split
+into two table cards (YTD / Annual) with RowLabel as first column. They need
+the v16-09 backend active; against the older backend cards 1, 3 and 5 would
+fail on the missing elements.
 
 Card design decisions forced by the Overview Page:
 - A table card shows at most three columns, so card 3 is two tabs (YTD /

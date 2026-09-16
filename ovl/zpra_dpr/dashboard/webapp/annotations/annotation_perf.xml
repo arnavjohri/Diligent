@@ -139,8 +139,8 @@
         <Annotation Term="UI.LineItem" Qualifier="PerfYtd">
           <Collection>
             <Record Type="UI.DataField">
-              <PropertyValue Property="Label" String="Product"/>
-              <PropertyValue Property="Value" Path="ProductGroupText"/>
+              <PropertyValue Property="Label" String="Row"/>
+              <PropertyValue Property="Value" Path="RowLabel"/>
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Label" String="Actual per day"/>
@@ -157,8 +157,8 @@
         <Annotation Term="UI.LineItem" Qualifier="PerfAnnual">
           <Collection>
             <Record Type="UI.DataField">
-              <PropertyValue Property="Label" String="Product"/>
-              <PropertyValue Property="Value" Path="ProductGroupText"/>
+              <PropertyValue Property="Label" String="Row"/>
+              <PropertyValue Property="Value" Path="RowLabel"/>
             </Record>
             <Record Type="UI.DataField">
               <PropertyValue Property="Label" String="BE Target per day"/>

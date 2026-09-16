@@ -292,25 +292,30 @@
           }
         }
       },
-      "card03_prodPerf": {
+      "card03_perfYtd": {
         "model": "mainModel",
         "template": "sap.ovp.cards.table",
         "settings": {
-          "title": "{{card03Title}}",
-          "subTitle": "{{card03Subtitle}}",
+          "title": "{{card03YtdTitle}}",
+          "subTitle": "{{card03YtdSubtitle}}",
           "entitySet": "ZDPR_Q_PROD_PERFSet",
-          "tabs": [
-            {
-              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
-              "value": "{{card03TabYtd}}"
-            },
-            {
-              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
-              "value": "{{card03TabAnnual}}"
-            }
-          ],
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+          "defaultSpan": {
+            "rows": 25,
+            "cols": 2
+          }
+        }
+      },
+      "card03_perfAnnual": {
+        "model": "mainModel",
+        "template": "sap.ovp.cards.table",
+        "settings": {
+          "title": "{{card03AnnualTitle}}",
+          "subTitle": "{{card03AnnualSubtitle}}",
+          "entitySet": "ZDPR_Q_PROD_PERFSet",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
           "defaultSpan": {
             "rows": 25,
             "cols": 2

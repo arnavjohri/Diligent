@@ -131,8 +131,24 @@ Data: BE targets (TAR_BE / NET_PROD) are missing for the dates tested, so the
 target line is zero and % achievement is nonsense until ZPRA_T_PRD_TAR is loaded
 for the fiscal year under test. Not a bug.
 
+## 5a. Backend revision v16-09 (senior, 16/09 evening)
+Five new views and nine changed objects, all in the target chain — list, paste
+order and reason in `../zdpr_rap/README.md`, sources in `../zdpr_rap/v16-09/`,
+documents in `../docs/ZDPR_RAP_Developer_Guide_2026-09-16.docx` and
+`../docs/ZDPR_RAP_Complete_Source_Code_2026-09-16.docx`. The app files in
+`webapp/` are adapted to it (ProductionDateText axes, RowLabel, YTD/Annual as
+two cards) and REQUIRE it. Validation the senior asked for: the flat BE Target
+line on card 1 must equal the "Target : YYYY-YY" grand total of the DPR Excel
+(BOPD/MMSCMD mode) for the same date; if not, check ZPRA_T_TAR_CF first.
+Two statements in the senior's Developer Guide §8.4 are wrong on this system
+and were not applied: the PROD_PERF result set is `ZDPR_Q_PROD_PERFSet` (not
+`...Results`) and the BOEPD annotation target type is `...Result` (not
+`...Type`); the generator names models after the service, not boepd/daily/...
+
 ## 6. Open items, in the order they should be done
 
+0. Get backend v16-09 active (ZIP pull or paste 01–11, then DDLX 12–14 in ADT),
+   refresh the BAS service models, re-run the preview, do the target check.
 1. Deploy: Build MTA → Deploy to Cloud Foundry → Work Zone content channel
    refresh → add to group/role (BTP guide in `../docs/`). Not done.
 2. Data check: SE16 ZPRA_T_PRD_TAR, TAR_CODE=TAR_BE, GJAHR=2024,
