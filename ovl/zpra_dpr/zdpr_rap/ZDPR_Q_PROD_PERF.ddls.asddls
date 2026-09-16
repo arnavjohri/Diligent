@@ -61,6 +61,24 @@ define view ZDPR_Q_PROD_PERF
         else            'Oil, LNG & Condensate ( BOPD )'
       end                                             as ProductGroupText,
 
+// BOC By Arnav on 16/09/26
+      /* One label per row: the Overview Page table card shows only three
+         columns, so scope and product group share the first one */
+      @EndUserText.label: 'Row'
+      case ScopeType
+        when 'YTD' then
+          case ProductGroup
+            when 'GAS' then 'YTD - Gas (MMSCMD)'
+            else            'YTD - Oil, LNG & Cond. (BOPD)'
+          end
+        else
+          case ProductGroup
+            when 'GAS' then 'Annual - Gas (MMSCMD)'
+            else            'Annual - Oil, LNG & Cond. (BOPD)'
+          end
+      end                                             as RowLabel,
+// EOC By Arnav on 16/09/26
+
       /* ── Actual (per-day average over the window; 0 on ANNUAL rows) ──── */
       @EndUserText.label: 'Actual (BOPD / MMSCMD)'
 // BOC By Arnav on 16/09/26
