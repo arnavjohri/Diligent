@@ -30,13 +30,21 @@
           "localUri": "annotations/annotation.xml"
         }
       },
+      "perfAnnotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation_perf.xml",
+        "settings": {
+          "localUri": "annotations/annotation_perf.xml"
+        }
+      },
       "mainService": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_PROD_PERF_CDS/",
         "type": "OData",
         "settings": {
           "annotations": [
             "ZDPR_Q_PROD_PERF_CDS_VAN",
-            "annotation"
+            "annotation",
+            "perfAnnotation"
           ],
           "localUri": "localService/mainService/metadata.xml",
           "odataVersion": "2.0"
@@ -75,12 +83,20 @@
           "localUri": "localService/ZDPR_Q_TARGET_QUERY_CDS/ZDPR_Q_TARGET_QUERY_CDS_VAN.xml"
         }
       },
+      "targetAnnotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation_target.xml",
+        "settings": {
+          "localUri": "annotations/annotation_target.xml"
+        }
+      },
       "ZDPR_Q_TARGET_QUERY_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_TARGET_QUERY_CDS/",
         "type": "OData",
         "settings": {
           "annotations": [
-            "ZDPR_Q_TARGET_QUERY_CDS_VAN"
+            "ZDPR_Q_TARGET_QUERY_CDS_VAN",
+            "targetAnnotation"
           ],
           "localUri": "localService/ZDPR_Q_TARGET_QUERY_CDS/metadata.xml",
           "odataVersion": "2.0"
@@ -111,12 +127,20 @@
           "localUri": "localService/ZDPR_Q_PROD_QUERY_CDS/ZDPR_Q_PROD_QUERY_CDS_VAN.xml"
         }
       },
+      "prodAnnotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation_prod.xml",
+        "settings": {
+          "localUri": "annotations/annotation_prod.xml"
+        }
+      },
       "ZDPR_Q_PROD_QUERY_CDS": {
         "uri": "/sap/opu/odata/sap/ZDPR_Q_PROD_QUERY_CDS/",
         "type": "OData",
         "settings": {
           "annotations": [
-            "ZDPR_Q_PROD_QUERY_CDS_VAN"
+            "ZDPR_Q_PROD_QUERY_CDS_VAN",
+            "prodAnnotation"
           ],
           "localUri": "localService/ZDPR_Q_PROD_QUERY_CDS/metadata.xml",
           "odataVersion": "2.0"
@@ -249,6 +273,93 @@
           "defaultSpan": {
             "rows": 25,
             "cols": 2
+          }
+        }
+      },
+      "card02_boepdByGroup": {
+        "model": "mainModel",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card02Title}}",
+          "subTitle": "{{card02Subtitle}}",
+          "entitySet": "ZDPR_Q_PROD_PERFSet",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdByGroup",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+          "defaultSpan": {
+            "rows": 25,
+            "cols": 1
+          }
+        }
+      },
+      "card03_prodPerf": {
+        "model": "mainModel",
+        "template": "sap.ovp.cards.table",
+        "settings": {
+          "title": "{{card03Title}}",
+          "subTitle": "{{card03Subtitle}}",
+          "entitySet": "ZDPR_Q_PROD_PERFSet",
+          "tabs": [
+            {
+              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
+              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+              "value": "{{card03TabYtd}}"
+            },
+            {
+              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
+              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
+              "value": "{{card03TabAnnual}}"
+            }
+          ],
+          "defaultSpan": {
+            "rows": 20,
+            "cols": 1
+          }
+        }
+      },
+      "card04_targetVsActual": {
+        "model": "ZDPR_Q_TARGET_QUERY_CDS",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card04Title}}",
+          "subTitle": "{{card04Subtitle}}",
+          "entitySet": "ZDPR_Q_TARGET_QUERYResults",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ActualVsTargetOvp",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "defaultSpan": {
+            "rows": 25,
+            "cols": 2
+          }
+        }
+      },
+      "card05_trendByBu": {
+        "model": "ZDPR_Q_BOEPD_TREND_CDS",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card05Title}}",
+          "subTitle": "{{card05Subtitle}}",
+          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByBusinessUnit",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDateBu",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "defaultSpan": {
+            "rows": 25,
+            "cols": 2
+          }
+        }
+      },
+      "card06_prodRecords": {
+        "model": "ZDPR_Q_PROD_QUERY_CDS",
+        "template": "sap.ovp.cards.table",
+        "settings": {
+          "title": "{{card06Title}}",
+          "subTitle": "{{card06Subtitle}}",
+          "entitySet": "ZDPR_Q_PROD_QUERYResults",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#ByAsset",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TopAssets",
+          "defaultSpan": {
+            "rows": 20,
+            "cols": 1
           }
         }
       }

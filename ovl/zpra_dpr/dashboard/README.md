@@ -14,9 +14,30 @@ deployed from there. After generation, overwrite the generated files with the
 ones here. Backend objects, if any step needs one, are pasted through ADT as
 usual and are listed in the step.
 
-    webapp/manifest.json                    data sources, models, global filter, cards
-    webapp/annotations/annotation_boepd.xml local annotations for ZDPR_Q_BOEPD_TREND_CDS
-    webapp/i18n/i18n.properties             all card titles
+    webapp/manifest.json                     data sources, models, global filter, six cards
+    webapp/annotations/annotation_boepd.xml  ZDPR_Q_BOEPD_TREND_CDS  - cards 1 and 5
+    webapp/annotations/annotation_perf.xml   ZDPR_Q_PROD_PERF_CDS    - cards 2 and 3
+    webapp/annotations/annotation_target.xml ZDPR_Q_TARGET_QUERY_CDS - card 4
+    webapp/annotations/annotation_prod.xml   ZDPR_Q_PROD_QUERY_CDS   - card 6
+    webapp/i18n/i18n.properties              all card titles
+
+## Status 16/09/26
+Step 1 verified in preview (card 1 renders, filter bar drives it). Cards 2-6
+written in one go on Arnav's request; awaiting preview. Data check (BE target
+zero for Sep 2024) deferred.
+
+Card design decisions forced by the Overview Page:
+- A table card shows at most three columns, so card 3 is two tabs (YTD /
+  Annual) of three columns each; % Achv is coloured by AchievementCriticality.
+- Card 2 cannot show the Excel headline total as one number: an OVP header
+  KPI on a plain view shows the first row only, and on the analytical query
+  it sums the days. It is a per-day column chart by product group instead;
+  the single total needs a TOTAL row in ZDPR_P_PERF_AGG (backend, later).
+- Card 4 plots native units (BOPD next to MMSCMD) - a BOE column needs a
+  backend measure in ZDPR_C_TARGET_CUBE.
+- Card 6 shows OVL share per asset and product summed over the selected
+  dates, not the latest day: an analytic query aggregates over the columns
+  the card requests.
 
 ## Step plan (one step, then confirm, then the next)
 
