@@ -242,7 +242,7 @@
         "settings": {
           "title": "{{card01Title}}",
           "subTitle": "{{card01Subtitle}}",
-          "entitySet": "ZDPR_Q_BOEPD_TRENDSet",
+          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",

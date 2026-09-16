@@ -92,15 +92,18 @@ Then add `webapp/annotations/annotation_boepd.xml` and replace
    `/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata` in the browser and
    confirm:
 
-   | Expected | Where used |
-   |---|---|
-   | entity set `ZDPR_Q_BOEPD_TRENDSet` (result rows) | manifest card01 `entitySet` |
-   | entity type `ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDType` (namespace = service name, uppercase, confirmed 16/09/26) | annotation `Target=` |
-   | entity set `ZDPR_Q_PROD_PERFSet` | manifest `globalFilterEntitySet` |
-   | parameter set `ZDPR_Q_BOEPD_TREND` with navigation `Set` | not referenced, informational |
+   Two naming conventions exist in this package (confirmed 16/09/26 from
+   the downloaded metadata):
 
-   If the system named them `...Results` / `Results`, change the three names.
-   Nothing else depends on it.
+   | View kind | Parameter set | Result set | Result entity type |
+   |---|---|---|---|
+   | plain view (ZDPR_Q_PROD_PERF) | `ZDPR_Q_PROD_PERF` | `ZDPR_Q_PROD_PERFSet` | `ZDPR_Q_PROD_PERFType` |
+   | analytical query (the other four) | `ZDPR_Q_BOEPD_TREND` | `ZDPR_Q_BOEPD_TRENDResults` | `ZDPR_Q_BOEPD_TRENDResult` |
+
+   Schema namespace = service name, uppercase (`ZDPR_Q_BOEPD_TREND_CDS`).
+   A wrong `entitySet` in a card shows up as
+   `Cannot read properties of null (reading 'entityType')` in
+   `Component-dbg.js getPreprocessors` and the card is silently dropped.
 3. **Date parameter format**. The SelectionVariant defaults are written as
    `2024-04-01T00:00:00` (Edm.DateTime). If card 1 shows "Cannot load card"
    with an *invalid key predicate* in the network trace, change the two values
