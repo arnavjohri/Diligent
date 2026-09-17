@@ -109,6 +109,30 @@ Fields are plain inputs for now (the main model is loaded with
 `sap-value-list=none`). Dropdown value help is a follow-up: a value-help view
 plus `@Consumption.valueHelpDefinition` on the filter view.
 
+## Step 8 — view switch on the chart cards (17/09/26)
+
+An Overview Page chart is fixed by its `UI.Chart` annotation; there is no
+dimension/measure picker like the smart chart of an Analytical List Page.
+The standard way to let the user change the axes is the card **view switch**
+(`tabs` in the card settings, SAP docs "Configuring View Switch"): a dropdown
+in the card header, one predefined chart per entry. Done on cards 4 and 5,
+frontend only, no backend change:
+
+| Card | Tab | Chart qualifier | x-axis | series | y-axis |
+|---|---|---|---|---|---|
+| 4 | By Product | ActualVsTargetOvp | ProductDescription | — | ActualQty, TargetQty |
+| 4 | By Asset | ByAsset | AssetDescription | ProductDescription | ActualQty, TargetQty |
+| 4 | By Fiscal Period | ByPeriod | FiscalPeriod | ProductDescription | ActualQty, TargetQty |
+| 5 | By Business Unit | ByBusinessUnit | ProductionDateText | BusinessUnit | ActualBoepdOvl |
+| 5 | By Asset | ByAsset | ProductionDateText | Asset | ActualBoepdOvl |
+| 5 | By Product Group | ByProductGroup | ProductionDateText | ProductGroup | ActualBoepdOvl |
+
+Not offered on card 5: an Asset or BU on the x-axis with BOEPD as y. The
+analytic query would sum the daily rates over the date range (rate × days),
+and a card cannot divide by the number of days. Card 1 keeps a single view by
+design (date only). A free "pick any axis" chart needs navigation from the
+card to an Analytical List Page on the same query (step 9, if wanted).
+
 ## Step 1 — generate the project, global filter, card 1
 
 ### 1.1 Prerequisites (already documented in the BTP guide)
