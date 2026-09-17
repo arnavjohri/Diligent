@@ -50,3 +50,29 @@ divides by the days in the year.
 | ZDPR_Q_PROD_PERF (`ZDPR_Q_PROD_PERF.ddls.asddls`, root of this folder) | view entity → classic view + @OData.publish, `/` → `division()` | 16/09/26 morning, activated; superseded the same day by v16-09/09 |
 
 `original/` = the source exactly as it stood in the 15/09 document. Never edited.
+
+## sac/ — summary cube for the SAC story (started 17/09/26)
+
+Goal: one analytical query that already carries every row of the Excel
+summary block per asset, so SAC only lays it out. Mapping and verdict in
+`../docs/DPR_Excel_to_CDS_mapping.md`. Parameter everywhere: `P_AsOf` = last
+production date included (DPR of 01-JAN-2026 → 31.12.2025).
+
+| # | Object | Purpose | State |
+|---|---|---|---|
+| 01 | ZDPR_P_ASOF | calendar helper: windows + day divisors for the as-of date | written |
+| 02 | ZDPR_P_SUM_DAILY | MTD, MTD-LY, YTD, YTD-LY, annual-LY rows from ZDPR_P_DAY_BASE, per day + MMT/BCM | next |
+| 03 | ZDPR_P_SUM_MONTHLY | previous-month row + FY history from ZDPR_I_MONTHLY | |
+| 04 | ZDPR_P_SUM_TARGET | monthly / FY / YTD target rows + asking rate | |
+| 05 | ZDPR_P_SUM_ROWS | union of 02–04, identical columns | |
+| 06 | ZDPR_C_SUMMARY | cube on 05 | |
+| 07 | ZDPR_Q_SUMMARY | analytical query (SAC live) | |
+| 08 | ZDPR_I_DAILY | + Comments field | |
+| 09 | ZDPR_C_REMARKS / 10 ZDPR_Q_REMARKS | remarks for the as-of date | |
+
+Column contract of 02–05 (union rule: identical types in every branch):
+BlockType char6 · FiscalYear numc4 · ProductionDate dats · Asset · Block ·
+Product · VolumeType char10 · ProductGroup char3 · BusinessUnit char15 ·
+QtyJvPerDay dec(23,7) · QtyOvlPerDay dec(23,7) · BoepdOvlPerDay dec(23,3) ·
+VolumeOvlMmt dec(23,7) (block TOTAL in MMT for oil family / BCM for gas) ·
+ConversionFactor dec(11,6).
