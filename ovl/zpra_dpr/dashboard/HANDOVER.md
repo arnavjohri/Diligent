@@ -151,7 +151,8 @@ and were not applied: the PROD_PERF result set is `ZDPR_Q_PROD_PERFSet` (not
    refresh the BAS service models, re-run the preview, do the target check.
 1. Deploy — path changed 17/09/26. The app goes to the **on-prem ABAP
    repository** via `npm run deploy` (`fiori deploy`, ABAP deployment
-   configuration in `ui5-deploy.yaml`), not to Cloud Foundry / Work Zone; the
+   configuration in `ui5-deploy.yaml`, destination `OCQ`, client 500, host
+   ovlocq.sap.ongcvidesh.in), not to Cloud Foundry / Work Zone; the
    CF guide in `../docs/` is superseded for this app. State 17/09/26: NOT yet
    uploaded. The first run reserved `R3TR WAPA ZDPRPRODDASH` + two `R3TR SICF`
    nodes on workbench TR **OCQK901673** (user SAP_ABAP = destination user) and
