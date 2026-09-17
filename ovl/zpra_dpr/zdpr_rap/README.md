@@ -5,6 +5,16 @@ repository (`vaibhavdiligent/ONGC-CST-Purchase-Date-Sharing-`, branch
 `claude/eager-euler-dpm9rf`, folder `src/rap`, ZIP in `deploy/`). This folder
 holds only what Arnav has to paste or verify, one file per object.
 
+## ZDPR_Q_DASH_FILTER.ddls.asddls — dashboard filter entity (17/09/26, Arnav)
+
+New classic view, `@OData.publish: true` → service `ZDPR_Q_DASH_FILTER_CDS`
+(parameter set `ZDPR_Q_DASH_FILTER`, result set `ZDPR_Q_DASH_FILTERSet`).
+Global filter entity of the Overview Page instead of ZDPR_Q_PROD_PERF: same
+three parameters (names unchanged — cards receive them by name) plus Asset,
+Block, Product, BusinessUnit, AssetDescription, ProductDescription, from
+`zpra_c_prd_prof` + `zoiu_pr_dn`. The page only reads its `$metadata`. SAC
+plan (`sac/`) is parked — the senior decided to stay with the Overview Page.
+
 ## v16-09/ — backend revision of 16/09/26 (senior's ZIP / Developer Guide)
 
 Extracted verbatim from `../docs/ZDPR_RAP_Complete_Source_Code_2026-09-16.docx`.

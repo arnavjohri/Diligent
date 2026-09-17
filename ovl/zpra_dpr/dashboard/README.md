@@ -54,7 +54,7 @@ Card design decisions forced by the Overview Page:
 | 4 | Card 4 "Target vs Actual by Product" column chart | ZDPR_Q_TARGET_QUERY_CDS | analytical card, P_TargetCode default TAR_BE | none |
 | 5 | Card 5 "Daily Production Trend by Business Unit" | ZDPR_Q_BOEPD_TREND_CDS | line chart, BusinessUnit as series | none |
 | 6 | Card 6 "Production Records" table | ZDPR_Q_PROD_QUERY_CDS or BOEPD_TREND | table card | none (columns differ slightly from the mockup — decided at step 6) |
-| 7 | Business unit + target code in the filter bar | new | filter bar fields | **yes** — one small classic view `ZDPR_Q_DASH_FILTER` carrying all four parameters plus BusinessUnit, used as the global filter entity |
+| 7 | Asset, Business unit, Block, Product in the filter bar | ZDPR_Q_DASH_FILTER_CDS (new) | global filter entity swapped — **built 17/09/26, awaiting activation** | **yes** — classic view `ZDPR_Q_DASH_FILTER` (`../zdpr_rap/ZDPR_Q_DASH_FILTER.ddls.asddls`): the three parameters plus Asset, BusinessUnit, Block, Product, on the profile table |
 | 8 | Card navigation "Open detail" | — | intent navigation to the ALP apps, if those get deployed | none |
 
 Why step 7 is separate: the global filter entity set in step 1 is
@@ -63,6 +63,38 @@ needs (P_DateFrom, P_DateTo, P_FiscalYear) but has no BusinessUnit field, and
 no existing query has all four parameters plus BusinessUnit. The filter bar
 only offers fields of its own entity, so BU and target code need a filter
 entity built for the page.
+
+## Step 7 — more filter fields (17/09/26)
+
+The filter bar offers only the parameters and elements of `globalFilterEntitySet`.
+`ZDPR_Q_PROD_PERFSet` has no dimension columns, so only the three parameters
+showed. There is no Plant or Location field anywhere in the DPR tables
+(`ZPRA_T_DLY_PRD` key: production date, product, asset, block, volume type);
+the dimensions that exist are Asset (the field/project, e.g. AZE_ACG), Block,
+Business Unit (derived from the asset prefix) and Product.
+
+1. Backend: activate `../zdpr_rap/ZDPR_Q_DASH_FILTER.ddls.asddls`, register
+   `ZDPR_Q_DASH_FILTER_CDS` in `/IWFND/MAINT_SERVICE`, check `$metadata`.
+2. BAS: *Manage Service Models* → add `ZDPR_Q_DASH_FILTER_CDS` (creates the
+   data source, model and `localService/ZDPR_Q_DASH_FILTER_CDS/`).
+3. `manifest.json` (already in this folder): data source + model
+   `ZDPR_Q_DASH_FILTER_CDS`; `sap.ovp.globalFilterModel` =
+   `ZDPR_Q_DASH_FILTER_CDS`, `globalFilterEntitySet` = `ZDPR_Q_DASH_FILTERSet`.
+   Nothing changes on the cards: parameters are still matched by name.
+
+Which card honours which new field (a filter reaches a card only when the
+card's query has an element of that name):
+
+| Field | Cards 1, 5 (BOEPD trend) | Card 4 (target) | Card 6 (records) | Cards 2, 3 (perf table) |
+|---|---|---|---|---|
+| Asset | yes | yes | yes | no — company total by design |
+| BusinessUnit | yes | no | no | no |
+| Block | no | yes | yes | no |
+| Product | yes | yes | yes | no |
+
+Fields are plain inputs for now (the main model is loaded with
+`sap-value-list=none`). Dropdown value help is a follow-up: a value-help view
+plus `@Consumption.valueHelpDefinition` on the filter view.
 
 ## Step 1 — generate the project, global filter, card 1
 
