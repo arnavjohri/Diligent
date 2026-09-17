@@ -27,7 +27,7 @@ share FORM naming, ALV construction and text-symbol style by design.
 | ALV (both programs) | `REUSE_ALV_GRID_DISPLAY_LVC`, full screen, hand-built `LVC_T_FCAT` |
 | Shipping | DDIC objects 1–3: SE11 build sheet, typed by hand (not ZIP-able, not paste-able). Programs 4–5: PASTE. Screen-free, so a ZIP is technically possible, but hand-written abapGit XML has never imported successfully on this landscape — see `CLAUDE.md`. |
 | Transport | `<TR to be filled by Arnav>` |
-| Date | 02.09.2026, revised 05.09.2026 |
+| Date | 02.09.2026, revised 17.09.2026 |
 
 Revision 05.09.2026: the ACDOCA collection read is driven by the partners that carry an
 approval instead of every customer of the company code (same figures, smaller read);
@@ -35,6 +35,13 @@ the BP-number-equals-customer-number assumption is tagged in the source; the aba
 XML in `src/` was regenerated and the ZIP rebuilt (`ZIP_IMPORT_NOTES.md`). Marked
 `*BOC By Arnav on 05/09/26` in the source; `BUILD_SPEC_141B.md` §7a, `ISSUES.md` #18, #22.
 The upload program was reviewed on the same day and is unchanged.
+
+Revision 17.09.2026: `F_GET_HIERARCHY` resolves the `ZSD_CUSTOMER_DATA` field names at
+runtime and lists the callee's fields in its status message when nothing maps (6.3.6,
+`ISSUES.md` #26; text symbol `M11` new); the approval customers are passed to the callee.
+Upload: no `ROLLBACK` after `COMMIT WORK AND WAIT`, a follow-on failure is reported in the
+summary instead (`M06`); amounts with more than two decimals rejected (`ISSUES.md` #25).
+Marked `*BOC By Arnav on 17/09/26` in the source.
 
 ---
 
@@ -347,9 +354,13 @@ corrected. The call is therefore built in full:
    with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result is
    taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own ALV is
    never swallowed by a capture left armed.
-4. Result rows are read by field **name** through `ASSIGN COMPONENT`, so the callee
-   structure need not be known at compile time, and are merged into `GT_CUST` on customer
-   number after `CONVERSION_EXIT_ALPHA_INPUT`.
+4. The callee's structure is read with RTTI and the four field names are **resolved at
+   runtime** (17/09/26, helper `F_HIER_FIELD`): the `GC_HIER_F_*` placeholder if the callee
+   has a field of that exact name, otherwise the first field whose name contains the level
+   token `L4` / `L5` / `L6`, or `KUNNR` and then `CUST` for the customer. Rows are then read
+   through `ASSIGN COMPONENT` with the resolved names and merged into `GT_CUST` on customer
+   number after `CONVERSION_EXIT_ALPHA_INPUT`. The approval partners are passed to the
+   callee as well, under the placeholder selection name `GC_HIER_SELKUN` (`S_KUNNR`).
 
 All six source names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
 selection screen. Correcting any of them is a change to that block and nothing else.
@@ -359,13 +370,14 @@ selection screen. Correcting any of them is a change to that block and nothing e
 group, `TRDIR` type `F`, which is neither a report nor `SUBMIT`-able. The guard now passes
 and the call genuinely runs.
 
-The remaining four constants are **placeholders**, not confirmed values, and nothing else in
-the program guesses them. A wrong one degrades, it never dumps: a wrong select-option name
-makes the callee run unfiltered (slower, same names reported, because the merge is on
-customer key); a wrong customer field means nothing keys, and a status message says so
-rather than leaving columns that look like missing master data; a wrong level field leaves
-that level blank. See §7 deviation 1 / `ISSUES.md` #1 for how to read the real names off the
-report's own layout.
+**Functional testing, 17/09/26.** The Adhesives report showed L4/L5/L6 blank with the real
+program name in place: the callee runs but names its columns differently from the
+placeholders. The runtime resolution above answers that for any sensible naming, and where
+it still cannot map the FORM says what it saw: M09 when the callee returns no rows, M10 with
+the callee's field names when no customer field resolves or no callee row keys to a report
+customer, the new M11 with the callee's field names when no level field resolves. The
+message text is enough to set the `GC_HIER_*` constants. The two select-option names stay
+placeholders; a wrong one costs an unfiltered run, nothing else. `ISSUES.md` #26.
 
 **Watch in functional testing.** If `ZSD_CUSTOMER_DATA` carries an obligatory selection
 field other than sales organisation, the `SUBMIT` stops on its own selection screen. That is
@@ -503,7 +515,7 @@ Every row carries an `" ASSUMPTION:` comment at the matching point in the source
 
 | # | FS says | Build does | Why | ISSUES.md |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; its select-option and ALV field names are still placeholders in `GC_HIER_*` | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 part-open |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; field names resolved at runtime since 17/09/26, callee field list shown when nothing maps | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1, #26 |
 | 2 | Info Category / Info Type required on the screen | Omitted | the Z table has no such field to filter on | #10 |
 | 3 | Actual Collection `BUDAT` from the selection screen | Per row, `ZEXC_DATE_FROM` to `ZCOMMIT_DATE` inclusive | reviewer comment, and a shared range would double count | #5 |
 | 4 | Sample row implies Actual minus Credit Limit | `ZCM_AMNT` minus Actual Collection | the prose states the formula twice, the sample is the Adhesives formula copy-pasted | #6 |
@@ -531,8 +543,11 @@ sign-off alongside the table above.
 Ranked by what changes a number or a column on the report or the upload log, not by
 `ISSUES.md` order.
 
-1. **ISSUES.md #1 — L4/L5/L6 source.** Shared with 141.A. The only columns with no data at
-   all. Needed: the real table/field, or a report name that can actually be read/submitted.
+1. **ISSUES.md #1 / #26 — L4/L5/L6 field names in `ZSD_CUSTOMER_DATA`.** Shared with
+   141.A. The report name is confirmed; its field names resolve at runtime since 17/09/26
+   and the status message lists the callee's fields when they do not. Needed: a
+   `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`, or the status-bar text from a run, to set
+   the `GC_HIER_*` constants for good.
 2. **ISSUES.md #6 — Non-Fulfilment formula.** Built as `ZCM_AMNT − Actual Collection`.
    Confirm this is right, not the sample row's `Actual − Credit Limit`.
 3. **ISSUES.md #5 — Actual Collection date window.** Built as each row's own

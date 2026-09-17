@@ -197,6 +197,36 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>M07</KEY>
+     <ENTRY>Sales hierarchy report not found - L4/L5/L6 left blank</ENTRY>
+     <LENGTH>54</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>M08</KEY>
+     <ENTRY>Hierarchy source is not an executable report - see TS</ENTRY>
+     <LENGTH>53</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>M09</KEY>
+     <ENTRY>Hierarchy report returned no ALV data - L4/L5/L6 blank</ENTRY>
+     <LENGTH>54</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>M10</KEY>
+     <ENTRY>Hierarchy field names do not match the report output</ENTRY>
+     <LENGTH>52</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>M11</KEY>
+     <ENTRY>Hierarchy level fields not found in the report output</ENTRY>
+     <LENGTH>53</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>S01</KEY>
      <ENTRY>Collection Received</ENTRY>
      <LENGTH>19</LENGTH>

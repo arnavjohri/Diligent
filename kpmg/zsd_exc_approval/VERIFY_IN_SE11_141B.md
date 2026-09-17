@@ -1,5 +1,9 @@
 # VERIFY_IN_SE11_141B.md — pre-paste DDIC checklist for WRICEF 141.B
 
+> **Superseded 07/09/26.** `ZSD_EXC_APPR_PAINTS` and `ZSD_EXP_PAINTS_UPLOAD` both activated
+> on 07/09/26, which proves every DDIC name in them, the Z table and its domains and data
+> elements included. Kept for the record; nothing below needs checking again.
+
 Covers both Paints programs:
 
 - `ZSD_EXC_APPR_PAINTS` (982 lines) — the output report

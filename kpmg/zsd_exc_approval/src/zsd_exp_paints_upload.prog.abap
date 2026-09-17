@@ -60,9 +60,12 @@
 *&     length with a note in the log; the row itself stays valid.
 *&
 *& TEXT ELEMENTS
-*&   Every user visible string is a text symbol with a literal default,
-*&   so the program runs correctly even before Goto -> Text Elements is
-*&   maintained. The list ships as ZSD_EXP_PAINTS_UPLOAD_TEXTS.md.
+*&   Every message, heading and label is a text symbol with a literal
+*&   default, so the program runs correctly even before Goto -> Text
+*&   Elements is maintained. The three selection-screen block titles
+*&   (TEXT-001 to TEXT-003) and the selection texts are bare references
+*&   and stay blank until they are. The list ships as
+*&   ZSD_EXP_PAINTS_UPLOAD_TEXTS.md and inside the abapGit ZIP.
 *&
 *& SELECTION TEXTS (Goto -> Text Elements -> Selection Texts)
 *&   P_FILE  Upload file
@@ -73,6 +76,12 @@
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
+*&   17.09.2026  Arnav Johri  <TR>  No ROLLBACK after COMMIT WORK AND
+*&                                  WAIT (rows are already durable, the
+*&                                  summary warns instead); amounts with
+*&                                  more than two decimals rejected;
+*&                                  amount length check counts the
+*&                                  decimal point
 *&---------------------------------------------------------------------*
 REPORT zsd_exp_paints_upload.
 
@@ -213,12 +222,13 @@ DATA: gt_raw   TYPE STANDARD TABLE OF ty_raw,
       gt_upd   TYPE STANDARD TABLE OF zsd_exp_paints,
       gt_log   TYPE STANDARD TABLE OF ty_log.
 
-DATA: g_read   TYPE i,
-      g_valid  TYPE i,
-      g_writ   TYPE i,
-      g_err    TYPE i,
-      g_dbfail TYPE abap_bool,
-      gv_repid TYPE sy-repid.
+DATA: g_read    TYPE i,
+      g_valid   TYPE i,
+      g_writ    TYPE i,
+      g_err     TYPE i,
+      g_dbfail  TYPE abap_bool,
+      g_updfail TYPE abap_bool,               "Changes by Arnav on 17/09/26
+      gv_repid  TYPE sy-repid.
 
 *&---------------------------------------------------------------------*
 *& Selection screen (build spec 5.1)
@@ -263,7 +273,8 @@ START-OF-SELECTION.
   gv_repid = sy-repid.
 
   CLEAR: gt_raw, gt_row, gt_upd, gt_log,
-         g_read, g_valid, g_writ, g_err, g_dbfail.
+         g_read, g_valid, g_writ, g_err, g_dbfail,
+         g_updfail.                             "Changes by Arnav on 17/09/26
 
   PERFORM f_read_file.
   PERFORM f_parse_rows.
@@ -935,11 +946,22 @@ FORM f_update_database.
 
   COMMIT WORK AND WAIT.
 
+*BOC By Arnav on 17/09/26
+* A non-zero SY-SUBRC after COMMIT WORK AND WAIT means an update task
+* registered in this LUW failed. The direct MODIFY above was already
+* made durable by the commit itself, and no ROLLBACK WORK can take it
+* back - so the rows ARE on the database. The run is flagged and the
+* summary points the user at SM13 instead of claiming a rollback that
+* never happened.
+*  IF sy-subrc <> 0.
+*    ROLLBACK WORK.
+*    g_dbfail = abap_true.
+*    RETURN.
+*  ENDIF.
   IF sy-subrc <> 0.
-    ROLLBACK WORK.
-    g_dbfail = abap_true.
-    RETURN.
+    g_updfail = abap_true.
   ENDIF.
+*EOC By Arnav on 17/09/26
 
   g_writ = lines( gt_upd ).
 
@@ -1065,7 +1087,17 @@ FORM f_show_summary.
            INTO lv_msg SEPARATED BY space.
     MESSAGE lv_msg TYPE 'S'.
   ELSE.
-    MESSAGE lv_msg TYPE 'S'.
+*BOC By Arnav on 17/09/26
+*    MESSAGE lv_msg TYPE 'S'.
+    IF g_updfail = abap_true.
+      CONCATENATE lv_msg
+                  'Rows saved, but a follow-on update failed - see SM13'(m06)
+             INTO lv_msg SEPARATED BY space.
+      MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+    ELSE.
+      MESSAGE lv_msg TYPE 'S'.
+    ENDIF.
+*EOC By Arnav on 17/09/26
   ENDIF.
 
 ENDFORM.
@@ -1460,11 +1492,28 @@ FORM f_conv_amount USING    iv_in  TYPE clike
     RETURN.
   ENDIF.
 
-* The target holds 23 digits including the two decimals. A longer
-* value is reported rather than allowed to overflow.
-  IF strlen( lv_str ) > 23.
+*BOC By Arnav on 17/09/26
+* The target holds 23 digits including the two decimals, and the string
+* still carries its decimal point, so 24 characters is the longest
+* value that can fit. Anything longer is reported rather than allowed
+* to overflow; the TRY below catches whatever still does not fit.
+*  IF strlen( lv_str ) > 23.
+*    RETURN.
+*  ENDIF.
+  IF strlen( lv_str ) > 24.
     RETURN.
   ENDIF.
+
+* More than two decimal places would be rounded silently on the way
+* into the CURR 23,2 field - 100.567 would load as 100.57 with nothing
+* in the log. It is reported as not a number instead (build spec 5.3
+* point 7: never a silent change of the value).
+  SPLIT lv_str AT '.' INTO lv_tmp lv_rest.
+  IF strlen( lv_rest ) > 2.
+    RETURN.
+  ENDIF.
+  CLEAR: lv_tmp, lv_rest.
+*EOC By Arnav on 17/09/26
 
 * A value that still overflows the packed field - 23 integer digits,
 * say - is caught here and reported as not a number rather than

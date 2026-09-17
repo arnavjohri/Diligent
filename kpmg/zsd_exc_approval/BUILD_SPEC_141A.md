@@ -214,13 +214,23 @@ logged in `ISSUES.md` #17-#21.
 
 | # | Section | Was | Now | Why |
 |---|---|---|---|---|
-| A1 | §3 step 2 | `WHERE ... AND infocategory = @p_infcat AND infotype = @p_inftyp` | `AND infotype = @p_inftyp` only | BP3100 has no INFOCATEGORY column — the 02/09/26 syntax check said so. The category is enforced by the P_INFTYP validation of §1.2. BP3100-INFOTYPE is still unverified |
+| A1 | §3 step 2 | `WHERE ... AND infocategory = @p_infcat AND infotype = @p_inftyp` | ~~`AND infotype = @p_inftyp` only~~ **Superseded 07/09/26:** `AND addtype = @p_infcat AND data_type = @p_inftyp` — the real BP3100 columns, confirmed by activation | BP3100 has neither INFOCATEGORY nor INFOTYPE |
 | A2 | §3 step 2 | rows in database order | `SORT gt_appr BY partner datefr counter` right after the empty check; nothing re-sorts it later | grouped per customer as in the FS layout; deterministic between runs; lets A3 read by index |
 | A3 | §3 steps 7/8/10 | commitment dates cached in a sorted table keyed PARTNER + COUNTER | standard table, one row per GT_APPR row, read by index in `f_build_output` | PARTNER + COUNTER is not confirmed unique in BP3100 |
 | A4 | §3 step 8 | `FOR ALL ENTRIES IN @gt_cust` on BSID and BSAD | `FOR ALL ENTRIES IN @gt_partner` | only approval partners are ever asked for; identical figures, far smaller read on a large BSID/BSAD |
 | A5 | §1 block b2 | no division | `s_spart FOR knvv-spart`, optional, applied to the KNVV read | FS reviewer comment (Yogesh Vanani) asks for division; blank = all divisions |
-| A6 | §3 step 7 | DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY / YYYYMMDD | plus a two-digit year read as 20YY, plus month-first order when the middle part is > 12 (7/25/2026); an ambiguous 8/5/2026 stays day-first | the FS sample writes M/D/YYYY; only the unambiguous case is taken |
+| A6 | §3 step 7 | DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY / YYYYMMDD | ~~two-digit year and month-first order added~~ **Dropped 07/09/26:** functional confirmed DD.MM.YYYY; the bare YYYYMMDD branch is removed too, `/` and `-` still accepted as separators | the confirmed format wins over a defensive parse |
 | A7 | §4 | eight deviations | rows 9-12 added to the table above and tagged in the source; BP-number = customer-number and "all BSID/BSAD lines summed" are ASSUMPTION notes too (ISSUES.md #18, #19) | every deviation greppable, as §0 requires |
+
+## 4b. Amendments — 07/09/26 and 17/09/26
+
+| # | Section | Was | Now | Why |
+|---|---|---|---|---|
+| A8 | §2 / §3 step 10 | `exc_type` component and "Approval Type" column, always blank | component, `CLEAR` and field-catalogue entry removed; columns after it renumbered 8 to 18; text symbol C08 unused | functional confirmed 07/09/26 the column is not required (ISSUES.md #2 closed) |
+| A9 | §1 / §1.1 / §1.2 | `P_INFCAT` / `P_INFTYP` typed off `UKM_INFOCAT` / `UKM_INFOTYP`, F4 and checks from those tables | typed off `BP3100-ADDTYPE` / `BP3100-DATA_TYPE`; F4 and checks read the distinct values in BP3100 itself | the customizing field names are unconfirmed on this landscape; BP3100's own values cannot be wrong |
+| A10 | §1 block b1 | no credit segment | `P_SEGMNT` obligatory, default `2000` | functional confirmed the segment 07/09/26 (ISSUES.md #16 closed) |
+| A11 | §3 step 6 | hierarchy read by the four `GC_HIER_F_*` names through `ASSIGN COMPONENT`; a wrong level name leaves the level silently blank | names resolved at runtime from the callee's structure (`F_HIER_FIELD`: exact name, else first field containing `L4`/`L5`/`L6`, or `KUNNR` then `CUST`); when the customer, all three levels, or the merge fail, the status message ends with the callee's field names; empty callee result reported as M15 | functional testing 17/09/26 showed L4/L5/L6 blank with the real program name — the placeholders do not match `ZSD_CUSTOMER_DATA` (ISSUES.md #26) |
+| A12 | §3 step 6 | only `S_VKORG` passed to the callee | approval partners from `GT_PARTNER` passed as well under placeholder `S_KUNNR` (`GC_HIER_SELKUN`) | a right name makes the callee run for a handful of customers; a wrong one is ignored by `SUBMIT` |
 
 ## 5. Also deliver
 

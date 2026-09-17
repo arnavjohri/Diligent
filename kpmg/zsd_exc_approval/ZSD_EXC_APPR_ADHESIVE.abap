@@ -22,9 +22,12 @@
 *&   amounts to derive DEF_PERC and needs it to avoid truncation.
 *&
 *& TEXT ELEMENTS
-*&   Every user visible string is a text symbol with a literal default,
-*&   so the program runs correctly even before Goto -> Text Elements is
-*&   maintained. The list ships as ZSD_EXC_APPR_ADHESIVE_TEXTS.md.
+*&   Every message, heading and status literal is a text symbol with a
+*&   literal default, so the program runs correctly even before Goto ->
+*&   Text Elements is maintained. The two selection-screen block titles
+*&   (TEXT-001, TEXT-002) and the selection texts are bare references
+*&   and stay blank until they are. The list ships as
+*&   ZSD_EXC_APPR_ADHESIVE_TEXTS.md.
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
@@ -38,12 +41,22 @@
 *&                                  ADDTYPE and DATA_TYPE. Selection,
 *&                                  F4 help and validation re-pointed;
 *&                                  business labels unchanged.
-*&   07/09/26    Arnav Johri  <TR>  Functional dropped the Exceptional
+*&   07.09.2026  Arnav Johri  <TR>  Functional dropped the Exceptional
 *&                                  Approval Type column (issue 2 -
 *&                                  not required). Commitment date in
 *&                                  BP3100-TEXT confirmed as DD.MM.YYYY
 *&                                  (issue 3), so the parse no longer
 *&                                  accepts a bare 8 digit token.
+*&   17.09.2026  Arnav Johri  <TR>  L4/L5/L6 blank in test (issue 1):
+*&                                  hierarchy field names resolved at
+*&                                  runtime from the callee's own
+*&                                  structure, callee field list shown
+*&                                  when nothing maps, approval
+*&                                  customers passed to the callee.
+*&                                  GT_APPR sorted; commitment date
+*&                                  linked to its row by position;
+*&                                  BSID/BSAD read for approval
+*&                                  partners only; optional Division.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_adhesive.
 
@@ -89,6 +102,9 @@ TYPES: BEGIN OF ty_appr,
        END OF ty_appr.
 
 * Parsed commitment date per approval row (BP3100-TEXT is free text).
+* One row per GT_APPR row, in GT_APPR order - the link is positional
+* (see f_get_open_items), so PARTNER / COUNTER are carried for
+* readability only.
 TYPES: BEGIN OF ty_cdate,
          partner     TYPE bp3100-partner,
          counter     TYPE bp3100-counter,
@@ -201,8 +217,14 @@ TYPES: BEGIN OF ty_output,
 DATA: gt_cust    TYPE ty_t_cust,
       gt_partner TYPE ty_t_kunnr,
       gt_appr    TYPE STANDARD TABLE OF ty_appr,
-      gt_cdate   TYPE SORTED TABLE OF ty_cdate
-                      WITH NON-UNIQUE KEY partner counter,
+*BOC By Arnav on 17/09/26
+* GT_CDATE is read by INDEX, in step with GT_APPR: PARTNER + COUNTER
+* is not confirmed to be unique in BP3100, so a keyed read could hand
+* one approval the commitment date of another.
+*      gt_cdate   TYPE SORTED TABLE OF ty_cdate
+*                      WITH NON-UNIQUE KEY partner counter,
+      gt_cdate   TYPE STANDARD TABLE OF ty_cdate,
+*EOC By Arnav on 17/09/26
       gt_kna1    TYPE SORTED TABLE OF ty_name
                       WITH NON-UNIQUE KEY kunnr,
       gt_climit  TYPE SORTED TABLE OF ty_climit
@@ -253,6 +275,18 @@ CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
            gc_subc_report  TYPE trdir-subc       VALUE '1'.
 *EOC By Arnav on 07/09/26
 
+*BOC By Arnav on 17/09/26
+* Placeholder for the callee's customer select-option. The customers
+* that carry an approval are passed under this name so that
+* ZSD_CUSTOMER_DATA runs for a handful of customers instead of every
+* customer of the sales organisation. A wrong name is ignored by SUBMIT
+* and only costs that saving; it cannot dump and cannot change a name.
+* Since 17/09/26 the four GC_HIER_F_* names above are also resolved at
+* runtime against the callee's real structure - see f_get_hierarchy
+* step 4 - so a callee that spells them differently still maps.
+CONSTANTS: gc_hier_selkun  TYPE rsparams-selname VALUE 'S_KUNNR'.
+*EOC By Arnav on 17/09/26
+
 *&---------------------------------------------------------------------*
 *& Selection screen
 *&---------------------------------------------------------------------*
@@ -268,12 +302,25 @@ SELECT-OPTIONS s_kunnr FOR knvv-kunnr.
 PARAMETERS     p_infcat TYPE bp3100-addtype OBLIGATORY.
 PARAMETERS     p_inftyp TYPE bp3100-data_type OBLIGATORY.
 *EOC By Arnav on 07/09/26
+* ASSUMPTION (FS deviation 10): the FS lists a required "Date" range
+* with no table or field. It is applied to BP3100-DATEFR, the approval
+* date from - not the commitment date and not a posting date. See open
+* issue 11.
 SELECT-OPTIONS s_date FOR bp3100-datefr OBLIGATORY.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
 PARAMETERS     p_bukrs TYPE knb1-bukrs OBLIGATORY.
 SELECT-OPTIONS s_vkorg FOR knvv-vkorg OBLIGATORY.
+*BOC By Arnav on 17/09/26
+* ASSUMPTION (FS deviation 12): the FS input table for Adhesives has no
+* division, but the reviewer comment in the FS (Yogesh Vanani,
+* 26/08/26) asks for "company code, sales organisation, division,
+* customer group 1 & 2", and the Paints sibling filters on division.
+* Division is therefore offered here as an OPTIONAL range - blank means
+* every division, so nothing changes for a user who ignores it.
+SELECT-OPTIONS s_spart FOR knvv-spart.
+*EOC By Arnav on 17/09/26
 SELECT-OPTIONS s_kvgr1 FOR knvv-kvgr1.
 SELECT-OPTIONS s_kvgr2 FOR knvv-kvgr2.
 *BOC By Arnav on 07/09/26
@@ -535,6 +582,11 @@ AT SELECTION-SCREEN ON p_inftyp.
 * table that holds the credit segments is not confirmed on this
 * landscape (build spec 1.2).
 
+* ASSUMPTION (FS deviation 11): no authorization check is built. The
+* FS says "Authorization TBD" and no object was named - see open issue
+* 15. When one is agreed it goes here, before START-OF-SELECTION reads
+* anything.
+
 *&---------------------------------------------------------------------*
 *& Main flow
 *&---------------------------------------------------------------------*
@@ -582,14 +634,26 @@ FORM f_get_customers.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
+*BOC By Arnav on 17/09/26
+* Division added to the KNVV filter (optional range, see block B2).
+*  SELECT kunnr
+*    FROM knvv
+*    FOR ALL ENTRIES IN @lt_knb1
+*    WHERE kunnr = @lt_knb1-kunnr
+*      AND vkorg IN @s_vkorg
+*      AND kvgr1 IN @s_kvgr1
+*      AND kvgr2 IN @s_kvgr2
+*    INTO TABLE @lt_knvv.
   SELECT kunnr
     FROM knvv
     FOR ALL ENTRIES IN @lt_knb1
     WHERE kunnr = @lt_knb1-kunnr
       AND vkorg IN @s_vkorg
+      AND spart IN @s_spart
       AND kvgr1 IN @s_kvgr1
       AND kvgr2 IN @s_kvgr2
     INTO TABLE @lt_knvv.
+*EOC By Arnav on 17/09/26
 
   IF lt_knvv IS INITIAL.
     MESSAGE 'No customers match the selection'(m01)
@@ -597,9 +661,9 @@ FORM f_get_customers.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
-* KNVV is sales-area dependent, so a customer extended to several sales
-* areas comes back more than once. It must appear exactly once in the
-* report - see open issue 13.
+* ASSUMPTION (FS deviation 9): KNVV is sales-area dependent, so a
+* customer extended to several sales areas comes back more than once.
+* It must appear exactly once in the report - see open issue 13.
   SORT lt_knvv BY kunnr.
   DELETE ADJACENT DUPLICATES FROM lt_knvv COMPARING kunnr.
 
@@ -636,6 +700,12 @@ FORM f_get_approvals.
 * The field list below matches TY_APPR component for component. Adding
 * a field here without adding it at the same index of TY_APPR fills the
 * wrong component.
+* ASSUMPTION: BP3100-PARTNER (and UKMBP_CMS_SGM-PARTNER in
+* f_get_credit_limits) is compared directly with the customer number.
+* That holds only where the business partner number equals the
+* customer number (CVI same-number assignment). If the numbers differ
+* on this landscape, a CVI_CUST_LINK lookup has to be inserted before
+* this read and before f_get_credit_limits - see open issue 18.
   SELECT partner, counter, datefr, dateto, amnt, text
     FROM bp3100
     FOR ALL ENTRIES IN @gt_cust
@@ -656,9 +726,19 @@ FORM f_get_approvals.
     LEAVE LIST-PROCESSING.
   ENDIF.
 
+*BOC By Arnav on 17/09/26
+* The database returns the rows in no guaranteed order, and a FOR ALL
+* ENTRIES read comes back in blocks. Sorted here, once: the list is
+* then grouped per customer as in the FS layout, two runs of the same
+* selection compare line for line, and GT_CDATE (built later in this
+* order) can be read by index. Nothing may re-sort GT_APPR after this.
+  SORT gt_appr BY partner datefr counter.
+*EOC By Arnav on 17/09/26
+
 * One entry per partner that actually carries an approval. This list
-* drives the KNA1 and UKMBP_CMS_SGM reads, so those two FOR ALL ENTRIES
-* run over the smallest possible driver table.
+* drives the KNA1, UKMBP_CMS_SGM, BSID and BSAD reads and the customer
+* list handed to the hierarchy report, so every FOR ALL ENTRIES runs
+* over the smallest possible driver table.
   LOOP AT gt_appr INTO ls_appr.
     CLEAR ls_partner.
     ls_partner-kunnr = ls_appr-partner.
@@ -797,6 +877,23 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
         ls_hier TYPE ty_cust,
         lv_mapped TYPE abap_bool.
 
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+  DATA: lo_tab     TYPE REF TO cl_abap_tabledescr,
+        lo_struc   TYPE REF TO cl_abap_structdescr,
+        lt_comp    TYPE abap_compdescr_tab,
+        ls_comp    TYPE abap_compdescr,
+        ls_partner TYPE ty_kunnr,
+        lv_f_kunnr TYPE dfies-fieldname,
+        lv_f_l4    TYPE dfies-fieldname,
+        lv_f_l5    TYPE dfies-fieldname,
+        lv_f_l6    TYPE dfies-fieldname,
+        lv_names   TYPE string,
+        lv_msg     TYPE c LENGTH 200,
+        lv_hits    TYPE i.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
+
   FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
                  <ls_any>  TYPE any,
                  <lv_fld>  TYPE any,
@@ -832,6 +929,24 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     APPEND ls_selt TO lt_selt.
   ENDLOOP.
 
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+* The customers that carry an approval are passed as well, under the
+* placeholder name GC_HIER_SELKUN. A wrong name is ignored by SUBMIT and
+* the callee runs for every customer of the sales organisation, as it
+* did before; a right one makes it run for a handful of customers.
+  LOOP AT gt_partner INTO ls_partner.
+    CLEAR ls_selt.
+    ls_selt-selname = gc_hier_selkun.
+    ls_selt-kind    = 'S'.
+    ls_selt-sign    = 'I'.
+    ls_selt-option  = 'EQ'.
+    ls_selt-low     = ls_partner-kunnr.
+    APPEND ls_selt TO lt_selt.
+  ENDLOOP.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
+
 * --- 3. run it with the display suppressed and take its ALV data -------
 * CLEAR_ALL is called on EVERY path below. If the capture were left
 * armed, the report's OWN ALV in f_display_alv would be swallowed
@@ -862,33 +977,141 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     RETURN.
   ENDIF.
 
-* --- 4. map by field NAME, so the callee structure is not hardcoded ----
+* --- 4. resolve the callee's field names, then map by name ------------
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+* Sanjay reported on 17/09/26 that L4/L5/L6 stay blank with the real
+* program name in place, so the placeholders in GC_HIER_F_* do not
+* match what ZSD_CUSTOMER_DATA puts out. Until the names are confirmed,
+* each one is resolved at runtime from the callee's own structure:
+*   1. the placeholder itself, if the callee has a field of that name;
+*   2. otherwise the first field whose name CONTAINS the level token
+*      (L4 / L5 / L6), or KUNNR and then CUST for the customer;
+*   3. otherwise nothing.
+* A callee that calls the field ZL5_NAME, NAME_L5 or L5NAME therefore
+* still maps. When the customer, or all three levels, stay unresolved
+* the status message lists the callee's field names, so the real
+* values for GC_HIER_* can be read straight off the tester's screen.
+* Old code:
+**  LOOP AT <lt_any> ASSIGNING <ls_any>.
+**    CLEAR ls_hier.
+**    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-kunnr = <lv_fld>.
+**      lv_mapped     = abap_true.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l4_name = <lv_fld>.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l5_name = <lv_fld>.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l6_name = <lv_fld>.
+**    ENDIF.
+**    CHECK ls_hier-kunnr IS NOT INITIAL.
+  TRY.
+      lo_tab   ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+      lo_struc ?= lo_tab->get_table_line_type( ).
+    CATCH cx_sy_move_cast_error.
+      CLEAR lo_struc.
+  ENDTRY.
+
+* The captured data is not a table of structures - nothing to map.
+  IF lo_struc IS NOT BOUND.
+    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m15)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  lt_comp = lo_struc->components.
+
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'KUNNR'
+                       CHANGING lv_f_kunnr.
+  IF lv_f_kunnr IS INITIAL.
+    PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'CUST'
+                         CHANGING lv_f_kunnr.
+  ENDIF.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l4 'L4'
+                       CHANGING lv_f_l4.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l5 'L5'
+                       CHANGING lv_f_l5.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l6 'L6'
+                       CHANGING lv_f_l6.
+
+* The callee's own field names, for the two messages below - the
+* fastest way to get the real GC_HIER_* values off a tester's screen.
+  LOOP AT lt_comp INTO ls_comp.
+    IF lv_names IS INITIAL.
+      lv_names = ls_comp-name.
+    ELSE.
+      lv_names = |{ lv_names } { ls_comp-name }|.
+    ENDIF.
+  ENDLOOP.
+
+  IF lv_f_kunnr IS INITIAL.
+    lv_msg = 'Hierarchy field names do not match the report output'(m16).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  IF lv_f_l4 IS INITIAL AND lv_f_l5 IS INITIAL AND lv_f_l6 IS INITIAL.
+    lv_msg = 'Hierarchy level fields not found in the report output'(m17).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+* The callee ran but produced no rows for this selection. Nothing to
+* map, and not a field-name problem - say which.
+  IF <lt_any> IS INITIAL.
+    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m15)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
   LOOP AT <lt_any> ASSIGNING <ls_any>.
 
     CLEAR ls_hier.
 
-    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+    ASSIGN COMPONENT lv_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
     IF sy-subrc = 0.
       ls_hier-kunnr = <lv_fld>.
-      lv_mapped     = abap_true.
+*     Only a filled customer counts as mapped - a resolved field that
+*     is empty on every row keys nothing, and the check below says so.
+      IF <lv_fld> IS NOT INITIAL.
+        lv_mapped = abap_true.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l4_name = <lv_fld>.
+    IF lv_f_l4 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l4_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l5_name = <lv_fld>.
+    IF lv_f_l5 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l5_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l6_name = <lv_fld>.
+    IF lv_f_l6 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l6_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
     CHECK ls_hier-kunnr IS NOT INITIAL.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
 
 *   The callee may return the customer without leading zeros. CT_CUST
 *   holds the internal KNA1 format, so convert before the key match.
@@ -902,8 +1125,8 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 
   ENDLOOP.
 
-* GC_HIER_F_KUNNR did not match any component of the callee output, so
-* nothing could be keyed. Say so - a silent blank column would look like
+* The customer field resolved but was empty on every row, so nothing
+* could be keyed. Say so - a silent blank column would look like
 * missing master data rather than a wrong field name.
   IF lv_mapped <> abap_true.
     MESSAGE 'Hierarchy field names do not match the report output'(m16)
@@ -923,11 +1146,59 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
       <ls_cust>-l4_name = ls_hier-l4_name.
       <ls_cust>-l5_name = ls_hier-l5_name.
       <ls_cust>-l6_name = ls_hier-l6_name.
+      lv_hits = lv_hits + 1.                  "Changes by Arnav on 17/09/26
     ENDIF.
   ENDLOOP.
 *EOC By Arnav on 07/09/26
 
+*BOC By Arnav on 17/09/26
+* Every field resolved and the callee returned rows, yet not one of
+* them keyed to a customer on this report. Either the customer field
+* the token search picked is the wrong one (a name, not a number) or
+* the callee reports a different customer set. Say so, with the
+* callee's field names, instead of leaving blank columns.
+  IF lv_hits = 0.
+    lv_msg = 'Hierarchy field names do not match the report output'(m16).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+  ENDIF.
+*EOC By Arnav on 17/09/26
+
 ENDFORM.
+
+*BOC By Arnav on 17/09/26
+*&---------------------------------------------------------------------*
+*& Form F_HIER_FIELD
+*&---------------------------------------------------------------------*
+*& Resolves one field of the hierarchy report's output: the exact
+*& placeholder name if the callee has it, otherwise the first component
+*& whose name contains the token, otherwise initial. Helper for
+*& f_get_hierarchy only.
+*&---------------------------------------------------------------------*
+FORM f_hier_field  USING    it_comp  TYPE abap_compdescr_tab
+                            iv_exact TYPE dfies-fieldname
+                            iv_token TYPE clike
+                   CHANGING cv_name  TYPE dfies-fieldname.
+
+  DATA ls_comp TYPE abap_compdescr.
+
+  CLEAR cv_name.
+
+  READ TABLE it_comp INTO ls_comp WITH KEY name = iv_exact.
+  IF sy-subrc = 0.
+    cv_name = ls_comp-name.
+    RETURN.
+  ENDIF.
+
+  LOOP AT it_comp INTO ls_comp.
+    IF ls_comp-name CS iv_token.
+      cv_name = ls_comp-name.
+      RETURN.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+*EOC By Arnav on 17/09/26
 
 *&---------------------------------------------------------------------*
 *& Form F_PARSE_COMMIT_DATE
@@ -1187,17 +1458,29 @@ FORM f_get_open_items.
   CLEAR: gt_cdate, gt_bsid, gt_bsad, lv_min_date, lv_max_date.
 
 * Parse first: f_build_output reads the parsed dates from GT_CDATE and
-* must never parse the same text twice.
+* must never parse the same text twice. GT_CDATE gets exactly one row
+* per GT_APPR row, in GT_APPR order, and is read back by index.
   LOOP AT gt_appr INTO ls_appr.
     CLEAR ls_cdate.
     ls_cdate-partner = ls_appr-partner.
     ls_cdate-counter = ls_appr-counter.
     PERFORM f_parse_commit_date USING    ls_appr-text
                                 CHANGING ls_cdate-commit_date.
-    INSERT ls_cdate INTO TABLE gt_cdate.
+*BOC By Arnav on 17/09/26
+*    INSERT ls_cdate INTO TABLE gt_cdate.
+    APPEND ls_cdate TO gt_cdate.
+*EOC By Arnav on 17/09/26
   ENDLOOP.
 
-  IF gt_cust IS INITIAL.
+*BOC By Arnav on 17/09/26
+* The line items are needed only for the customers that actually carry
+* an approval (GT_PARTNER), not for every customer of the company code
+* (GT_CUST). GT_PARTNER is a subset of GT_CUST and f_build_output only
+* ever asks for those partners, so the figures are identical - the read
+* is just far smaller on a large BSID / BSAD.
+*  IF gt_cust IS INITIAL.
+  IF gt_partner IS INITIAL.
+*EOC By Arnav on 17/09/26
     RETURN.
   ENDIF.
 
@@ -1232,30 +1515,59 @@ FORM f_get_open_items.
 * arithmetic uses DMBTR. WRBTR is document currency while the credit
 * limit is not, so only the company code currency amount is comparable.
 * Switching back is a one line change in f_calc_open_amount.
+* ASSUMPTION: every BSID / BSAD line of the customer is summed - normal
+* receivables, special G/L items (down payments received, bills of
+* exchange, security deposits, UMSKZ filled) and noted items (down
+* payment requests, BSTAT 'S') alike. The FS says "fetch WRBTR from
+* BSID" and draws no line between them, so none is drawn here. If
+* functional wants the FBL5N picture (no noted items, special G/L shown
+* separately) the two SELECTs need UMSKZ and BSTAT in their field lists
+* and f_calc_open_amount needs the exclusion - open issue 19.
 * NOTE: FOR ALL ENTRIES suppresses duplicate result rows. BUDAT is in
 * the field list, so two documents that share BELNR / BUZEI across
 * fiscal years are still returned separately.
+*BOC By Arnav on 17/09/26
+* Driver table changed from GT_CUST to GT_PARTNER - see the note above.
+*  SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg, rebzg
+*    FROM bsid
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE bukrs = @p_bukrs
+*      AND kunnr = @gt_cust-kunnr
+*      AND budat <= @lv_max_date
+*    INTO TABLE @gt_bsid.
   SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg, rebzg
     FROM bsid
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE bukrs = @p_bukrs
-      AND kunnr = @gt_cust-kunnr
+      AND kunnr = @gt_partner-kunnr
       AND budat <= @lv_max_date
     INTO TABLE @gt_bsid.
+*EOC By Arnav on 17/09/26
 
   IF sy-subrc <> 0.
     CLEAR gt_bsid.
   ENDIF.
 
+*BOC By Arnav on 17/09/26
+*  SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg,
+*         rebzg, augdt
+*    FROM bsad
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE bukrs = @p_bukrs
+*      AND kunnr = @gt_cust-kunnr
+*      AND budat <= @lv_max_date
+*      AND augdt >  @lv_min_date
+*    INTO TABLE @gt_bsad.
   SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg,
          rebzg, augdt
     FROM bsad
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE bukrs = @p_bukrs
-      AND kunnr = @gt_cust-kunnr
+      AND kunnr = @gt_partner-kunnr
       AND budat <= @lv_max_date
       AND augdt >  @lv_min_date
     INTO TABLE @gt_bsad.
+*EOC By Arnav on 17/09/26
 
   IF sy-subrc <> 0.
     CLEAR gt_bsad.
@@ -1326,12 +1638,17 @@ FORM f_build_output.
         ls_name   TYPE ty_name,
         ls_climit TYPE ty_climit,
         ls_cdate  TYPE ty_cdate,
+        lv_tabix  TYPE sy-tabix,             "Changes by Arnav on 17/09/26
         lv_amount TYPE dmbtr,
         lv_perc   TYPE p LENGTH 15 DECIMALS 2.
 
   CLEAR gt_output.
 
   LOOP AT gt_appr INTO ls_appr.
+
+*   Kept before any READ TABLE below overwrites SY-TABIX: GT_CDATE is
+*   read by this index.
+    lv_tabix = sy-tabix.                     "Changes by Arnav on 17/09/26
 
     CLEAR: ls_out, ls_cust, ls_name, ls_climit, ls_cdate,
            lv_amount, lv_perc.
@@ -1381,13 +1698,25 @@ FORM f_build_output.
     ls_out-exc_amnt    = ls_appr-amnt.
     ls_out-commit_text = ls_appr-text.
 
-    READ TABLE gt_cdate INTO ls_cdate
-         WITH KEY partner = ls_appr-partner
-                  counter = ls_appr-counter.
+*BOC By Arnav on 17/09/26
+* Positional read - GT_CDATE row n belongs to GT_APPR row n (built in
+* f_get_open_items in this order). PARTNER + COUNTER is not confirmed
+* to be unique in BP3100, so a keyed read could return the commitment
+* date of a different approval of the same partner.
+*    READ TABLE gt_cdate INTO ls_cdate
+*         WITH KEY partner = ls_appr-partner
+*                  counter = ls_appr-counter.
+    READ TABLE gt_cdate INTO ls_cdate INDEX lv_tabix.
+*EOC By Arnav on 17/09/26
     IF sy-subrc = 0.
       ls_out-commit_date = ls_cdate-commit_date.
     ENDIF.
 
+*   ASSUMPTION: a partner with no UKMBP_CMS_SGM row in P_SEGMNT keeps a
+*   credit limit of zero and is judged against it (Non-Fulfilment =
+*   the whole outstanding, Default % zero). A limit that is genuinely
+*   zero and a limit that is simply not maintained in this segment
+*   therefore read the same; build spec 3.4 accepts that.
     READ TABLE gt_climit INTO ls_climit
          WITH KEY partner = ls_appr-partner.
     IF sy-subrc = 0.

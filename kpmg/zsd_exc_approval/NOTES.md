@@ -19,19 +19,20 @@ approval block and actual-vs-commitment block.
 
 ## Open questions blocking build
 
-See `ISSUES.md` for the numbered list raised 02/09/26 and extended 05/09/26. The hard
-blocker is the L4/L5/L6 name source — the FS names `SAPLSLVC_FULLSCREEN`, which is the
-generic ALV full-screen function group, not a data source and not SUBMIT-able.
+See `ISSUES.md` for the numbered list raised 02/09/26 and extended since. The L4/L5/L6
+source is `ZSD_CUSTOMER_DATA` (confirmed 07/09/26; the FS printed `SAPLSLVC_FULLSCREEN`,
+the generic ALV function group). Its field names are still unconfirmed — resolved at
+runtime since 17/09/26, `ISSUES.md` #26.
 
-## Where each object stands (05/09/26)
+## Where each object stands (17/09/26)
 
 | Object | Repo copy | System | Next step |
 |---|---|---|---|
-| `ZSD_EXC_APPR_ADHESIVE` (141.A) | corrected 05/09/26: BP3100 filter on INFOTYPE only, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division, sturdier date parse | **active** since 02/09/26 with Arnav's hand fix of the BP3100 WHERE clause — that clause was never sent back | `ZR_PROG_DOWNLOAD` the active version, diff against the repo copy, then paste the reconciled repo copy (ISSUES.md #17) |
-| `ZSD_EXP_PAINTS` + 5 domains + 6 data elements | `src/` XML rebuilt 05/09/26 | not yet created | ZIP first (`ABAPGIT_UPLOAD_STEPS.md`); `ZSD_EXP_PAINTS_DDIC.md` by hand if the ZIP dumps |
-| TMG on `ZSD_EXP_PAINTS` | build sheet only | not yet | SE11 by hand after the table is active |
-| `ZSD_EXP_PAINTS_UPLOAD` | corrected 17/09/26: no ROLLBACK after COMMIT WORK AND WAIT (summary warns instead, text symbol M06), amounts with a third decimal rejected, amount length check counts the decimal point | not yet pasted | ZIP or paste after the table is active |
-| `ZSD_EXC_APPR_PAINTS` | ACDOCA read driven by approval partners since 05/09/26 | not yet pasted | ZIP or paste after the table is active |
+| `ZSD_EXC_APPR_ADHESIVE` (141.A) | 07/09/26 system state (ADDTYPE/DATA_TYPE, segment 2000, approval-type column removed, DD.MM.YYYY) **plus 17/09/26**: hierarchy field names resolved at runtime with diagnostics, approval customers passed to `ZSD_CUSTOMER_DATA`, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division | **active** since 07/09/26 — in functional testing, L4/L5/L6 blank (ISSUES.md #26) | fresh SE80 download, diff, paste the repo copy, add text symbol M17; then send the status-bar text or a download of `ZSD_CUSTOMER_DATA` |
+| `ZSD_EXP_PAINTS` + 5 domains + 6 data elements | `src/` XML rebuilt 05/09/26 | **active** since 07/09/26, created by hand | nothing — the ZIP is now a convenience for the two programs only |
+| TMG on `ZSD_EXP_PAINTS` | build sheet only | not confirmed | check SM30 opens on the table; SE11 by hand if not |
+| `ZSD_EXP_PAINTS_UPLOAD` | corrected 17/09/26: no ROLLBACK after COMMIT WORK AND WAIT (summary warns instead, text symbol M06), amounts with a third decimal rejected, amount length check counts the decimal point | **active** since 07/09/26 (07/09 version) | paste the repo copy, add M06 |
+| `ZSD_EXC_APPR_PAINTS` | 17/09/26: same hierarchy fix as Adhesives (text symbol M11 new), ACDOCA read driven by approval partners | **active** since 07/09/26 (07/09 version) | paste the repo copy, add M07–M11 |
 
 ## Delivery
 
@@ -43,5 +44,7 @@ container, no `CALL SCREEN`.
 `ZSD_EXC_APPROVAL.zip` (18 files) carries everything for 141.B except the TMG and the
 two foreign keys. It was rebuilt 05/09/26 after an element-by-element check of the
 abapGit XML — `ZIP_IMPORT_NOTES.md` lists the six defects that were fixed and the root
-cause found for the `zfi_tds_cl34` import dumps. It has not been tried since the rebuild.
-141.A is deliberately not in it (ISSUES.md #17).
+cause found for the `zfi_tds_cl34` import dumps — and again 17/09/26 with the current
+Paints sources. It has never been imported: the DDIC objects were created by hand and all
+three programs were pasted, so it is a convenience, not the shipping path. 141.A is
+deliberately not in it — it is active, and a pull would overwrite the active object.

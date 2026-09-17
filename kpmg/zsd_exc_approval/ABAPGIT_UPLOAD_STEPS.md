@@ -60,15 +60,15 @@ recalculate.
 
 ## Why A is not here
 
-`ZSD_EXC_APPR_ADHESIVE` is already active in your system with the `BP3100` WHERE clause
-you corrected by hand on 02/09/26. That clause was never sent back, so on 05/09/26 the
-repo copy was corrected on reasoning alone: the `INFOCATEGORY` predicate is gone and the
-read filters on `INFOTYPE` only, with the category enforced on the selection screen. That
-may or may not be the same clause you activated. An abapGit pull **overwrites the SAP
-object with the repo version**, so A stays out of the ZIP until the two are reconciled.
+`ZSD_EXC_APPR_ADHESIVE` is **active in your system since 07/09/26**, pasted by hand. An
+abapGit pull overwrites the SAP object with the repo version, so keeping A out of the ZIP
+means an import can never clobber the active program. A ships by paste: the repo copy is
+the 07/09/26 system state plus the 17/09/26 hierarchy fix (`ISSUES.md` #26). Before pasting
+it back, take a fresh SE80 download (`ZR_PROG_DOWNLOAD`), drop it in `incoming/` and diff
+it against the repo copy — the golden rule in `CLAUDE.md`.
 
-To reconcile: `ZR_PROG_DOWNLOAD` the active `ZSD_EXC_APPR_ADHESIVE`, drop it in
-`incoming/`, and the diff against the repo copy settles it (ISSUES.md #17). The repo copy
-also carries the other 05/09/26 corrections (sorted output, positional commitment-date
-link, smaller BSID/BSAD read, optional Division, sturdier date parse) that the active
-version does not have, so the reconciled repo copy is what gets pasted back.
+The same now applies to the two Paints programs in this ZIP: both are active since
+07/09/26 and were pasted, not imported. Importing the ZIP into a package where they already
+exist would overwrite them with the repo copies — which is what you want only after the
+diff above. The DDIC objects in the ZIP are active too, created by hand from
+`ZSD_EXP_PAINTS_DDIC.md`.

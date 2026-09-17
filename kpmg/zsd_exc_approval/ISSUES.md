@@ -151,3 +151,77 @@ DD.MM.YYYY. Forcing DD.MM.YYYY regardless of the user setting would mean convert
 column to a character field, which loses date sorting and date filtering in the ALV — not
 recommended, but it is a small change if functional insists.
 
+
+## 05/09/26 — full review of 141 A/B (recorded 17/09/26; the entry was lost in a merge)
+
+| # | Doc | Item | Problem | Needed from functional / Arnav |
+|---|-----|------|---------|--------------------------------|
+| 17 | A | BP3100 category filter | The 05/09/26 repo copy filtered on `INFOTYPE` only, reasoning from the 02/09/26 syntax error. **Superseded 07/09/26**: the real columns are `ADDTYPE` and `DATA_TYPE`, and the program is active with both in the WHERE clause. | Nothing — closed by the 07/09/26 correction above. |
+| 18 | A+B | BP number = customer number | `BP3100-PARTNER` and `UKMBP_CMS_SGM-PARTNER` are compared directly with `KUNNR`. Holds only with CVI same-number assignment. If not, A finds no approvals and both reports show zero limits. Tagged `ASSUMPTION` in both sources. | Confirm BP and customer share the number range (SE16N `CVI_CUST_LINK`, PARTNER_GUID vs CUSTOMER). |
+| 19 | A | Actual OS composition | Every BSID/BSAD line is summed: normal receivables, special G/L items (down payments, bills of exchange, deposits) and noted items (down-payment requests). The FS draws no line; FBL5N would exclude noted items. Tagged `ASSUMPTION` in `F_GET_OPEN_ITEMS`. | Confirm whether special G/L and noted items count toward "Actual OS as on Commitment Date". |
+| 20 | A | Division on the Adhesives screen | Yogesh Vanani's FS comment asks for division; the FS input table omits it. Built as an OPTIONAL range `S_SPART` (blank = all divisions), applied to the KNVV read. | Confirm optional is right, or make it obligatory as in Paints. |
+| 21 | A | Commitment date spellings | The 05/09/26 copy also accepted a two-digit year and month-first order. **Dropped 07/09/26** when functional confirmed DD.MM.YYYY — the narrower parse of the 07/09/26 entry stands. | Nothing — closed with issue 3. |
+| 22 | B | abapGit ZIP shape | `ZSD_EXC_APPROVAL.zip` rebuilt: DDIC XML element order corrected (DDTEXT after SIGNFLAG/VALEXI/LOWERCASE in DD01V; REFTABLE/REFFIELD before NOTNULL/COMPTYPE in DD03P), `REFKIND D` on the six data elements, `CLIDEP X` and `EXCLASS 4` on DD02V, selection-text LENGTH values corrected (+8), no directory entries. See `ZIP_IMPORT_NOTES.md`. | The DDIC objects were created by hand and are active since 07/09/26, so the ZIP is now a convenience for the two Paints programs only. Untested on the system. |
+| 23 | — | Root cause of the `zfi_tds_cl34` import dumps | Its `.abapgit.xml` is wrapped in an `<abapGit ...>` element. abapGit reads `.abapgit.xml` with `CALL TRANSFORMATION id` directly (`zcl_abapgit_dot_abapgit=>from_xml`, the frame in the dump), which needs a bare `<asx:abap>` root. Object XML files, by contrast, MUST carry the wrapper. This folder's `.abapgit.xml` is bare and correct. | Nothing for functional. Recorded in `kpmg/zfi_tds_cl34/NOTES.md` and `CLAUDE.md`. |
+
+Also done 05/09/26, no functional input needed: `GT_APPR` sorted by partner, date and
+counter (A); commitment date linked to its approval row by position instead of by
+PARTNER + COUNTER, which is not confirmed unique (A); BSID/BSAD and ACDOCA reads driven by
+the approval partners instead of every customer of the company code (A and B); ASSUMPTION
+tags for deviations 9/10/11 (A); `fs/141B_extract.md` added.
+
+## 17/09/26 — functional testing: "L5 name is not coming"
+
+Sanjay Modhvadiya reported on Teams, with screenshots of `ZSD_EXC_APPR_ADHESIVE`, that the
+L4/L5/L6 columns are blank for every row (customers 0001000000 CPI Test Customer and
+0001000724 IDS DISTRIBUTORS-F&S in the screenshots). The report otherwise runs.
+
+### Root cause
+
+The program name is right — `GC_HIER_PROG` = `ZSD_CUSTOMER_DATA` since 07/09/26 — so the
+`SUBMIT` runs and the ALV capture returns data. What is still wrong is the **four field
+names the program uses to read that data**, which were placeholders that were never
+confirmed (issue 1 above): `KUNNR`, `L4_NAME`, `L5_NAME`, `L6_NAME`, plus the select-option
+name `S_VKORG`. `ZSD_CUSTOMER_DATA` evidently names its columns differently. With the
+07/09/26 code, a customer field that does not match gives message M16 and blank columns; a
+level field that does not match gives **blank columns and no message**, which is what
+Sanjay saw. The names cannot be confirmed from here: this repo does not hold
+`ZSD_CUSTOMER_DATA`, and the system is not reachable.
+
+### Fix applied — both reports, marked 17/09/26
+
+| # | Change | Where |
+|---|---|---|
+| 26 | **Field names resolved at runtime.** `F_GET_HIERARCHY` now reads the callee's own structure with RTTI (`CL_ABAP_TABLEDESCR` → `CL_ABAP_STRUCTDESCR` → components) and resolves each of the four names through the new helper `F_HIER_FIELD`: the placeholder if the callee has that exact field, otherwise the first field whose name **contains** the level token (`L4`, `L5`, `L6`) or, for the customer, `KUNNR` and then `CUST`. A callee that calls the field `ZL5_NAME`, `NAME_L5` or `L5NAME` therefore maps without a code change. | A and B, `F_GET_HIERARCHY` step 4, new `F_HIER_FIELD` |
+| 26a | **Diagnostics instead of silence.** When the customer field cannot be resolved (M16 / M10), when no level field can be resolved (new M17 / M11), or when everything resolves but not one callee row keys to a customer on the report (M16 / M10 again), the status message now ends with the callee's **actual field names**. The real `GC_HIER_*` values can then be read straight off the tester's status bar. An empty callee result gives M15 / M09 rather than a field-name message. | same |
+| 26b | **Approval customers passed to the callee.** The partners in `GT_PARTNER` go into the `SUBMIT` selection table under the placeholder `GC_HIER_SELKUN` = `S_KUNNR`. A wrong name is ignored by `SUBMIT` (the callee runs for the whole sales organisation, as before); a right one makes it run for a handful of customers. | same, step 2 |
+
+Placeholders still in the code, all in the `GC_HIER_*` block: `S_VKORG`, `S_KUNNR`,
+`KUNNR`, `L4_NAME`, `L5_NAME`, `L6_NAME`. The runtime resolution makes the four field names
+self-correcting for any sensible naming; the two select-option names are not resolvable at
+runtime and simply fall back to an unfiltered run.
+
+### What is needed to close issue 1 for good
+
+Either of these, in this order of preference:
+
+1. `ZR_PROG_DOWNLOAD` of **`ZSD_CUSTOMER_DATA`** into `incoming/` — its ALV structure and
+   selection screen give all six names, and the token search can then be retired for the
+   confirmed values.
+2. Failing that, the **status-bar message text** after running the corrected
+   `ZSD_EXC_APPR_ADHESIVE`: if the columns are still blank, the message now lists the callee's
+   field names, which is enough to set the constants.
+
+### To ship
+
+The repo copies of both reports carry this fix; the active programs do not. Paste
+`ZSD_EXC_APPR_ADHESIVE.abap` over the active program (diff against a fresh SE80 download
+first, per the golden rule) and add text symbol `M17`; same for `ZSD_EXC_APPR_PAINTS.abap`
+with `M11`. Text sheets and the ZIP are updated.
+
+### Also recorded 17/09/26
+
+| # | Doc | Item | State |
+|---|-----|------|-------|
+| 24 | B | Overlapping approvals for one customer | Two approval rows whose windows overlap count the same ACDOCA posting against both. Tagged `ASSUMPTION` in `F_CALC_COLLECTION`; this is the per-row reading of issue 5 taken to its conclusion. | Confirm with issue 5. |
+| 25 | U | Upload commit semantics | After `COMMIT WORK AND WAIT` a failed follow-on update no longer triggers a `ROLLBACK` that could not undo the committed rows anyway; the summary carries a warning (M06, "see SM13") instead. Amounts with more than two decimals are rejected rather than silently rounded. | None — repo copy only, not yet pasted over the active `ZSD_EXP_PAINTS_UPLOAD`. |

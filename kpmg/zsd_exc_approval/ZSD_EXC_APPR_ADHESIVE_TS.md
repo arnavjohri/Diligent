@@ -22,7 +22,14 @@ questions: `ISSUES.md`.
 | Shipping | PASTE. Screen-free, so a ZIP is technically possible, but hand-written
 abapGit XML has never imported successfully on this landscape — see `CLAUDE.md`. |
 | Transport | `<TR to be filled by Arnav>` |
-| Date | 02.09.2026 |
+| Date | 02.09.2026, revised 17.09.2026 |
+
+Revision 17.09.2026: L4/L5/L6 field names of `ZSD_CUSTOMER_DATA` resolved at runtime
+with the callee's field list shown when nothing maps (§5.6, `ISSUES.md` #26); optional
+Division on the selection screen; BSID/BSAD read for the approval partners only; commitment
+dates linked to their approval row by position; approval-type column removed and the
+commitment-date parse narrowed to DD.MM.YYYY (07.09.2026, notes at the end). Marked
+`*BOC By Arnav on 17/09/26` and `07/09/26` in the source.
 
 ---
 
@@ -60,6 +67,7 @@ Two framed blocks, `TEXT-001` "Exceptional Approval Data" and `TEXT-002`
 | `S_DATE` | SELECT-OPTIONS on `BP3100-DATEFR` | **Obligatory** | standard (date) | Exceptional approval date (from) |
 | `P_BUKRS` | PARAMETER, `KNB1-BUKRS` | **Obligatory** | standard DDIC | Company code |
 | `S_VKORG` | SELECT-OPTIONS on `KNVV-VKORG` | **Obligatory** | standard DDIC | Sales organisation |
+| `S_SPART` | SELECT-OPTIONS on `KNVV-SPART` | Optional | standard DDIC | Division (blank = all divisions; FS reviewer comment, §7 deviation 14) |
 | `S_KVGR1` | SELECT-OPTIONS on `KNVV-KVGR1` | Optional | standard DDIC | Customer group 1 |
 | `S_KVGR2` | SELECT-OPTIONS on `KNVV-KVGR2` | Optional | standard DDIC | Customer group 2 |
 | `P_SEGMNT` | PARAMETER, `UKMBP_CMS_SGM-CREDIT_SGMNT` | **Obligatory**, default `2000` | standard DDIC | Credit segment |
@@ -95,17 +103,18 @@ customer is ambiguous. See §7 deviation 7 / `ISSUES.md` #16.
 | Table | Used for | Read by |
 |---|---|---|
 | `KNB1` | Company-code customers for `P_BUKRS`, restricted by `S_KUNNR` | `F_GET_CUSTOMERS` |
-| `KNVV` | Sales-area filter (`S_VKORG` / `S_KVGR1` / `S_KVGR2`); also the sole customer key still used once dedupe has run | `F_GET_CUSTOMERS` |
+| `KNVV` | Sales-area filter (`S_VKORG` / `S_SPART` / `S_KVGR1` / `S_KVGR2`); also the sole customer key still used once dedupe has run | `F_GET_CUSTOMERS` |
 | `BP3100` | The driver: exceptional-approval "Additional Information" rows for the chosen information category, information type and approval-date range | `F_GET_APPROVALS` |
 | `KNA1` | Customer name (`NAME1`) | `F_GET_NAMES` |
 | `UKMBP_CMS_SGM` | Actual credit limit, keyed by partner + credit segment | `F_GET_CREDIT_LIMITS` |
 | `T001` | Company-code currency (ALV currency reference); also the `P_BUKRS` existence check | `F_GET_COMPANY_CURRENCY`, `AT SELECTION-SCREEN ON P_BUKRS` |
 | `BP3100` | F4 lists and existence checks for `P_INFCAT` (`ADDTYPE`) and `P_INFTYP` (`DATA_TYPE`) | F4 handlers, `AT SELECTION-SCREEN ON P_INFCAT` / `ON P_INFTYP` |
-| `BSID` | Customer open items **as they stand today** | `F_GET_OPEN_ITEMS` |
-| `BSAD` | Customer items cleared **since** the commitment date — needed because an item open on the commitment date but cleared afterwards must still count as open on that date | `F_GET_OPEN_ITEMS` |
+| `BSID` | Customer open items **as they stand today**, for the partners that carry an approval | `F_GET_OPEN_ITEMS` |
+| `BSAD` | Customer items cleared **since** the commitment date, same partners — needed because an item open on the commitment date but cleared afterwards must still count as open on that date | `F_GET_OPEN_ITEMS` |
+| `TRDIR` | Existence and type check on the hierarchy report before it is submitted | `F_GET_HIERARCHY` |
 
-No table other than these ten is touched. There is no read against a sales
-hierarchy table for L4/L5/L6 — see §6, step 6.
+No table other than these is touched. There is no read against a sales hierarchy
+table for L4/L5/L6 — those come from a background call to `ZSD_CUSTOMER_DATA`, §5.6.
 
 ---
 
@@ -125,8 +134,9 @@ guarded by an `IS NOT INITIAL` check on its driver table.
 ### 5.1 `F_GET_CUSTOMERS`
 
 Builds the customer set the whole report runs against. Reads `KNB1` for the company
-code and customer range, then reads `KNVV` for the sales organisation and customer
-group filters against that customer list. Because `KNVV` is sales-area dependent, a
+code and customer range, then reads `KNVV` for the sales organisation, division and
+customer group filters against that customer list (`S_SPART` is optional — blank means
+every division). Because `KNVV` is sales-area dependent, a
 customer extended to several sales areas comes back more than once from that read —
 the routine sorts by customer and runs `DELETE ADJACENT DUPLICATES COMPARING KUNNR`
 so each customer appears **exactly once** downstream, regardless of how many sales
@@ -135,12 +145,18 @@ selection" and the report stops cleanly (`LEAVE LIST-PROCESSING`) — no dump.
 
 ### 5.2 `F_GET_APPROVALS`
 
-Reads `BP3100` for the customer set built in 5.1, filtered by information category,
-information type and the approval-date range. This is the row that drives everything
-downstream — one BP3100 row becomes one output row. Also builds a deduplicated list
-of the partners that actually carry an approval, so the smaller downstream reads
-(§5.3, §5.4) run over the minimum key set rather than the full customer set from 5.1.
+Reads `BP3100` for the customer set built in 5.1, filtered by information category
+(`ADDTYPE`), information type (`DATA_TYPE`) and the approval-date range. This is the row
+that drives everything downstream — one BP3100 row becomes one output row. The result is
+sorted by partner, approval date from and counter, so rows group per customer as in the FS
+layout and the order is the same on every run. Also builds a deduplicated list of the
+partners that actually carry an approval (`GT_PARTNER`), so the downstream reads (§5.3,
+§5.4, §5.6, §5.7) run over the minimum key set rather than the full customer set from 5.1.
 Empty result: "No exceptional approvals found for the selection", report stops.
+
+`BP3100-PARTNER` is compared directly with the customer number. That holds only where the
+business partner and the customer share one number (CVI same-number assignment), which is
+tagged `ASSUMPTION` in the source — `ISSUES.md` #18.
 
 ### 5.3 `F_GET_NAMES`
 
@@ -171,14 +187,19 @@ corrected. The call is therefore built in full:
    `SUBC = '1'` (executable), the FORM issues one status message and returns with the
    columns blank, and no `SUBMIT` is attempted.
 2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
-   under the name `GC_HIER_SELNAME`.
+   under the name `GC_HIER_SELNAME`, and the approval partners from `GT_PARTNER` under
+   `GC_HIER_SELKUN` (17/09/26). `SUBMIT` ignores a selection name the callee does not
+   have, so a wrong name only means the callee runs unfiltered.
 3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
    with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result
    is taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own
    ALV is never swallowed by a capture left armed.
-4. The result rows are read by field **name** through `ASSIGN COMPONENT`, so the callee
-   structure does not have to be known at compile time, and are merged into `GT_CUST`
-   on customer number after `CONVERSION_EXIT_ALPHA_INPUT`.
+4. The callee's structure is read with RTTI and the four field names are **resolved at
+   runtime** (17/09/26, helper `F_HIER_FIELD`): the `GC_HIER_F_*` placeholder if the
+   callee has a field of that exact name, otherwise the first field whose name contains
+   the level token `L4` / `L5` / `L6`, or `KUNNR` and then `CUST` for the customer. The
+   rows are then read through `ASSIGN COMPONENT` with the resolved names and merged into
+   `GT_CUST` on customer number after `CONVERSION_EXIT_ALPHA_INPUT`.
 
 All six source names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
 selection screen. Correcting any of them is a change to that block and nothing else.
@@ -188,13 +209,22 @@ selection screen. Correcting any of them is a change to that block and nothing e
 group, `TRDIR` type `F`, which is neither a report nor `SUBMIT`-able. The guard now passes
 and the call genuinely runs.
 
-The remaining four constants are **placeholders**, not confirmed values, and nothing else in
-the program guesses them. A wrong one degrades, it never dumps: a wrong select-option name
-makes the callee run unfiltered (slower, same names reported, because the merge is on
-customer key); a wrong customer field means nothing keys, and a status message says so
-rather than leaving columns that look like missing master data; a wrong level field leaves
-that level blank. See §7 deviation 1 / `ISSUES.md` #1 for how to read the real names off the
-report's own layout.
+**Functional testing, 17/09/26.** Sanjay reported L4/L5/L6 blank on every row with the real
+program name in place — so the callee runs, but names its columns differently from the
+placeholders. The runtime resolution above is the answer for any sensible naming. Where it
+still cannot map, the FORM says exactly what it saw instead of leaving blank columns:
+
+| Situation | Message | Columns |
+|---|---|---|
+| Callee ran, returned no rows | M15 "Hierarchy report returned no ALV data" | blank |
+| No customer field resolves (`KUNNR` / `CUST`) | M16 "Hierarchy field names do not match the report output: " + the callee's field names | blank |
+| No level field resolves (`L4` / `L5` / `L6`) | M17 "Hierarchy level fields not found in the report output: " + the callee's field names | blank |
+| Everything resolves, but no callee row keys to a report customer | M16 + the callee's field names | blank |
+| Customer resolves, one or two levels do not | none | that level blank |
+
+The status message text is enough to set the `GC_HIER_*` constants without a download of
+the callee. The two select-option names (`S_VKORG`, `S_KUNNR`) cannot be resolved at runtime
+and stay placeholders; a wrong one costs an unfiltered run, nothing else. `ISSUES.md` #26.
 
 **Watch in functional testing.** If `ZSD_CUSTOMER_DATA` carries an obligatory selection
 field other than sales organisation, the `SUBMIT` stops on its own selection screen. That is
@@ -206,26 +236,32 @@ Two things happen here, in order:
 
 1. **Parse every commitment date once.** `BP3100-TEXT` is free text, so each
    approval row's commitment date is extracted by `F_PARSE_COMMIT_DATE` (§5.7.1) and
-   the result cached in `GT_CDATE`, keyed by partner + counter. `F_BUILD_OUTPUT`
-   (§5.9) reads this cache rather than parsing the text a second time.
-2. **Read the open items once for the whole customer set**, bounded by the lowest and
-   highest commitment date found across all rows (`lv_min_date` / `lv_max_date`). If
-   no row parsed to a usable date, this whole step is skipped — there is no "as on"
-   date to report against.
+   the result cached in `GT_CDATE`, one row per `GT_APPR` row in the same order.
+   `F_BUILD_OUTPUT` (§5.9) reads this cache by position rather than parsing the text a
+   second time; PARTNER + COUNTER is not confirmed unique in `BP3100`, so it is not
+   used as a key.
+2. **Read the open items once for the approval partners** (`GT_PARTNER`, §5.2 — not the
+   whole customer set of §5.1, which gives identical figures on a far smaller read),
+   bounded by the lowest and highest commitment date found across all rows
+   (`lv_min_date` / `lv_max_date`). If no row parsed to a usable date, this whole step
+   is skipped — there is no "as on" date to report against.
    - `BSID` (items open **now**) up to `lv_max_date` on posting date.
    - `BSAD` (items **cleared since**) up to `lv_max_date` on posting date and after
      `lv_min_date` on clearing date — an item cleared after a customer's commitment
      date was still open on that date and must still count.
    - Both guarded by `IS NOT INITIAL`; neither is filtered by fiscal year (`GJAHR`) —
      see §7 deviation 2 / `ISSUES.md` #4.
+   - Every line is summed: normal receivables, special G/L items and noted items alike.
+     The FS draws no line; tagged `ASSUMPTION`, §7 deviation 13 / `ISSUES.md` #19.
 
 No `SELECT` runs inside a loop anywhere in this FORM or the two it drives.
 
 #### 5.7.1 `F_PARSE_COMMIT_DATE` (helper, called from 5.7)
 
 Scans the free text token by token (split on spaces), normalising `/` and `-`
-separators to `.`. It accepts `DD.MM.YYYY`, `DD/MM/YYYY`, `DD-MM-YYYY` and an
-unseparated 8-digit `YYYYMMDD`, ignoring any surrounding words. The first token that
+separators to `.`. It accepts `DD.MM.YYYY` — the entry format functional confirmed on
+07/09/26 — and `DD/MM/YYYY` / `DD-MM-YYYY` as the same field order with a different
+separator, ignoring any surrounding words. The first token that
 parses to a **calendar-valid** date (via `F_CHECK_DATE`, leap-year aware) wins;
 `00000000` is never accepted. If nothing in the text parses, the routine returns an
 initial date — it never raises a message and never dumps. A row with an unparsed
@@ -255,11 +291,9 @@ Assembles one output row per `BP3100` approval row (5.2), in customer/approval o
 - **Customer / name / L4-L6**: looked up from the tables built in 5.1, 5.3 and 5.6.
 - **Approval Month** = `DATEFR+4(2) && '/' && DATEFR(4)` — MM/YYYY built from the
   approval-date-from field.
-- **Approval Type**: left blank — no source field is named in the FS. See §7
-  deviation 5 / `ISSUES.md` #2.
 - **Approval Date From/To, Exceptional Amount, Commitment Text**: taken directly from
   the `BP3100` row.
-- **Commitment Date**: looked up from the `GT_CDATE` cache built in 5.7.1.
+- **Commitment Date**: taken from the `GT_CDATE` cache built in 5.7.1, by position.
 - **Actual Credit Limit**: looked up from 5.4 (zero if the customer has none in this
   segment).
 - If the commitment date parsed successfully:
@@ -267,14 +301,15 @@ Assembles one output row per `BP3100` approval row (5.2), in customer/approval o
   - **Non-Fulfilment Amount** = Actual OS − Actual Credit Limit.
   - **Default %** = `(Non-Fulfilment Amount × 100) / Actual Credit Limit`, computed
     in a wider packed field first so an extreme ratio cannot overflow the 7,2 output
-    field and short dump; a limit of exactly zero leaves the percentage blank rather
+    field and short dump; a limit of exactly zero leaves the percentage at 0.00 rather
     than dividing by zero.
   - **Status**: `Not Fulfilled` when Non-Fulfilment Amount `> 0`, otherwise
     `Fulfilled` — including exactly zero. The FS defines the status only for a
     strictly positive and a strictly negative amount; zero is treated as Fulfilled.
     See §7 deviation 8 / `ISSUES.md` #12.
-- If the commitment date did **not** parse: Actual OS, Non-Fulfilment Amount,
-  Default % and Status are all left blank. The row is not dropped.
+- If the commitment date did **not** parse: Actual OS, Non-Fulfilment Amount and
+  Default % are cleared (they show as 0.00, being packed fields) and Status is left
+  blank. The row is not dropped.
 - **Currency** (`WAERS`, hidden): the company-code currency from 5.5, carried on
   every row as the ALV's currency reference field for the four amount columns.
 
@@ -294,31 +329,34 @@ sees "No data to display for the selection" before the grid is even called.
 
 ## 6. Output layout
 
-One row per exceptional-approval record (`BP3100` row), 18 visible columns plus one
-hidden currency-reference column. Column order matches `TY_OUTPUT` and the ALV field
+One row per exceptional-approval record (`BP3100` row), 17 visible columns plus one
+hidden currency-reference column (the Approval Type column was removed 07/09/26). Column order matches `TY_OUTPUT` and the ALV field
 catalogue.
 
 | # | Heading | Field | Currency ref | Notes |
 |---|---|---|---|---|
 | 1 | Customer Code | `KUNNR` | — | |
 | 2 | Customer Name | `NAME1` | — | blank if no `KNA1` row |
-| 3 | L4 Name | `L4_NAME` | — | **always blank** — stub, §5.6 |
-| 4 | L5 Name | `L5_NAME` | — | **always blank** — stub, §5.6 |
-| 5 | L6 Name | `L6_NAME` | — | **always blank** — stub, §5.6 |
+| 3 | L4 Name | `L4_NAME` | — | from `ZSD_CUSTOMER_DATA`, §5.6; blank when that level cannot be mapped |
+| 4 | L5 Name | `L5_NAME` | — | from `ZSD_CUSTOMER_DATA`, §5.6; blank when that level cannot be mapped |
+| 5 | L6 Name | `L6_NAME` | — | from `ZSD_CUSTOMER_DATA`, §5.6; blank when that level cannot be mapped |
 | 6 | Approval Month | `EXC_MONTH` | — | MM/YYYY from `DATEFR` |
 | 7 | Exception Number | `EXC_NO` | — | `BP3100-COUNTER` |
-| 8 | Approval Type | `EXC_TYPE` | — | **always blank** — no source field, §5.9 |
-| 9 | Approval Date From | `DATE_FROM` | — | `BP3100-DATEFR` |
-| 10 | Approval Date To | `DATE_TO` | — | `BP3100-DATETO` |
-| 11 | Exceptional Amount | `EXC_AMNT` | `WAERS` | `BP3100-AMNT` |
-| 12 | Commitment Date | `COMMIT_DATE` | — | blank if unparseable |
-| 13 | Commitment Text | `COMMIT_TEXT` | — | raw `BP3100-TEXT`, always shown |
-| 14 | Actual Credit Limit | `CREDIT_LIMIT` | `WAERS` | for `P_SEGMNT`; zero if none |
-| 15 | Actual OS on Commit Date | `ACT_OS` | `WAERS` | blank if commitment date unparseable |
-| 16 | Non-Fulfilment Amount | `NON_FULFIL` | `WAERS` | Actual OS − Actual Credit Limit |
-| 17 | Default % Non-Fulfilment | `DEF_PERC` | — | blank when limit = 0 or commitment date unparseable |
-| 18 | Status | `STATUS` | — | Fulfilled / Not Fulfilled; blank when commitment date unparseable |
-| — | Currency | `WAERS` | — | hidden (`NO_OUT`); company-code currency, drives columns 11/14/15/16 |
+| 8 | Approval Date From | `DATE_FROM` | — | `BP3100-DATEFR` |
+| 9 | Approval Date To | `DATE_TO` | — | `BP3100-DATETO` |
+| 10 | Exceptional Amount | `EXC_AMNT` | `WAERS` | `BP3100-AMNT` |
+| 11 | Commitment Date | `COMMIT_DATE` | — | blank if unparseable |
+| 12 | Commitment Text | `COMMIT_TEXT` | — | raw `BP3100-TEXT`, always shown |
+| 13 | Actual Credit Limit | `CREDIT_LIMIT` | `WAERS` | for `P_SEGMNT`; zero if none |
+| 14 | Actual OS on Commit Date | `ACT_OS` | `WAERS` | 0.00 if commitment date unparseable |
+| 15 | Non-Fulfilment Amount | `NON_FULFIL` | `WAERS` | Actual OS − Actual Credit Limit; 0.00 if commitment date unparseable |
+| 16 | Default % Non-Fulfilment | `DEF_PERC` | — | 0.00 when limit = 0 or commitment date unparseable |
+| 17 | Status | `STATUS` | — | Fulfilled / Not Fulfilled; blank when commitment date unparseable |
+| — | Currency | `WAERS` | — | hidden (`NO_OUT`); company-code currency, drives columns 10/13/14/15 |
+
+Amount and percentage columns are packed fields, so a cleared value shows as `0.00` in
+the grid, not as an empty cell — only the character columns (Commitment Date, Status)
+are visibly blank.
 
 ---
 
@@ -329,17 +367,21 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 | # | FS says | Build does | Why | `ISSUES.md` |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; its select-option and ALV field names are still placeholders in `GC_HIER_*` | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1 part-open |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; its field names resolved at runtime since 17/09/26, with the callee's field list shown when nothing maps | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1, #26 |
 | 2 | Actual OS from `BSID` by `GJAHR` | `BSID` + `BSAD`, bounded by `BUDAT`/`AUGDT`, no `GJAHR` filter | `BSID` holds items open **now**; an item cleared after the commitment date must still count as open on that date. Open items also span fiscal years, so a `GJAHR` filter drops valid rows | #4 |
 | 3 | Fetch `WRBTR` | `WRBTR` is selected for reference; the arithmetic uses `DMBTR` | `WRBTR` is document currency; the credit limit is not. `DMBTR` (company-code currency) is the comparable figure. Switching back is a one-line change | #4 |
 | 4 | `REBZG` blank / not blank as two separate steps | Single read, `REBZG` selected but not filtered | The two FS steps together are simply "all items" — filtering on `REBZG` would not change the sum | related to #4 |
-| 5 | Exceptional Approval Type column, values Credit Limit / Order / Both | Column present, always blank | No source field is named in the output mapping | #2 |
-| 6 | Commitment date "fetched" from `TEXT` | Defensive multi-format parse, initial on failure | `BP3100-TEXT` is free text with no agreed entry format | #3 |
+| 5 | Exceptional Approval Type column, values Credit Limit / Order / Both | Column **removed** 07/09/26 | Functional confirmed it is not required | #2 closed |
+| 6 | Commitment date "fetched" from `TEXT` | `DD.MM.YYYY` parse (separator `/` or `-` also accepted), initial on failure | `BP3100-TEXT` is free text; the entry format was confirmed 07/09/26 | #3 closed |
 | 7 | No credit segment on the selection screen | `P_SEGMNT` added, obligatory, **defaults to 2000** | `UKMBP_CMS_SGM` is keyed by partner **and** credit segment — the credit limit is ambiguous without one. Segment 2000 confirmed by functional 07/09/26 | #16 closed |
 | 8 | Status defined only for (+) and (−) non-fulfilment | Exactly zero is treated as **Fulfilled** | The FS gives no rule for the boundary case | #12 |
 | 9 | KNVV-keyed customer selection | Result deduplicated to one row per customer | A customer extended to several sales areas would otherwise multiply rows | #13 |
 | 10 | Required "Date" selection field, no table/field stated | Applied to `BP3100-DATEFR` (approval date from) | The output mapping's only date the FS ties to an approval, as opposed to a commitment or posting date | #11 |
 | 11 | "Authorization TBD" | No authorization object built | Nothing was confirmed to check against; see open point below | #15 |
+| 12 | Credit limit and approvals "for the customer" | `BP3100-PARTNER` and `UKMBP_CMS_SGM-PARTNER` compared directly with `KUNNR` | Holds only under CVI same-number assignment | #18 |
+| 13 | "Actual OS" with no line drawn | Every BSID/BSAD line summed — receivables, special G/L and noted items | The FS gives no exclusion; FBL5N would drop noted items | #19 |
+| 14 | No division on the selection screen | `S_SPART` added, optional | FS reviewer comment (Yogesh Vanani) asks for it; blank = all divisions | #20 |
+| 15 | Hierarchy report called for the sales organisation | Approval customers passed as well, under placeholder `S_KUNNR`; field names resolved at runtime | A wrong selection name is ignored by `SUBMIT`; a wrong field name is self-corrected or reported with the callee's field list | #26 |
 
 ---
 
@@ -347,21 +389,22 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 Ranked by what changes a number or a column on the report, not by `ISSUES.md` order.
 
-1. **`ISSUES.md` #1 — L4/L5/L6 source.** The only column with no data at all. Needed:
-   the real table/field (KNVP partner functions? a customer hierarchy table? an HR
-   org level?) or a report name that can actually be read/submitted.
+1. **`ISSUES.md` #1 / #26 — L4/L5/L6 field names in `ZSD_CUSTOMER_DATA`.** The report
+   name is confirmed; its ALV field names and select-option names are not. Since 17/09/26
+   the field names resolve at runtime and the status message lists the callee's fields
+   when they do not. Needed: a `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`, or the status-bar
+   text from a run of the corrected report, to set the `GC_HIER_*` constants for good.
 2. **`ISSUES.md` #4 — as-on-date logic, currency, GJAHR.** The build's `BSID`+`BSAD`
    approach and its use of `DMBTR` are the technical team's best read of "actual OS as
    on the commitment date" from a document-currency, GJAHR-scoped FS instruction that
    cannot literally be correct (see deviations 2–4 above). Confirmation removes the
    `" ASSUMPTION:` tags but does not by itself change any code unless the answer
    differs from what is built.
-3. **`ISSUES.md` #2 — Approval Type source field.** Which `BP3100` field (or another
-   source) carries Credit Limit / Order / Both.
-4. **`ISSUES.md` #3 — commitment date format.** Confirm the agreed entry convention
-   for `BP3100-TEXT` (today: defensive multi-format parse) and whether an unparseable
-   row should be flagged to the user in some way beyond the blank columns it already
-   gets.
+3. ~~**`ISSUES.md` #2 — Approval Type source field.**~~ **Closed 07/09/26.** Not required;
+   column removed.
+4. ~~**`ISSUES.md` #3 — commitment date format.**~~ **Closed 07/09/26.** `DD.MM.YYYY`.
+   Still open within it: whether an unparseable row should be flagged beyond the blank
+   Commitment Date and Status it already gets.
 5. ~~**`ISSUES.md` #16 — credit segment.**~~ **Closed 07/09/26.** Functional confirmed
    segment `2000`. `P_SEGMNT` now defaults to it and stays overridable.
 6. **`ISSUES.md` #13 — sales-area duplication.** Confirm one row per customer
@@ -373,6 +416,13 @@ Ranked by what changes a number or a column on the report, not by `ISSUES.md` or
 9. **`ISSUES.md` #11 — "Date" selection field.** Confirm approval date from (current
    build, on `BP3100-DATEFR`) is the intended filter, as opposed to commitment date or
    posting date.
+10. **`ISSUES.md` #18 — BP number = customer number.** Confirm CVI same-number
+    assignment on this landscape; otherwise `BP3100` and `UKMBP_CMS_SGM` need a
+    `CVI_CUST_LINK` hop.
+11. **`ISSUES.md` #19 — what counts as "Actual OS".** Confirm special G/L and noted items
+    are in (current build) or out.
+12. **`ISSUES.md` #20 — division.** Confirm `S_SPART` optional (current build) rather than
+    obligatory as on the Paints screen.
 
 `ISSUES.md` items #5, #6, #8, #9 and #10 belong to WRICEF 141.B (Paints) and do not
 apply to this object.
@@ -386,13 +436,17 @@ apply to this object.
 | 1 | FS sample row 1 — customer 1009024, exceptional amount driving a positive non-fulfilment | Customer 1009024, credit limit 100,000, actual OS on commitment date 125,000 | Non-Fulfilment Amount = 25,000; Default % = 25.00; Status = Not Fulfilled |
 | 2 | FS sample row 2 — customer with actual OS below the limit | Customer with credit limit 100,000, actual OS on commitment date 98,000 | Non-Fulfilment Amount = −2,000; Default % = −2.00; Status = Fulfilled |
 | 3 | Empty selection | `P_BUKRS` / `S_VKORG` combination that matches no `KNB1`/`KNVV` row | Message "No customers match the selection"; report stops, no ALV shown |
-| 4 | Zero credit limit | Approval row for a customer with no `UKMBP_CMS_SGM` row in `P_SEGMNT` (or `CREDIT_LIMIT = 0`) | Actual Credit Limit = 0; Default % left blank (no division by zero); Non-Fulfilment Amount still computed as Actual OS − 0; Status set from that amount |
-| 5 | Unparseable commitment date | `BP3100-TEXT` containing no recognisable date token (e.g. free-form remarks only) | Row still appears; Commitment Text shows the raw text; Commitment Date, Actual OS, Non-Fulfilment Amount, Default % and Status are all blank |
+| 4 | Zero credit limit | Approval row for a customer with no `UKMBP_CMS_SGM` row in `P_SEGMNT` (or `CREDIT_LIMIT = 0`) | Actual Credit Limit = 0; Default % shows 0.00 (no division by zero); Non-Fulfilment Amount still computed as Actual OS − 0; Status set from that amount |
+| 5 | Unparseable commitment date | `BP3100-TEXT` containing no recognisable date token (e.g. free-form remarks only) | Row still appears; Commitment Text shows the raw text; Commitment Date and Status are blank, Actual OS, Non-Fulfilment Amount and Default % show 0.00 |
 | 6 | Customer in more than one sales area | One `KUNNR` extended to two `VKORG` values that both satisfy `S_VKORG` | Customer appears **exactly once** in `GT_CUST` and therefore at most once per approval row — never duplicated by sales area |
 | 7 | No exceptional approvals for a valid customer set | Customers found in `KNB1`/`KNVV`, but no `BP3100` row matches `P_INFCAT`/`P_INFTYP`/`S_DATE` | Message "No exceptional approvals found for the selection"; report stops |
 | 8 | Company code that does not exist | `P_BUKRS` value absent from `T001` | Error on the selection screen: "Company code does not exist"; cursor stays on the field |
 | 9 | Information type not valid for the category | `P_INFTYP` filled, but no `BP3100` row for that `ADDTYPE`/`DATA_TYPE` pair | Error on the selection screen: "Information type not valid for this category" |
 | 10 | Item cleared after the commitment date | A `BSID` item as of the commitment date is later cleared (now only in `BSAD`), with `AUGDT` after the commitment date | Still counted as open in `F_CALC_OPEN_AMOUNT` via the `BSAD` leg — Actual OS on Commitment Date includes it |
+| 11 | Division filter | Same `P_BUKRS`/`S_VKORG` run twice, once with `S_SPART` blank and once with one division | Blank: every division's customers; filled: only customers with a `KNVV` row in that division; no duplicate rows either way |
+| 12 | Hierarchy names resolved | `ZSD_CUSTOMER_DATA` active and returning rows for the selected customers | L4/L5/L6 filled on every row that the callee reports; no hierarchy status message |
+| 13 | Hierarchy names not resolvable | Callee output whose customer or level fields carry none of the tokens `KUNNR`/`CUST` or `L4`/`L5`/`L6` | L4/L5/L6 blank; status message M16 or M17 ending with the callee's field names; report still displays |
+| 14 | Hierarchy callee returns nothing | `ZSD_CUSTOMER_DATA` returns no rows for the passed selection | L4/L5/L6 blank; status message M15; report still displays |
 
 ## Note added 07/09/26 — BP3100 field names
 
@@ -421,6 +475,17 @@ out of habit. This makes the parse stricter: an 8-digit run inside free text is 
 to be an amount or a document number, which the old code would have read as a date.
 
 A row that still fails to parse behaves as before — the raw text shows in the Commitment
-Text column, and Actual OS, Non-Fulfilment, Default % and Status stay blank rather than
+Text column, Status stays blank and Actual OS, Non-Fulfilment and Default % show 0.00 rather than
 carrying a number derived from a date the program could not read.
 
+
+## Note added 17/09/26 — L4/L5/L6 blank in functional testing
+
+Sanjay reported the three hierarchy columns blank on every row. The program name is right
+and `ZSD_CUSTOMER_DATA` runs; the four ALV field names the program read its output with
+were placeholders that did not match. `F_GET_HIERARCHY` now resolves each name at runtime
+from the callee's own structure (exact placeholder, else a field whose name contains the
+level token) and, where it still cannot map, ends its status message with the callee's
+field names — so the next run either fills the columns or tells us exactly what to put in
+`GC_HIER_*`. The approval customers are also passed to the callee. Details in §5.6 and
+`ISSUES.md` #26. Text symbol `M17` is new.

@@ -177,6 +177,15 @@ other than sales organisation, the `SUBMIT` stops on its own selection screen. T
 one failure mode the guards cannot cover, because its screen is not known here. If it
 happens, send the selection screen.
 
+> **17/09/26 — it happened.** Sanjay reported L4/L5/L6 blank on every Adhesives row. The
+> program name is right; the four field names above are what does not match. Both reports
+> now resolve them at runtime (exact placeholder, else a field whose name contains `L4` /
+> `L5` / `L6`, or `KUNNR` / `CUST`) and, when they still cannot, the status message ends
+> with the callee's **actual field names**. Two things close this for good, either one:
+> (a) `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`; (b) the status-bar text after running the
+> corrected report. The repo copy must be pasted over the active program first — with
+> text symbol `M17` (A) / `M11` (B). `ISSUES.md` #26.
+
 ---
 
 # PART 3 — Assumed and built. Confirm, or tell us to change

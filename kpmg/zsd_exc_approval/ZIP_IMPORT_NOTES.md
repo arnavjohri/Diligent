@@ -1,7 +1,10 @@
 # ZSD_EXC_APPROVAL.zip — what is in it, and what is NOT proven
 
 First built 03/09/26 as `ZSD_EXP_PAINTS.zip`, renamed 04/09/26, **rebuilt 05/09/26** from
-`src/` after the review below. 19 files, file entries only (no `src/` directory entry).
+`src/` after the review below, and again **17/09/26** with the current Paints sources
+(hierarchy fix, text symbols M07–M11 and M06). 18 files, file entries only (no `src/`
+directory entry). Every object in it is already active in the system by hand (07/09/26),
+so an import is a convenience and would overwrite the active programs — diff first.
 
 ## Contents
 

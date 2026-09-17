@@ -41,9 +41,12 @@
 *&   number. See the ASSUMPTION notes at each such point.
 *&
 *& TEXT ELEMENTS
-*&   Every user visible string is a text symbol with a literal default,
-*&   so the program runs correctly even before Goto -> Text Elements is
-*&   maintained. The list ships as ZSD_EXC_APPR_PAINTS_TEXTS.md.
+*&   Every message, heading and status literal is a text symbol with a
+*&   literal default, so the program runs correctly even before Goto ->
+*&   Text Elements is maintained. The three selection-screen block
+*&   titles (TEXT-001 to TEXT-003) and the selection texts are bare
+*&   references and stay blank until they are. The list ships as
+*&   ZSD_EXC_APPR_PAINTS_TEXTS.md and inside the abapGit ZIP.
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
@@ -52,6 +55,14 @@
 *&                                  hierarchy read built as a background
 *&                                  SUBMIT with the source name held in
 *&                                  the GC_HIER_* constants.
+*&   17.09.2026  Arnav Johri  <TR>  Hierarchy field names resolved at
+*&                                  runtime from the callee's own
+*&                                  structure, callee field list shown
+*&                                  when nothing maps, approval
+*&                                  customers passed to the callee
+*&                                  (issue 1). ACDOCA read driven by
+*&                                  the approval partners (GT_PARTNER)
+*&                                  instead of every customer.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_paints.
 
@@ -75,9 +86,9 @@ TYPES: BEGIN OF ty_kunnr,
 TYPES ty_t_kunnr TYPE STANDARD TABLE OF ty_kunnr WITH DEFAULT KEY.
 
 * Customer key list. F_GET_HIERARCHY writes L4/L5/L6 here after running
-* the hierarchy report; they stay blank while its name is unconfirmed.
-* This is also the driver table for the ACDOCA collection read - build
-* spec 6.3 point 7 fixes FOR ALL ENTRIES IN @gt_cust.
+* the hierarchy report. The ACDOCA collection read is driven by
+* GT_PARTNER (the customers that carry an approval), not by this table
+* - build spec amendment B1, 17/09/26.
 TYPES: BEGIN OF ty_cust,
          kunnr   TYPE kna1-kunnr,
          l4_name TYPE char40,
@@ -216,6 +227,18 @@ CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
            gc_hier_f_l6    TYPE dfies-fieldname  VALUE 'L6_NAME',
            gc_subc_report  TYPE trdir-subc       VALUE '1'.
 *EOC By Arnav on 07/09/26
+
+*BOC By Arnav on 17/09/26
+* Placeholder for the callee's customer select-option. The customers
+* that carry an approval are passed under this name so that
+* ZSD_CUSTOMER_DATA runs for a handful of customers instead of every
+* customer of the sales organisation. A wrong name is ignored by SUBMIT
+* and only costs that saving; it cannot dump and cannot change a name.
+* Since 17/09/26 the four GC_HIER_F_* names above are also resolved at
+* runtime against the callee's real structure - see f_get_hierarchy
+* step 4 - so a callee that spells them differently still maps.
+CONSTANTS: gc_hier_selkun  TYPE rsparams-selname VALUE 'S_KUNNR'.
+*EOC By Arnav on 17/09/26
 
 *&---------------------------------------------------------------------*
 *& Selection screen
@@ -483,6 +506,12 @@ FORM f_get_credit_limits.
     RETURN.
   ENDIF.
 
+* ASSUMPTION: UKMBP_CMS_SGM-PARTNER is compared directly with the
+* customer number. That holds only where the business partner number
+* equals the customer number (CVI same-number assignment). If the
+* numbers differ on this landscape, a CVI_CUST_LINK lookup has to be
+* inserted before this read - see open issue 18 (shared with the
+* Adhesives report).
   SELECT partner, credit_sgmnt, credit_limit
     FROM ukmbp_cms_sgm
     FOR ALL ENTRIES IN @gt_partner
@@ -571,6 +600,23 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
         ls_hier TYPE ty_cust,
         lv_mapped TYPE abap_bool.
 
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+  DATA: lo_tab     TYPE REF TO cl_abap_tabledescr,
+        lo_struc   TYPE REF TO cl_abap_structdescr,
+        lt_comp    TYPE abap_compdescr_tab,
+        ls_comp    TYPE abap_compdescr,
+        ls_partner TYPE ty_kunnr,
+        lv_f_kunnr TYPE dfies-fieldname,
+        lv_f_l4    TYPE dfies-fieldname,
+        lv_f_l5    TYPE dfies-fieldname,
+        lv_f_l6    TYPE dfies-fieldname,
+        lv_names   TYPE string,
+        lv_msg     TYPE c LENGTH 200,
+        lv_hits    TYPE i.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
+
   FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
                  <ls_any>  TYPE any,
                  <lv_fld>  TYPE any,
@@ -606,6 +652,24 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     APPEND ls_selt TO lt_selt.
   ENDLOOP.
 
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+* The customers that carry an approval are passed as well, under the
+* placeholder name GC_HIER_SELKUN. A wrong name is ignored by SUBMIT and
+* the callee runs for every customer of the sales organisation, as it
+* did before; a right one makes it run for a handful of customers.
+  LOOP AT gt_partner INTO ls_partner.
+    CLEAR ls_selt.
+    ls_selt-selname = gc_hier_selkun.
+    ls_selt-kind    = 'S'.
+    ls_selt-sign    = 'I'.
+    ls_selt-option  = 'EQ'.
+    ls_selt-low     = ls_partner-kunnr.
+    APPEND ls_selt TO lt_selt.
+  ENDLOOP.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
+
 * --- 3. run it with the display suppressed and take its ALV data -------
 * CLEAR_ALL is called on EVERY path below. If the capture were left
 * armed, the report's OWN ALV in f_display_alv would be swallowed
@@ -636,33 +700,142 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
     RETURN.
   ENDIF.
 
-* --- 4. map by field NAME, so the callee structure is not hardcoded ----
+* --- 4. resolve the callee's field names, then map by name ------------
+*EOC By Arnav on 07/09/26
+*BOC By Arnav on 17/09/26
+* Sanjay reported on 17/09/26 that L4/L5/L6 stay blank with the real
+* program name in place, so the placeholders in GC_HIER_F_* do not
+* match what ZSD_CUSTOMER_DATA puts out. Until the names are confirmed,
+* each one is resolved at runtime from the callee's own structure:
+*   1. the placeholder itself, if the callee has a field of that name;
+*   2. otherwise the first field whose name CONTAINS the level token
+*      (L4 / L5 / L6), or KUNNR and then CUST for the customer;
+*   3. otherwise nothing.
+* A callee that calls the field ZL5_NAME, NAME_L5 or L5NAME therefore
+* still maps. When the customer, or all three levels, stay unresolved
+* the status message lists the callee's field names, so the real
+* values for GC_HIER_* can be read straight off the tester's screen.
+* Kept identical to the Adhesives report on purpose.
+* Old code:
+**  LOOP AT <lt_any> ASSIGNING <ls_any>.
+**    CLEAR ls_hier.
+**    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-kunnr = <lv_fld>.
+**      lv_mapped     = abap_true.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l4_name = <lv_fld>.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l5_name = <lv_fld>.
+**    ENDIF.
+**    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+**    IF sy-subrc = 0.
+**      ls_hier-l6_name = <lv_fld>.
+**    ENDIF.
+**    CHECK ls_hier-kunnr IS NOT INITIAL.
+  TRY.
+      lo_tab   ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+      lo_struc ?= lo_tab->get_table_line_type( ).
+    CATCH cx_sy_move_cast_error.
+      CLEAR lo_struc.
+  ENDTRY.
+
+* The captured data is not a table of structures - nothing to map.
+  IF lo_struc IS NOT BOUND.
+    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  lt_comp = lo_struc->components.
+
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'KUNNR'
+                       CHANGING lv_f_kunnr.
+  IF lv_f_kunnr IS INITIAL.
+    PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'CUST'
+                         CHANGING lv_f_kunnr.
+  ENDIF.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l4 'L4'
+                       CHANGING lv_f_l4.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l5 'L5'
+                       CHANGING lv_f_l5.
+  PERFORM f_hier_field USING    lt_comp gc_hier_f_l6 'L6'
+                       CHANGING lv_f_l6.
+
+* The callee's own field names, for the two messages below - the
+* fastest way to get the real GC_HIER_* values off a tester's screen.
+  LOOP AT lt_comp INTO ls_comp.
+    IF lv_names IS INITIAL.
+      lv_names = ls_comp-name.
+    ELSE.
+      lv_names = |{ lv_names } { ls_comp-name }|.
+    ENDIF.
+  ENDLOOP.
+
+  IF lv_f_kunnr IS INITIAL.
+    lv_msg = 'Hierarchy field names do not match the report output'(m10).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  IF lv_f_l4 IS INITIAL AND lv_f_l5 IS INITIAL AND lv_f_l6 IS INITIAL.
+    lv_msg = 'Hierarchy level fields not found in the report output'(m11).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+* The callee ran but produced no rows for this selection. Nothing to
+* map, and not a field-name problem - say which.
+  IF <lt_any> IS INITIAL.
+    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
   LOOP AT <lt_any> ASSIGNING <ls_any>.
 
     CLEAR ls_hier.
 
-    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+    ASSIGN COMPONENT lv_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
     IF sy-subrc = 0.
       ls_hier-kunnr = <lv_fld>.
-      lv_mapped     = abap_true.
+*     Only a filled customer counts as mapped - a resolved field that
+*     is empty on every row keys nothing, and the check below says so.
+      IF <lv_fld> IS NOT INITIAL.
+        lv_mapped = abap_true.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l4_name = <lv_fld>.
+    IF lv_f_l4 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l4_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l5_name = <lv_fld>.
+    IF lv_f_l5 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l5_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
-    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-l6_name = <lv_fld>.
+    IF lv_f_l6 IS NOT INITIAL.
+      ASSIGN COMPONENT lv_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+      IF sy-subrc = 0.
+        ls_hier-l6_name = <lv_fld>.
+      ENDIF.
     ENDIF.
 
     CHECK ls_hier-kunnr IS NOT INITIAL.
+*EOC By Arnav on 17/09/26
+*BOC By Arnav on 07/09/26
 
 *   The callee may return the customer without leading zeros. CT_CUST
 *   holds the internal KNA1 format, so convert before the key match.
@@ -676,8 +849,8 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 
   ENDLOOP.
 
-* GC_HIER_F_KUNNR did not match any component of the callee output, so
-* nothing could be keyed. Say so - a silent blank column would look like
+* The customer field resolved but was empty on every row, so nothing
+* could be keyed. Say so - a silent blank column would look like
 * missing master data rather than a wrong field name.
   IF lv_mapped <> abap_true.
     MESSAGE 'Hierarchy field names do not match the report output'(m10)
@@ -697,11 +870,59 @@ FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
       <ls_cust>-l4_name = ls_hier-l4_name.
       <ls_cust>-l5_name = ls_hier-l5_name.
       <ls_cust>-l6_name = ls_hier-l6_name.
+      lv_hits = lv_hits + 1.                  "Changes by Arnav on 17/09/26
     ENDIF.
   ENDLOOP.
 *EOC By Arnav on 07/09/26
 
+*BOC By Arnav on 17/09/26
+* Every field resolved and the callee returned rows, yet not one of
+* them keyed to a customer on this report. Either the customer field
+* the token search picked is the wrong one (a name, not a number) or
+* the callee reports a different customer set. Say so, with the
+* callee's field names, instead of leaving blank columns.
+  IF lv_hits = 0.
+    lv_msg = 'Hierarchy field names do not match the report output'(m10).
+    lv_msg = |{ lv_msg }: { lv_names }|.
+    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+  ENDIF.
+*EOC By Arnav on 17/09/26
+
 ENDFORM.
+
+*BOC By Arnav on 17/09/26
+*&---------------------------------------------------------------------*
+*& Form F_HIER_FIELD
+*&---------------------------------------------------------------------*
+*& Resolves one field of the hierarchy report's output: the exact
+*& placeholder name if the callee has it, otherwise the first component
+*& whose name contains the token, otherwise initial. Helper for
+*& f_get_hierarchy only.
+*&---------------------------------------------------------------------*
+FORM f_hier_field  USING    it_comp  TYPE abap_compdescr_tab
+                            iv_exact TYPE dfies-fieldname
+                            iv_token TYPE clike
+                   CHANGING cv_name  TYPE dfies-fieldname.
+
+  DATA ls_comp TYPE abap_compdescr.
+
+  CLEAR cv_name.
+
+  READ TABLE it_comp INTO ls_comp WITH KEY name = iv_exact.
+  IF sy-subrc = 0.
+    cv_name = ls_comp-name.
+    RETURN.
+  ENDIF.
+
+  LOOP AT it_comp INTO ls_comp.
+    IF ls_comp-name CS iv_token.
+      cv_name = ls_comp-name.
+      RETURN.
+    ENDIF.
+  ENDLOOP.
+
+ENDFORM.
+*EOC By Arnav on 17/09/26
 
 *&---------------------------------------------------------------------*
 *& Form F_GET_COLLECTIONS
@@ -720,7 +941,15 @@ FORM f_get_collections.
 
   CLEAR: gt_coll, ls_appr, lv_min_date, lv_max_date.
 
-  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
+*BOC By Arnav on 17/09/26
+* The collection lines are needed only for the customers that actually
+* carry an approval (GT_PARTNER), not for every customer of the company
+* code (GT_CUST). GT_PARTNER is a subset of GT_CUST and f_build_output
+* only ever asks for those partners, so the figures are identical - the
+* ACDOCA read is just far smaller.
+*  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
+  IF gt_partner IS INITIAL OR gt_appr IS INITIAL.
+*EOC By Arnav on 17/09/26
     RETURN.
   ENDIF.
 
@@ -767,19 +996,32 @@ FORM f_get_collections.
 * ZCOMMIT_DATE - is applied afterwards, in memory, in
 * f_calc_collection, and never here.
 * NOTE: the field list below matches TY_COLL component for component.
-* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_CUST-KUNNR, but
-* it is part of the locked WHERE clause in build spec 6.3 point 7 and
-* is kept so the code and the contract read the same.
+* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_PARTNER-KUNNR,
+* but it is part of the locked WHERE clause in build spec 6.3 point 7
+* and is kept so the code and the contract read the same.
+*BOC By Arnav on 17/09/26
+* Driver table changed from GT_CUST to GT_PARTNER - see the note above.
+*  SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
+*    FROM acdoca
+*    FOR ALL ENTRIES IN @gt_cust
+*    WHERE rldnr  = @p_rldnr
+*      AND rbukrs = @p_bukrs
+*      AND kunnr  = @gt_cust-kunnr
+*      AND budat  BETWEEN @lv_min_date AND @lv_max_date
+*      AND blart IN @s_blart
+*      AND kunnr <> @space
+*    INTO TABLE @gt_coll.
   SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
     FROM acdoca
-    FOR ALL ENTRIES IN @gt_cust
+    FOR ALL ENTRIES IN @gt_partner
     WHERE rldnr  = @p_rldnr
       AND rbukrs = @p_bukrs
-      AND kunnr  = @gt_cust-kunnr
+      AND kunnr  = @gt_partner-kunnr
       AND budat  BETWEEN @lv_min_date AND @lv_max_date
       AND blart IN @s_blart
       AND kunnr <> @space
     INTO TABLE @gt_coll.
+*EOC By Arnav on 17/09/26
 
 * No collection document in the whole window is a normal business
 * result, not an error: every Actual Collection is then zero and the
@@ -815,6 +1057,13 @@ FORM f_calc_collection  USING    iv_kunnr       TYPE kna1-kunnr
 * collection across two overlapping approvals for the same customer -
 * see open issue 5. Both dates are required; a row without a commitment
 * date reports no collection rather than an unbounded one.
+* ASSUMPTION: two approvals of one customer whose windows overlap both
+* count a collection posted inside the overlap - every row is summed on
+* its own window and nothing allocates a receipt to one approval only.
+* Neither the table key nor the upload program prevents overlapping
+* windows. If functional wants each receipt counted once, the
+* allocation rule (earliest commitment first?) has to be agreed - see
+* open issue 24.
   IF iv_kunnr IS INITIAL
      OR iv_date_from IS INITIAL
      OR iv_commit_date IS INITIAL.
