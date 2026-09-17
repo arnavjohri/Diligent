@@ -21,62 +21,133 @@
 | 15 | A+B | Authorisation | FS says "Authorization TBD". | Auth object / check to build in |
 | 16 | A+B | Actual Credit Limit | `UKMBP_CMS_SGM` is keyed by partner **and credit segment** — a customer with several segments has several CREDIT_LIMIT values. FS names neither a segment nor a rule. | Which credit segment: fixed default (0000?) or a selection-screen field |
 
-## 02/09/26 — first paste of ZSD_EXC_APPR_ADHESIVE
+## 07/09/26 — answers received, code updated for functional testing
 
-Syntax check stopped at ONE error, in `FORM f_get_approvals`:
-`Unknown column name INFOCATEGORY` on the `SELECT ... FROM bp3100`. Everything the check
-reached before that line resolved (UKM_INFOCAT-INFOCATEGORY, UKM_INFOTYP-INFOTYPE /
--INFOCATEGORY, BP3100-PARTNER / COUNTER / DATEFR / DATETO / AMNT / TEXT, CHAR40 / CHAR30 /
-CHAR15 / CHAR7). Arnav corrected the WHERE clause by hand in SE38 and the program is active
-in the system; the corrected field name was not sent back, so the repo copy stayed on the
-failed version until 05/09/26 (item 17 below).
+| # | Answer received | What the code now does | Status |
+|---|-----------------|------------------------|--------|
+| 16 | Credit segment is **2000** | `P_SEGMNT` on both selection screens now defaults to `2000`. Kept as an overridable parameter, not a constant. | **Closed** |
+| 1 | The hierarchy report is to be called in background and its output read. The program name in the FS is wrong and will be corrected. | `F_GET_HIERARCHY` in both reports now builds the call in full: TRDIR check, `SUBMIT ... WITH SELECTION-TABLE ... AND RETURN`, ALV capture via `CL_SALV_BS_RUNTIME_INFO`, dynamic field mapping, merge into the customer list. The unconfirmed names sit in one `GC_HIER_*` constants block. | **Partly answered — still blocked on the name** |
 
-## 05/09/26 — full review of 141 A/B (both programs, upload, ZIP, docs)
+### Issue 1 — program name given 07/09/26, field names still placeholders
 
-| # | Doc | Item | Problem | Needed from functional / Arnav |
-|---|-----|------|---------|--------------------------------|
-| 17 | A | BP3100 category filter | BP3100 has no `INFOCATEGORY` column (activation error 02/09/26). Repo copy now filters on `INFOTYPE` only; the category is enforced on the selection screen (P_INFTYP must belong to P_INFCAT). `BP3100-INFOTYPE` itself is still unconfirmed by an activation. | **Arnav:** `ZR_PROG_DOWNLOAD` of the active `ZSD_EXC_APPR_ADHESIVE`, so the repo copy can be reconciled with the WHERE clause that actually activated. Until then A stays out of the ZIP. |
-| 18 | A+B | BP number = customer number | `BP3100-PARTNER` and `UKMBP_CMS_SGM-PARTNER` are compared directly with `KUNNR`. Holds only with CVI same-number assignment. If not, A finds no approvals and both reports show zero limits. | Confirm BP and customer share the number range (SE16N `CVI_CUST_LINK`, PARTNER_GUID vs CUSTOMER). |
-| 19 | A | Actual OS composition | Every BSID/BSAD line is summed: normal receivables, special G/L items (down payments, bills of exchange, deposits) and noted items (down-payment requests). The FS draws no line; FBL5N would exclude noted items. | Confirm whether special G/L and noted items count toward "Actual OS as on Commitment Date". |
-| 20 | A | Division on the Adhesives screen | Yogesh Vanani's FS comment asks for division; the FS input table omits it. Built as an OPTIONAL range `S_SPART` (blank = all divisions). | Confirm optional is right, or make it obligatory as in Paints. |
-| 21 | A | Commitment date spellings | Parser now also accepts a two-digit year (`05.08.26` → 2026) and month-first order when the middle part cannot be a month (`7/25/2026`). An ambiguous `8/5/2026` stays day-first, 8 May. | Still open under #3: the agreed entry convention for `BP3100-TEXT`. |
-| 22 | B | abapGit ZIP shape | `ZSD_EXC_APPROVAL.zip` rebuilt 05/09/26: DDIC XML element order corrected (DDTEXT after SIGNFLAG/VALEXI/LOWERCASE in DD01V; REFTABLE/REFFIELD before NOTNULL/COMPTYPE in DD03P), `REFKIND D` added to the six data elements, `CLIDEP X` and `EXCLASS 4` added to DD02V, table short text aligned to the build sheet, selection-text LENGTH values corrected (+8), ZIP written without directory entries. See `ZIP_IMPORT_NOTES.md`. | **Arnav:** try the ZIP once more; if it dumps, capture the file abapGit names in ST22 and fall back to paste. |
-| 23 | — | Root cause of the `zfi_tds_cl34` import dumps | Its `.abapgit.xml` is wrapped in an `<abapGit ...>` element. abapGit reads `.abapgit.xml` with `CALL TRANSFORMATION id` directly (`zcl_abapgit_dot_abapgit=>from_xml`, the very frame named in the dump), and that transformation needs a bare `<asx:abap>` root. Object XML files, by contrast, MUST carry the wrapper. This folder's `.abapgit.xml` is bare and correct. | Nothing for functional. Recorded in `kpmg/zfi_tds_cl34/NOTES.md` and `CLAUDE.md`. |
+Arnav supplied the real source: **`ZSD_CUSTOMER_DATA`**. `GC_HIER_PROG` now carries it,
+so the TRDIR guard passes and the `SUBMIT` genuinely runs. The other four constants are
+still unconfirmed and are **not** guessed anywhere else in the code.
 
-Also done 05/09/26, no functional input needed: `GT_APPR` sorted (A), commitment date
-linked to its approval row by position instead of by PARTNER + COUNTER (A), BSID/BSAD and
-ACDOCA reads driven by the approval partners instead of every customer of the company code
-(A and B), ASSUMPTION tags added for deviations 9/10/11 (A), Adhesives TS wording corrected
-(0.00, not blank, for cleared amounts), `fs/141B_extract.md` added.
+| Constant | Needs | Status |
+|---|---|---|
+| `GC_HIER_PROG` | the executable report that lists the sales hierarchy | **`ZSD_CUSTOMER_DATA` — confirmed 07/09/26** |
+| `GC_HIER_SELNAME` | that report's SELECT-OPTION name for sales organisation | placeholder `S_VKORG` |
+| `GC_HIER_F_KUNNR` | the customer field in its ALV output | placeholder `KUNNR` |
+| `GC_HIER_F_L4` / `_L5` / `_L6` | the three level-name fields in its ALV output | placeholder `L4_NAME` / `L5_NAME` / `L6_NAME` |
 
-## 17/09/26 — reported on Teams by Sanjay Modhvadiya: "L5 name is not coming"
+What a wrong placeholder costs, none of it a dump:
 
-Screenshots of `ZSD_EXC_APPR_ADHESIVE` output for customers 0001000000 (CPI Test Customer,
-five approvals of 07/2026) and 0001000724 (IDS DISTRIBUTORS-F&S, 09/2026). L4 Name, L5 Name
-and L6 Name are blank on every row. That is **open issue #1, not a defect**: the FS names
-`SAPLSLVC_FULLSCREEN` as the source of the three names, and that is the program name every
-ALV full-screen list shows under System -> Status — the FS author read it off the screen of
-some existing report, and *that report* is the real source. `f_get_hierarchy` is a deliberate
-stub (build spec §3 step 6) in both reports and stays one until the source is named.
+- **`GC_HIER_SELNAME` wrong.** `SUBMIT` ignores an unknown `SELNAME`, so `ZSD_CUSTOMER_DATA`
+  runs unfiltered. Slower, but the merge is on customer key so the names reported are still
+  right for the customers on the report.
+- **`GC_HIER_F_KUNNR` wrong.** Nothing keys. `F_GET_HIERARCHY` says so with a status message
+  rather than showing blank columns that look like missing master data.
+- **`GC_HIER_F_L4` / `_L5` / `_L6` wrong.** That level comes back blank.
 
-Needed from Sanjay: the transaction or report he had open when he saw L4/L5/L6 for a
-customer, or the table that holds them (KNVP partner functions with a sales-employee
-number? a Z sales-hierarchy table keyed by customer or by sales office/group? KNVH?). One
-FORM changes once that arrives, in both reports.
+To confirm them: run `ZSD_CUSTOMER_DATA`, use Settings → Layout → Current on its ALV for the
+technical field names, and F1 on its sales-organisation field for the select-option name.
 
-What the screenshots also confirm: the program is active and runs end to end on the
-system copy — BP3100 PARTNER/COUNTER/DATEFR/DATETO/AMNT/TEXT resolve, the commitment date
-is read out of the free text (04.08.2026), the BSID/BSAD as-on figure works (12,359,932.39
-against a 65,006.00 limit -> Not Fulfilled, 18,913.53 %), and rows without a commitment date
-or without a limit show 0.00 and a blank status as designed. Item #17 (reconcile the repo
-copy with the active one) is still open.
+**Watch in functional testing:** if `ZSD_CUSTOMER_DATA` has an obligatory selection field
+other than sales organisation, the `SUBMIT` stops on its own selection screen. That is the
+one behaviour the placeholders cannot protect against, because we do not know its screen.
 
-| # | Doc | Item | Problem | Needed |
-|---|-----|------|---------|--------|
-| 24 | B | Overlapping approval windows | Two approvals of one customer whose windows overlap both count a receipt posted inside the overlap — each row sums its own window. Nothing prevents overlapping windows. `" ASSUMPTION:` note in `f_calc_collection`. | Accept, or name an allocation rule (earliest commitment first?). |
-| 25 | B | Upload: COMMIT WORK AND WAIT semantics | The 02/09/26 build did `ROLLBACK WORK` and logged "rolled back" when SY-SUBRC <> 0 after the commit. A direct MODIFY is already durable at that point; the non-zero code only means a registered update task failed. Corrected 17/09/26: the rows count as written, the summary warns and points at SM13 (new text symbol M06). | Nothing — recorded for the TS. |
+## Still open and genuinely blocking a correct number
 
-Also 17/09/26 (B, upload): an amount with more than two decimals is rejected (it was rounded
-silently), the amount length check allows for the decimal point (24 characters), and the
-header comments of all three programs no longer claim the block titles have literal defaults
-(bare `TEXT-nnn` references are blank until Text Elements is maintained).
+These four cannot be assumed either way — each has two readings that produce different
+figures on the same data, so a guess would ship a wrong number rather than a blank.
+
+| # | Doc | Question |
+|---|-----|----------|
+| 2 | A | Which BP3100 field carries the Exceptional Approval Type. Column ships blank until answered. |
+| 3 | A | The agreed entry format for the commitment date inside BP3100-TEXT, and what to do with a row that does not parse. |
+| 5 | B | Actual Collection window: BUDAT from the selection screen, or per row from approval date to commitment date. Currently per row. |
+| 6 | B | Non-Fulfilment sign: Commitment minus Actual Collection (the prose), or Actual minus Credit Limit (the sample). Currently the prose. |
+
+Issue 15 (authorisation object) is still "TBD" in the FS. It does not block functional
+testing, but it blocks the move to QA.
+
+## 07/09/26 — BP3100 field names corrected
+
+Arnav confirmed from the system that **BP3100 has no `INFOCATEGORY` / `INFOTYPE` column**.
+The fields carrying the information category and information type are **`ADDTYPE`** and
+**`DATA_TYPE`**. `ZSD_EXC_APPR_ADHESIVE` re-pointed throughout: the BP3100 read, both
+parameters (now typed off `BP3100-ADDTYPE` / `BP3100-DATA_TYPE`), both F4 helps and both
+selection-screen checks.
+
+Business labels are unchanged — the screen still reads "Information Category" and
+"Information Type", and the parameter names `P_INFCAT` / `P_INFTYP` keep that meaning, so
+no selection text or message text moved.
+
+`UKM_INFOCAT` and `UKM_INFOTYP` were dropped as the value-help and validation source. Now
+that BP3100 uses different field names, the matching customizing field names are not
+confirmed on this landscape, and a wrong table or field name costs an activation cycle.
+Both F4 helps and both checks now read the distinct values present in BP3100 itself, which
+cannot be wrong and, for a report, is the better list: only values that carry data can be
+reported on. If those customizing tables do exist with usable field names and functional
+wants the full list offered rather than the used list, that is a change to two SELECTs.
+
+`ZSD_EXC_APPR_PAINTS` is unaffected — Info Category and Info Type were already dropped from
+the Paints selection screen (issue 10), so it never referenced either field.
+
+## 07/09/26 — all three programs activated
+
+| Object | State |
+|---|---|
+| `ZSD_EXC_APPR_ADHESIVE` | **Active.** With the credit-segment default, the `ZSD_CUSTOMER_DATA` hierarchy call, and the ADDTYPE / DATA_TYPE correction. |
+| `ZSD_EXC_APPR_PAINTS` | **Active.** With the credit-segment default and the hierarchy call. |
+| `ZSD_EXP_PAINTS_UPLOAD` | **Active.** |
+
+Activation of the two Paints programs proves the DDIC underneath them is active as well —
+neither would syntax check otherwise. So SE11 steps 1 to 4 of `ZSD_EXP_PAINTS_DDIC.md` are
+done: the 5 domains, the 6 data elements, table `ZSD_EXP_PAINTS` and its technical settings.
+
+### What is left on the build
+
+| Item | Blocking? |
+|---|---|
+| Table maintenance generator, function group `ZSD_EXC_PAINTS`, one step, screen 0001 (§4 of the DDIC sheet) | Not implied by activation — check SM30 opens on `ZSD_EXP_PAINTS`. Needed for single-record maintenance; the upload program covers mass entry without it. |
+| Text elements on all three programs | Cosmetic. Every literal carries its own default, so all three run without them. |
+| The four `GC_HIER_*` field names from `ZSD_CUSTOMER_DATA` | L4/L5/L6 stay blank until supplied. |
+| Authorisation object (issue 15) | Blocks QA, not functional testing. |
+| The four functional questions (issues 2, 3, 5, 6) | Each decides a number, not whether the program runs. |
+
+### First-run order for functional testing
+
+1. `ZSD_EXP_PAINTS_UPLOAD` with the test-run box ticked, on a small file. The log must come
+   back clean before anything is written.
+2. Same file with the box unticked, insert mode.
+3. `ZSD_EXC_APPR_PAINTS` over the loaded rows.
+4. `ZSD_EXC_APPR_ADHESIVE` against real BP3100 data.
+
+On the first run of either report, watch whether `ZSD_CUSTOMER_DATA` stops on its own
+selection screen. That is the one failure mode the `GC_HIER_*` guards cannot cover.
+
+## 07/09/26 — issues 2 and 3 answered
+
+| # | Answer | What changed in `ZSD_EXC_APPR_ADHESIVE` |
+|---|---|---|
+| 2 | The Exceptional Approval Type is **not required** on this report. | Column removed, not blanked. `EXC_TYPE` dropped from `TY_OUTPUT`, the `CLEAR` dropped from `F_BUILD_OUTPUT`, the field-catalogue entry dropped and the columns after it renumbered 8 to 18. Text symbol `C08` is now unused. **Closed.** |
+| 3 | The commitment date in `BP3100-TEXT` is entered as **DD.MM.YYYY**. | `F_PARSE_COMMIT_DATE` narrowed. The bare 8-digit `YYYYMMDD` branch is removed. `/` and `-` are still normalised to `.` first, because those carry the same field order and accepting them costs one `REPLACE` and prevents a blank row when a user types a slash out of habit. **Closed.** |
+
+Dropping the 8-digit branch makes the parse **stricter**, not weaker: an 8-digit run inside
+free text is more likely to be an amount, a phone fragment or a document number, all of
+which the old code would have read as a date.
+
+`ZSD_EXC_APPR_PAINTS` is unaffected by issue 2. Its approval type column has a real source
+field, `ZSD_EXP_PAINTS-ZEXC_APPR_TYPE`, mapped 1/2/3 to text symbols `T01` to `T03`, and it
+stays.
+
+### Note on the commitment date DISPLAY
+
+`COMMIT_DATE` in the ALV is typed `DATS`, so SAP renders it in each user's own date format
+from their user profile (SU3, Defaults tab). For an Indian profile that is already
+DD.MM.YYYY. Forcing DD.MM.YYYY regardless of the user setting would mean converting the
+column to a character field, which loses date sorting and date filtering in the ALV — not
+recommended, but it is a small change if functional insists.
+

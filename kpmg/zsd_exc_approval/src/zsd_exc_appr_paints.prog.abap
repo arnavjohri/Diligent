@@ -47,9 +47,11 @@
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
-*&   05.09.2026  Arnav Johri  <TR>  ACDOCA read driven by the partners
-*&                                  that carry an approval (GT_PARTNER)
-*&                                  instead of every customer (GT_CUST)
+*&   07.09.2026  Arnav Johri  <TR>  Credit segment defaulted to 2000
+*&                                  (confirmed by functional). Sales
+*&                                  hierarchy read built as a background
+*&                                  SUBMIT with the source name held in
+*&                                  the GC_HIER_* constants.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_paints.
 
@@ -72,10 +74,10 @@ TYPES: BEGIN OF ty_kunnr,
 
 TYPES ty_t_kunnr TYPE STANDARD TABLE OF ty_kunnr WITH DEFAULT KEY.
 
-* Customer key list. L4/L5/L6 are carried here so that the (stubbed)
-* hierarchy read has somewhere to write once a real source is agreed.
-* The ACDOCA collection read is driven by GT_PARTNER (the customers
-* that carry an approval), not by this table - 05/09/26.
+* Customer key list. F_GET_HIERARCHY writes L4/L5/L6 here after running
+* the hierarchy report; they stay blank while its name is unconfirmed.
+* This is also the driver table for the ACDOCA collection read - build
+* spec 6.3 point 7 fixes FOR ALL ENTRIES IN @gt_cust.
 TYPES: BEGIN OF ty_cust,
          kunnr   TYPE kna1-kunnr,
          l4_name TYPE char40,
@@ -178,6 +180,43 @@ DATA: gt_cust    TYPE ty_t_cust,
 DATA: gv_waers TYPE t001-waers,
       gv_repid TYPE sy-repid.
 
+*BOC By Arnav on 07/09/26
+*&---------------------------------------------------------------------*
+*& Sales hierarchy source - PROGRAM CONFIRMED, FIELD NAMES ARE NOT
+*&---------------------------------------------------------------------*
+* The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
+* 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
+* generic ALV full-screen FUNCTION GROUP, not an executable report.
+* Arnav gave the real source on 07/09/26: ZSD_CUSTOMER_DATA.
+*
+* GC_HIER_PROG is therefore CONFIRMED. The other four are still
+* PLACEHOLDERS - nobody has confirmed what ZSD_CUSTOMER_DATA calls its
+* sales-organisation select-option or its ALV output fields, and this
+* program deliberately does not guess:
+*   GC_HIER_SELNAME  its SELECT-OPTION name for sales organisation
+*   GC_HIER_F_KUNNR  the customer field in its ALV output
+*   GC_HIER_F_L4/5/6 the three level name fields in its ALV output
+*
+* What a wrong placeholder costs, none of it a dump:
+*   GC_HIER_SELNAME wrong - SUBMIT ignores the unknown SELNAME, so the
+*     callee runs unfiltered. Slower, but the merge is on customer key
+*     so the reported names are still right.
+*   GC_HIER_F_KUNNR wrong - nothing maps. F_GET_HIERARCHY says so with
+*     one status message rather than silently showing blank columns.
+*   GC_HIER_F_L4/5/6 wrong - that level comes back blank.
+*
+* To confirm them: run ZSD_CUSTOMER_DATA, then on its ALV use
+* Settings -> Layout -> Current for the technical field names, and F1
+* on its sales organisation field for the select-option name.
+CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
+           gc_hier_selname TYPE rsparams-selname VALUE 'S_VKORG',
+           gc_hier_f_kunnr TYPE dfies-fieldname  VALUE 'KUNNR',
+           gc_hier_f_l4    TYPE dfies-fieldname  VALUE 'L4_NAME',
+           gc_hier_f_l5    TYPE dfies-fieldname  VALUE 'L5_NAME',
+           gc_hier_f_l6    TYPE dfies-fieldname  VALUE 'L6_NAME',
+           gc_subc_report  TYPE trdir-subc       VALUE '1'.
+*EOC By Arnav on 07/09/26
+
 *&---------------------------------------------------------------------*
 *& Selection screen
 *&---------------------------------------------------------------------*
@@ -199,11 +238,23 @@ SELECT-OPTIONS s_vkorg FOR knvv-vkorg OBLIGATORY.
 SELECT-OPTIONS s_spart FOR knvv-spart OBLIGATORY.
 SELECT-OPTIONS s_kvgr1 FOR knvv-kvgr1.
 SELECT-OPTIONS s_kvgr2 FOR knvv-kvgr2.
-* ASSUMPTION (FS deviation 13): the FS names no credit segment, but
-* UKMBP_CMS_SGM is keyed by partner AND credit segment, so CREDIT_LIMIT
-* is ambiguous without one. The segment is therefore asked for on the
-* selection screen. No default is hardcoded - see open issue 16.
-PARAMETERS     p_segmnt TYPE ukmbp_cms_sgm-credit_sgmnt OBLIGATORY.
+*BOC By Arnav on 07/09/26
+* FS deviation 13: the FS names no credit segment, but UKMBP_CMS_SGM is
+* keyed by partner AND credit segment, so CREDIT_LIMIT is ambiguous
+* without one. Functional confirmed segment 2000 on 07/09/26, closing
+* open issue 16. It stays a SELECTION PARAMETER carrying 2000 as its
+* default rather than a constant, so a second segment costs no code
+* change and the tester can see and override what is being read.
+* Kept identical to the Adhesives report on purpose.
+* Old code:
+** ASSUMPTION (FS deviation 13): the FS names no credit segment, but
+** UKMBP_CMS_SGM is keyed by partner AND credit segment, so CREDIT_LIMIT
+** is ambiguous without one. The segment is therefore asked for on the
+** selection screen. No default is hardcoded - see open issue 16.
+**PARAMETERS     p_segmnt TYPE ukmbp_cms_sgm-credit_sgmnt OBLIGATORY.
+PARAMETERS     p_segmnt TYPE ukmbp_cms_sgm-credit_sgmnt OBLIGATORY
+                        DEFAULT '2000'.
+*EOC By Arnav on 07/09/26
 SELECTION-SCREEN END OF BLOCK b2.
 
 * ASSUMPTION (FS deviation 7): the FS names ledger '0L' and document
@@ -432,12 +483,6 @@ FORM f_get_credit_limits.
     RETURN.
   ENDIF.
 
-* ASSUMPTION: UKMBP_CMS_SGM-PARTNER is compared directly with the
-* customer number. That holds only where the business partner number
-* equals the customer number (CVI same-number assignment). If the
-* numbers differ on this landscape, a CVI_CUST_LINK lookup has to be
-* inserted before this read - see open issue 18 (shared with the
-* Adhesives report).
   SELECT partner, credit_sgmnt, credit_limit
     FROM ukmbp_cms_sgm
     FOR ALL ENTRIES IN @gt_partner
@@ -480,28 +525,181 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form F_GET_HIERARCHY
 *&---------------------------------------------------------------------*
-*& STUB - deliberately does nothing. L4/L5/L6 stay blank.
+*& Runs the sales hierarchy report in background and merges its L4/L5/L6
+*& names into the customer list. Source names are the GC_HIER_* block.
 *&---------------------------------------------------------------------*
 FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 
-* ASSUMPTION (FS deviation 1): the FS says "Submit program
-* SAPLSLVC_FULLSCREEN pass VKORG = 1000, 1100, 1200, 1300 fetch L4
-* Name". SAPLSLVC_FULLSCREEN is the generic ALV full-screen function
-* group. It is not a report, it cannot be SUBMITted and it holds no
-* sales hierarchy data, so there is nothing to read. Columns L4_NAME,
-* L5_NAME and L6_NAME are therefore present in the layout but always
-* blank until functional confirms the real source - see open issue 1.
+*BOC By Arnav on 07/09/26
+* Functional confirmed on 07/09/26 that the hierarchy report is to be
+* called in background and its output read, and that the program name
+* printed in the FS is wrong. Arnav gave the real source the same day:
+* ZSD_CUSTOMER_DATA. The call is built in full here, with every source
+* name - the confirmed program and the four placeholders alike - held
+* in the CONSTANTS block GC_HIER_* above. Correcting any of them is a
+* change to that block alone.
 *
-* When the source is confirmed this FORM is the only place that has to
-* change: read the hierarchy for CT_CUST-KUNNR and fill CT_CUST-L4_NAME
-* / L5_NAME / L6_NAME. The candidates raised with functional were the
-* KNVP partner functions, a customer hierarchy (KNVH) and the HR org
-* structure. No table is guessed here on purpose - a wrong guess would
-* ship wrong names to the client rather than blank ones. No SELECT, no
-* SUBMIT and no CALL FUNCTION belongs in this FORM until then.
+* HOW IT WORKS
+*   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
+*      '1' (executable), one status message is issued and L4/L5/L6 stay
+*      blank. No SUBMIT is attempted and nothing dumps.
+*   2. The sales organisations from S_VKORG are passed to the callee in
+*      a RSPARAMS selection table under the name GC_HIER_SELNAME. An
+*      unknown SELNAME is ignored by SUBMIT, it does not dump.
+*   3. CL_SALV_BS_RUNTIME_INFO suppresses the callee display and hands
+*      back its ALV result table, which is read by field NAME through
+*      ASSIGN COMPONENT - so the callee structure need not be known at
+*      compile time.
+*   4. The result is keyed on customer and merged into CT_CUST.
 *
-* Kept equivalent to the Adhesives stub so that both reports can be
-* filled from one confirmed source in one change.
+* ASSUMPTION: ZSD_CUSTOMER_DATA is an ALV report. A classic WRITE list
+* returns no ALV data and lands on message (m09) - blank columns, no dump.
+* ASSUMPTION: ZSD_CUSTOMER_DATA has no OBLIGATORY selection field other
+* than the sales organisation. If it has, SUBMIT stops on its own
+* selection screen and functional must tell us what else to pass. This
+* is the one case that needs watching in functional testing, because the
+* program name is now real and the SUBMIT genuinely runs.
+* Kept identical to the Adhesives stub replacement on purpose, so that
+* one confirmed source fills both reports in one change.
+
+  DATA: lv_subc TYPE trdir-subc,
+        lt_selt TYPE TABLE OF rsparams,
+        ls_selt TYPE rsparams,
+        lr_data TYPE REF TO data,
+        lt_hier TYPE SORTED TABLE OF ty_cust
+                     WITH NON-UNIQUE KEY kunnr,
+        ls_hier TYPE ty_cust,
+        lv_mapped TYPE abap_bool.
+
+  FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
+                 <ls_any>  TYPE any,
+                 <lv_fld>  TYPE any,
+                 <ls_cust> TYPE ty_cust.
+
+* --- 1. the source must exist and be an executable report -------------
+  SELECT SINGLE subc
+    FROM trdir
+    WHERE name = @gc_hier_prog
+    INTO @lv_subc.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Sales hierarchy report not found - L4/L5/L6 left blank'(m07)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  IF lv_subc <> gc_subc_report.
+    MESSAGE 'Hierarchy source is not an executable report - see TS'(m08)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+* --- 2. pass our own sales organisations to the callee -----------------
+  LOOP AT s_vkorg INTO DATA(ls_vkorg).
+    CLEAR ls_selt.
+    ls_selt-selname = gc_hier_selname.
+    ls_selt-kind    = 'S'.
+    ls_selt-sign    = ls_vkorg-sign.
+    ls_selt-option  = ls_vkorg-option.
+    ls_selt-low     = ls_vkorg-low.
+    ls_selt-high    = ls_vkorg-high.
+    APPEND ls_selt TO lt_selt.
+  ENDLOOP.
+
+* --- 3. run it with the display suppressed and take its ALV data -------
+* CLEAR_ALL is called on EVERY path below. If the capture were left
+* armed, the report's OWN ALV in f_display_alv would be swallowed
+* instead of shown.
+  cl_salv_bs_runtime_info=>set( EXPORTING display  = abap_false
+                                          metadata = abap_false
+                                          data     = abap_true ).
+
+  SUBMIT (gc_hier_prog) WITH SELECTION-TABLE lt_selt
+                        AND RETURN.                     "#EC CI_SUBMIT
+
+  TRY.
+      cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = lr_data ).
+    CATCH cx_salv_bs_sc_runtime_info.
+      CLEAR lr_data.
+  ENDTRY.
+
+  cl_salv_bs_runtime_info=>clear_all( ).
+
+  IF lr_data IS NOT BOUND.
+    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  ASSIGN lr_data->* TO <lt_any>.
+  IF <lt_any> IS NOT ASSIGNED.
+    RETURN.
+  ENDIF.
+
+* --- 4. map by field NAME, so the callee structure is not hardcoded ----
+  LOOP AT <lt_any> ASSIGNING <ls_any>.
+
+    CLEAR ls_hier.
+
+    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+    IF sy-subrc = 0.
+      ls_hier-kunnr = <lv_fld>.
+      lv_mapped     = abap_true.
+    ENDIF.
+
+    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+    IF sy-subrc = 0.
+      ls_hier-l4_name = <lv_fld>.
+    ENDIF.
+
+    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+    IF sy-subrc = 0.
+      ls_hier-l5_name = <lv_fld>.
+    ENDIF.
+
+    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+    IF sy-subrc = 0.
+      ls_hier-l6_name = <lv_fld>.
+    ENDIF.
+
+    CHECK ls_hier-kunnr IS NOT INITIAL.
+
+*   The callee may return the customer without leading zeros. CT_CUST
+*   holds the internal KNA1 format, so convert before the key match.
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+      EXPORTING
+        input  = ls_hier-kunnr
+      IMPORTING
+        output = ls_hier-kunnr.
+
+    INSERT ls_hier INTO TABLE lt_hier.
+
+  ENDLOOP.
+
+* GC_HIER_F_KUNNR did not match any component of the callee output, so
+* nothing could be keyed. Say so - a silent blank column would look like
+* missing master data rather than a wrong field name.
+  IF lv_mapped <> abap_true.
+    MESSAGE 'Hierarchy field names do not match the report output'(m10)
+            TYPE 'S' DISPLAY LIKE 'W'.
+    RETURN.
+  ENDIF.
+
+  IF lt_hier IS INITIAL.
+    RETURN.
+  ENDIF.
+
+* --- 5. merge into the customer list ----------------------------------
+  LOOP AT ct_cust ASSIGNING <ls_cust>.
+    READ TABLE lt_hier INTO ls_hier
+         WITH KEY kunnr = <ls_cust>-kunnr.
+    IF sy-subrc = 0.
+      <ls_cust>-l4_name = ls_hier-l4_name.
+      <ls_cust>-l5_name = ls_hier-l5_name.
+      <ls_cust>-l6_name = ls_hier-l6_name.
+    ENDIF.
+  ENDLOOP.
+*EOC By Arnav on 07/09/26
 
 ENDFORM.
 
@@ -522,15 +720,7 @@ FORM f_get_collections.
 
   CLEAR: gt_coll, ls_appr, lv_min_date, lv_max_date.
 
-*BOC By Arnav on 05/09/26
-* The collection lines are needed only for the customers that actually
-* carry an approval (GT_PARTNER), not for every customer of the company
-* code (GT_CUST). GT_PARTNER is a subset of GT_CUST and f_build_output
-* only ever asks for those partners, so the figures are identical - the
-* ACDOCA read is just far smaller.
-*  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
-  IF gt_partner IS INITIAL OR gt_appr IS INITIAL.
-*EOC By Arnav on 05/09/26
+  IF gt_cust IS INITIAL OR gt_appr IS INITIAL.
     RETURN.
   ENDIF.
 
@@ -577,32 +767,19 @@ FORM f_get_collections.
 * ZCOMMIT_DATE - is applied afterwards, in memory, in
 * f_calc_collection, and never here.
 * NOTE: the field list below matches TY_COLL component for component.
-* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_PARTNER-KUNNR,
-* but it is part of the locked WHERE clause in build spec 6.3 point 7
-* and is kept so the code and the contract read the same.
-*BOC By Arnav on 05/09/26
-* Driver table changed from GT_CUST to GT_PARTNER - see the note above.
-*  SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
-*    FROM acdoca
-*    FOR ALL ENTRIES IN @gt_cust
-*    WHERE rldnr  = @p_rldnr
-*      AND rbukrs = @p_bukrs
-*      AND kunnr  = @gt_cust-kunnr
-*      AND budat  BETWEEN @lv_min_date AND @lv_max_date
-*      AND blart IN @s_blart
-*      AND kunnr <> @space
-*    INTO TABLE @gt_coll.
+* NOTE: KUNNR <> SPACE is redundant next to KUNNR = GT_CUST-KUNNR, but
+* it is part of the locked WHERE clause in build spec 6.3 point 7 and
+* is kept so the code and the contract read the same.
   SELECT rbukrs, gjahr, belnr, docln, budat, blart, kunnr, hsl
     FROM acdoca
-    FOR ALL ENTRIES IN @gt_partner
+    FOR ALL ENTRIES IN @gt_cust
     WHERE rldnr  = @p_rldnr
       AND rbukrs = @p_bukrs
-      AND kunnr  = @gt_partner-kunnr
+      AND kunnr  = @gt_cust-kunnr
       AND budat  BETWEEN @lv_min_date AND @lv_max_date
       AND blart IN @s_blart
       AND kunnr <> @space
     INTO TABLE @gt_coll.
-*EOC By Arnav on 05/09/26
 
 * No collection document in the whole window is a normal business
 * result, not an error: every Actual Collection is then zero and the
@@ -755,8 +932,9 @@ FORM f_build_output.
       ls_out-name1 = ls_name-name1.
     ENDIF.
 
-*   L4/L5/L6 come from the customer table, which the stubbed hierarchy
-*   read leaves blank. GT_CUST is sorted by KUNNR.
+*   L4/L5/L6 come from the customer table, filled by f_get_hierarchy.
+*   They stay blank while GC_HIER_PROG names no executable report.
+*   GT_CUST is sorted by KUNNR.
     READ TABLE gt_cust INTO ls_cust
          WITH KEY kunnr = ls_appr-zcustomer BINARY SEARCH.
     IF sy-subrc = 0.
