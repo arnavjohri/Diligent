@@ -16,7 +16,7 @@ this file only adds what the dashboard work established.
 | Backend package `ZPR_DPR_RAP` (18 CDS + 5 DDLX + classes + SD/SB) | customer on-prem S/4, transport OCQK901644 | active; full source in `../docs/ZDPR_RAP_Complete_Source_Code.docx` |
 | ZDPR_Q_PROD_PERF rewritten as classic view + `@OData.publish` | `../zdpr_rap/ZDPR_Q_PROD_PERF.ddls.asddls` (original in `../zdpr_rap/original/`) | activated 16/09/26, service ZDPR_Q_PROD_PERF_CDS registered |
 | Five OData V2 services `ZDPR_Q_*_CDS` | `/IWFND/MAINT_SERVICE`, alias LOCAL | all answer `$metadata` |
-| Fiori Overview Page app `zdprdashboard` | BAS dev space, project `zdprdashboard`; the files that differ from the generator output are in `webapp/` here | six cards render in BAS preview; deployed 17/09/26 to the on-prem ABAP repository as BSP application `ZDPRPRODDASH` (see §6 item 1) |
+| Fiori Overview Page app `zdprdashboard` | BAS dev space, project `zdprdashboard`; the files that differ from the generator output are in `webapp/` here | six cards render in BAS preview; ABAP-repository deploy as BSP `ZDPRPRODDASH` in progress 17/09/26, first runs failed on a TR lock (see §6 item 1) |
 | Step plan, BAS click path, design decisions | `README.md` (this folder) | current |
 | Review document for the senior | `../docs/ZDPR_Dashboard_Review.docx` | generated 16/09/26 from this folder |
 | Mockup the customer-facing design was drawn from | screenshot supplied in chat 16/09/26 (not on disk); described in `README.md` step table and the Word document | — |
@@ -149,16 +149,19 @@ and were not applied: the PROD_PERF result set is `ZDPR_Q_PROD_PERFSet` (not
 
 0. Get backend v16-09 active (ZIP pull or paste 01–11, then DDLX 12–14 in ADT),
    refresh the BAS service models, re-run the preview, do the target check.
-1. Deploy — path changed 17/09/26. The app went to the **on-prem ABAP repository**
-   via `npm run deploy` (`fiori deploy`, ABAP deployment configuration in
-   `ui5-deploy.yaml`), not to Cloud Foundry / Work Zone. Result on the workbench
-   TR: `R3TR WAPA ZDPRPRODDASH` plus two `R3TR SICF` nodes `ZDPRPRODDASH`
-   (`/sap/bc/ui5_ui5/sap/` and `/sap/bc/bsp/sap/`) — that is the complete and
-   expected footprint. Keep `app.transport` in `ui5-deploy.yaml` on that TR;
-   the object can sit in only one open request. Still open: standalone URL
-   check (`/sap/bc/ui5_ui5/sap/zdprproddash/index.html`), then tile / catalog /
-   group in `/UI2/FLPD_CUST` (customizing TR) and PFCG role. The CF / Work Zone
-   guide in `../docs/` is superseded for this app.
+1. Deploy — path changed 17/09/26. The app goes to the **on-prem ABAP
+   repository** via `npm run deploy` (`fiori deploy`, ABAP deployment
+   configuration in `ui5-deploy.yaml`), not to Cloud Foundry / Work Zone; the
+   CF guide in `../docs/` is superseded for this app. State 17/09/26: NOT yet
+   uploaded. The first run reserved `R3TR WAPA ZDPRPRODDASH` + two `R3TR SICF`
+   nodes on workbench TR **OCQK901673** (user SAP_ABAP = destination user) and
+   then failed; later runs used TR OCQK901674 in `ui5-deploy.yaml` and died
+   with HTTP 400 `Object R3TR WAPA ZDPRPRODDASH is already locked in request
+   OCQK901673`. Fix: `app.transport: OCQK901673`, `app.package: ZPR_DPR_RAP`
+   (uppercase), rerun. Success looks like `* Creating new SAPUI5 ABAP
+   repository ZDPRPRODDASH *`, 13 files, `Deployment Successful`. Then the
+   standalone URL check (`/sap/bc/ui5_ui5/sap/zdprproddash/index.html`), then
+   tile / catalog / group in `/UI2/FLPD_CUST` (customizing TR) and PFCG role.
 2. Data check: SE16 ZPRA_T_PRD_TAR, TAR_CODE=TAR_BE, GJAHR=2024,
    PROD_VL_TYPE_CD=NET_PROD — which MONAT exist; then validate cards 1–4 against
    the DPR Excel for a window that has targets.
