@@ -63,6 +63,13 @@
 *&                                  (issue 1). ACDOCA read driven by
 *&                                  the approval partners (GT_PARTNER)
 *&                                  instead of every customer.
+*&   17.09.2026  Arnav Johri  <TR>  Source of ZSD_CUSTOMER_DATA received:
+*&                                  its L4/L5/L6 names are rows of table
+*&                                  ZSD_CUSTEMP_ASSG. That table is now
+*&                                  read directly; the SUBMIT, the ALV
+*&                                  capture and the GC_HIER_* constants
+*&                                  are retired. M07 to M11 no longer
+*&                                  referenced; M12 new.
 *&---------------------------------------------------------------------*
 REPORT zsd_exc_appr_paints.
 
@@ -85,15 +92,21 @@ TYPES: BEGIN OF ty_kunnr,
 
 TYPES ty_t_kunnr TYPE STANDARD TABLE OF ty_kunnr WITH DEFAULT KEY.
 
-* Customer key list. F_GET_HIERARCHY writes L4/L5/L6 here after running
-* the hierarchy report. The ACDOCA collection read is driven by
-* GT_PARTNER (the customers that carry an approval), not by this table
-* - build spec amendment B1, 17/09/26.
+* Customer key list. F_GET_HIERARCHY writes L4/L5/L6 here from table
+* ZSD_CUSTEMP_ASSG - the same rows ZSD_CUSTOMER_DATA shows. A customer
+* without a valid row for a level keeps that level blank.
 TYPES: BEGIN OF ty_cust,
          kunnr   TYPE kna1-kunnr,
-         l4_name TYPE char40,
-         l5_name TYPE char40,
-         l6_name TYPE char40,
+*BOC By Arnav on 17/09/26
+* Typed off the source table so a level name is never truncated.
+* Old code:
+*         l4_name TYPE char40,
+*         l5_name TYPE char40,
+*         l6_name TYPE char40,
+         l4_name TYPE zsd_custemp_assg-lname,
+         l5_name TYPE zsd_custemp_assg-lname,
+         l6_name TYPE zsd_custemp_assg-lname,
+*EOC By Arnav on 17/09/26
        END OF ty_cust.
 
 TYPES ty_t_cust TYPE STANDARD TABLE OF ty_cust WITH DEFAULT KEY.
@@ -149,9 +162,16 @@ TYPES: BEGIN OF ty_coll,
 TYPES: BEGIN OF ty_output,
          kunnr        TYPE kna1-kunnr,
          name1        TYPE kna1-name1,
-         l4_name      TYPE char40,
-         l5_name      TYPE char40,
-         l6_name      TYPE char40,
+*BOC By Arnav on 17/09/26
+* Typed off the source table so a level name is never truncated.
+* Old code:
+*         l4_name      TYPE char40,
+*         l5_name      TYPE char40,
+*         l6_name      TYPE char40,
+         l4_name      TYPE zsd_custemp_assg-lname,
+         l5_name      TYPE zsd_custemp_assg-lname,
+         l6_name      TYPE zsd_custemp_assg-lname,
+*EOC By Arnav on 17/09/26
          exc_month    TYPE char7,
          exc_no       TYPE zsd_exp_paints-zsrn,
          exc_type     TYPE char30,
@@ -191,53 +211,70 @@ DATA: gt_cust    TYPE ty_t_cust,
 DATA: gv_waers TYPE t001-waers,
       gv_repid TYPE sy-repid.
 
-*BOC By Arnav on 07/09/26
-*&---------------------------------------------------------------------*
-*& Sales hierarchy source - PROGRAM CONFIRMED, FIELD NAMES ARE NOT
-*&---------------------------------------------------------------------*
-* The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
-* 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
-* generic ALV full-screen FUNCTION GROUP, not an executable report.
-* Arnav gave the real source on 07/09/26: ZSD_CUSTOMER_DATA.
-*
-* GC_HIER_PROG is therefore CONFIRMED. The other four are still
-* PLACEHOLDERS - nobody has confirmed what ZSD_CUSTOMER_DATA calls its
-* sales-organisation select-option or its ALV output fields, and this
-* program deliberately does not guess:
-*   GC_HIER_SELNAME  its SELECT-OPTION name for sales organisation
-*   GC_HIER_F_KUNNR  the customer field in its ALV output
-*   GC_HIER_F_L4/5/6 the three level name fields in its ALV output
-*
-* What a wrong placeholder costs, none of it a dump:
-*   GC_HIER_SELNAME wrong - SUBMIT ignores the unknown SELNAME, so the
-*     callee runs unfiltered. Slower, but the merge is on customer key
-*     so the reported names are still right.
-*   GC_HIER_F_KUNNR wrong - nothing maps. F_GET_HIERARCHY says so with
-*     one status message rather than silently showing blank columns.
-*   GC_HIER_F_L4/5/6 wrong - that level comes back blank.
-*
-* To confirm them: run ZSD_CUSTOMER_DATA, then on its ALV use
-* Settings -> Layout -> Current for the technical field names, and F1
-* on its sales organisation field for the select-option name.
-CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
-           gc_hier_selname TYPE rsparams-selname VALUE 'S_VKORG',
-           gc_hier_f_kunnr TYPE dfies-fieldname  VALUE 'KUNNR',
-           gc_hier_f_l4    TYPE dfies-fieldname  VALUE 'L4_NAME',
-           gc_hier_f_l5    TYPE dfies-fieldname  VALUE 'L5_NAME',
-           gc_hier_f_l6    TYPE dfies-fieldname  VALUE 'L6_NAME',
-           gc_subc_report  TYPE trdir-subc       VALUE '1'.
-*EOC By Arnav on 07/09/26
-
 *BOC By Arnav on 17/09/26
-* Placeholder for the callee's customer select-option. The customers
-* that carry an approval are passed under this name so that
-* ZSD_CUSTOMER_DATA runs for a handful of customers instead of every
-* customer of the sales organisation. A wrong name is ignored by SUBMIT
-* and only costs that saving; it cannot dump and cannot change a name.
-* Since 17/09/26 the four GC_HIER_F_* names above are also resolved at
-* runtime against the callee's real structure - see f_get_hierarchy
-* step 4 - so a callee that spells them differently still maps.
-CONSTANTS: gc_hier_selkun  TYPE rsparams-selname VALUE 'S_KUNNR'.
+*&---------------------------------------------------------------------*
+*& Sales hierarchy source - TABLE CONFIRMED FROM ZSD_CUSTOMER_DATA
+*&---------------------------------------------------------------------*
+* The source of ZSD_CUSTOMER_DATA (received 17/09/26) shows where its
+* L4/L5/L6 columns come from: table ZSD_CUSTEMP_ASSG, one row per
+* customer and level - LCATEGORY L1 to L6, LNAME the level name,
+* STARTVAL/ENDVAL the validity. That report reads the rows valid on
+* SY-DATUM and copies LNAME into LNAME4/LNAME5/LNAME6. This program
+* now reads the same table the same way, so the background SUBMIT of
+* that report, the ALV capture and the field-name placeholders below
+* are retired. The three level keys are the only source names left.
+* Old code:
+**BOC By Arnav on 07/09/26
+**&---------------------------------------------------------------------*
+**& Sales hierarchy source - PROGRAM CONFIRMED, FIELD NAMES ARE NOT
+**&---------------------------------------------------------------------*
+** The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
+** 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
+** generic ALV full-screen FUNCTION GROUP, not an executable report.
+** Arnav gave the real source on 07/09/26: ZSD_CUSTOMER_DATA.
+**
+** GC_HIER_PROG is therefore CONFIRMED. The other four are still
+** PLACEHOLDERS - nobody has confirmed what ZSD_CUSTOMER_DATA calls its
+** sales-organisation select-option or its ALV output fields, and this
+** program deliberately does not guess:
+**   GC_HIER_SELNAME  its SELECT-OPTION name for sales organisation
+**   GC_HIER_F_KUNNR  the customer field in its ALV output
+**   GC_HIER_F_L4/5/6 the three level name fields in its ALV output
+**
+** What a wrong placeholder costs, none of it a dump:
+**   GC_HIER_SELNAME wrong - SUBMIT ignores the unknown SELNAME, so the
+**     callee runs unfiltered. Slower, but the merge is on customer key
+**     so the reported names are still right.
+**   GC_HIER_F_KUNNR wrong - nothing maps. F_GET_HIERARCHY says so with
+**     one status message rather than silently showing blank columns.
+**   GC_HIER_F_L4/5/6 wrong - that level comes back blank.
+**
+** To confirm them: run ZSD_CUSTOMER_DATA, then on its ALV use
+** Settings -> Layout -> Current for the technical field names, and F1
+** on its sales organisation field for the select-option name.
+*CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DATA',
+*           gc_hier_selname TYPE rsparams-selname VALUE 'S_VKORG',
+*           gc_hier_f_kunnr TYPE dfies-fieldname  VALUE 'KUNNR',
+*           gc_hier_f_l4    TYPE dfies-fieldname  VALUE 'L4_NAME',
+*           gc_hier_f_l5    TYPE dfies-fieldname  VALUE 'L5_NAME',
+*           gc_hier_f_l6    TYPE dfies-fieldname  VALUE 'L6_NAME',
+*           gc_subc_report  TYPE trdir-subc       VALUE '1'.
+**EOC By Arnav on 07/09/26
+
+**BOC By Arnav on 17/09/26
+** Placeholder for the callee's customer select-option. The customers
+** that carry an approval are passed under this name so that
+** ZSD_CUSTOMER_DATA runs for a handful of customers instead of every
+** customer of the sales organisation. A wrong name is ignored by SUBMIT
+** and only costs that saving; it cannot dump and cannot change a name.
+** Since 17/09/26 the four GC_HIER_F_* names above are also resolved at
+** runtime against the callee's real structure - see f_get_hierarchy
+** step 4 - so a callee that spells them differently still maps.
+*CONSTANTS: gc_hier_selkun  TYPE rsparams-selname VALUE 'S_KUNNR'.
+**EOC By Arnav on 17/09/26
+CONSTANTS: gc_lcat_l4 TYPE zsd_custemp_assg-lcategory VALUE 'L4',
+           gc_lcat_l5 TYPE zsd_custemp_assg-lcategory VALUE 'L5',
+           gc_lcat_l6 TYPE zsd_custemp_assg-lcategory VALUE 'L6'.
 *EOC By Arnav on 17/09/26
 
 *&---------------------------------------------------------------------*
@@ -554,374 +591,449 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form F_GET_HIERARCHY
 *&---------------------------------------------------------------------*
-*& Runs the sales hierarchy report in background and merges its L4/L5/L6
-*& names into the customer list. Source names are the GC_HIER_* block.
+*& Reads the L4/L5/L6 names of the approval customers from table
+*& ZSD_CUSTEMP_ASSG, as ZSD_CUSTOMER_DATA does, into the customer list.
 *&---------------------------------------------------------------------*
 FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
 
-*BOC By Arnav on 07/09/26
-* Functional confirmed on 07/09/26 that the hierarchy report is to be
-* called in background and its output read, and that the program name
-* printed in the FS is wrong. Arnav gave the real source the same day:
-* ZSD_CUSTOMER_DATA. The call is built in full here, with every source
-* name - the confirmed program and the four placeholders alike - held
-* in the CONSTANTS block GC_HIER_* above. Correcting any of them is a
-* change to that block alone.
+*BOC By Arnav on 17/09/26
+* Sanjay reported L4/L5/L6 blank on 17/09/26 with the real program name
+* in place, and Arnav supplied the source of ZSD_CUSTOMER_DATA the same
+* day. That report does not compute the levels: it reads table
+* ZSD_CUSTEMP_ASSG for its customers (rows valid on SY-DATUM) and shows
+* LNAME per LCATEGORY as LNAME1 to LNAME6 - which is also why the
+* placeholders L4_NAME/L5_NAME/L6_NAME never matched. Running a 3600
+* line report in background, capturing its ALV and resolving its field
+* names was the long way round to one table read. The read is done
+* here directly, the same way that report does it, so the result is
+* identical and nothing depends on that report's screen, its Z_CT_VKORG
+* authorisation check or its ALV any more.
 *
-* HOW IT WORKS
-*   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
-*      '1' (executable), one status message is issued and L4/L5/L6 stay
-*      blank. No SUBMIT is attempted and nothing dumps.
-*   2. The sales organisations from S_VKORG are passed to the callee in
-*      a RSPARAMS selection table under the name GC_HIER_SELNAME. An
-*      unknown SELNAME is ignored by SUBMIT, it does not dump.
-*   3. CL_SALV_BS_RUNTIME_INFO suppresses the callee display and hands
-*      back its ALV result table, which is read by field NAME through
-*      ASSIGN COMPONENT - so the callee structure need not be known at
-*      compile time.
-*   4. The result is keyed on customer and merged into CT_CUST.
-*
-* ASSUMPTION: ZSD_CUSTOMER_DATA is an ALV report. A classic WRITE list
-* returns no ALV data and lands on message (m09) - blank columns, no dump.
-* ASSUMPTION: ZSD_CUSTOMER_DATA has no OBLIGATORY selection field other
-* than the sales organisation. If it has, SUBMIT stops on its own
-* selection screen and functional must tell us what else to pass. This
-* is the one case that needs watching in functional testing, because the
-* program name is now real and the SUBMIT genuinely runs.
-* Kept identical to the Adhesives stub replacement on purpose, so that
-* one confirmed source fills both reports in one change.
-
-  DATA: lv_subc TYPE trdir-subc,
-        lt_selt TYPE TABLE OF rsparams,
-        ls_selt TYPE rsparams,
-        lr_data TYPE REF TO data,
-        lt_hier TYPE SORTED TABLE OF ty_cust
-                     WITH NON-UNIQUE KEY kunnr,
-        ls_hier TYPE ty_cust,
-        lv_mapped TYPE abap_bool.
-
-*EOC By Arnav on 07/09/26
-*BOC By Arnav on 17/09/26
-  DATA: lo_tab     TYPE REF TO cl_abap_tabledescr,
-        lo_struc   TYPE REF TO cl_abap_structdescr,
-        lt_comp    TYPE abap_compdescr_tab,
-        ls_comp    TYPE abap_compdescr,
-        ls_partner TYPE ty_kunnr,
-        lv_f_kunnr TYPE dfies-fieldname,
-        lv_f_l4    TYPE dfies-fieldname,
-        lv_f_l5    TYPE dfies-fieldname,
-        lv_f_l6    TYPE dfies-fieldname,
-        lv_names   TYPE string,
-        lv_msg     TYPE c LENGTH 200,
-        lv_hits    TYPE i.
-*EOC By Arnav on 17/09/26
-*BOC By Arnav on 07/09/26
-
-  FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
-                 <ls_any>  TYPE any,
-                 <lv_fld>  TYPE any,
-                 <ls_cust> TYPE ty_cust.
-
-* --- 1. the source must exist and be an executable report -------------
-  SELECT SINGLE subc
-    FROM trdir
-    WHERE name = @gc_hier_prog
-    INTO @lv_subc.
-
-  IF sy-subrc <> 0.
-    MESSAGE 'Sales hierarchy report not found - L4/L5/L6 left blank'(m07)
-            TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-  IF lv_subc <> gc_subc_report.
-    MESSAGE 'Hierarchy source is not an executable report - see TS'(m08)
-            TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-* --- 2. pass our own sales organisations to the callee -----------------
-  LOOP AT s_vkorg INTO DATA(ls_vkorg).
-    CLEAR ls_selt.
-    ls_selt-selname = gc_hier_selname.
-    ls_selt-kind    = 'S'.
-    ls_selt-sign    = ls_vkorg-sign.
-    ls_selt-option  = ls_vkorg-option.
-    ls_selt-low     = ls_vkorg-low.
-    ls_selt-high    = ls_vkorg-high.
-    APPEND ls_selt TO lt_selt.
-  ENDLOOP.
-
-*EOC By Arnav on 07/09/26
-*BOC By Arnav on 17/09/26
-* The customers that carry an approval are passed as well, under the
-* placeholder name GC_HIER_SELKUN. A wrong name is ignored by SUBMIT and
-* the callee runs for every customer of the sales organisation, as it
-* did before; a right one makes it run for a handful of customers.
-  LOOP AT gt_partner INTO ls_partner.
-    CLEAR ls_selt.
-    ls_selt-selname = gc_hier_selkun.
-    ls_selt-kind    = 'S'.
-    ls_selt-sign    = 'I'.
-    ls_selt-option  = 'EQ'.
-    ls_selt-low     = ls_partner-kunnr.
-    APPEND ls_selt TO lt_selt.
-  ENDLOOP.
-*EOC By Arnav on 17/09/26
-*BOC By Arnav on 07/09/26
-
-* --- 3. run it with the display suppressed and take its ALV data -------
-* CLEAR_ALL is called on EVERY path below. If the capture were left
-* armed, the report's OWN ALV in f_display_alv would be swallowed
-* instead of shown.
-  cl_salv_bs_runtime_info=>set( EXPORTING display  = abap_false
-                                          metadata = abap_false
-                                          data     = abap_true ).
-
-  SUBMIT (gc_hier_prog) WITH SELECTION-TABLE lt_selt
-                        AND RETURN.                     "#EC CI_SUBMIT
-
-  TRY.
-      cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = lr_data ).
-    CATCH cx_salv_bs_sc_runtime_info.
-      CLEAR lr_data.
-  ENDTRY.
-
-  cl_salv_bs_runtime_info=>clear_all( ).
-
-  IF lr_data IS NOT BOUND.
-    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
-            TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-  ASSIGN lr_data->* TO <lt_any>.
-  IF <lt_any> IS NOT ASSIGNED.
-    RETURN.
-  ENDIF.
-
-* --- 4. resolve the callee's field names, then map by name ------------
-*EOC By Arnav on 07/09/26
-*BOC By Arnav on 17/09/26
-* Sanjay reported on 17/09/26 that L4/L5/L6 stay blank with the real
-* program name in place, so the placeholders in GC_HIER_F_* do not
-* match what ZSD_CUSTOMER_DATA puts out. Until the names are confirmed,
-* each one is resolved at runtime from the callee's own structure:
-*   1. the placeholder itself, if the callee has a field of that name;
-*   2. otherwise the first field whose name CONTAINS the level token
-*      (L4 / L5 / L6), or KUNNR and then CUST for the customer;
-*   3. otherwise nothing.
-* A callee that calls the field ZL5_NAME, NAME_L5 or L5NAME therefore
-* still maps. When the customer, or all three levels, stay unresolved
-* the status message lists the callee's field names, so the real
-* values for GC_HIER_* can be read straight off the tester's screen.
-* Kept identical to the Adhesives report on purpose.
+* ASSUMPTION: the hierarchy is taken as valid TODAY (STARTVAL <= SY-DATUM
+* <= ENDVAL), exactly as ZSD_CUSTOMER_DATA shows it. The FS asks for the
+* names that report shows, not the names as on the approval date.
+* ASSUMPTION: a customer with more than one valid row for the same level
+* gets the last one read, which is what the LOOP in ZSD_CUSTOMER_DATA
+* does as well.
 * Old code:
-**  LOOP AT <lt_any> ASSIGNING <ls_any>.
-**    CLEAR ls_hier.
-**    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
-**    IF sy-subrc = 0.
-**      ls_hier-kunnr = <lv_fld>.
-**      lv_mapped     = abap_true.
-**    ENDIF.
-**    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
-**    IF sy-subrc = 0.
-**      ls_hier-l4_name = <lv_fld>.
-**    ENDIF.
-**    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
-**    IF sy-subrc = 0.
-**      ls_hier-l5_name = <lv_fld>.
-**    ENDIF.
-**    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
-**    IF sy-subrc = 0.
-**      ls_hier-l6_name = <lv_fld>.
-**    ENDIF.
-**    CHECK ls_hier-kunnr IS NOT INITIAL.
-  TRY.
-      lo_tab   ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
-      lo_struc ?= lo_tab->get_table_line_type( ).
-    CATCH cx_sy_move_cast_error.
-      CLEAR lo_struc.
-  ENDTRY.
 
-* The captured data is not a table of structures - nothing to map.
-  IF lo_struc IS NOT BOUND.
-    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+**BOC By Arnav on 07/09/26
+** Functional confirmed on 07/09/26 that the hierarchy report is to be
+** called in background and its output read, and that the program name
+** printed in the FS is wrong. Arnav gave the real source the same day:
+** ZSD_CUSTOMER_DATA. The call is built in full here, with every source
+** name - the confirmed program and the four placeholders alike - held
+** in the CONSTANTS block GC_HIER_* above. Correcting any of them is a
+** change to that block alone.
+**
+** HOW IT WORKS
+**   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
+**      '1' (executable), one status message is issued and L4/L5/L6 stay
+**      blank. No SUBMIT is attempted and nothing dumps.
+**   2. The sales organisations from S_VKORG are passed to the callee in
+**      a RSPARAMS selection table under the name GC_HIER_SELNAME. An
+**      unknown SELNAME is ignored by SUBMIT, it does not dump.
+**   3. CL_SALV_BS_RUNTIME_INFO suppresses the callee display and hands
+**      back its ALV result table, which is read by field NAME through
+**      ASSIGN COMPONENT - so the callee structure need not be known at
+**      compile time.
+**   4. The result is keyed on customer and merged into CT_CUST.
+**
+** ASSUMPTION: ZSD_CUSTOMER_DATA is an ALV report. A classic WRITE list
+** returns no ALV data and lands on message (m09) - blank columns, no dump.
+** ASSUMPTION: ZSD_CUSTOMER_DATA has no OBLIGATORY selection field other
+** than the sales organisation. If it has, SUBMIT stops on its own
+** selection screen and functional must tell us what else to pass. This
+** is the one case that needs watching in functional testing, because the
+** program name is now real and the SUBMIT genuinely runs.
+** Kept identical to the Adhesives stub replacement on purpose, so that
+** one confirmed source fills both reports in one change.
+
+*  DATA: lv_subc TYPE trdir-subc,
+*        lt_selt TYPE TABLE OF rsparams,
+*        ls_selt TYPE rsparams,
+*        lr_data TYPE REF TO data,
+*        lt_hier TYPE SORTED TABLE OF ty_cust
+*                     WITH NON-UNIQUE KEY kunnr,
+*        ls_hier TYPE ty_cust,
+*        lv_mapped TYPE abap_bool.
+
+**EOC By Arnav on 07/09/26
+**BOC By Arnav on 17/09/26
+*  DATA: lo_tab     TYPE REF TO cl_abap_tabledescr,
+*        lo_struc   TYPE REF TO cl_abap_structdescr,
+*        lt_comp    TYPE abap_compdescr_tab,
+*        ls_comp    TYPE abap_compdescr,
+*        ls_partner TYPE ty_kunnr,
+*        lv_f_kunnr TYPE dfies-fieldname,
+*        lv_f_l4    TYPE dfies-fieldname,
+*        lv_f_l5    TYPE dfies-fieldname,
+*        lv_f_l6    TYPE dfies-fieldname,
+*        lv_names   TYPE string,
+*        lv_msg     TYPE c LENGTH 200,
+*        lv_hits    TYPE i.
+**EOC By Arnav on 17/09/26
+**BOC By Arnav on 07/09/26
+
+*  FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
+*                 <ls_any>  TYPE any,
+*                 <lv_fld>  TYPE any,
+*                 <ls_cust> TYPE ty_cust.
+
+** --- 1. the source must exist and be an executable report -------------
+*  SELECT SINGLE subc
+*    FROM trdir
+*    WHERE name = @gc_hier_prog
+*    INTO @lv_subc.
+
+*  IF sy-subrc <> 0.
+*    MESSAGE 'Sales hierarchy report not found - L4/L5/L6 left blank'(m07)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  IF lv_subc <> gc_subc_report.
+*    MESSAGE 'Hierarchy source is not an executable report - see TS'(m08)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+** --- 2. pass our own sales organisations to the callee -----------------
+*  LOOP AT s_vkorg INTO DATA(ls_vkorg).
+*    CLEAR ls_selt.
+*    ls_selt-selname = gc_hier_selname.
+*    ls_selt-kind    = 'S'.
+*    ls_selt-sign    = ls_vkorg-sign.
+*    ls_selt-option  = ls_vkorg-option.
+*    ls_selt-low     = ls_vkorg-low.
+*    ls_selt-high    = ls_vkorg-high.
+*    APPEND ls_selt TO lt_selt.
+*  ENDLOOP.
+
+**EOC By Arnav on 07/09/26
+**BOC By Arnav on 17/09/26
+** The customers that carry an approval are passed as well, under the
+** placeholder name GC_HIER_SELKUN. A wrong name is ignored by SUBMIT and
+** the callee runs for every customer of the sales organisation, as it
+** did before; a right one makes it run for a handful of customers.
+*  LOOP AT gt_partner INTO ls_partner.
+*    CLEAR ls_selt.
+*    ls_selt-selname = gc_hier_selkun.
+*    ls_selt-kind    = 'S'.
+*    ls_selt-sign    = 'I'.
+*    ls_selt-option  = 'EQ'.
+*    ls_selt-low     = ls_partner-kunnr.
+*    APPEND ls_selt TO lt_selt.
+*  ENDLOOP.
+**EOC By Arnav on 17/09/26
+**BOC By Arnav on 07/09/26
+
+** --- 3. run it with the display suppressed and take its ALV data -------
+** CLEAR_ALL is called on EVERY path below. If the capture were left
+** armed, the report's OWN ALV in f_display_alv would be swallowed
+** instead of shown.
+*  cl_salv_bs_runtime_info=>set( EXPORTING display  = abap_false
+*                                          metadata = abap_false
+*                                          data     = abap_true ).
+
+*  SUBMIT (gc_hier_prog) WITH SELECTION-TABLE lt_selt
+*                        AND RETURN.                     "#EC CI_SUBMIT
+
+*  TRY.
+*      cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = lr_data ).
+*    CATCH cx_salv_bs_sc_runtime_info.
+*      CLEAR lr_data.
+*  ENDTRY.
+
+*  cl_salv_bs_runtime_info=>clear_all( ).
+
+*  IF lr_data IS NOT BOUND.
+*    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  ASSIGN lr_data->* TO <lt_any>.
+*  IF <lt_any> IS NOT ASSIGNED.
+*    RETURN.
+*  ENDIF.
+
+** --- 4. resolve the callee's field names, then map by name ------------
+**EOC By Arnav on 07/09/26
+**BOC By Arnav on 17/09/26
+** Sanjay reported on 17/09/26 that L4/L5/L6 stay blank with the real
+** program name in place, so the placeholders in GC_HIER_F_* do not
+** match what ZSD_CUSTOMER_DATA puts out. Until the names are confirmed,
+** each one is resolved at runtime from the callee's own structure:
+**   1. the placeholder itself, if the callee has a field of that name;
+**   2. otherwise the first field whose name CONTAINS the level token
+**      (L4 / L5 / L6), or KUNNR and then CUST for the customer;
+**   3. otherwise nothing.
+** A callee that calls the field ZL5_NAME, NAME_L5 or L5NAME therefore
+** still maps. When the customer, or all three levels, stay unresolved
+** the status message lists the callee's field names, so the real
+** values for GC_HIER_* can be read straight off the tester's screen.
+** Kept identical to the Adhesives report on purpose.
+** Old code:
+***  LOOP AT <lt_any> ASSIGNING <ls_any>.
+***    CLEAR ls_hier.
+***    ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+***    IF sy-subrc = 0.
+***      ls_hier-kunnr = <lv_fld>.
+***      lv_mapped     = abap_true.
+***    ENDIF.
+***    ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+***    IF sy-subrc = 0.
+***      ls_hier-l4_name = <lv_fld>.
+***    ENDIF.
+***    ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+***    IF sy-subrc = 0.
+***      ls_hier-l5_name = <lv_fld>.
+***    ENDIF.
+***    ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+***    IF sy-subrc = 0.
+***      ls_hier-l6_name = <lv_fld>.
+***    ENDIF.
+***    CHECK ls_hier-kunnr IS NOT INITIAL.
+*  TRY.
+*      lo_tab   ?= cl_abap_typedescr=>describe_by_data_ref( lr_data ).
+*      lo_struc ?= lo_tab->get_table_line_type( ).
+*    CATCH cx_sy_move_cast_error.
+*      CLEAR lo_struc.
+*  ENDTRY.
+
+** The captured data is not a table of structures - nothing to map.
+*  IF lo_struc IS NOT BOUND.
+*    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  lt_comp = lo_struc->components.
+
+*  PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'KUNNR'
+*                       CHANGING lv_f_kunnr.
+*  IF lv_f_kunnr IS INITIAL.
+*    PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'CUST'
+*                         CHANGING lv_f_kunnr.
+*  ENDIF.
+*  PERFORM f_hier_field USING    lt_comp gc_hier_f_l4 'L4'
+*                       CHANGING lv_f_l4.
+*  PERFORM f_hier_field USING    lt_comp gc_hier_f_l5 'L5'
+*                       CHANGING lv_f_l5.
+*  PERFORM f_hier_field USING    lt_comp gc_hier_f_l6 'L6'
+*                       CHANGING lv_f_l6.
+
+** The callee's own field names, for the two messages below - the
+** fastest way to get the real GC_HIER_* values off a tester's screen.
+*  LOOP AT lt_comp INTO ls_comp.
+*    IF lv_names IS INITIAL.
+*      lv_names = ls_comp-name.
+*    ELSE.
+*      lv_names = |{ lv_names } { ls_comp-name }|.
+*    ENDIF.
+*  ENDLOOP.
+
+*  IF lv_f_kunnr IS INITIAL.
+*    lv_msg = 'Hierarchy field names do not match the report output'(m10).
+*    lv_msg = |{ lv_msg }: { lv_names }|.
+*    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  IF lv_f_l4 IS INITIAL AND lv_f_l5 IS INITIAL AND lv_f_l6 IS INITIAL.
+*    lv_msg = 'Hierarchy level fields not found in the report output'(m11).
+*    lv_msg = |{ lv_msg }: { lv_names }|.
+*    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+** The callee ran but produced no rows for this selection. Nothing to
+** map, and not a field-name problem - say which.
+*  IF <lt_any> IS INITIAL.
+*    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  LOOP AT <lt_any> ASSIGNING <ls_any>.
+
+*    CLEAR ls_hier.
+
+*    ASSIGN COMPONENT lv_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+*    IF sy-subrc = 0.
+*      ls_hier-kunnr = <lv_fld>.
+**     Only a filled customer counts as mapped - a resolved field that
+**     is empty on every row keys nothing, and the check below says so.
+*      IF <lv_fld> IS NOT INITIAL.
+*        lv_mapped = abap_true.
+*      ENDIF.
+*    ENDIF.
+
+*    IF lv_f_l4 IS NOT INITIAL.
+*      ASSIGN COMPONENT lv_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+*      IF sy-subrc = 0.
+*        ls_hier-l4_name = <lv_fld>.
+*      ENDIF.
+*    ENDIF.
+
+*    IF lv_f_l5 IS NOT INITIAL.
+*      ASSIGN COMPONENT lv_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+*      IF sy-subrc = 0.
+*        ls_hier-l5_name = <lv_fld>.
+*      ENDIF.
+*    ENDIF.
+
+*    IF lv_f_l6 IS NOT INITIAL.
+*      ASSIGN COMPONENT lv_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+*      IF sy-subrc = 0.
+*        ls_hier-l6_name = <lv_fld>.
+*      ENDIF.
+*    ENDIF.
+
+*    CHECK ls_hier-kunnr IS NOT INITIAL.
+**EOC By Arnav on 17/09/26
+**BOC By Arnav on 07/09/26
+
+**   The callee may return the customer without leading zeros. CT_CUST
+**   holds the internal KNA1 format, so convert before the key match.
+*    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+*      EXPORTING
+*        input  = ls_hier-kunnr
+*      IMPORTING
+*        output = ls_hier-kunnr.
+
+*    INSERT ls_hier INTO TABLE lt_hier.
+
+*  ENDLOOP.
+
+** The customer field resolved but was empty on every row, so nothing
+** could be keyed. Say so - a silent blank column would look like
+** missing master data rather than a wrong field name.
+*  IF lv_mapped <> abap_true.
+*    MESSAGE 'Hierarchy field names do not match the report output'(m10)
+*            TYPE 'S' DISPLAY LIKE 'W'.
+*    RETURN.
+*  ENDIF.
+
+*  IF lt_hier IS INITIAL.
+*    RETURN.
+*  ENDIF.
+
+** --- 5. merge into the customer list ----------------------------------
+*  LOOP AT ct_cust ASSIGNING <ls_cust>.
+*    READ TABLE lt_hier INTO ls_hier
+*         WITH KEY kunnr = <ls_cust>-kunnr.
+*    IF sy-subrc = 0.
+*      <ls_cust>-l4_name = ls_hier-l4_name.
+*      <ls_cust>-l5_name = ls_hier-l5_name.
+*      <ls_cust>-l6_name = ls_hier-l6_name.
+*      lv_hits = lv_hits + 1.                  "Changes by Arnav on 17/09/26
+*    ENDIF.
+*  ENDLOOP.
+**EOC By Arnav on 07/09/26
+
+**BOC By Arnav on 17/09/26
+** Every field resolved and the callee returned rows, yet not one of
+** them keyed to a customer on this report. Either the customer field
+** the token search picked is the wrong one (a name, not a number) or
+** the callee reports a different customer set. Say so, with the
+** callee's field names, instead of leaving blank columns.
+*  IF lv_hits = 0.
+*    lv_msg = 'Hierarchy field names do not match the report output'(m10).
+*    lv_msg = |{ lv_msg }: { lv_names }|.
+*    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
+*  ENDIF.
+**EOC By Arnav on 17/09/26
+
+  TYPES: BEGIN OF lty_assg,
+           kunnr     TYPE zsd_custemp_assg-kunnr,
+           lcategory TYPE zsd_custemp_assg-lcategory,
+           lname     TYPE zsd_custemp_assg-lname,
+         END OF lty_assg.
+
+  DATA: lt_assg TYPE SORTED TABLE OF lty_assg
+                     WITH NON-UNIQUE KEY kunnr,
+        ls_assg TYPE lty_assg.
+
+  FIELD-SYMBOLS <ls_cust> TYPE ty_cust.
+
+* Only the customers that carry an approval are ever shown, so only
+* they are asked for.
+  IF gt_partner IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  SELECT kunnr, lcategory, lname
+    FROM zsd_custemp_assg
+    FOR ALL ENTRIES IN @gt_partner
+    WHERE kunnr     = @gt_partner-kunnr
+      AND lcategory IN ( @gc_lcat_l4, @gc_lcat_l5, @gc_lcat_l6 )
+      AND startval <= @sy-datum
+      AND endval   >= @sy-datum
+    INTO TABLE @lt_assg.
+
+* Nothing maintained for any of them: say so, instead of leaving three
+* blank columns that look like a program fault.
+  IF sy-subrc <> 0.
+    MESSAGE 'No sales hierarchy maintained for the selected customers'(m12)
             TYPE 'S' DISPLAY LIKE 'W'.
     RETURN.
   ENDIF.
 
-  lt_comp = lo_struc->components.
-
-  PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'KUNNR'
-                       CHANGING lv_f_kunnr.
-  IF lv_f_kunnr IS INITIAL.
-    PERFORM f_hier_field USING    lt_comp gc_hier_f_kunnr 'CUST'
-                         CHANGING lv_f_kunnr.
-  ENDIF.
-  PERFORM f_hier_field USING    lt_comp gc_hier_f_l4 'L4'
-                       CHANGING lv_f_l4.
-  PERFORM f_hier_field USING    lt_comp gc_hier_f_l5 'L5'
-                       CHANGING lv_f_l5.
-  PERFORM f_hier_field USING    lt_comp gc_hier_f_l6 'L6'
-                       CHANGING lv_f_l6.
-
-* The callee's own field names, for the two messages below - the
-* fastest way to get the real GC_HIER_* values off a tester's screen.
-  LOOP AT lt_comp INTO ls_comp.
-    IF lv_names IS INITIAL.
-      lv_names = ls_comp-name.
-    ELSE.
-      lv_names = |{ lv_names } { ls_comp-name }|.
-    ENDIF.
-  ENDLOOP.
-
-  IF lv_f_kunnr IS INITIAL.
-    lv_msg = 'Hierarchy field names do not match the report output'(m10).
-    lv_msg = |{ lv_msg }: { lv_names }|.
-    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-  IF lv_f_l4 IS INITIAL AND lv_f_l5 IS INITIAL AND lv_f_l6 IS INITIAL.
-    lv_msg = 'Hierarchy level fields not found in the report output'(m11).
-    lv_msg = |{ lv_msg }: { lv_names }|.
-    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-* The callee ran but produced no rows for this selection. Nothing to
-* map, and not a field-name problem - say which.
-  IF <lt_any> IS INITIAL.
-    MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m09)
-            TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-  LOOP AT <lt_any> ASSIGNING <ls_any>.
-
-    CLEAR ls_hier.
-
-    ASSIGN COMPONENT lv_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
-    IF sy-subrc = 0.
-      ls_hier-kunnr = <lv_fld>.
-*     Only a filled customer counts as mapped - a resolved field that
-*     is empty on every row keys nothing, and the check below says so.
-      IF <lv_fld> IS NOT INITIAL.
-        lv_mapped = abap_true.
-      ENDIF.
-    ENDIF.
-
-    IF lv_f_l4 IS NOT INITIAL.
-      ASSIGN COMPONENT lv_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
-      IF sy-subrc = 0.
-        ls_hier-l4_name = <lv_fld>.
-      ENDIF.
-    ENDIF.
-
-    IF lv_f_l5 IS NOT INITIAL.
-      ASSIGN COMPONENT lv_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
-      IF sy-subrc = 0.
-        ls_hier-l5_name = <lv_fld>.
-      ENDIF.
-    ENDIF.
-
-    IF lv_f_l6 IS NOT INITIAL.
-      ASSIGN COMPONENT lv_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
-      IF sy-subrc = 0.
-        ls_hier-l6_name = <lv_fld>.
-      ENDIF.
-    ENDIF.
-
-    CHECK ls_hier-kunnr IS NOT INITIAL.
-*EOC By Arnav on 17/09/26
-*BOC By Arnav on 07/09/26
-
-*   The callee may return the customer without leading zeros. CT_CUST
-*   holds the internal KNA1 format, so convert before the key match.
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
-      EXPORTING
-        input  = ls_hier-kunnr
-      IMPORTING
-        output = ls_hier-kunnr.
-
-    INSERT ls_hier INTO TABLE lt_hier.
-
-  ENDLOOP.
-
-* The customer field resolved but was empty on every row, so nothing
-* could be keyed. Say so - a silent blank column would look like
-* missing master data rather than a wrong field name.
-  IF lv_mapped <> abap_true.
-    MESSAGE 'Hierarchy field names do not match the report output'(m10)
-            TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-  IF lt_hier IS INITIAL.
-    RETURN.
-  ENDIF.
-
-* --- 5. merge into the customer list ----------------------------------
   LOOP AT ct_cust ASSIGNING <ls_cust>.
-    READ TABLE lt_hier INTO ls_hier
-         WITH KEY kunnr = <ls_cust>-kunnr.
-    IF sy-subrc = 0.
-      <ls_cust>-l4_name = ls_hier-l4_name.
-      <ls_cust>-l5_name = ls_hier-l5_name.
-      <ls_cust>-l6_name = ls_hier-l6_name.
-      lv_hits = lv_hits + 1.                  "Changes by Arnav on 17/09/26
-    ENDIF.
+    LOOP AT lt_assg INTO ls_assg WHERE kunnr = <ls_cust>-kunnr.
+      CASE ls_assg-lcategory.
+        WHEN gc_lcat_l4.
+          <ls_cust>-l4_name = ls_assg-lname.
+        WHEN gc_lcat_l5.
+          <ls_cust>-l5_name = ls_assg-lname.
+        WHEN gc_lcat_l6.
+          <ls_cust>-l6_name = ls_assg-lname.
+      ENDCASE.
+    ENDLOOP.
   ENDLOOP.
-*EOC By Arnav on 07/09/26
-
-*BOC By Arnav on 17/09/26
-* Every field resolved and the callee returned rows, yet not one of
-* them keyed to a customer on this report. Either the customer field
-* the token search picked is the wrong one (a name, not a number) or
-* the callee reports a different customer set. Say so, with the
-* callee's field names, instead of leaving blank columns.
-  IF lv_hits = 0.
-    lv_msg = 'Hierarchy field names do not match the report output'(m10).
-    lv_msg = |{ lv_msg }: { lv_names }|.
-    MESSAGE lv_msg TYPE 'S' DISPLAY LIKE 'W'.
-  ENDIF.
 *EOC By Arnav on 17/09/26
 
 ENDFORM.
 
 *BOC By Arnav on 17/09/26
-*&---------------------------------------------------------------------*
-*& Form F_HIER_FIELD
-*&---------------------------------------------------------------------*
-*& Resolves one field of the hierarchy report's output: the exact
-*& placeholder name if the callee has it, otherwise the first component
-*& whose name contains the token, otherwise initial. Helper for
-*& f_get_hierarchy only.
-*&---------------------------------------------------------------------*
-FORM f_hier_field  USING    it_comp  TYPE abap_compdescr_tab
-                            iv_exact TYPE dfies-fieldname
-                            iv_token TYPE clike
-                   CHANGING cv_name  TYPE dfies-fieldname.
+* F_HIER_FIELD resolved the field names of the captured ALV. Retired the
+* same day, together with the SUBMIT it served - see f_get_hierarchy.
+* Old code:
+**BOC By Arnav on 17/09/26
+**&---------------------------------------------------------------------*
+**& Form F_HIER_FIELD
+**&---------------------------------------------------------------------*
+**& Resolves one field of the hierarchy report's output: the exact
+**& placeholder name if the callee has it, otherwise the first component
+**& whose name contains the token, otherwise initial. Helper for
+**& f_get_hierarchy only.
+**&---------------------------------------------------------------------*
+*FORM f_hier_field  USING    it_comp  TYPE abap_compdescr_tab
+*                            iv_exact TYPE dfies-fieldname
+*                            iv_token TYPE clike
+*                   CHANGING cv_name  TYPE dfies-fieldname.
 
-  DATA ls_comp TYPE abap_compdescr.
+*  DATA ls_comp TYPE abap_compdescr.
 
-  CLEAR cv_name.
+*  CLEAR cv_name.
 
-  READ TABLE it_comp INTO ls_comp WITH KEY name = iv_exact.
-  IF sy-subrc = 0.
-    cv_name = ls_comp-name.
-    RETURN.
-  ENDIF.
+*  READ TABLE it_comp INTO ls_comp WITH KEY name = iv_exact.
+*  IF sy-subrc = 0.
+*    cv_name = ls_comp-name.
+*    RETURN.
+*  ENDIF.
 
-  LOOP AT it_comp INTO ls_comp.
-    IF ls_comp-name CS iv_token.
-      cv_name = ls_comp-name.
-      RETURN.
-    ENDIF.
-  ENDLOOP.
+*  LOOP AT it_comp INTO ls_comp.
+*    IF ls_comp-name CS iv_token.
+*      cv_name = ls_comp-name.
+*      RETURN.
+*    ENDIF.
+*  ENDLOOP.
 
-ENDFORM.
+*ENDFORM.
+**EOC By Arnav on 17/09/26
 *EOC By Arnav on 17/09/26
 
 *&---------------------------------------------------------------------*
@@ -1182,7 +1294,7 @@ FORM f_build_output.
     ENDIF.
 
 *   L4/L5/L6 come from the customer table, filled by f_get_hierarchy.
-*   They stay blank while GC_HIER_PROG names no executable report.
+*   A customer with no ZSD_CUSTEMP_ASSG row valid today keeps them blank.
 *   GT_CUST is sorted by KUNNR.
     READ TABLE gt_cust INTO ls_cust
          WITH KEY kunnr = ls_appr-zcustomer BINARY SEARCH.

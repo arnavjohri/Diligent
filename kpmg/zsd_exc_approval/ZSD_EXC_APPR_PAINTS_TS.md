@@ -36,9 +36,9 @@ XML in `src/` was regenerated and the ZIP rebuilt (`ZIP_IMPORT_NOTES.md`). Marke
 `*BOC By Arnav on 05/09/26` in the source; `BUILD_SPEC_141B.md` §7a, `ISSUES.md` #18, #22.
 The upload program was reviewed on the same day and is unchanged.
 
-Revision 17.09.2026: `F_GET_HIERARCHY` resolves the `ZSD_CUSTOMER_DATA` field names at
-runtime and lists the callee's fields in its status message when nothing maps (6.3.6,
-`ISSUES.md` #26; text symbol `M11` new); the approval customers are passed to the callee.
+Revision 17.09.2026: `F_GET_HIERARCHY` reads L4/L5/L6 directly from `ZSD_CUSTEMP_ASSG`,
+the table `ZSD_CUSTOMER_DATA` shows them from; the SUBMIT and ALV capture are retired
+(6.3.6, `ISSUES.md` #27; text symbol `M12` new, `M07`–`M11` no longer referenced).
 Upload: no `ROLLBACK` after `COMMIT WORK AND WAIT`, a follow-on failure is reported in the
 summary instead (`M06`); amounts with more than two decimals rejected (`ISSUES.md` #25).
 Marked `*BOC By Arnav on 17/09/26` in the source.
@@ -286,7 +286,8 @@ checked — their customizing/check tables are not confirmed on this landscape.
 | `T001` | company-code currency (ALV currency reference); `P_BUKRS` check | `F_GET_COMPANY_CURRENCY`; selection-screen validation |
 | `ACDOCA` | collection document lines for the Actual Collection figure | `F_GET_COLLECTIONS` |
 
-No sales-hierarchy table is read for L4/L5/L6 — see 6.3.6.
+L4/L5/L6 are read from `ZSD_CUSTEMP_ASSG` (level name per customer and level, valid today),
+the table `ZSD_CUSTOMER_DATA` shows them from — see 6.3.6.
 
 ### 6.3 Processing logic
 
@@ -339,50 +340,27 @@ One `SELECT SINGLE T001-WAERS` for `P_BUKRS` — the currency shown against ever
 column. `P_BUKRS` is already validated on the selection screen, so this is a defensive
 fallback; failure shows a warning and the report still runs.
 
-#### 6.3.6 `F_GET_HIERARCHY` — background call to the hierarchy report
+#### 6.3.6 `F_GET_HIERARCHY` — L4/L5/L6 from `ZSD_CUSTEMP_ASSG`
 
-Functional confirmed on 07/09/26 that the hierarchy report is to be run in background and
-its output read, and that the program name printed in the FS is wrong and will be
-corrected. The call is therefore built in full:
+Identical to the Adhesives FORM (`ZSD_EXC_APPR_ADHESIVE_TS.md` §5.6), so both reports fill
+from one source in one change. In short: the sales hierarchy report `ZSD_CUSTOMER_DATA`
+(source received 17/09/26) shows its L4/L5/L6 names from table `ZSD_CUSTEMP_ASSG` — one
+row per customer and level, `LCATEGORY` `L1`–`L6`, `LNAME` the name, `STARTVAL`/`ENDVAL` the
+validity, rows valid on `SY-DATUM`. This FORM reads the same table the same way for the
+approval partners (`GT_PARTNER`, `FOR ALL ENTRIES` behind an `IS NOT INITIAL` guard),
+levels `L4`/`L5`/`L6` only, and copies `LNAME` into the customer list by level. No row for
+any partner: status message M12 "No sales hierarchy maintained for the selected
+customers", columns blank, report continues. A customer without a valid row for a level
+keeps that level blank; a duplicated level takes the last valid row, as the callee does.
 
-1. `TRDIR` is read for `GC_HIER_PROG` (`ZSD_CUSTOMER_DATA`). Unless it exists **and** is
-   `SUBC = '1'` (executable), the FORM issues one status message and returns with the
-   columns blank, and no `SUBMIT` is attempted.
-2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
-   under the name `GC_HIER_SELNAME`.
-3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
-   with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result is
-   taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own ALV is
-   never swallowed by a capture left armed.
-4. The callee's structure is read with RTTI and the four field names are **resolved at
-   runtime** (17/09/26, helper `F_HIER_FIELD`): the `GC_HIER_F_*` placeholder if the callee
-   has a field of that exact name, otherwise the first field whose name contains the level
-   token `L4` / `L5` / `L6`, or `KUNNR` and then `CUST` for the customer. Rows are then read
-   through `ASSIGN COMPONENT` with the resolved names and merged into `GT_CUST` on customer
-   number after `CONVERSION_EXIT_ALPHA_INPUT`. The approval partners are passed to the
-   callee as well, under the placeholder selection name `GC_HIER_SELKUN` (`S_KUNNR`).
+Constants `GC_LCAT_L4/5/6` are the only source names. The level-name fields of `TY_CUST`
+and `TY_OUTPUT` are typed off `ZSD_CUSTEMP_ASSG-LNAME`.
 
-All six source names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
-selection screen. Correcting any of them is a change to that block and nothing else.
-
-**Program name confirmed 07/09/26.** `GC_HIER_PROG` is `ZSD_CUSTOMER_DATA`, not the
-`SAPLSLVC_FULLSCREEN` the FS printed. That name was the generic ALV full-screen function
-group, `TRDIR` type `F`, which is neither a report nor `SUBMIT`-able. The guard now passes
-and the call genuinely runs.
-
-**Functional testing, 17/09/26.** The Adhesives report showed L4/L5/L6 blank with the real
-program name in place: the callee runs but names its columns differently from the
-placeholders. The runtime resolution above answers that for any sensible naming, and where
-it still cannot map the FORM says what it saw: M09 when the callee returns no rows, M10 with
-the callee's field names when no customer field resolves or no callee row keys to a report
-customer, the new M11 with the callee's field names when no level field resolves. The
-message text is enough to set the `GC_HIER_*` constants. The two select-option names stay
-placeholders; a wrong one costs an unfiltered run, nothing else. `ISSUES.md` #26.
-
-**Watch in functional testing.** If `ZSD_CUSTOMER_DATA` carries an obligatory selection
-field other than sales organisation, the `SUBMIT` stops on its own selection screen. That is
-the one case the guards cannot cover, because its screen is not known here. Kept structurally identical to the Adhesives
-FORM so that both reports fill from one confirmed source in one change.
+**History.** 07/09/26: background `SUBMIT` of `ZSD_CUSTOMER_DATA` with ALV capture and
+placeholder field names. 17/09/26 morning: field names resolved at runtime with diagnostics.
+17/09/26 afternoon: the callee's source showed fields `LNAME4`–`LNAME6` and a plain table
+read behind them, so the SUBMIT, the capture and `F_HIER_FIELD` were retired — commented out
+in the source, not deleted. `ISSUES.md` #1, #26, #27.
 
 #### 6.3.7 `F_GET_COLLECTIONS`
 
@@ -515,7 +493,7 @@ Every row carries an `" ASSUMPTION:` comment at the matching point in the source
 
 | # | FS says | Build does | Why | ISSUES.md |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; field names resolved at runtime since 17/09/26, callee field list shown when nothing maps | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1, #26 |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Direct read of **`ZSD_CUSTEMP_ASSG`**, the table `ZSD_CUSTOMER_DATA` shows these names from, valid today | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, not a report; the real report is a table read plus display, so the table is read | #1, #27 |
 | 2 | Info Category / Info Type required on the screen | Omitted | the Z table has no such field to filter on | #10 |
 | 3 | Actual Collection `BUDAT` from the selection screen | Per row, `ZEXC_DATE_FROM` to `ZCOMMIT_DATE` inclusive | reviewer comment, and a shared range would double count | #5 |
 | 4 | Sample row implies Actual minus Credit Limit | `ZCM_AMNT` minus Actual Collection | the prose states the formula twice, the sample is the Adhesives formula copy-pasted | #6 |
@@ -543,11 +521,9 @@ sign-off alongside the table above.
 Ranked by what changes a number or a column on the report or the upload log, not by
 `ISSUES.md` order.
 
-1. **ISSUES.md #1 / #26 — L4/L5/L6 field names in `ZSD_CUSTOMER_DATA`.** Shared with
-   141.A. The report name is confirmed; its field names resolve at runtime since 17/09/26
-   and the status message lists the callee's fields when they do not. Needed: a
-   `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`, or the status-bar text from a run, to set
-   the `GC_HIER_*` constants for good.
+1. ~~**ISSUES.md #1 — L4/L5/L6 source.**~~ **Resolved 17/09/26** (#27), shared with 141.A:
+   read directly from `ZSD_CUSTEMP_ASSG`. Left to confirm in functional testing: the names
+   match `ZSD_CUSTOMER_DATA` for the same customers, and "valid today" is the wanted reading.
 2. **ISSUES.md #6 — Non-Fulfilment formula.** Built as `ZCM_AMNT − Actual Collection`.
    Confirm this is right, not the sample row's `Actual − Credit Limit`.
 3. **ISSUES.md #5 — Actual Collection date window.** Built as each row's own

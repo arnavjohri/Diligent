@@ -3,7 +3,9 @@
 > **Superseded 07/09/26.** `ZSD_EXC_APPR_ADHESIVE` activated on 07/09/26, which proves every
 > DDIC name it references. The one FS-sourced name that was wrong — `INFOCATEGORY` /
 > `INFOTYPE` on `BP3100` — is `ADDTYPE` / `DATA_TYPE` (`ISSUES.md`, 07/09/26). Kept for the
-> record; nothing below needs checking again.
+> record; nothing below needs checking again. The one DDIC name added since — table
+> `ZSD_CUSTEMP_ASSG` with `KUNNR`, `LCATEGORY`, `LNAME`, `STARTVAL`, `ENDVAL` (17/09/26) — is
+> proven by the activation of `ZSD_CUSTOMER_DATA`, which selects exactly those fields.
 
 There is no ADT connection to this landscape and no way to syntax-check the program
 before it is pasted into SE38. This file lists **every DDIC table and field the

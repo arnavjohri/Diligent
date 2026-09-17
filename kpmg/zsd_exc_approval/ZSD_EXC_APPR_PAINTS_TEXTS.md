@@ -20,8 +20,8 @@ literals). The `+4(2)` substring offsets on lines 746 and 748
 (`ls_appr-zexc_appr_month+4(2)`) are **not** text-symbol references — they are ABAP
 offset/length notation, so they are excluded.
 
-That leaves 43 distinct IDs: `001`–`003`, `C01`–`C21`, `M01`–`M11`, `S01`–`S05`,
-`T01`–`T03`. Every one of the 43 appears in Table 1 below, each exactly once, with the
+That leaves 39 distinct IDs: `001`–`003`, `C01`–`C21`, `M01`–`M06`, `M12`, `S01`–`S05`,
+`T01`–`T03`. Every one of the 39 appears in Table 1 below, each exactly once, with the
 literal text taken verbatim from the source as the default. Nothing is listed that the
 source does not reference, and nothing the source references is missing. `M01` occurs
 three times in the source (twice in `F_GET_CUSTOMERS`, once in `F_GET_APPROVALS`) — one
@@ -99,11 +99,7 @@ before letters, so `001`–`003` come before `C01`…).
 | M04 | Company code currency could not be read | 39 | message, F_GET_COMPANY_CURRENCY |
 | M05 | No data to display for the selection | 36 | message, F_DISPLAY_ALV |
 | M06 | The report list could not be displayed | 38 | message, F_DISPLAY_ALV |
-| M07 | Sales hierarchy report not found - L4/L5/L6 left blank | 54 | message, F_GET_HIERARCHY |
-| M08 | Hierarchy source is not an executable report - see TS | 53 | message, F_GET_HIERARCHY |
-| M09 | Hierarchy report returned no ALV data - L4/L5/L6 blank | 54 | message, F_GET_HIERARCHY |
-| M10 | Hierarchy field names do not match the report output | 52 | message, F_GET_HIERARCHY |
-| M11 | Hierarchy level fields not found in the report output | 52 | message, F_GET_HIERARCHY |
+| M12 | No sales hierarchy maintained for the selected customers | 56 | message, F_GET_HIERARCHY |
 | S01 | Collection Received | 19 | status-1 literal, F_CALC_STATUS |
 | S02 | Commitment Not due | 18 | status-1 literal, F_CALC_STATUS |
 | S03 | Commitment Overdue | 18 | status-1 literal, F_CALC_STATUS |
@@ -113,7 +109,12 @@ before letters, so `001`–`003` come before `C01`…).
 | T02 | Overdue | 7 | approval-type literal, F_BUILD_OUTPUT (ZEXC_APPR_TYPE = '2') |
 | T03 | Credit Limit & Overdue | 22 | approval-type literal, F_BUILD_OUTPUT (ZEXC_APPR_TYPE = '3') |
 
-43 rows, 43 distinct IDs referenced in the source — the two sets match.
+39 rows, 39 distinct IDs referenced in the source — the two sets match.
+
+`M07`–`M11` (the hierarchy-report messages of 07/09/26 and the morning of 17/09/26) are
+no longer referenced since the afternoon of 17/09/26. If they are already maintained in
+the system they are harmless; `M12` is deliberately a new number so that a maintained
+`M07` with the old text can never be shown for the new message.
 
 ## 2. Selection Texts
 

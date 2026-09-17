@@ -278,3 +278,28 @@ recommendation is to read the hierarchy the same way that program does, directly
 `F_GET_HIERARCHY`, and drop the `SUBMIT` — no capture, no field-name guessing, no callee
 screen. The "Parent Customer" columns suggest the SAP customer hierarchy (`KNVH`), but the
 level convention is not to be guessed.
+
+### 17/09/26 — `ZSD_CUSTOMER_DATA` source received: the levels are a table read
+
+Arnav supplied the SE38 print of `ZSD_CUSTOMER_DATA` (3607 lines, last changed 02.09.2026;
+filed as `original/ZSD_CUSTOMER_DATA.TXT` with a de-paginated copy beside it). Findings:
+
+| What | Found |
+|---|---|
+| Display | `REUSE_ALV_GRID_DISPLAY` — capturable, so the morning's SUBMIT path would have worked once the names were set |
+| Selection screen | `S_KUNNR` (`KNA1-KUNNR`), `S_VKORG` obligatory, `S_VTWEG`, `S_SPART`, `S_VKBUR`, `S_AUFSD`, `S_KNKLI`, three checkboxes — both placeholder select-option names were right |
+| ALV level fields | `LCATEGORY4` / `LNAME4`, `LCATEGORY5` / `LNAME5`, `LCATEGORY6` / `LNAME6` — not `L4_NAME`, and not containing the token `L4` either, which is why the morning's runtime resolution also came up empty (message M17) |
+| Where the names come from | Table **`ZSD_CUSTEMP_ASSG`**: `KUNNR`, `LCATEGORY` (`L1`–`L6`), `LID`, `STARTVAL`, `ENDVAL`, `LNAME`. The report reads the rows with `STARTVAL <= SY-DATUM <= ENDVAL` for its customers and copies `LNAME` into `LNAME1`–`LNAME6` by `LCATEGORY` |
+| Also in the callee | An `AUTHORITY-CHECK` on `Z_CT_VKORG` per sales organisation that ends the program with an E message when it fails — a SUBMIT from the report would have inherited that |
+
+| # | Change | Where |
+|---|---|---|
+| 27 | **Direct read replaces the SUBMIT.** `F_GET_HIERARCHY` in both reports now selects `KUNNR`, `LCATEGORY`, `LNAME` from `ZSD_CUSTEMP_ASSG` for the approval partners, levels `L4`/`L5`/`L6`, valid on `SY-DATUM`, and copies `LNAME` into the customer list by level — exactly the callee's own logic, without running a 3600-line report, its authorisation check and an ALV capture per run. The SUBMIT, the capture, `F_HIER_FIELD` and the `GC_HIER_*` constants are commented out, not deleted. New constants `GC_LCAT_L4/5/6`. The three level-name fields are typed off `ZSD_CUSTEMP_ASSG-LNAME` so a name is never truncated. When no selected customer has a valid row, status message M18 (A) / M12 (B) says so. Tagged `ASSUMPTION`: hierarchy as valid today, as the callee shows it; last valid row wins for a duplicated level, as in the callee. | A and B, `F_GET_HIERARCHY`, `CONSTANTS`, `TY_CUST`, `TY_OUTPUT` |
+
+Text symbols: A retires `M13`–`M17` and adds `M18`; B retires `M07`–`M11` and adds `M12`.
+New numbers on purpose — a maintained old symbol would otherwise show its old text for the
+new message. DDIC names `ZSD_CUSTEMP_ASSG-KUNNR/LCATEGORY/LNAME/STARTVAL/ENDVAL` are proven
+by the callee's own activation.
+
+**Issue 1 closes with this** once functional confirms the names on the report match
+`ZSD_CUSTOMER_DATA` for the same customers. Not yet activated on the system.

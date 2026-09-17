@@ -111,10 +111,9 @@ customer is ambiguous. See §7 deviation 7 / `ISSUES.md` #16.
 | `BP3100` | F4 lists and existence checks for `P_INFCAT` (`ADDTYPE`) and `P_INFTYP` (`DATA_TYPE`) | F4 handlers, `AT SELECTION-SCREEN ON P_INFCAT` / `ON P_INFTYP` |
 | `BSID` | Customer open items **as they stand today**, for the partners that carry an approval | `F_GET_OPEN_ITEMS` |
 | `BSAD` | Customer items cleared **since** the commitment date, same partners — needed because an item open on the commitment date but cleared afterwards must still count as open on that date | `F_GET_OPEN_ITEMS` |
-| `TRDIR` | Existence and type check on the hierarchy report before it is submitted | `F_GET_HIERARCHY` |
+| `ZSD_CUSTEMP_ASSG` | Sales hierarchy: level name (`LNAME`) per customer and level (`LCATEGORY` `L4`/`L5`/`L6`), rows valid today — the same table `ZSD_CUSTOMER_DATA` shows these names from | `F_GET_HIERARCHY` |
 
-No table other than these is touched. There is no read against a sales hierarchy
-table for L4/L5/L6 — those come from a background call to `ZSD_CUSTOMER_DATA`, §5.6.
+No table other than these is touched.
 
 ---
 
@@ -177,58 +176,36 @@ every amount column in the ALV. `P_BUKRS` is already validated on the selection
 screen, so a failure here is defensive only — the report still runs, the amounts are
 shown without a currency, and the user gets a warning.
 
-### 5.6 `F_GET_HIERARCHY` — background call to the hierarchy report
+### 5.6 `F_GET_HIERARCHY` — L4/L5/L6 from `ZSD_CUSTEMP_ASSG`
 
-Functional confirmed on 07/09/26 that the hierarchy report is to be run in background
-and its output read, and that the program name printed in the FS is wrong and will be
-corrected. The call is therefore built in full:
+The FS asks for the names shown by the sales hierarchy report `ZSD_CUSTOMER_DATA` (the FS
+printed `SAPLSLVC_FULLSCREEN`, the generic ALV function group; the real name was given on
+07/09/26 and its source on 17/09/26). That report does not compute the levels: it reads
+table `ZSD_CUSTEMP_ASSG` — one row per customer and level, `LCATEGORY` `L1` to `L6`, `LNAME`
+the level name, `STARTVAL`/`ENDVAL` the validity — for the rows valid on `SY-DATUM`, and
+shows `LNAME` as `LNAME4` / `LNAME5` / `LNAME6`. This FORM reads the same table the same way:
 
-1. `TRDIR` is read for `GC_HIER_PROG` (`ZSD_CUSTOMER_DATA`). Unless it exists **and** is
-   `SUBC = '1'` (executable), the FORM issues one status message and returns with the
-   columns blank, and no `SUBMIT` is attempted.
-2. The sales organisations from `S_VKORG` are copied into an `RSPARAMS` selection table
-   under the name `GC_HIER_SELNAME`, and the approval partners from `GT_PARTNER` under
-   `GC_HIER_SELKUN` (17/09/26). `SUBMIT` ignores a selection name the callee does not
-   have, so a wrong name only means the callee runs unfiltered.
-3. `CL_SALV_BS_RUNTIME_INFO` is armed with `display = abap_false`, the report is called
-   with `SUBMIT (GC_HIER_PROG) WITH SELECTION-TABLE ... AND RETURN`, and its ALV result
-   is taken with `GET_DATA_REF`. `CLEAR_ALL` runs on every path, so this report's own
-   ALV is never swallowed by a capture left armed.
-4. The callee's structure is read with RTTI and the four field names are **resolved at
-   runtime** (17/09/26, helper `F_HIER_FIELD`): the `GC_HIER_F_*` placeholder if the
-   callee has a field of that exact name, otherwise the first field whose name contains
-   the level token `L4` / `L5` / `L6`, or `KUNNR` and then `CUST` for the customer. The
-   rows are then read through `ASSIGN COMPONENT` with the resolved names and merged into
-   `GT_CUST` on customer number after `CONVERSION_EXIT_ALPHA_INPUT`.
+1. If no partner carries an approval, nothing is read.
+2. One `SELECT` of `KUNNR`, `LCATEGORY`, `LNAME` for the approval partners (`GT_PARTNER`,
+   `FOR ALL ENTRIES` behind an `IS NOT INITIAL` guard), `LCATEGORY` in `L4`/`L5`/`L6`,
+   `STARTVAL <= SY-DATUM <= ENDVAL`.
+3. No row at all: status message M18 "No sales hierarchy maintained for the selected
+   customers", columns blank, report continues.
+4. Otherwise each row's `LNAME` is copied into the customer list under its level. A
+   customer with no valid row for a level keeps that level blank. Where a level has more
+   than one valid row the last one read wins, as in `ZSD_CUSTOMER_DATA`.
 
-All six source names live in one `CONSTANTS` block, `GC_HIER_*`, immediately above the
-selection screen. Correcting any of them is a change to that block and nothing else.
+The three level keys are the only source names, constants `GC_LCAT_L4/5/6`. The level-name
+fields of `TY_CUST` and `TY_OUTPUT` are typed off `ZSD_CUSTEMP_ASSG-LNAME` so a name is never
+truncated.
 
-**Program name confirmed 07/09/26.** `GC_HIER_PROG` is `ZSD_CUSTOMER_DATA`, not the
-`SAPLSLVC_FULLSCREEN` the FS printed. That name was the generic ALV full-screen function
-group, `TRDIR` type `F`, which is neither a report nor `SUBMIT`-able. The guard now passes
-and the call genuinely runs.
-
-**Functional testing, 17/09/26.** Sanjay reported L4/L5/L6 blank on every row with the real
-program name in place — so the callee runs, but names its columns differently from the
-placeholders. The runtime resolution above is the answer for any sensible naming. Where it
-still cannot map, the FORM says exactly what it saw instead of leaving blank columns:
-
-| Situation | Message | Columns |
-|---|---|---|
-| Callee ran, returned no rows | M15 "Hierarchy report returned no ALV data" | blank |
-| No customer field resolves (`KUNNR` / `CUST`) | M16 "Hierarchy field names do not match the report output: " + the callee's field names | blank |
-| No level field resolves (`L4` / `L5` / `L6`) | M17 "Hierarchy level fields not found in the report output: " + the callee's field names | blank |
-| Everything resolves, but no callee row keys to a report customer | M16 + the callee's field names | blank |
-| Customer resolves, one or two levels do not | none | that level blank |
-
-The status message text is enough to set the `GC_HIER_*` constants without a download of
-the callee. The two select-option names (`S_VKORG`, `S_KUNNR`) cannot be resolved at runtime
-and stay placeholders; a wrong one costs an unfiltered run, nothing else. `ISSUES.md` #26.
-
-**Watch in functional testing.** If `ZSD_CUSTOMER_DATA` carries an obligatory selection
-field other than sales organisation, the `SUBMIT` stops on its own selection screen. That is
-the one case the guards cannot cover, because its screen is not known here.
+**History.** 07/09/26: built as a background `SUBMIT` of `ZSD_CUSTOMER_DATA` with the ALV
+captured through `CL_SALV_BS_RUNTIME_INFO` and read by placeholder field names. 17/09/26
+morning: names resolved at runtime with diagnostics, after functional testing showed the
+columns blank. 17/09/26 afternoon: the callee's source showed its fields are `LNAME4`–`LNAME6`
+(matching neither the placeholders nor the `L4` token) and that the names are a plain table
+read, so the SUBMIT, the capture and the helper `F_HIER_FIELD` were retired — commented out
+in the source, not deleted. `ISSUES.md` #1, #26, #27.
 
 ### 5.7 `F_GET_OPEN_ITEMS`
 
@@ -367,7 +344,7 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 | # | FS says | Build does | Why | `ISSUES.md` |
 |---|---|---|---|---|
-| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Background `SUBMIT` of **`ZSD_CUSTOMER_DATA`** + ALV capture. Program name confirmed 07/09/26; its field names resolved at runtime since 17/09/26, with the callee's field list shown when nothing maps | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, `TRDIR` type `F`, not an executable report | #1, #26 |
+| 1 | L4/L5/L6 from `SAPLSLVC_FULLSCREEN` | Direct read of **`ZSD_CUSTEMP_ASSG`**, the table `ZSD_CUSTOMER_DATA` shows these names from, valid today | `SAPLSLVC_FULLSCREEN` is the generic ALV function group, not a report; the real report is a table read plus display, so the table is read | #1, #27 |
 | 2 | Actual OS from `BSID` by `GJAHR` | `BSID` + `BSAD`, bounded by `BUDAT`/`AUGDT`, no `GJAHR` filter | `BSID` holds items open **now**; an item cleared after the commitment date must still count as open on that date. Open items also span fiscal years, so a `GJAHR` filter drops valid rows | #4 |
 | 3 | Fetch `WRBTR` | `WRBTR` is selected for reference; the arithmetic uses `DMBTR` | `WRBTR` is document currency; the credit limit is not. `DMBTR` (company-code currency) is the comparable figure. Switching back is a one-line change | #4 |
 | 4 | `REBZG` blank / not blank as two separate steps | Single read, `REBZG` selected but not filtered | The two FS steps together are simply "all items" — filtering on `REBZG` would not change the sum | related to #4 |
@@ -381,7 +358,7 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 | 12 | Credit limit and approvals "for the customer" | `BP3100-PARTNER` and `UKMBP_CMS_SGM-PARTNER` compared directly with `KUNNR` | Holds only under CVI same-number assignment | #18 |
 | 13 | "Actual OS" with no line drawn | Every BSID/BSAD line summed — receivables, special G/L and noted items | The FS gives no exclusion; FBL5N would drop noted items | #19 |
 | 14 | No division on the selection screen | `S_SPART` added, optional | FS reviewer comment (Yogesh Vanani) asks for it; blank = all divisions | #20 |
-| 15 | Hierarchy report called for the sales organisation | Approval customers passed as well, under placeholder `S_KUNNR`; field names resolved at runtime | A wrong selection name is ignored by `SUBMIT`; a wrong field name is self-corrected or reported with the callee's field list | #26 |
+| 15 | Hierarchy "as shown by the report" | Hierarchy rows valid on `SY-DATUM`, as `ZSD_CUSTOMER_DATA` selects them; last valid row wins for a duplicated level | Identical to the callee's own logic; the FS does not ask for the hierarchy as on the approval date | #27 |
 
 ---
 
@@ -389,11 +366,10 @@ source and a cross-reference to the numbered item in `ISSUES.md`.
 
 Ranked by what changes a number or a column on the report, not by `ISSUES.md` order.
 
-1. **`ISSUES.md` #1 / #26 — L4/L5/L6 field names in `ZSD_CUSTOMER_DATA`.** The report
-   name is confirmed; its ALV field names and select-option names are not. Since 17/09/26
-   the field names resolve at runtime and the status message lists the callee's fields
-   when they do not. Needed: a `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`, or the status-bar
-   text from a run of the corrected report, to set the `GC_HIER_*` constants for good.
+1. ~~**`ISSUES.md` #1 — L4/L5/L6 source.**~~ **Resolved 17/09/26** (#27): read directly
+   from `ZSD_CUSTEMP_ASSG`, the table `ZSD_CUSTOMER_DATA` shows them from. Left to confirm
+   in functional testing: the names on this report match that report for the same
+   customers, and "valid today" is the wanted reading.
 2. **`ISSUES.md` #4 — as-on-date logic, currency, GJAHR.** The build's `BSID`+`BSAD`
    approach and its use of `DMBTR` are the technical team's best read of "actual OS as
    on the commitment date" from a document-currency, GJAHR-scoped FS instruction that
@@ -444,9 +420,9 @@ apply to this object.
 | 9 | Information type not valid for the category | `P_INFTYP` filled, but no `BP3100` row for that `ADDTYPE`/`DATA_TYPE` pair | Error on the selection screen: "Information type not valid for this category" |
 | 10 | Item cleared after the commitment date | A `BSID` item as of the commitment date is later cleared (now only in `BSAD`), with `AUGDT` after the commitment date | Still counted as open in `F_CALC_OPEN_AMOUNT` via the `BSAD` leg — Actual OS on Commitment Date includes it |
 | 11 | Division filter | Same `P_BUKRS`/`S_VKORG` run twice, once with `S_SPART` blank and once with one division | Blank: every division's customers; filled: only customers with a `KNVV` row in that division; no duplicate rows either way |
-| 12 | Hierarchy names resolved | `ZSD_CUSTOMER_DATA` active and returning rows for the selected customers | L4/L5/L6 filled on every row that the callee reports; no hierarchy status message |
-| 13 | Hierarchy names not resolvable | Callee output whose customer or level fields carry none of the tokens `KUNNR`/`CUST` or `L4`/`L5`/`L6` | L4/L5/L6 blank; status message M16 or M17 ending with the callee's field names; report still displays |
-| 14 | Hierarchy callee returns nothing | `ZSD_CUSTOMER_DATA` returns no rows for the passed selection | L4/L5/L6 blank; status message M15; report still displays |
+| 12 | Hierarchy names | Customer with `ZSD_CUSTEMP_ASSG` rows for `L4`, `L5`, `L6` valid today | L4/L5/L6 Name equal to `LNAME` of those rows — identical to the L4/L5/L6 Name columns of `ZSD_CUSTOMER_DATA` for the same customer |
+| 13 | Partial hierarchy | Customer with a valid `L4` and `L5` row but no `L6` row, or an `L6` row whose `ENDVAL` is in the past | L4 and L5 filled, L6 blank; no message |
+| 14 | No hierarchy at all | None of the approval customers has a `ZSD_CUSTEMP_ASSG` row valid today | All three columns blank; status message M18; report still displays |
 
 ## Note added 07/09/26 — BP3100 field names
 
@@ -481,11 +457,13 @@ carrying a number derived from a date the program could not read.
 
 ## Note added 17/09/26 — L4/L5/L6 blank in functional testing
 
-Sanjay reported the three hierarchy columns blank on every row. The program name is right
-and `ZSD_CUSTOMER_DATA` runs; the four ALV field names the program read its output with
-were placeholders that did not match. `F_GET_HIERARCHY` now resolves each name at runtime
-from the callee's own structure (exact placeholder, else a field whose name contains the
-level token) and, where it still cannot map, ends its status message with the callee's
-field names — so the next run either fills the columns or tells us exactly what to put in
-`GC_HIER_*`. The approval customers are also passed to the callee. Details in §5.6 and
-`ISSUES.md` #26. Text symbol `M17` is new.
+Sanjay reported the three hierarchy columns blank on every row. The morning fix resolved
+the callee's field names at runtime and listed them when nothing mapped (`ISSUES.md` #26);
+it was activated and the columns stayed blank, because the callee's fields are `LNAME4`,
+`LNAME5`, `LNAME6` — neither the placeholders nor anything containing the token `L4`.
+
+The same afternoon Arnav supplied the source of `ZSD_CUSTOMER_DATA`. Its level names are a
+plain read of table `ZSD_CUSTEMP_ASSG`, valid today, so `F_GET_HIERARCHY` now reads that
+table directly and the SUBMIT, the ALV capture and the field-name resolution are retired
+(commented out). Details in §5.6 and `ISSUES.md` #27. Text symbol `M18` is new; `M13`–`M17`
+are no longer referenced.

@@ -20,19 +20,19 @@ approval block and actual-vs-commitment block.
 ## Open questions blocking build
 
 See `ISSUES.md` for the numbered list raised 02/09/26 and extended since. The L4/L5/L6
-source is `ZSD_CUSTOMER_DATA` (confirmed 07/09/26; the FS printed `SAPLSLVC_FULLSCREEN`,
-the generic ALV function group). Its field names are still unconfirmed — resolved at
-runtime since 17/09/26, `ISSUES.md` #26.
+source is table `ZSD_CUSTEMP_ASSG`, found in the source of `ZSD_CUSTOMER_DATA` on 17/09/26
+(the FS printed `SAPLSLVC_FULLSCREEN`, the generic ALV function group). Both reports read
+it directly since 17/09/26, `ISSUES.md` #27.
 
 ## Where each object stands (17/09/26)
 
 | Object | Repo copy | System | Next step |
 |---|---|---|---|
-| `ZSD_EXC_APPR_ADHESIVE` (141.A) | 07/09/26 system state (ADDTYPE/DATA_TYPE, segment 2000, approval-type column removed, DD.MM.YYYY) **plus 17/09/26**: hierarchy field names resolved at runtime with diagnostics, approval customers passed to `ZSD_CUSTOMER_DATA`, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division | **active** since 07/09/26 — in functional testing, L4/L5/L6 blank (ISSUES.md #26). Fresh download 17/09/26 filed in `original/`: **no drift** from the 07/09 base | paste the repo copy whole, add text symbols M13–M17 and selection text S_SPART; then send the status-bar text or a download of `ZSD_CUSTOMER_DATA` |
+| `ZSD_EXC_APPR_ADHESIVE` (141.A) | 07/09/26 system state (ADDTYPE/DATA_TYPE, segment 2000, approval-type column removed, DD.MM.YYYY) **plus 17/09/26**: hierarchy field names resolved at runtime with diagnostics, approval customers passed to `ZSD_CUSTOMER_DATA`, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division | **active** with the morning 17/09/26 version (runtime field resolution) — L4/L5/L6 still blank. Fresh download 17/09/26 filed in `original/`: **no drift** from the 07/09 base | paste the repo copy whole (direct `ZSD_CUSTEMP_ASSG` read, ISSUES.md #27), add text symbol M18 and selection text S_SPART; M13–M17 may stay |
 | `ZSD_EXP_PAINTS` + 5 domains + 6 data elements | `src/` XML rebuilt 05/09/26 | **active** since 07/09/26, created by hand | nothing — the ZIP is now a convenience for the two programs only |
 | TMG on `ZSD_EXP_PAINTS` | build sheet only | not confirmed | check SM30 opens on the table; SE11 by hand if not |
 | `ZSD_EXP_PAINTS_UPLOAD` | corrected 17/09/26: no ROLLBACK after COMMIT WORK AND WAIT (summary warns instead, text symbol M06), amounts with a third decimal rejected, amount length check counts the decimal point | **active** since 07/09/26 (07/09 version) | paste the repo copy, add M06 |
-| `ZSD_EXC_APPR_PAINTS` | 17/09/26: same hierarchy fix as Adhesives (text symbol M11 new), ACDOCA read driven by approval partners | **active** since 07/09/26 (07/09 version) | paste the repo copy, add M07–M11 |
+| `ZSD_EXC_APPR_PAINTS` | 17/09/26: direct `ZSD_CUSTEMP_ASSG` read for L4/L5/L6 (text symbol M12 new, M07–M11 retired), ACDOCA read driven by approval partners | **active** since 07/09/26 (07/09 version) | paste the repo copy, add M12 |
 
 ## Originals
 
@@ -40,7 +40,9 @@ runtime since 17/09/26, `ISSUES.md` #26.
 headers, line numbers, 72-column wrap, text-element and cross-reference appendix), kept
 byte for byte. `original/ZSD_EXC_APPR_ADHESIVE.from-print.abap` is the same source with
 the pagination and line numbers stripped and the wrapped lines rejoined, so it diffs
-directly against the repo copy. Neither is edited.
+directly against the repo copy. Neither is edited. `original/ZSD_CUSTOMER_DATA.TXT` and
+its `.from-print.abap` are the same pair for the sales hierarchy report, supplied 17/09/26
+— not an object of this build, kept because the L4/L5/L6 read was derived from it.
 
 ## Delivery
 

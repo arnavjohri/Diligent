@@ -136,7 +136,12 @@ percentage too.
 
 # PART 2 — Needed to fill three columns
 
-## Q5 — Issue 1 (A+B). The four ALV field names inside ZSD_CUSTOMER_DATA.
+## ~~Q5 — Issue 1 (A+B). The four ALV field names inside ZSD_CUSTOMER_DATA.~~ CLOSED 17/09/26
+
+> **Answered by the source of `ZSD_CUSTOMER_DATA`.** Its L4/L5/L6 names are a read of table
+> `ZSD_CUSTEMP_ASSG` valid today; both reports now read that table directly and the SUBMIT
+> is retired. One thing to confirm in testing: the names on the report match
+> `ZSD_CUSTOMER_DATA` for the same customers. `ISSUES.md` #27.
 
 **Where:** the `GC_HIER_*` `CONSTANTS` block above the selection screen in **both** A and B,
 around line 228, and `F_GET_HIERARCHY` in both.
@@ -345,4 +350,4 @@ separate, stricter check, since it writes data.
 |---|---|---|
 | 16 | Credit segment is **2000** | `P_SEGMNT` defaults to `2000` on both selection screens, still overridable |
 | — | BP3100 has no `INFOCATEGORY` / `INFOTYPE`; the fields are **`ADDTYPE`** and **`DATA_TYPE`** | A re-pointed throughout: the BP3100 read, both parameters, both F4 helps, both checks |
-| 1 (part) | Hierarchy report is **`ZSD_CUSTOMER_DATA`**, called in background | Built in full in `F_GET_HIERARCHY` in both; four field names still placeholders — see Q5 |
+| 1 | Hierarchy report is **`ZSD_CUSTOMER_DATA`**; its source shows the names come from table `ZSD_CUSTEMP_ASSG` | Both reports read `ZSD_CUSTEMP_ASSG` directly in `F_GET_HIERARCHY` (17/09/26) |
