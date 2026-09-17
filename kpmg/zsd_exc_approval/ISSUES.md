@@ -219,6 +219,36 @@ The repo copies of both reports carry this fix; the active programs do not. Past
 first, per the golden rule) and add text symbol `M17`; same for `ZSD_EXC_APPR_PAINTS.abap`
 with `M11`. Text sheets and the ZIP are updated.
 
+### 17/09/26 — drift check on the fresh download of `ZSD_EXC_APPR_ADHESIVE`
+
+Arnav supplied the active program as an SE38 print (`original/ZSD_EXC_APPR_ADHESIVE.TXT`,
+last changed 07.09.2026 by UDAYABAP03, 1590 source lines; de-paginated copy beside it as
+`ZSD_EXC_APPR_ADHESIVE.from-print.abap`). **No drift**: it matches the 07/09/26 repo base
+line for line. The single textual difference, a missing blank before `).` in the
+`GET_DATA_REF` call, is the printer trimming a trailing blank where it wrapped the line
+at 72 characters, not a code change.
+
+So the repo copy (1919 lines) is the reconciled object: the active program plus the 17/09/26
+changes, nothing lost. Paste it whole.
+
+The print also lists what Goto → Text Elements holds in the system today: `001`, `002`,
+`C01`–`C19`, `M01`–`M12`, `S01`, `S02`, and selection texts for the nine original fields.
+After the paste, add:
+
+| Tab | Add | Text |
+|---|---|---|
+| Text symbols | `M13` | Sales hierarchy report not found - L4/L5/L6 left blank |
+| | `M14` | Hierarchy source is not an executable report - see TS |
+| | `M15` | Hierarchy report returned no ALV data - L4/L5/L6 blank |
+| | `M16` | Hierarchy field names do not match the report output |
+| | `M17` | Hierarchy level fields not found in the report output |
+| Selection texts | `S_SPART` | Division |
+
+`C08` (Approval Type) is maintained but no longer referenced; it can stay or go. Every
+message has a literal default, so the report runs correctly before the symbols are typed;
+the symbols only matter for translation and for the selection text on `S_SPART`, which
+shows as the technical name until it is entered.
+
 ### Also recorded 17/09/26
 
 | # | Doc | Item | State |

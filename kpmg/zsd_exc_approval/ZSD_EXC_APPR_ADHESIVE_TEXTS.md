@@ -4,6 +4,11 @@ None of this travels with a pasted source. After pasting `ZSD_EXC_APPR_ADHESIVE.
 go **SE38 → (enter program) → Goto → Text Elements** and maintain the three tabs below
 exactly as listed, then activate.
 
+**System state on 17/09/26** (from the SE38 print Arnav supplied): text symbols `001`,
+`002`, `C01`–`C19`, `M01`–`M12`, `S01`, `S02` and the nine original selection texts are
+already maintained. **Still to add: `M13`–`M17` and the selection text `S_SPART`
+(Division).** `C08` is maintained but unused since 07/09/26.
+
 ## Reconciliation performed
 
 Grepped the source for every text-symbol reference:

@@ -1,0 +1,1961 @@
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE attrib          Page      1
+--------------------------------------------------------------------------------
+
+
+
+Created on....02.09.2026    Last changed on/by........ 07.09.2026 UDAYABAP03
+Author........UDAYABAP03
+--------------------------------------------------------------------------------
+
+Title.........UDAYABAP03
+
+Type..................1     Reporting
+Status................
+Application...........
+Class.................
+Logical database......
+  from Application....
+Selection screen......
+Authorization group...
+Package...............ZSD_ABAP
+
+  Start by Variants
+  Deactivate editor lock
+X Fixed point arithmetic active
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      2
+--------------------------------------------------------------------------------
+
+    1  *&---------------------------------------------------------------------*
+    2  *& Report/Include : ZSD_EXC_APPR_ADHESIVE
+    3  *& Title          : Exceptional Approval Report - Adhesives
+    4  *& Project        : KPMG / UDAY - Astral Limited        Module: SD
+    5  *& Related FS     : WRICEF 141.A - Exceptional approval format, Adhesive
+       s
+    6  *& Build spec     : BUILD_SPEC_141A.md (locked contract - wins over FS)
+    7  *& Author         : Arnav Johri                         Date: 02.09.2026
+    8  *& Transport      : <TR to be filled by Arnav>
+    9  *& Ships by       : PASTE (screen-free; see BUILD_SPEC_141A.md for the Z
+       IP note)
+   10  *&---------------------------------------------------------------------*
+   11  *& DESCRIPTION
+   12  *&   Lists the exceptional credit approvals maintained in the business
+   13  *&   partner credit management "Additional Information" (table BP3100)
+   14  *&   for the selected customers, information category and information
+   15  *&   type. For every approval row the report shows the actual credit
+   16  *&   limit of the chosen credit segment, the actual outstanding as on
+   17  *&   the commitment date, the non-fulfilment amount, the default
+   18  *&   percentage and the resulting status.
+   19  *&
+   20  *& SE38 ATTRIBUTES - please check on creation
+   21  *&   "Fixed point arithmetic" must be ON. F_BUILD_OUTPUT divides packed
+   22  *&   amounts to derive DEF_PERC and needs it to avoid truncation.
+   23  *&
+   24  *& TEXT ELEMENTS
+   25  *&   Every user visible string is a text symbol with a literal default,
+   26  *&   so the program runs correctly even before Goto -> Text Elements is
+   27  *&   maintained. The list ships as ZSD_EXC_APPR_ADHESIVE_TEXTS.md.
+   28  *&
+   29  *& CHANGE HISTORY
+   30  *&   02.09.2026  Arnav Johri  <TR>  Initial development
+   31  *&   07.09.2026  Arnav Johri  <TR>  Credit segment defaulted to 2000
+   32  *&                                  (confirmed by functional). Sales
+   33  *&                                  hierarchy read built as a background
+   34  *&                                  SUBMIT with the source name held in
+   35  *&                                  the GC_HIER_* constants.
+   36  *&   07.09.2026  Arnav Johri  <TR>  BP3100 has no INFOCATEGORY /
+   37  *&                                  INFOTYPE. The real fields are
+   38  *&                                  ADDTYPE and DATA_TYPE. Selection,
+   39  *&                                  F4 help and validation re-pointed;
+   40  *&                                  business labels unchanged.
+   41  *&   07/09/26    Arnav Johri  <TR>  Functional dropped the Exceptional
+   42  *&                                  Approval Type column (issue 2 -
+   43  *&                                  not required). Commitment date in
+   44  *&                                  BP3100-TEXT confirmed as DD.MM.YYYY
+   45  *&                                  (issue 3), so the parse no longer
+   46  *&                                  accepts a bare 8 digit token.
+   47  *&---------------------------------------------------------------------*
+   48  REPORT zsd_exc_appr_adhesive.
+   49
+   50  *&---------------------------------------------------------------------*
+   51  *& Tables - only for the SELECT-OPTIONS reference fields
+   52  *&---------------------------------------------------------------------*
+   53  TABLES: knvv,
+   54          bp3100.
+   55
+   56  *&---------------------------------------------------------------------*
+   57  *& Types
+   58  *&---------------------------------------------------------------------*
+   59  * Single key column helper, used for the KNB1 / KNVV pre-reads and for
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      3
+--------------------------------------------------------------------------------
+
+   60  * the deduplicated partner list that drives the KNA1 and UKMBP_CMS_SGM
+   61  * reads.
+   62  TYPES: BEGIN OF ty_kunnr,
+   63           kunnr TYPE kna1-kunnr,
+   64         END OF ty_kunnr.
+   65
+   66  TYPES ty_t_kunnr TYPE STANDARD TABLE OF ty_kunnr WITH DEFAULT KEY.
+   67
+   68  * Customer key list. F_GET_HIERARCHY writes L4/L5/L6 here after running
+   69  * the hierarchy report; they stay blank while its name is unconfirmed.
+   70  TYPES: BEGIN OF ty_cust,
+   71           kunnr   TYPE kna1-kunnr,
+   72           l4_name TYPE char40,
+   73           l5_name TYPE char40,
+   74           l6_name TYPE char40,
+   75         END OF ty_cust.
+   76
+   77  TYPES ty_t_cust TYPE STANDARD TABLE OF ty_cust WITH DEFAULT KEY.
+   78
+   79  * Approval rows read from BP3100. The component order below MUST stay
+   80  * identical to the SELECT field list in FORM f_get_approvals - strict
+   81  * Open SQL fills the target by POSITION, not by name.
+   82  TYPES: BEGIN OF ty_appr,
+   83           partner TYPE bp3100-partner,
+   84           counter TYPE bp3100-counter,
+   85           datefr  TYPE bp3100-datefr,
+   86           dateto  TYPE bp3100-dateto,
+   87           amnt    TYPE bp3100-amnt,
+   88           text    TYPE bp3100-text,
+   89         END OF ty_appr.
+   90
+   91  * Parsed commitment date per approval row (BP3100-TEXT is free text).
+   92  TYPES: BEGIN OF ty_cdate,
+   93           partner     TYPE bp3100-partner,
+   94           counter     TYPE bp3100-counter,
+   95           commit_date TYPE dats,
+   96         END OF ty_cdate.
+   97
+   98  TYPES: BEGIN OF ty_name,
+   99           kunnr TYPE kna1-kunnr,
+  100           name1 TYPE kna1-name1,
+  101         END OF ty_name.
+  102
+  103  TYPES: BEGIN OF ty_climit,
+  104           partner      TYPE ukmbp_cms_sgm-partner,
+  105           credit_sgmnt TYPE ukmbp_cms_sgm-credit_sgmnt,
+  106           credit_limit TYPE ukmbp_cms_sgm-credit_limit,
+  107         END OF ty_climit.
+  108
+  109  * Open item as it stands today (BSID).
+  110  TYPES: BEGIN OF ty_item,
+  111           bukrs TYPE bsid-bukrs,
+  112           kunnr TYPE bsid-kunnr,
+  113           belnr TYPE bsid-belnr,
+  114           buzei TYPE bsid-buzei,
+  115           budat TYPE bsid-budat,
+  116           wrbtr TYPE bsid-wrbtr,
+  117           dmbtr TYPE bsid-dmbtr,
+  118           shkzg TYPE bsid-shkzg,
+  119           rebzg TYPE bsid-rebzg,
+  120         END OF ty_item.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      4
+--------------------------------------------------------------------------------
+
+  121
+  122  * Item already cleared (BSAD) - same list plus the clearing date.
+  123  TYPES: BEGIN OF ty_clritem,
+  124           bukrs TYPE bsad-bukrs,
+  125           kunnr TYPE bsad-kunnr,
+  126           belnr TYPE bsad-belnr,
+  127           buzei TYPE bsad-buzei,
+  128           budat TYPE bsad-budat,
+  129           wrbtr TYPE bsad-wrbtr,
+  130           dmbtr TYPE bsad-dmbtr,
+  131           shkzg TYPE bsad-shkzg,
+  132           rebzg TYPE bsad-rebzg,
+  133           augdt TYPE bsad-augdt,
+  134         END OF ty_clritem.
+  135
+  136  * F4 helper tables.
+  137  *BOC By Arnav on 07/09/26
+  138  * BP3100 carries no INFOCATEGORY / INFOTYPE column. The fields that hold
+  139  * the information category and the information type are ADDTYPE and
+  140  * DATA_TYPE. Both helper tables are therefore typed straight off BP3100,
+  141  * which cannot be wrong whatever data element sits behind those fields.
+  142  * The business labels on the screen stay "Information Category" and
+  143  * "Information Type" - only the technical names changed.
+  144  * Old code:
+  145  **TYPES: BEGIN OF ty_f4_infcat,
+  146  **         infocategory TYPE ukm_infocat-infocategory,
+  147  **       END OF ty_f4_infcat.
+  148  **TYPES: BEGIN OF ty_f4_infotyp,
+  149  **         infotype TYPE ukm_infotyp-infotype,
+  150  **       END OF ty_f4_infotyp.
+  151  TYPES: BEGIN OF ty_f4_infcat,
+  152           addtype TYPE bp3100-addtype,
+  153         END OF ty_f4_infcat.
+  154
+  155  TYPES: BEGIN OF ty_f4_infotyp,
+  156           data_type TYPE bp3100-data_type,
+  157         END OF ty_f4_infotyp.
+  158  *EOC By Arnav on 07/09/26
+  159
+  160  * Output structure - declared in the exact order fixed by the build
+  161  * spec section 2. WAERS is last on purpose: it is the ALV currency
+  162  * reference for the amount columns, not a business column, and is
+  163  * marked NO_OUT in the field catalogue.
+  164  TYPES: BEGIN OF ty_output,
+  165           kunnr        TYPE kna1-kunnr,
+  166           name1        TYPE kna1-name1,
+  167           l4_name      TYPE char40,
+  168           l5_name      TYPE char40,
+  169           l6_name      TYPE char40,
+  170           exc_month    TYPE char7,
+  171           exc_no       TYPE bp3100-counter,
+  172  *BOC By Arnav on 07/09/26
+  173  * Functional confirmed 07/09/26 that the Exceptional Approval Type is
+  174  * not required on this report, closing open issue 2. The component is
+  175  * removed rather than left blank, so the ALV carries no column that can
+  176  * never be filled. Paints keeps its own approval type - that one has a
+  177  * real source field, ZSD_EXP_PAINTS-ZEXC_APPR_TYPE.
+  178  * Old code:
+  179  **         exc_type     TYPE char30,
+  180  *EOC By Arnav on 07/09/26
+  181           date_from    TYPE bp3100-datefr,
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      5
+--------------------------------------------------------------------------------
+
+  182           date_to      TYPE bp3100-dateto,
+  183           exc_amnt     TYPE bp3100-amnt,
+  184           commit_date  TYPE dats,
+  185           commit_text  TYPE bp3100-text,
+  186           credit_limit TYPE ukmbp_cms_sgm-credit_limit,
+  187           act_os       TYPE dmbtr,
+  188           non_fulfil   TYPE dmbtr,
+  189           def_perc     TYPE p LENGTH 7 DECIMALS 2,
+  190           status       TYPE char15,
+  191           waers        TYPE t001-waers,
+  192         END OF ty_output.
+  193
+  194  *&---------------------------------------------------------------------*
+  195  *& Global data
+  196  *&---------------------------------------------------------------------*
+  197  * GT_BSID and GT_BSAD are SORTED on KUNNR so that f_calc_open_amount is
+  198  * a keyed access per output row and not a linear scan of the whole item
+  199  * set. NON-UNIQUE, because a data constellation must never dump on the
+  200  * SELECT ... INTO TABLE.
+  201  DATA: gt_cust    TYPE ty_t_cust,
+  202        gt_partner TYPE ty_t_kunnr,
+  203        gt_appr    TYPE STANDARD TABLE OF ty_appr,
+  204        gt_cdate   TYPE SORTED TABLE OF ty_cdate
+  205                        WITH NON-UNIQUE KEY partner counter,
+  206        gt_kna1    TYPE SORTED TABLE OF ty_name
+  207                        WITH NON-UNIQUE KEY kunnr,
+  208        gt_climit  TYPE SORTED TABLE OF ty_climit
+  209                        WITH NON-UNIQUE KEY partner,
+  210        gt_bsid    TYPE SORTED TABLE OF ty_item
+  211                        WITH NON-UNIQUE KEY kunnr,
+  212        gt_bsad    TYPE SORTED TABLE OF ty_clritem
+  213                        WITH NON-UNIQUE KEY kunnr,
+  214        gt_output  TYPE STANDARD TABLE OF ty_output.
+  215
+  216  DATA: gv_waers TYPE t001-waers,
+  217        gv_repid TYPE sy-repid.
+  218
+  219  *BOC By Arnav on 07/09/26
+  220  *&---------------------------------------------------------------------*
+  221  *& Sales hierarchy source - PROGRAM CONFIRMED, FIELD NAMES ARE NOT
+  222  *&---------------------------------------------------------------------*
+  223  * The FS says "Submit program SAPLSLVC_FULLSCREEN pass VKORG = 1000,
+  224  * 1100, 1200, 1300 fetch L4 Name". That name is wrong - it is the
+  225  * generic ALV full-screen FUNCTION GROUP, not an executable report.
+  226  * Arnav gave the real source on 07/09/26: ZSD_CUSTOMER_DATA.
+  227  *
+  228  * GC_HIER_PROG is therefore CONFIRMED. The other four are still
+  229  * PLACEHOLDERS - nobody has confirmed what ZSD_CUSTOMER_DATA calls its
+  230  * sales-organisation select-option or its ALV output fields, and this
+  231  * program deliberately does not guess:
+  232  *   GC_HIER_SELNAME  its SELECT-OPTION name for sales organisation
+  233  *   GC_HIER_F_KUNNR  the customer field in its ALV output
+  234  *   GC_HIER_F_L4/5/6 the three level name fields in its ALV output
+  235  *
+  236  * What a wrong placeholder costs, none of it a dump:
+  237  *   GC_HIER_SELNAME wrong - SUBMIT ignores the unknown SELNAME, so the
+  238  *     callee runs unfiltered. Slower, but the merge is on customer key
+  239  *     so the reported names are still right.
+  240  *   GC_HIER_F_KUNNR wrong - nothing maps. F_GET_HIERARCHY says so with
+  241  *     one status message rather than silently showing blank columns.
+  242  *   GC_HIER_F_L4/5/6 wrong - that level comes back blank.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      6
+--------------------------------------------------------------------------------
+
+  243  *
+  244  * To confirm them: run ZSD_CUSTOMER_DATA, then on its ALV use
+  245  * Settings -> Layout -> Current for the technical field names, and F1
+  246  * on its sales organisation field for the select-option name.
+  247  CONSTANTS: gc_hier_prog    TYPE trdir-name       VALUE 'ZSD_CUSTOMER_DAT
+       A',
+  248             gc_hier_selname TYPE rsparams-selname VALUE 'S_VKORG',
+  249             gc_hier_f_kunnr TYPE dfies-fieldname  VALUE 'KUNNR',
+  250             gc_hier_f_l4    TYPE dfies-fieldname  VALUE 'L4_NAME',
+  251             gc_hier_f_l5    TYPE dfies-fieldname  VALUE 'L5_NAME',
+  252             gc_hier_f_l6    TYPE dfies-fieldname  VALUE 'L6_NAME',
+  253             gc_subc_report  TYPE trdir-subc       VALUE '1'.
+  254  *EOC By Arnav on 07/09/26
+  255
+  256  *&---------------------------------------------------------------------*
+  257  *& Selection screen
+  258  *&---------------------------------------------------------------------*
+  259  SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
+  260  SELECT-OPTIONS s_kunnr FOR knvv-kunnr.
+  261  *BOC By Arnav on 07/09/26
+  262  * Typed off BP3100-ADDTYPE / BP3100-DATA_TYPE, the fields that actually
+  263  * hold the information category and information type. Parameter names
+  264  * keep the business meaning so the selection texts do not change.
+  265  * Old code:
+  266  **PARAMETERS     p_infcat TYPE ukm_infocat-infocategory OBLIGATORY.
+  267  **PARAMETERS     p_inftyp TYPE ukm_infotyp-infotype OBLIGATORY.
+  268  PARAMETERS     p_infcat TYPE bp3100-addtype OBLIGATORY.
+  269  PARAMETERS     p_inftyp TYPE bp3100-data_type OBLIGATORY.
+  270  *EOC By Arnav on 07/09/26
+  271  SELECT-OPTIONS s_date FOR bp3100-datefr OBLIGATORY.
+  272  SELECTION-SCREEN END OF BLOCK b1.
+  273
+  274  SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
+  275  PARAMETERS     p_bukrs TYPE knb1-bukrs OBLIGATORY.
+  276  SELECT-OPTIONS s_vkorg FOR knvv-vkorg OBLIGATORY.
+  277  SELECT-OPTIONS s_kvgr1 FOR knvv-kvgr1.
+  278  SELECT-OPTIONS s_kvgr2 FOR knvv-kvgr2.
+  279  *BOC By Arnav on 07/09/26
+  280  * FS deviation 7: the FS names no credit segment, but UKMBP_CMS_SGM is
+  281  * keyed by partner AND credit segment, so CREDIT_LIMIT is ambiguous
+  282  * without one. Functional confirmed segment 2000 on 07/09/26, closing
+  283  * open issue 16. It stays a SELECTION PARAMETER carrying 2000 as its
+  284  * default rather than a constant, so a second segment costs no code
+  285  * change and the tester can see and override what is being read.
+  286  * Old code:
+  287  ** ASSUMPTION (FS deviation 7): the FS names no credit segment, but
+  288  ** UKMBP_CMS_SGM is keyed by partner AND credit segment, so CREDIT_LIMIT
+  289  ** is ambiguous without one. The segment is therefore asked for on the
+  290  ** selection screen. No default is hardcoded - see open issue 16.
+  291  **PARAMETERS     p_segmnt TYPE ukmbp_cms_sgm-credit_sgmnt OBLIGATORY.
+  292  PARAMETERS     p_segmnt TYPE ukmbp_cms_sgm-credit_sgmnt OBLIGATORY
+  293                          DEFAULT '2000'.
+  294  *EOC By Arnav on 07/09/26
+  295  SELECTION-SCREEN END OF BLOCK b2.
+  296
+  297  *&---------------------------------------------------------------------*
+  298  *& Initialization
+  299  *&---------------------------------------------------------------------*
+  300  INITIALIZATION.
+  301
+  302    gv_repid = sy-repid.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      7
+--------------------------------------------------------------------------------
+
+  303
+  304  *&---------------------------------------------------------------------*
+  305  *& F4 help - information category
+  306  *&---------------------------------------------------------------------*
+  307  AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_infcat.
+  308
+  309    DATA: lt_f4cat  TYPE STANDARD TABLE OF ty_f4_infcat,
+  310          lt_retcat TYPE STANDARD TABLE OF ddshretval,
+  311          ls_retcat TYPE ddshretval.
+  312
+  313    CLEAR: lt_f4cat, lt_retcat, ls_retcat.
+  314
+  315  *BOC By Arnav on 07/09/26
+  316  * ASSUMPTION: the value help is sourced from BP3100 itself rather than
+  317  * from a customizing table. UKM_INFOCAT was dropped because BP3100 uses
+  318  * ADDTYPE / DATA_TYPE and the matching customizing field names are not
+  319  * confirmed on this landscape - a wrong table name costs an activation
+  320  * cycle. Reading the distinct values actually present in BP3100 cannot
+  321  * be wrong, and for a report it is the better list anyway: only values
+  322  * that carry data can be reported on.
+  323  * Old code:
+  324  ** No text table is read here - its name is not confirmed on this
+  325  ** landscape, so only the key values are offered (build spec 1.1).
+  326  **  SELECT DISTINCT infocategory
+  327  **    FROM ukm_infocat
+  328  **    ORDER BY infocategory
+  329  **    INTO TABLE @lt_f4cat.
+  330    SELECT DISTINCT addtype
+  331      FROM bp3100
+  332      ORDER BY addtype
+  333      INTO TABLE @lt_f4cat.
+  334  *EOC By Arnav on 07/09/26
+  335
+  336    IF lt_f4cat IS INITIAL.
+  337      MESSAGE 'No information categories are maintained'(m08)
+  338              TYPE 'S' DISPLAY LIKE 'W'.
+  339    ELSE.
+  340      CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+  341        EXPORTING
+  342          retfield        = 'ADDTYPE'
+  343          dynpprog        = gv_repid
+  344          dynpnr          = sy-dynnr
+  345          dynprofield     = 'P_INFCAT'
+  346          value_org       = 'S'
+  347        TABLES
+  348          value_tab       = lt_f4cat
+  349          return_tab      = lt_retcat
+  350        EXCEPTIONS
+  351          parameter_error = 1
+  352          no_values_found = 2
+  353          OTHERS          = 3.
+  354
+  355      IF sy-subrc <> 0.
+  356        MESSAGE 'Value help could not be displayed'(m09)
+  357                TYPE 'S' DISPLAY LIKE 'W'.
+  358      ELSE.
+  359        READ TABLE lt_retcat INTO ls_retcat INDEX 1.
+  360        IF sy-subrc = 0.
+  361          p_infcat = ls_retcat-fieldval.
+  362        ENDIF.
+  363      ENDIF.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      8
+--------------------------------------------------------------------------------
+
+  364    ENDIF.
+  365
+  366  *&---------------------------------------------------------------------*
+  367  *& F4 help - information type, dependent on the information category
+  368  *&---------------------------------------------------------------------*
+  369  AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_inftyp.
+  370
+  371    DATA: lt_f4typ  TYPE STANDARD TABLE OF ty_f4_infotyp,
+  372          lt_rettyp TYPE STANDARD TABLE OF ddshretval,
+  373          ls_rettyp TYPE ddshretval,
+  374          lt_dynp   TYPE STANDARD TABLE OF dynpread,
+  375          ls_dynp   TYPE dynpread,
+  376          lv_infcat TYPE bp3100-addtype.
+  377
+  378    CLEAR: lt_f4typ, lt_rettyp, ls_rettyp, lt_dynp, ls_dynp, lv_infcat.
+  379
+  380  * Read the category straight off the screen so the F4 reflects what the
+  381  * user has typed but not yet confirmed with ENTER (build spec 1.1).
+  382    ls_dynp-fieldname = 'P_INFCAT'.
+  383    APPEND ls_dynp TO lt_dynp.
+  384
+  385    CALL FUNCTION 'DYNP_VALUES_READ'
+  386      EXPORTING
+  387        dyname             = gv_repid
+  388        dynumb             = sy-dynnr
+  389        translate_to_upper = abap_true
+  390      TABLES
+  391        dynpfields         = lt_dynp
+  392      EXCEPTIONS
+  393        OTHERS             = 1.
+  394
+  395    IF sy-subrc = 0.
+  396      READ TABLE lt_dynp INTO ls_dynp WITH KEY fieldname = 'P_INFCAT'.
+  397      IF sy-subrc = 0.
+  398        lv_infcat = ls_dynp-fieldvalue.
+  399      ENDIF.
+  400    ENDIF.
+  401
+  402  * Fall back to the ABAP field if the screen could not be read.
+  403    IF lv_infcat IS INITIAL.
+  404      lv_infcat = p_infcat.
+  405    ENDIF.
+  406
+  407    IF lv_infcat IS INITIAL.
+  408      MESSAGE 'Enter the information category first'(m03)
+  409              TYPE 'S' DISPLAY LIKE 'W'.
+  410    ELSE.
+  411  *BOC By Arnav on 07/09/26
+  412  * Old code:
+  413  **    SELECT DISTINCT infotype
+  414  **      FROM ukm_infotyp
+  415  **      WHERE infocategory = @lv_infcat
+  416  **      ORDER BY infotype
+  417  **      INTO TABLE @lt_f4typ.
+  418      SELECT DISTINCT data_type
+  419        FROM bp3100
+  420        WHERE addtype = @lv_infcat
+  421        ORDER BY data_type
+  422        INTO TABLE @lt_f4typ.
+  423  *EOC By Arnav on 07/09/26
+  424
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page      9
+--------------------------------------------------------------------------------
+
+  425      IF lt_f4typ IS INITIAL.
+  426        MESSAGE 'No information types for this category'(m10)
+  427                TYPE 'S' DISPLAY LIKE 'W'.
+  428      ELSE.
+  429        CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+  430          EXPORTING
+  431            retfield        = 'DATA_TYPE'
+  432            dynpprog        = gv_repid
+  433            dynpnr          = sy-dynnr
+  434            dynprofield     = 'P_INFTYP'
+  435            value_org       = 'S'
+  436          TABLES
+  437            value_tab       = lt_f4typ
+  438            return_tab      = lt_rettyp
+  439          EXCEPTIONS
+  440            parameter_error = 1
+  441            no_values_found = 2
+  442            OTHERS          = 3.
+  443
+  444        IF sy-subrc <> 0.
+  445          MESSAGE 'Value help could not be displayed'(m09)
+  446                  TYPE 'S' DISPLAY LIKE 'W'.
+  447        ELSE.
+  448          READ TABLE lt_rettyp INTO ls_rettyp INDEX 1.
+  449          IF sy-subrc = 0.
+  450            p_inftyp = ls_rettyp-fieldval.
+  451          ENDIF.
+  452        ENDIF.
+  453      ENDIF.
+  454    ENDIF.
+  455
+  456  *&---------------------------------------------------------------------*
+  457  *& Selection screen validation (build spec 1.2)
+  458  *&---------------------------------------------------------------------*
+  459  AT SELECTION-SCREEN ON p_bukrs.
+  460
+  461    DATA lv_chk_bukrs TYPE t001-bukrs.
+  462
+  463    CLEAR lv_chk_bukrs.
+  464
+  465    SELECT SINGLE bukrs
+  466      FROM t001
+  467      WHERE bukrs = @p_bukrs
+  468      INTO @lv_chk_bukrs.
+  469
+  470    IF sy-subrc <> 0.
+  471      MESSAGE 'Company code does not exist'(m04) TYPE 'E'.
+  472    ENDIF.
+  473
+  474  AT SELECTION-SCREEN ON p_infcat.
+  475
+  476  *BOC By Arnav on 07/09/26
+  477  * Checked against BP3100 for the same reason as the value help above.
+  478  * SELECT SINGLE stops at the first hit, so a valid value is cheap; only
+  479  * a value that does not exist reads further, and that is the error path.
+  480  * Old code:
+  481  **  DATA lv_chk_cat TYPE ukm_infocat-infocategory.
+  482  **  CLEAR lv_chk_cat.
+  483  **  SELECT SINGLE infocategory
+  484  **    FROM ukm_infocat
+  485  **    WHERE infocategory = @p_infcat
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     10
+--------------------------------------------------------------------------------
+
+  486  **    INTO @lv_chk_cat.
+  487    DATA lv_chk_cat TYPE bp3100-addtype.
+  488
+  489    CLEAR lv_chk_cat.
+  490
+  491    SELECT SINGLE addtype
+  492      FROM bp3100
+  493      WHERE addtype = @p_infcat
+  494      INTO @lv_chk_cat.
+  495  *EOC By Arnav on 07/09/26
+  496
+  497    IF sy-subrc <> 0.
+  498      MESSAGE 'Information category does not exist'(m05) TYPE 'E'.
+  499    ENDIF.
+  500
+  501  AT SELECTION-SCREEN ON p_inftyp.
+  502
+  503  *BOC By Arnav on 07/09/26
+  504  * Old code:
+  505  **  DATA lv_chk_typ TYPE ukm_infotyp-infotype.
+  506    DATA lv_chk_typ TYPE bp3100-data_type.
+  507  *EOC By Arnav on 07/09/26
+  508
+  509    CLEAR lv_chk_typ.
+  510
+  511  * Only checked once the category itself is filled - otherwise the user
+  512  * would get two errors for one mistake.
+  513    IF p_infcat IS NOT INITIAL.
+  514  *BOC By Arnav on 07/09/26
+  515  * Old code:
+  516  **    SELECT SINGLE infotype
+  517  **      FROM ukm_infotyp
+  518  **      WHERE infocategory = @p_infcat
+  519  **        AND infotype     = @p_inftyp
+  520  **      INTO @lv_chk_typ.
+  521      SELECT SINGLE data_type
+  522        FROM bp3100
+  523        WHERE addtype   = @p_infcat
+  524          AND data_type = @p_inftyp
+  525        INTO @lv_chk_typ.
+  526  *EOC By Arnav on 07/09/26
+  527
+  528      IF sy-subrc <> 0.
+  529        MESSAGE 'Information type not valid for this category'(m06)
+  530                TYPE 'E'.
+  531      ENDIF.
+  532    ENDIF.
+  533
+  534  * p_segmnt is deliberately NOT existence checked - the customizing
+  535  * table that holds the credit segments is not confirmed on this
+  536  * landscape (build spec 1.2).
+  537
+  538  *&---------------------------------------------------------------------*
+  539  *& Main flow
+  540  *&---------------------------------------------------------------------*
+  541  START-OF-SELECTION.
+  542
+  543    gv_repid = sy-repid.
+  544
+  545    PERFORM f_get_customers.
+  546    PERFORM f_get_approvals.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     11
+--------------------------------------------------------------------------------
+
+  547    PERFORM f_get_names.
+  548    PERFORM f_get_credit_limits.
+  549    PERFORM f_get_company_currency.
+  550    PERFORM f_get_hierarchy CHANGING gt_cust.
+  551    PERFORM f_get_open_items.
+  552    PERFORM f_build_output.
+  553
+  554  END-OF-SELECTION.
+  555
+  556    PERFORM f_display_alv.
+  557
+  558  *&---------------------------------------------------------------------*
+  559  *& Form F_GET_CUSTOMERS
+  560  *&---------------------------------------------------------------------*
+  561  *& Company code customers from KNB1, restricted by the sales area and
+  562  *& customer group selections on KNVV. One row per customer.
+  563  *&---------------------------------------------------------------------*
+  564  FORM f_get_customers.
+  565
+  566    DATA: lt_knb1 TYPE ty_t_kunnr,
+  567          lt_knvv TYPE ty_t_kunnr,
+  568          ls_knvv TYPE ty_kunnr,
+  569          ls_cust TYPE ty_cust.
+  570
+  571    CLEAR: gt_cust, lt_knb1, lt_knvv, ls_knvv, ls_cust.
+  572
+  573    SELECT kunnr
+  574      FROM knb1
+  575      WHERE bukrs = @p_bukrs
+  576        AND kunnr IN @s_kunnr
+  577      INTO TABLE @lt_knb1.
+  578
+  579    IF lt_knb1 IS INITIAL.
+  580      MESSAGE 'No customers match the selection'(m01)
+  581              TYPE 'S' DISPLAY LIKE 'E'.
+  582      LEAVE LIST-PROCESSING.
+  583    ENDIF.
+  584
+  585    SELECT kunnr
+  586      FROM knvv
+  587      FOR ALL ENTRIES IN @lt_knb1
+  588      WHERE kunnr = @lt_knb1-kunnr
+  589        AND vkorg IN @s_vkorg
+  590        AND kvgr1 IN @s_kvgr1
+  591        AND kvgr2 IN @s_kvgr2
+  592      INTO TABLE @lt_knvv.
+  593
+  594    IF lt_knvv IS INITIAL.
+  595      MESSAGE 'No customers match the selection'(m01)
+  596              TYPE 'S' DISPLAY LIKE 'E'.
+  597      LEAVE LIST-PROCESSING.
+  598    ENDIF.
+  599
+  600  * KNVV is sales-area dependent, so a customer extended to several sales
+  601  * areas comes back more than once. It must appear exactly once in the
+  602  * report - see open issue 13.
+  603    SORT lt_knvv BY kunnr.
+  604    DELETE ADJACENT DUPLICATES FROM lt_knvv COMPARING kunnr.
+  605
+  606    LOOP AT lt_knvv INTO ls_knvv.
+  607      CLEAR ls_cust.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     12
+--------------------------------------------------------------------------------
+
+  608      ls_cust-kunnr = ls_knvv-kunnr.
+  609      APPEND ls_cust TO gt_cust.
+  610    ENDLOOP.
+  611
+  612  * GT_CUST stays sorted by KUNNR, so the reads in f_build_output can use
+  613  * BINARY SEARCH.
+  614
+  615  ENDFORM.
+  616
+  617  *&---------------------------------------------------------------------*
+  618  *& Form F_GET_APPROVALS
+  619  *&---------------------------------------------------------------------*
+  620  *& Exceptional approval rows from BP3100 for the selected customers,
+  621  *& information category, information type and approval date range.
+  622  *&---------------------------------------------------------------------*
+  623  FORM f_get_approvals.
+  624
+  625    DATA: ls_appr    TYPE ty_appr,
+  626          ls_partner TYPE ty_kunnr.
+  627
+  628    CLEAR: gt_appr, gt_partner, ls_appr, ls_partner.
+  629
+  630    IF gt_cust IS INITIAL.
+  631      MESSAGE 'No customers match the selection'(m01)
+  632              TYPE 'S' DISPLAY LIKE 'E'.
+  633      LEAVE LIST-PROCESSING.
+  634    ENDIF.
+  635
+  636  * The field list below matches TY_APPR component for component. Adding
+  637  * a field here without adding it at the same index of TY_APPR fills the
+  638  * wrong component.
+  639    SELECT partner, counter, datefr, dateto, amnt, text
+  640      FROM bp3100
+  641      FOR ALL ENTRIES IN @gt_cust
+  642      WHERE partner      = @gt_cust-kunnr
+  643  *BOC By Arnav on 07/09/26
+  644  * Old code:
+  645  **      AND infocategory = @p_infcat
+  646  **      AND infotype     = @p_inftyp
+  647        AND addtype      = @p_infcat
+  648        AND data_type    = @p_inftyp
+  649  *EOC By Arnav on 07/09/26
+  650        AND datefr      IN @s_date
+  651      INTO TABLE @gt_appr.
+  652
+  653    IF gt_appr IS INITIAL.
+  654      MESSAGE 'No exceptional approvals found for the selection'(m02)
+  655              TYPE 'S' DISPLAY LIKE 'E'.
+  656      LEAVE LIST-PROCESSING.
+  657    ENDIF.
+  658
+  659  * One entry per partner that actually carries an approval. This list
+  660  * drives the KNA1 and UKMBP_CMS_SGM reads, so those two FOR ALL ENTRIES
+  661  * run over the smallest possible driver table.
+  662    LOOP AT gt_appr INTO ls_appr.
+  663      CLEAR ls_partner.
+  664      ls_partner-kunnr = ls_appr-partner.
+  665      APPEND ls_partner TO gt_partner.
+  666    ENDLOOP.
+  667
+  668    SORT gt_partner BY kunnr.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     13
+--------------------------------------------------------------------------------
+
+  669    DELETE ADJACENT DUPLICATES FROM gt_partner COMPARING kunnr.
+  670
+  671  ENDFORM.
+  672
+  673  *&---------------------------------------------------------------------*
+  674  *& Form F_GET_NAMES
+  675  *&---------------------------------------------------------------------*
+  676  *& Customer names for the partners that actually carry an approval.
+  677  *&---------------------------------------------------------------------*
+  678  FORM f_get_names.
+  679
+  680    CLEAR gt_kna1.
+  681
+  682    IF gt_partner IS INITIAL.
+  683      RETURN.
+  684    ENDIF.
+  685
+  686    SELECT kunnr, name1
+  687      FROM kna1
+  688      FOR ALL ENTRIES IN @gt_partner
+  689      WHERE kunnr = @gt_partner-kunnr
+  690      INTO TABLE @gt_kna1.
+  691
+  692  * A partner without a KNA1 row is not an error: f_build_output reads
+  693  * defensively and simply leaves the name blank.
+  694    IF sy-subrc <> 0.
+  695      CLEAR gt_kna1.
+  696    ENDIF.
+  697
+  698  ENDFORM.
+  699
+  700  *&---------------------------------------------------------------------*
+  701  *& Form F_GET_CREDIT_LIMITS
+  702  *&---------------------------------------------------------------------*
+  703  *& Actual credit limit per partner for the credit segment entered on
+  704  *& the selection screen.
+  705  *&---------------------------------------------------------------------*
+  706  FORM f_get_credit_limits.
+  707
+  708    CLEAR gt_climit.
+  709
+  710    IF gt_partner IS INITIAL.
+  711      RETURN.
+  712    ENDIF.
+  713
+  714    SELECT partner, credit_sgmnt, credit_limit
+  715      FROM ukmbp_cms_sgm
+  716      FOR ALL ENTRIES IN @gt_partner
+  717      WHERE partner      = @gt_partner-kunnr
+  718        AND credit_sgmnt = @p_segmnt
+  719      INTO TABLE @gt_climit.
+  720
+  721  * A partner with no limit in this segment is not an error either -
+  722  * f_build_output leaves the limit at zero and guards the division.
+  723    IF sy-subrc <> 0.
+  724      CLEAR gt_climit.
+  725    ENDIF.
+  726
+  727  ENDFORM.
+  728
+  729  *&---------------------------------------------------------------------*
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     14
+--------------------------------------------------------------------------------
+
+  730  *& Form F_GET_COMPANY_CURRENCY
+  731  *&---------------------------------------------------------------------*
+  732  *& Company code currency, used as the ALV currency reference for every
+  733  *& amount column.
+  734  *&---------------------------------------------------------------------*
+  735  FORM f_get_company_currency.
+  736
+  737    CLEAR gv_waers.
+  738
+  739    SELECT SINGLE waers
+  740      FROM t001
+  741      WHERE bukrs = @p_bukrs
+  742      INTO @gv_waers.
+  743
+  744  * P_BUKRS is validated on the selection screen, so this is a defensive
+  745  * fallback only. The amounts are still shown, without a currency.
+  746    IF sy-subrc <> 0.
+  747      MESSAGE 'Company code currency could not be read'(m11)
+  748              TYPE 'S' DISPLAY LIKE 'W'.
+  749    ENDIF.
+  750
+  751  ENDFORM.
+  752
+  753  *&---------------------------------------------------------------------*
+  754  *& Form F_GET_HIERARCHY
+  755  *&---------------------------------------------------------------------*
+  756  *& Runs the sales hierarchy report in background and merges its L4/L5/L6
+  757  *& names into the customer list. Source names are the GC_HIER_* block.
+  758  *&---------------------------------------------------------------------*
+  759  FORM f_get_hierarchy CHANGING ct_cust TYPE ty_t_cust.
+  760
+  761  *BOC By Arnav on 07/09/26
+  762  * Functional confirmed on 07/09/26 that the hierarchy report is to be
+  763  * called in background and its output read, and that the program name
+  764  * printed in the FS is wrong. Arnav gave the real source the same day:
+  765  * ZSD_CUSTOMER_DATA. The call is built in full here, with every source
+  766  * name - the confirmed program and the four placeholders alike - held
+  767  * in the CONSTANTS block GC_HIER_* above. Correcting any of them is a
+  768  * change to that block alone.
+  769  *
+  770  * HOW IT WORKS
+  771  *   1. TRDIR is checked first. Unless GC_HIER_PROG exists AND is SUBC
+  772  *      '1' (executable), one status message is issued and L4/L5/L6 stay
+  773  *      blank. No SUBMIT is attempted and nothing dumps.
+  774  *   2. The sales organisations from S_VKORG are passed to the callee in
+  775  *      a RSPARAMS selection table under the name GC_HIER_SELNAME. An
+  776  *      unknown SELNAME is ignored by SUBMIT, it does not dump.
+  777  *   3. CL_SALV_BS_RUNTIME_INFO suppresses the callee display and hands
+  778  *      back its ALV result table, which is read by field NAME through
+  779  *      ASSIGN COMPONENT - so the callee structure need not be known at
+  780  *      compile time.
+  781  *   4. The result is keyed on customer and merged into CT_CUST.
+  782  *
+  783  * ASSUMPTION: ZSD_CUSTOMER_DATA is an ALV report. A classic WRITE list
+  784  * returns no ALV data and lands on message (m15) - blank columns, no dum
+       p.
+  785  * ASSUMPTION: ZSD_CUSTOMER_DATA has no OBLIGATORY selection field other
+  786  * than the sales organisation. If it has, SUBMIT stops on its own
+  787  * selection screen and functional must tell us what else to pass. This
+  788  * is the one case that needs watching in functional testing, because the
+  789  * program name is now real and the SUBMIT genuinely runs.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     15
+--------------------------------------------------------------------------------
+
+  790
+  791    DATA: lv_subc TYPE trdir-subc,
+  792          lt_selt TYPE TABLE OF rsparams,
+  793          ls_selt TYPE rsparams,
+  794          lr_data TYPE REF TO data,
+  795          lt_hier TYPE SORTED TABLE OF ty_cust
+  796                       WITH NON-UNIQUE KEY kunnr,
+  797          ls_hier TYPE ty_cust,
+  798          lv_mapped TYPE abap_bool.
+  799
+  800    FIELD-SYMBOLS: <lt_any>  TYPE ANY TABLE,
+  801                   <ls_any>  TYPE any,
+  802                   <lv_fld>  TYPE any,
+  803                   <ls_cust> TYPE ty_cust.
+  804
+  805  * --- 1. the source must exist and be an executable report -------------
+  806    SELECT SINGLE subc
+  807      FROM trdir
+  808      WHERE name = @gc_hier_prog
+  809      INTO @lv_subc.
+  810
+  811    IF sy-subrc <> 0.
+  812      MESSAGE 'Sales hierarchy report not found - L4/L5/L6 left blank'(m13
+       )
+  813              TYPE 'S' DISPLAY LIKE 'W'.
+  814      RETURN.
+  815    ENDIF.
+  816
+  817    IF lv_subc <> gc_subc_report.
+  818      MESSAGE 'Hierarchy source is not an executable report - see TS'(m14)
+  819              TYPE 'S' DISPLAY LIKE 'W'.
+  820      RETURN.
+  821    ENDIF.
+  822
+  823  * --- 2. pass our own sales organisations to the callee ----------------
+       -
+  824    LOOP AT s_vkorg INTO DATA(ls_vkorg).
+  825      CLEAR ls_selt.
+  826      ls_selt-selname = gc_hier_selname.
+  827      ls_selt-kind    = 'S'.
+  828      ls_selt-sign    = ls_vkorg-sign.
+  829      ls_selt-option  = ls_vkorg-option.
+  830      ls_selt-low     = ls_vkorg-low.
+  831      ls_selt-high    = ls_vkorg-high.
+  832      APPEND ls_selt TO lt_selt.
+  833    ENDLOOP.
+  834
+  835  * --- 3. run it with the display suppressed and take its ALV data ------
+       -
+  836  * CLEAR_ALL is called on EVERY path below. If the capture were left
+  837  * armed, the report's OWN ALV in f_display_alv would be swallowed
+  838  * instead of shown.
+  839    cl_salv_bs_runtime_info=>set( EXPORTING display  = abap_false
+  840                                            metadata = abap_false
+  841                                            data     = abap_true ).
+  842
+  843    SUBMIT (gc_hier_prog) WITH SELECTION-TABLE lt_selt
+  844                          AND RETURN.                     "#EC CI_SUBMIT
+  845
+  846    TRY.
+  847        cl_salv_bs_runtime_info=>get_data_ref( IMPORTING r_data = lr_data
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     16
+--------------------------------------------------------------------------------
+
+       ).
+  848      CATCH cx_salv_bs_sc_runtime_info.
+  849        CLEAR lr_data.
+  850    ENDTRY.
+  851
+  852    cl_salv_bs_runtime_info=>clear_all( ).
+  853
+  854    IF lr_data IS NOT BOUND.
+  855      MESSAGE 'Hierarchy report returned no ALV data - L4/L5/L6 blank'(m15
+       )
+  856              TYPE 'S' DISPLAY LIKE 'W'.
+  857      RETURN.
+  858    ENDIF.
+  859
+  860    ASSIGN lr_data->* TO <lt_any>.
+  861    IF <lt_any> IS NOT ASSIGNED.
+  862      RETURN.
+  863    ENDIF.
+  864
+  865  * --- 4. map by field NAME, so the callee structure is not hardcoded ---
+       -
+  866    LOOP AT <lt_any> ASSIGNING <ls_any>.
+  867
+  868      CLEAR ls_hier.
+  869
+  870      ASSIGN COMPONENT gc_hier_f_kunnr OF STRUCTURE <ls_any> TO <lv_fld>.
+  871      IF sy-subrc = 0.
+  872        ls_hier-kunnr = <lv_fld>.
+  873        lv_mapped     = abap_true.
+  874      ENDIF.
+  875
+  876      ASSIGN COMPONENT gc_hier_f_l4 OF STRUCTURE <ls_any> TO <lv_fld>.
+  877      IF sy-subrc = 0.
+  878        ls_hier-l4_name = <lv_fld>.
+  879      ENDIF.
+  880
+  881      ASSIGN COMPONENT gc_hier_f_l5 OF STRUCTURE <ls_any> TO <lv_fld>.
+  882      IF sy-subrc = 0.
+  883        ls_hier-l5_name = <lv_fld>.
+  884      ENDIF.
+  885
+  886      ASSIGN COMPONENT gc_hier_f_l6 OF STRUCTURE <ls_any> TO <lv_fld>.
+  887      IF sy-subrc = 0.
+  888        ls_hier-l6_name = <lv_fld>.
+  889      ENDIF.
+  890
+  891      CHECK ls_hier-kunnr IS NOT INITIAL.
+  892
+  893  *   The callee may return the customer without leading zeros. CT_CUST
+  894  *   holds the internal KNA1 format, so convert before the key match.
+  895      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_INPUT'
+  896        EXPORTING
+  897          input  = ls_hier-kunnr
+  898        IMPORTING
+  899          output = ls_hier-kunnr.
+  900
+  901      INSERT ls_hier INTO TABLE lt_hier.
+  902
+  903    ENDLOOP.
+  904
+  905  * GC_HIER_F_KUNNR did not match any component of the callee output, so
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     17
+--------------------------------------------------------------------------------
+
+  906  * nothing could be keyed. Say so - a silent blank column would look like
+  907  * missing master data rather than a wrong field name.
+  908    IF lv_mapped <> abap_true.
+  909      MESSAGE 'Hierarchy field names do not match the report output'(m16)
+  910              TYPE 'S' DISPLAY LIKE 'W'.
+  911      RETURN.
+  912    ENDIF.
+  913
+  914    IF lt_hier IS INITIAL.
+  915      RETURN.
+  916    ENDIF.
+  917
+  918  * --- 5. merge into the customer list ----------------------------------
+  919    LOOP AT ct_cust ASSIGNING <ls_cust>.
+  920      READ TABLE lt_hier INTO ls_hier
+  921           WITH KEY kunnr = <ls_cust>-kunnr.
+  922      IF sy-subrc = 0.
+  923        <ls_cust>-l4_name = ls_hier-l4_name.
+  924        <ls_cust>-l5_name = ls_hier-l5_name.
+  925        <ls_cust>-l6_name = ls_hier-l6_name.
+  926      ENDIF.
+  927    ENDLOOP.
+  928  *EOC By Arnav on 07/09/26
+  929
+  930  ENDFORM.
+  931
+  932  *&---------------------------------------------------------------------*
+  933  *& Form F_PARSE_COMMIT_DATE
+  934  *&---------------------------------------------------------------------*
+  935  *& Defensive parse of the free-text commitment date held in BP3100-TEXT.
+  936  *& Returns an initial date when nothing usable is found - never dumps
+  937  *& and never messages per row.
+  938  *&---------------------------------------------------------------------*
+  939  FORM f_parse_commit_date  USING    iv_text TYPE bp3100-text
+  940                            CHANGING cv_date TYPE dats.
+  941
+  942  *BOC By Arnav on 07/09/26
+  943  * Functional confirmed on 07/09/26 that the commitment date is entered
+  944  * as DD.MM.YYYY, closing open issue 3.
+  945  *
+  946  * This routine now accepts DD.MM.YYYY and nothing else in substance.
+  947  * The slash and hyphen are still normalised to a full stop first,
+  948  * because DD/MM/YYYY and DD-MM-YYYY carry the SAME field order and
+  949  * accepting them costs one REPLACE and prevents a blank row when a
+  950  * user types a slash out of habit.
+  951  *
+  952  * The bare 8 digit YYYYMMDD branch is REMOVED. With a confirmed
+  953  * separated format it is no longer needed, and an 8 digit run inside
+  954  * free text is more likely to be something else - an amount, a phone
+  955  * fragment, a document number - which the old code would have read as
+  956  * a date. Dropping it makes the parse stricter, not weaker.
+  957  *
+  958  * A row that still does not parse is reported with its raw text in the
+  959  * Commitment Text column and blank as-on-date figures. It never dumps
+  960  * and it never messages per row.
+  961  * Old code:
+  962  ** ASSUMPTION (FS deviation 6): the FS maps the commitment date to
+  963  ** BP3100-TEXT, which is free text with no agreed entry format. This
+  964  ** routine accepts DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY and an 8 digit
+  965  ** YYYYMMDD token anywhere inside the text, validates day and month
+  966  ** against the calendar and returns initial on anything else - see open
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     18
+--------------------------------------------------------------------------------
+
+  967  ** issue 3. No regular expression is used: the token scan below is the
+  968  ** same logic without the escaping risk.
+  969  *EOC By Arnav on 07/09/26
+  970
+  971    DATA: lv_string TYPE string,
+  972          lt_token  TYPE STANDARD TABLE OF string,
+  973          lv_token  TYPE string,
+  974          lt_part   TYPE STANDARD TABLE OF string,
+  975          lv_clean  TYPE string,
+  976          lv_tmp    TYPE string,
+  977          lv_p1     TYPE string,
+  978          lv_p2     TYPE string,
+  979          lv_p3     TYPE string,
+  980          lv_char   TYPE c LENGTH 1,
+  981          lv_len    TYPE i,
+  982          lv_pos    TYPE i,
+  983          lv_day    TYPE i,
+  984          lv_mon    TYPE i,
+  985          lv_year   TYPE i,
+  986          lv_ok     TYPE abap_bool,
+  987          lv_nday   TYPE n LENGTH 2,
+  988          lv_nmon   TYPE n LENGTH 2,
+  989          lv_nyear  TYPE n LENGTH 4,
+  990          lv_cand   TYPE c LENGTH 8.
+  991
+  992    CLEAR cv_date.
+  993
+  994    lv_string = iv_text.
+  995    IF lv_string IS INITIAL.
+  996      RETURN.
+  997    ENDIF.
+  998
+  999  * Normalise the two alternative separators onto '.' so that only one
+ 1000  * separated form has to be handled below.
+ 1001    REPLACE ALL OCCURRENCES OF '/' IN lv_string WITH '.'.
+ 1002    REPLACE ALL OCCURRENCES OF '-' IN lv_string WITH '.'.
+ 1003
+ 1004    SPLIT lv_string AT space INTO TABLE lt_token.
+ 1005
+ 1006    LOOP AT lt_token INTO lv_token.
+ 1007
+ 1008  *   Strip everything that is not a digit or a separator, and never let
+ 1009  *   the cleaned token start with a separator. Surrounding words are
+ 1010  *   therefore ignored even when they are glued to the date.
+ 1011      CLEAR lv_clean.
+ 1012      lv_len = strlen( lv_token ).
+ 1013      lv_pos = 0.
+ 1014      WHILE lv_pos < lv_len.
+ 1015        lv_char = lv_token+lv_pos(1).
+ 1016        IF lv_char CA '0123456789'.
+ 1017          CONCATENATE lv_clean lv_char INTO lv_clean.
+ 1018        ELSEIF lv_char = '.' AND lv_clean IS NOT INITIAL.
+ 1019          CONCATENATE lv_clean lv_char INTO lv_clean.
+ 1020        ENDIF.
+ 1021        lv_pos = lv_pos + 1.
+ 1022      ENDWHILE.
+ 1023
+ 1024      IF lv_clean IS INITIAL.
+ 1025        CONTINUE.
+ 1026      ENDIF.
+ 1027
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     19
+--------------------------------------------------------------------------------
+
+ 1028  *   Drop a single trailing separator left behind by punctuation.
+ 1029      lv_len = strlen( lv_clean ).
+ 1030      lv_pos = lv_len - 1.
+ 1031      IF lv_clean+lv_pos(1) = '.'.
+ 1032        lv_tmp   = lv_clean(lv_pos).
+ 1033        lv_clean = lv_tmp.
+ 1034      ENDIF.
+ 1035
+ 1036      IF lv_clean IS INITIAL.
+ 1037        CONTINUE.
+ 1038      ENDIF.
+ 1039
+ 1040      CLEAR: lv_day, lv_mon, lv_year, lv_p1, lv_p2, lv_p3, lv_ok.
+ 1041
+ 1042      IF lv_clean CS '.'.
+ 1043
+ 1044  *     Separated form - DD.MM.YYYY after normalisation.
+ 1045        CLEAR lt_part.
+ 1046        SPLIT lv_clean AT '.' INTO TABLE lt_part.
+ 1047        IF lines( lt_part ) <> 3.
+ 1048          CONTINUE.
+ 1049        ENDIF.
+ 1050
+ 1051        READ TABLE lt_part INTO lv_p1 INDEX 1.
+ 1052        READ TABLE lt_part INTO lv_p2 INDEX 2.
+ 1053        READ TABLE lt_part INTO lv_p3 INDEX 3.
+ 1054
+ 1055        IF lv_p1 IS INITIAL OR lv_p2 IS INITIAL OR lv_p3 IS INITIAL.
+ 1056          CONTINUE.
+ 1057        ENDIF.
+ 1058        IF lv_p1 CN '0123456789' OR lv_p2 CN '0123456789'
+ 1059                                 OR lv_p3 CN '0123456789'.
+ 1060          CONTINUE.
+ 1061        ENDIF.
+ 1062        IF strlen( lv_p1 ) > 2 OR strlen( lv_p2 ) > 2
+ 1063                               OR strlen( lv_p3 ) <> 4.
+ 1064          CONTINUE.
+ 1065        ENDIF.
+ 1066
+ 1067        lv_day  = lv_p1.
+ 1068        lv_mon  = lv_p2.
+ 1069        lv_year = lv_p3.
+ 1070
+ 1071      ELSE.
+ 1072
+ 1073  *BOC By Arnav on 07/09/26
+ 1074  *     No separator, so this token is not a DD.MM.YYYY date. The bare 8
+ 1075  *     digit YYYYMMDD form is no longer accepted - see the note in the
+ 1076  *     FORM header, issue 3 closed 07/09/26.
+ 1077        CONTINUE.
+ 1078  * Old code:
+ 1079  **     Plain 8 digit form - YYYYMMDD.
+ 1080  **      IF strlen( lv_clean ) <> 8.
+ 1081  **        CONTINUE.
+ 1082  **      ENDIF.
+ 1083  **      IF lv_clean CN '0123456789'.
+ 1084  **        CONTINUE.
+ 1085  **      ENDIF.
+ 1086  **      lv_year = lv_clean(4).
+ 1087  **      lv_mon  = lv_clean+4(2).
+ 1088  **      lv_day  = lv_clean+6(2).
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     20
+--------------------------------------------------------------------------------
+
+ 1089  *EOC By Arnav on 07/09/26
+ 1090
+ 1091      ENDIF.
+ 1092
+ 1093      PERFORM f_check_date USING    lv_year
+ 1094                                    lv_mon
+ 1095                                    lv_day
+ 1096                           CHANGING lv_ok.
+ 1097
+ 1098      IF lv_ok <> abap_true.
+ 1099        CONTINUE.
+ 1100      ENDIF.
+ 1101
+ 1102      lv_nyear = lv_year.
+ 1103      lv_nmon  = lv_mon.
+ 1104      lv_nday  = lv_day.
+ 1105      CONCATENATE lv_nyear lv_nmon lv_nday INTO lv_cand.
+ 1106
+ 1107      cv_date = lv_cand.
+ 1108
+ 1109  *   Belt and braces - 00000000 is never accepted as a date.
+ 1110      IF cv_date IS INITIAL.
+ 1111        CONTINUE.
+ 1112      ENDIF.
+ 1113
+ 1114  *   First token that parses wins.
+ 1115      EXIT.
+ 1116
+ 1117    ENDLOOP.
+ 1118
+ 1119  ENDFORM.
+ 1120
+ 1121  *&---------------------------------------------------------------------*
+ 1122  *& Form F_CHECK_DATE
+ 1123  *&---------------------------------------------------------------------*
+ 1124  *& Calendar validation of a year / month / day triple. Leap year aware.
+ 1125  *& Helper for f_parse_commit_date only.
+ 1126  *&---------------------------------------------------------------------*
+ 1127  FORM f_check_date  USING    iv_year  TYPE i
+ 1128                              iv_month TYPE i
+ 1129                              iv_day   TYPE i
+ 1130                     CHANGING cv_ok    TYPE abap_bool.
+ 1131
+ 1132    DATA lv_maxday TYPE i.
+ 1133
+ 1134    CLEAR cv_ok.
+ 1135
+ 1136  * A four digit year outside this window is text that happens to look
+ 1137  * like a date, not a commitment date.
+ 1138    IF iv_year < 1900 OR iv_year > 9999.
+ 1139      RETURN.
+ 1140    ENDIF.
+ 1141
+ 1142    IF iv_month < 1 OR iv_month > 12.
+ 1143      RETURN.
+ 1144    ENDIF.
+ 1145
+ 1146    IF iv_day < 1.
+ 1147      RETURN.
+ 1148    ENDIF.
+ 1149
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     21
+--------------------------------------------------------------------------------
+
+ 1150    lv_maxday = 31.
+ 1151    CASE iv_month.
+ 1152      WHEN 4 OR 6 OR 9 OR 11.
+ 1153        lv_maxday = 30.
+ 1154      WHEN 2.
+ 1155        IF ( iv_year MOD 4 = 0 AND iv_year MOD 100 <> 0 )
+ 1156           OR iv_year MOD 400 = 0.
+ 1157          lv_maxday = 29.
+ 1158        ELSE.
+ 1159          lv_maxday = 28.
+ 1160        ENDIF.
+ 1161      WHEN OTHERS.
+ 1162        lv_maxday = 31.
+ 1163    ENDCASE.
+ 1164
+ 1165    IF iv_day > lv_maxday.
+ 1166      RETURN.
+ 1167    ENDIF.
+ 1168
+ 1169    cv_ok = abap_true.
+ 1170
+ 1171  ENDFORM.
+ 1172
+ 1173  *&---------------------------------------------------------------------*
+ 1174  *& Form F_GET_OPEN_ITEMS
+ 1175  *&---------------------------------------------------------------------*
+ 1176  *& Parses every commitment date once, then reads the customer line items
+ 1177  *& ONCE for the whole customer set. The reads are bounded by the lowest
+ 1178  *& and the highest parsed commitment date. No SELECT inside a LOOP.
+ 1179  *&---------------------------------------------------------------------*
+ 1180  FORM f_get_open_items.
+ 1181
+ 1182    DATA: ls_appr     TYPE ty_appr,
+ 1183          ls_cdate    TYPE ty_cdate,
+ 1184          lv_min_date TYPE dats,
+ 1185          lv_max_date TYPE dats.
+ 1186
+ 1187    CLEAR: gt_cdate, gt_bsid, gt_bsad, lv_min_date, lv_max_date.
+ 1188
+ 1189  * Parse first: f_build_output reads the parsed dates from GT_CDATE and
+ 1190  * must never parse the same text twice.
+ 1191    LOOP AT gt_appr INTO ls_appr.
+ 1192      CLEAR ls_cdate.
+ 1193      ls_cdate-partner = ls_appr-partner.
+ 1194      ls_cdate-counter = ls_appr-counter.
+ 1195      PERFORM f_parse_commit_date USING    ls_appr-text
+ 1196                                  CHANGING ls_cdate-commit_date.
+ 1197      INSERT ls_cdate INTO TABLE gt_cdate.
+ 1198    ENDLOOP.
+ 1199
+ 1200    IF gt_cust IS INITIAL.
+ 1201      RETURN.
+ 1202    ENDIF.
+ 1203
+ 1204    LOOP AT gt_cdate INTO ls_cdate.
+ 1205      IF ls_cdate-commit_date IS INITIAL.
+ 1206        CONTINUE.
+ 1207      ENDIF.
+ 1208      IF lv_min_date IS INITIAL OR ls_cdate-commit_date < lv_min_date.
+ 1209        lv_min_date = ls_cdate-commit_date.
+ 1210      ENDIF.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     22
+--------------------------------------------------------------------------------
+
+ 1211      IF ls_cdate-commit_date > lv_max_date.
+ 1212        lv_max_date = ls_cdate-commit_date.
+ 1213      ENDIF.
+ 1214    ENDLOOP.
+ 1215
+ 1216  * Nothing parsed - there is no as-on date to report against, so the
+ 1217  * whole open item read is skipped.
+ 1218    IF lv_min_date IS INITIAL OR lv_max_date IS INITIAL.
+ 1219      RETURN.
+ 1220    ENDIF.
+ 1221
+ 1222  * ASSUMPTION (FS deviation 2): the FS reads BSID by GJAHR only. BSID
+ 1223  * holds the items that are open NOW, so an item that was open on the
+ 1224  * commitment date but has been cleared since would be lost, and a
+ 1225  * GJAHR filter would drop items that span fiscal years. The read is
+ 1226  * therefore BSID plus BSAD, bounded by BUDAT and AUGDT and not by
+ 1227  * GJAHR - see open issue 4.
+ 1228  * ASSUMPTION (FS deviation 4): the FS splits the read into REBZG blank
+ 1229  * and REBZG not blank. Together those two steps are simply "all items",
+ 1230  * so REBZG is selected but not filtered on - the sum is identical.
+ 1231  * ASSUMPTION (FS deviation 3): WRBTR is selected for reference but the
+ 1232  * arithmetic uses DMBTR. WRBTR is document currency while the credit
+ 1233  * limit is not, so only the company code currency amount is comparable.
+ 1234  * Switching back is a one line change in f_calc_open_amount.
+ 1235  * NOTE: FOR ALL ENTRIES suppresses duplicate result rows. BUDAT is in
+ 1236  * the field list, so two documents that share BELNR / BUZEI across
+ 1237  * fiscal years are still returned separately.
+ 1238    SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg, rebzg
+ 1239      FROM bsid
+ 1240      FOR ALL ENTRIES IN @gt_cust
+ 1241      WHERE bukrs = @p_bukrs
+ 1242        AND kunnr = @gt_cust-kunnr
+ 1243        AND budat <= @lv_max_date
+ 1244      INTO TABLE @gt_bsid.
+ 1245
+ 1246    IF sy-subrc <> 0.
+ 1247      CLEAR gt_bsid.
+ 1248    ENDIF.
+ 1249
+ 1250    SELECT bukrs, kunnr, belnr, buzei, budat, wrbtr, dmbtr, shkzg,
+ 1251           rebzg, augdt
+ 1252      FROM bsad
+ 1253      FOR ALL ENTRIES IN @gt_cust
+ 1254      WHERE bukrs = @p_bukrs
+ 1255        AND kunnr = @gt_cust-kunnr
+ 1256        AND budat <= @lv_max_date
+ 1257        AND augdt >  @lv_min_date
+ 1258      INTO TABLE @gt_bsad.
+ 1259
+ 1260    IF sy-subrc <> 0.
+ 1261      CLEAR gt_bsad.
+ 1262    ENDIF.
+ 1263
+ 1264  ENDFORM.
+ 1265
+ 1266  *&---------------------------------------------------------------------*
+ 1267  *& Form F_CALC_OPEN_AMOUNT
+ 1268  *&---------------------------------------------------------------------*
+ 1269  *& Pure in-memory arithmetic over the line items read in
+ 1270  *& f_get_open_items. No database access.
+ 1271  *&---------------------------------------------------------------------*
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     23
+--------------------------------------------------------------------------------
+
+ 1272  FORM f_calc_open_amount  USING    iv_kunnr  TYPE kna1-kunnr
+ 1273                                    iv_date   TYPE dats
+ 1274                           CHANGING cv_amount TYPE dmbtr.
+ 1275
+ 1276    DATA: ls_bsid TYPE ty_item,
+ 1277          ls_bsad TYPE ty_clritem.
+ 1278
+ 1279    CLEAR cv_amount.
+ 1280
+ 1281    IF iv_kunnr IS INITIAL OR iv_date IS INITIAL.
+ 1282      RETURN.
+ 1283    ENDIF.
+ 1284
+ 1285  * Still open today and posted on or before the commitment date.
+ 1286  * GT_BSID is a sorted table keyed on KUNNR, so the WHERE below is a
+ 1287  * keyed access and not a full scan per output row.
+ 1288    LOOP AT gt_bsid INTO ls_bsid WHERE kunnr = iv_kunnr.
+ 1289      IF ls_bsid-budat > iv_date.
+ 1290        CONTINUE.
+ 1291      ENDIF.
+ 1292      IF ls_bsid-shkzg = 'S'.
+ 1293        cv_amount = cv_amount + ls_bsid-dmbtr.
+ 1294      ELSEIF ls_bsid-shkzg = 'H'.
+ 1295        cv_amount = cv_amount - ls_bsid-dmbtr.
+ 1296      ENDIF.
+ 1297    ENDLOOP.
+ 1298
+ 1299  * Cleared since, but still open on the commitment date.
+ 1300    LOOP AT gt_bsad INTO ls_bsad WHERE kunnr = iv_kunnr.
+ 1301      IF ls_bsad-budat > iv_date.
+ 1302        CONTINUE.
+ 1303      ENDIF.
+ 1304      IF ls_bsad-augdt <= iv_date.
+ 1305        CONTINUE.
+ 1306      ENDIF.
+ 1307      IF ls_bsad-shkzg = 'S'.
+ 1308        cv_amount = cv_amount + ls_bsad-dmbtr.
+ 1309      ELSEIF ls_bsad-shkzg = 'H'.
+ 1310        cv_amount = cv_amount - ls_bsad-dmbtr.
+ 1311      ENDIF.
+ 1312    ENDLOOP.
+ 1313
+ 1314  ENDFORM.
+ 1315
+ 1316  *&---------------------------------------------------------------------*
+ 1317  *& Form F_BUILD_OUTPUT
+ 1318  *&---------------------------------------------------------------------*
+ 1319  *& One output row per approval row.
+ 1320  *&---------------------------------------------------------------------*
+ 1321  FORM f_build_output.
+ 1322
+ 1323    DATA: ls_appr   TYPE ty_appr,
+ 1324          ls_out    TYPE ty_output,
+ 1325          ls_cust   TYPE ty_cust,
+ 1326          ls_name   TYPE ty_name,
+ 1327          ls_climit TYPE ty_climit,
+ 1328          ls_cdate  TYPE ty_cdate,
+ 1329          lv_amount TYPE dmbtr,
+ 1330          lv_perc   TYPE p LENGTH 15 DECIMALS 2.
+ 1331
+ 1332    CLEAR gt_output.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     24
+--------------------------------------------------------------------------------
+
+ 1333
+ 1334    LOOP AT gt_appr INTO ls_appr.
+ 1335
+ 1336      CLEAR: ls_out, ls_cust, ls_name, ls_climit, ls_cdate,
+ 1337             lv_amount, lv_perc.
+ 1338
+ 1339      ls_out-kunnr = ls_appr-partner.
+ 1340
+ 1341      READ TABLE gt_kna1 INTO ls_name
+ 1342           WITH KEY kunnr = ls_appr-partner.
+ 1343      IF sy-subrc = 0.
+ 1344        ls_out-name1 = ls_name-name1.
+ 1345      ENDIF.
+ 1346
+ 1347  *   L4/L5/L6 come from the customer table, filled by f_get_hierarchy.
+ 1348  *   They stay blank while GC_HIER_PROG names no executable report.
+ 1349  *   GT_CUST is sorted by KUNNR.
+ 1350      READ TABLE gt_cust INTO ls_cust
+ 1351           WITH KEY kunnr = ls_appr-partner BINARY SEARCH.
+ 1352      IF sy-subrc = 0.
+ 1353        ls_out-l4_name = ls_cust-l4_name.
+ 1354        ls_out-l5_name = ls_cust-l5_name.
+ 1355        ls_out-l6_name = ls_cust-l6_name.
+ 1356      ENDIF.
+ 1357
+ 1358  *   Approval month as MM/YYYY, taken from the approval date from.
+ 1359      IF ls_appr-datefr IS NOT INITIAL.
+ 1360        ls_out-exc_month = ls_appr-datefr+4(2) && '/' && ls_appr-datefr(4)
+       .
+ 1361      ENDIF.
+ 1362
+ 1363      ls_out-exc_no = ls_appr-counter.
+ 1364
+ 1365  *BOC By Arnav on 07/09/26
+ 1366  * FS deviation 5 withdrawn. The FS showed an "Exceptional Approval
+ 1367  * Type" column with values Credit Limit / Order / Both but named no
+ 1368  * source field for it, so the column shipped blank. Functional
+ 1369  * confirmed on 07/09/26 that it is not required - open issue 2 closed
+ 1370  * and the column removed from TY_OUTPUT and from the field catalogue.
+ 1371  * Old code:
+ 1372  ** ASSUMPTION (FS deviation 5): the FS shows an "Exceptional Approval
+ 1373  ** Type" column with values Credit Limit / Order / Both but names no
+ 1374  ** source field for it. The column is kept so the layout matches the FS
+ 1375  ** and is left blank until functional confirms the field - open issue 2.
+ 1376  **    CLEAR ls_out-exc_type.
+ 1377  *EOC By Arnav on 07/09/26
+ 1378
+ 1379      ls_out-date_from   = ls_appr-datefr.
+ 1380      ls_out-date_to     = ls_appr-dateto.
+ 1381      ls_out-exc_amnt    = ls_appr-amnt.
+ 1382      ls_out-commit_text = ls_appr-text.
+ 1383
+ 1384      READ TABLE gt_cdate INTO ls_cdate
+ 1385           WITH KEY partner = ls_appr-partner
+ 1386                    counter = ls_appr-counter.
+ 1387      IF sy-subrc = 0.
+ 1388        ls_out-commit_date = ls_cdate-commit_date.
+ 1389      ENDIF.
+ 1390
+ 1391      READ TABLE gt_climit INTO ls_climit
+ 1392           WITH KEY partner = ls_appr-partner.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     25
+--------------------------------------------------------------------------------
+
+ 1393      IF sy-subrc = 0.
+ 1394        ls_out-credit_limit = ls_climit-credit_limit.
+ 1395      ENDIF.
+ 1396
+ 1397      IF ls_out-commit_date IS NOT INITIAL.
+ 1398
+ 1399  *     LS_OUT-KUNNR carries the same value as LS_APPR-PARTNER but with
+ 1400  *     the KUNNR type, which is what the FORM signature expects.
+ 1401        PERFORM f_calc_open_amount USING    ls_out-kunnr
+ 1402                                            ls_out-commit_date
+ 1403                                   CHANGING lv_amount.
+ 1404
+ 1405        ls_out-act_os     = lv_amount.
+ 1406        ls_out-non_fulfil = ls_out-act_os - ls_out-credit_limit.
+ 1407
+ 1408        IF ls_out-credit_limit <> 0.
+ 1409  *       Computed in a wider packed field first. A limit that is a tiny
+ 1410  *       fraction of the outstanding could otherwise overflow DEF_PERC
+ 1411  *       and short dump instead of reporting.
+ 1412          lv_perc = ( ls_out-non_fulfil * 100 ) / ls_out-credit_limit.
+ 1413          IF lv_perc > 99999999999 OR lv_perc < -99999999999.
+ 1414            CLEAR ls_out-def_perc.
+ 1415          ELSE.
+ 1416            ls_out-def_perc = lv_perc.
+ 1417          ENDIF.
+ 1418        ELSE.
+ 1419  *       Never divide by zero - the FS gives no rule for a zero limit.
+ 1420          CLEAR ls_out-def_perc.
+ 1421        ENDIF.
+ 1422
+ 1423  * ASSUMPTION (FS deviation 8): the FS defines the status only for a
+ 1424  * positive and a negative non-fulfilment amount. Exactly zero means
+ 1425  * nothing is outstanding above the limit, so it is reported as
+ 1426  * Fulfilled - see open issue 12.
+ 1427        IF ls_out-non_fulfil > 0.
+ 1428          ls_out-status = 'Not Fulfilled'(s01).
+ 1429        ELSE.
+ 1430          ls_out-status = 'Fulfilled'(s02).
+ 1431        ENDIF.
+ 1432
+ 1433      ELSE.
+ 1434
+ 1435  *     Commitment date could not be parsed. The row is still reported so
+ 1436  *     the user can see the text that was typed, but the as-on-date
+ 1437  *     figures and the status stay empty rather than showing a wrong
+ 1438  *     number.
+ 1439        CLEAR: ls_out-act_os,
+ 1440               ls_out-non_fulfil,
+ 1441               ls_out-def_perc,
+ 1442               ls_out-status.
+ 1443
+ 1444      ENDIF.
+ 1445
+ 1446  * ASSUMPTION: the amount columns are shown in the company code currency
+ 1447  * of P_BUKRS. The credit limit of UKMBP_CMS_SGM is held in the credit
+ 1448  * segment currency, which is normally the same, but is not read here
+ 1449  * because the segment currency field name is not confirmed.
+ 1450      ls_out-waers = gv_waers.
+ 1451
+ 1452      APPEND ls_out TO gt_output.
+ 1453
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     26
+--------------------------------------------------------------------------------
+
+ 1454    ENDLOOP.
+ 1455
+ 1456  ENDFORM.
+ 1457
+ 1458  *&---------------------------------------------------------------------*
+ 1459  *& Form F_DISPLAY_ALV
+ 1460  *&---------------------------------------------------------------------*
+ 1461  *& Hand built LVC field catalogue and full screen grid display.
+ 1462  *&---------------------------------------------------------------------*
+ 1463  FORM f_display_alv.
+ 1464
+ 1465    DATA: lt_fcat    TYPE lvc_t_fcat,
+ 1466          ls_layout  TYPE lvc_s_layo,
+ 1467          ls_variant TYPE disvariant.
+ 1468
+ 1469    CLEAR: lt_fcat, ls_layout, ls_variant.
+ 1470
+ 1471    IF gt_output IS INITIAL.
+ 1472      MESSAGE 'No data to display for the selection'(m12)
+ 1473              TYPE 'S' DISPLAY LIKE 'E'.
+ 1474      LEAVE LIST-PROCESSING.
+ 1475    ENDIF.
+ 1476
+ 1477  * Column order follows TY_OUTPUT. The fourth argument is the currency
+ 1478  * reference field, the fifth the "do not display" flag.
+ 1479    PERFORM f_add_fcat USING  1 'KUNNR'        'Customer Code'(c01)
+ 1480                                space   space   CHANGING lt_fcat.
+ 1481    PERFORM f_add_fcat USING  2 'NAME1'        'Customer Name'(c02)
+ 1482                                space   space   CHANGING lt_fcat.
+ 1483    PERFORM f_add_fcat USING  3 'L4_NAME'      'L4 Name'(c03)
+ 1484                                space   space   CHANGING lt_fcat.
+ 1485    PERFORM f_add_fcat USING  4 'L5_NAME'      'L5 Name'(c04)
+ 1486                                space   space   CHANGING lt_fcat.
+ 1487    PERFORM f_add_fcat USING  5 'L6_NAME'      'L6 Name'(c05)
+ 1488                                space   space   CHANGING lt_fcat.
+ 1489    PERFORM f_add_fcat USING  6 'EXC_MONTH'    'Approval Month'(c06)
+ 1490                                space   space   CHANGING lt_fcat.
+ 1491    PERFORM f_add_fcat USING  7 'EXC_NO'       'Exception Number'(c07)
+ 1492                                space   space   CHANGING lt_fcat.
+ 1493  *BOC By Arnav on 07/09/26
+ 1494  * EXC_TYPE removed (issue 2 closed - not required). Every column after
+ 1495  * it moves up one position. The text symbol IDs are deliberately NOT
+ 1496  * renumbered: C09 to C19 keep their IDs so only one row leaves the
+ 1497  * text-element sheet. C08 is now unused.
+ 1498  * Old code:
+ 1499  **  PERFORM f_add_fcat USING  8 'EXC_TYPE'     'Approval Type'(c08)
+ 1500  **                              space   space   CHANGING lt_fcat.
+ 1501    PERFORM f_add_fcat USING  8 'DATE_FROM'    'Approval Date From'(c09)
+ 1502                                space   space   CHANGING lt_fcat.
+ 1503    PERFORM f_add_fcat USING  9 'DATE_TO'      'Approval Date To'(c10)
+ 1504                                space   space   CHANGING lt_fcat.
+ 1505    PERFORM f_add_fcat USING 10 'EXC_AMNT'     'Exceptional Amount'(c11)
+ 1506                                'WAERS' space   CHANGING lt_fcat.
+ 1507    PERFORM f_add_fcat USING 11 'COMMIT_DATE'  'Commitment Date'(c12)
+ 1508                                space   space   CHANGING lt_fcat.
+ 1509    PERFORM f_add_fcat USING 12 'COMMIT_TEXT'  'Commitment Text'(c13)
+ 1510                                space   space   CHANGING lt_fcat.
+ 1511    PERFORM f_add_fcat USING 13 'CREDIT_LIMIT' 'Actual Credit Limit'(c14)
+ 1512                                'WAERS' space   CHANGING lt_fcat.
+ 1513    PERFORM f_add_fcat USING 14 'ACT_OS'       'Actual OS on Commit Date'(
+       c15)
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     27
+--------------------------------------------------------------------------------
+
+ 1514                                'WAERS' space   CHANGING lt_fcat.
+ 1515    PERFORM f_add_fcat USING 15 'NON_FULFIL'   'Non-Fulfilment Amount'(c16
+       )
+ 1516                                'WAERS' space   CHANGING lt_fcat.
+ 1517    PERFORM f_add_fcat USING 16 'DEF_PERC'     'Default % Non-Fulfilment'(
+       c17)
+ 1518                                space   space   CHANGING lt_fcat.
+ 1519    PERFORM f_add_fcat USING 17 'STATUS'       'Status'(c18)
+ 1520                                space   space   CHANGING lt_fcat.
+ 1521
+ 1522  * WAERS is the currency reference for the amount columns above and is
+ 1523  * not a business column, so it is not displayed.
+ 1524    PERFORM f_add_fcat USING 18 'WAERS'        'Currency'(c19)
+ 1525                                space   'X'    CHANGING lt_fcat.
+ 1526  *EOC By Arnav on 07/09/26
+ 1527
+ 1528    ls_layout-zebra      = abap_true.
+ 1529    ls_layout-cwidth_opt = abap_true.
+ 1530
+ 1531  * IS_VARIANT must carry the report name for I_SAVE = 'A' to be able to
+ 1532  * store a layout.
+ 1533    ls_variant-report = gv_repid.
+ 1534
+ 1535    CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY_LVC'
+ 1536      EXPORTING
+ 1537        i_callback_program = gv_repid
+ 1538        is_layout_lvc      = ls_layout
+ 1539        it_fieldcat_lvc    = lt_fcat
+ 1540        i_save             = 'A'
+ 1541        is_variant         = ls_variant
+ 1542      TABLES
+ 1543        t_outtab           = gt_output
+ 1544      EXCEPTIONS
+ 1545        program_error      = 1
+ 1546        OTHERS             = 2.
+ 1547
+ 1548    IF sy-subrc <> 0.
+ 1549      MESSAGE 'The report list could not be displayed'(m07)
+ 1550              TYPE 'S' DISPLAY LIKE 'E'.
+ 1551    ENDIF.
+ 1552
+ 1553  ENDFORM.
+ 1554
+ 1555  *&---------------------------------------------------------------------*
+ 1556  *& Form F_ADD_FCAT
+ 1557  *&---------------------------------------------------------------------*
+ 1558  *& Builds one LVC_S_FCAT entry so that f_display_alv stays a readable
+ 1559  *& list of column definitions. The parameters are typed generically
+ 1560  *& (CLIKE) so that literals, text symbols and SPACE can all be passed.
+ 1561  *&---------------------------------------------------------------------*
+ 1562  FORM f_add_fcat  USING    iv_pos   TYPE i
+ 1563                            iv_field TYPE clike
+ 1564                            iv_text  TYPE clike
+ 1565                            iv_curr  TYPE clike
+ 1566                            iv_noout TYPE clike
+ 1567                   CHANGING ct_fcat  TYPE lvc_t_fcat.
+ 1568
+ 1569    DATA ls_fcat TYPE lvc_s_fcat.
+ 1570
+ 1571    CLEAR ls_fcat.
+ 1572
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE                 Page     28
+--------------------------------------------------------------------------------
+
+ 1573    ls_fcat-col_pos   = iv_pos.
+ 1574    ls_fcat-fieldname = iv_field.
+ 1575    ls_fcat-scrtext_l = iv_text.
+ 1576    ls_fcat-scrtext_m = iv_text.
+ 1577    ls_fcat-scrtext_s = iv_text.
+ 1578    ls_fcat-reptext   = iv_text.
+ 1579
+ 1580    IF iv_curr IS NOT INITIAL.
+ 1581      ls_fcat-cfieldname = iv_curr.
+ 1582    ENDIF.
+ 1583
+ 1584    IF iv_noout = abap_true.
+ 1585      ls_fcat-no_out = abap_true.
+ 1586    ENDIF.
+ 1587
+ 1588    APPEND ls_fcat TO ct_fcat.
+ 1589
+ 1590  ENDFORM.
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE text e          Page     29
+--------------------------------------------------------------------------------
+
+Title:
+   UDAYABAP03
+
+--------------------------------------------------------------------------------
+Text elements:
+
+001   Exceptional Approval Data
+002   Organisational Data
+C01   Customer Code
+C02   Customer Name
+C03   L4 Name
+C04   L5 Name
+C05   L6 Name
+C06   Approval Month
+C07   Exception Number
+C08   Approval Type
+C09   Approval Date From
+C10   Approval Date To
+C11   Exceptional Amount
+C12   Commitment Date
+C13   Commitment Text
+C14   Actual Credit Limit
+C15   Actual OS on Commit Date
+C16   Non-Fulfilment Amount
+C17   Default % Non-Fulfilment
+C18   Status
+C19   Currency
+M01   No customers match the selection
+M02   No exceptional approvals found for the selection
+M03   Enter the information category first
+M04   Company code does not exist
+M05   Information category does not exist
+M06   Information type not valid for this category
+M07   The report list could not be displayed
+M08   No information categories are maintained
+M09   Value help could not be displayed
+M10   No information types for this category
+M11   Company code currency could not be read
+M12   No data to display for the selection
+S01   Not Fulfilled
+S02   Fulfilled
+
+
+--------------------------------------------------------------------------------
+Selection texts:
+
+P_BUKRS
+        Company Code
+P_INFCAT
+        Information Category
+P_INFTYP
+        Information Type
+P_SEGMNT
+        Credit Segment
+S_DATE
+        Approval Date
+S_KUNNR
+        Customer Number
+S_KVGR1
+        Customer Group 1
+S_KVGR2
+--------------------------------------------------------------------------------
+17.09.26 DEV      Program ZSD_EXC_APPR_ADHESIVE text e          Page     30
+--------------------------------------------------------------------------------
+
+        Customer Group 2
+S_VKORG
+        Sales Organization
+--------------------------------------------------------------------------------
+17.09.26 DEV      Internal Program Environment ZSD_EXC_APPR_ADHEPage     31
+--------------------------------------------------------------------------------
+
+Subroutines:                                                  Line  Page
+
+F_ADD_FCAT.................... ZSD_EXC_APPR_ADHESIVE          1479    26
+                               ZSD_EXC_APPR_ADHESIVE          1481    26
+                               ZSD_EXC_APPR_ADHESIVE          1483    26
+                               ZSD_EXC_APPR_ADHESIVE          1485    26
+                               ZSD_EXC_APPR_ADHESIVE          1487    26
+                               ZSD_EXC_APPR_ADHESIVE          1489    26
+                               ZSD_EXC_APPR_ADHESIVE          1491    26
+                               ZSD_EXC_APPR_ADHESIVE          1501    26
+                               ZSD_EXC_APPR_ADHESIVE          1503    26
+                               ZSD_EXC_APPR_ADHESIVE          1505    26
+                               ZSD_EXC_APPR_ADHESIVE          1507    26
+                               ZSD_EXC_APPR_ADHESIVE          1509    26
+                               ZSD_EXC_APPR_ADHESIVE          1511    26
+                               ZSD_EXC_APPR_ADHESIVE          1513    26
+                               ZSD_EXC_APPR_ADHESIVE          1515    27
+                               ZSD_EXC_APPR_ADHESIVE          1517    27
+                               ZSD_EXC_APPR_ADHESIVE          1519    27
+                               ZSD_EXC_APPR_ADHESIVE          1524    27
+                               ZSD_EXC_APPR_ADHESIVE          1562    27
+F_BUILD_OUTPUT................ ZSD_EXC_APPR_ADHESIVE           552    11
+                               ZSD_EXC_APPR_ADHESIVE          1321    23
+F_CALC_OPEN_AMOUNT............ ZSD_EXC_APPR_ADHESIVE          1272    23
+                               ZSD_EXC_APPR_ADHESIVE          1401    25
+F_CHECK_DATE.................. ZSD_EXC_APPR_ADHESIVE          1093    20
+                               ZSD_EXC_APPR_ADHESIVE          1127    20
+F_DISPLAY_ALV................. ZSD_EXC_APPR_ADHESIVE           556    11
+                               ZSD_EXC_APPR_ADHESIVE          1463    26
+F_GET_APPROVALS............... ZSD_EXC_APPR_ADHESIVE           546    10
+                               ZSD_EXC_APPR_ADHESIVE           623    12
+F_GET_COMPANY_CURRENCY........ ZSD_EXC_APPR_ADHESIVE           549    11
+                               ZSD_EXC_APPR_ADHESIVE           735    14
+F_GET_CREDIT_LIMITS........... ZSD_EXC_APPR_ADHESIVE           548    11
+                               ZSD_EXC_APPR_ADHESIVE           706    13
+F_GET_CUSTOMERS............... ZSD_EXC_APPR_ADHESIVE           545    10
+                               ZSD_EXC_APPR_ADHESIVE           564    11
+F_GET_HIERARCHY............... ZSD_EXC_APPR_ADHESIVE           550    11
+                               ZSD_EXC_APPR_ADHESIVE           759    14
+F_GET_NAMES................... ZSD_EXC_APPR_ADHESIVE           547    11
+                               ZSD_EXC_APPR_ADHESIVE           678    13
+F_GET_OPEN_ITEMS.............. ZSD_EXC_APPR_ADHESIVE           551    11
+                               ZSD_EXC_APPR_ADHESIVE          1180    21
+F_PARSE_COMMIT_DATE........... ZSD_EXC_APPR_ADHESIVE           939    17
+                               ZSD_EXC_APPR_ADHESIVE          1195    21
+--------------------------------------------------------------------------------
+
+Messages:
+
+                                                              Line  Page
+
+?............................. ZSD_EXC_APPR_ADHESIVE           337     7
+?............................. ZSD_EXC_APPR_ADHESIVE           356     7
+?............................. ZSD_EXC_APPR_ADHESIVE           408     8
+?............................. ZSD_EXC_APPR_ADHESIVE           426     9
+?............................. ZSD_EXC_APPR_ADHESIVE           445     9
+?............................. ZSD_EXC_APPR_ADHESIVE           471     9
+?............................. ZSD_EXC_APPR_ADHESIVE           498    10
+?............................. ZSD_EXC_APPR_ADHESIVE           529    10
+?............................. ZSD_EXC_APPR_ADHESIVE           580    11
+?............................. ZSD_EXC_APPR_ADHESIVE           595    11
+--------------------------------------------------------------------------------
+17.09.26 DEV      Internal Program Environment ZSD_EXC_APPR_ADHEPage     32
+--------------------------------------------------------------------------------
+
+?............................. ZSD_EXC_APPR_ADHESIVE           631    12
+?............................. ZSD_EXC_APPR_ADHESIVE           654    12
+?............................. ZSD_EXC_APPR_ADHESIVE           747    14
+?............................. ZSD_EXC_APPR_ADHESIVE           812    15
+?............................. ZSD_EXC_APPR_ADHESIVE           818    15
+?............................. ZSD_EXC_APPR_ADHESIVE           855    16
+?............................. ZSD_EXC_APPR_ADHESIVE           909    17
+?............................. ZSD_EXC_APPR_ADHESIVE          1472    26
+?............................. ZSD_EXC_APPR_ADHESIVE          1549    27
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+17.09.26 DEV      Internal Program Environment ZSD_EXC_APPR_ADHEPage     33
+--------------------------------------------------------------------------------
+
+External calls
+
+
+Function Modules                                              Line  Page
+
+CONVERSION_EXIT_ALPHA_INPUT... ZSD_EXC_APPR_ADHESIVE           895    16
+DYNP_VALUES_READ.............. ZSD_EXC_APPR_ADHESIVE           385     8
+F4IF_INT_TABLE_VALUE_REQUEST.. ZSD_EXC_APPR_ADHESIVE           340     7
+                               ZSD_EXC_APPR_ADHESIVE           429     9
+REUSE_ALV_GRID_DISPLAY_LVC.... ZSD_EXC_APPR_ADHESIVE          1535    27
+--------------------------------------------------------------------------------
+
+
+Reports:                                                      Line  Page
+
+?............................. ZSD_EXC_APPR_ADHESIVE           843    15
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+17.09.26 DEV      Internal Program Environment ZSD_EXC_APPR_ADHEPage     34
+--------------------------------------------------------------------------------
+
+DATABASE OPERATIONS
+
+
+SELECT:                                                       Line  Page
+
+BP3100........................ ZSD_EXC_APPR_ADHESIVE           331     7
+                               ZSD_EXC_APPR_ADHESIVE           419     8
+                               ZSD_EXC_APPR_ADHESIVE           492    10
+                               ZSD_EXC_APPR_ADHESIVE           522    10
+                               ZSD_EXC_APPR_ADHESIVE           640    12
+BSAD.......................... ZSD_EXC_APPR_ADHESIVE          1252    22
+BSID.......................... ZSD_EXC_APPR_ADHESIVE          1239    22
+KNA1.......................... ZSD_EXC_APPR_ADHESIVE           687    13
+KNB1.......................... ZSD_EXC_APPR_ADHESIVE           574    11
+KNVV.......................... ZSD_EXC_APPR_ADHESIVE           586    11
+T001.......................... ZSD_EXC_APPR_ADHESIVE           466     9
+                               ZSD_EXC_APPR_ADHESIVE           740    14
+TRDIR......................... ZSD_EXC_APPR_ADHESIVE           807    15
+UKMBP_CMS_SGM................. ZSD_EXC_APPR_ADHESIVE           715    13
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+17.09.26 DEV      Internal Program Environment ZSD_EXC_APPR_ADHEPage     35
+--------------------------------------------------------------------------------
+
+INTERNAL TABLE OPERATIONS
+
+
+READ TABLE:                                                   Line  Page
+
+GT_CDATE...................... ZSD_EXC_APPR_ADHESIVE          1384    24
+GT_CLIMIT..................... ZSD_EXC_APPR_ADHESIVE          1391    24
+GT_CUST....................... ZSD_EXC_APPR_ADHESIVE          1350    24
+GT_KNA1....................... ZSD_EXC_APPR_ADHESIVE          1341    24
+LT_DYNP....................... ZSD_EXC_APPR_ADHESIVE           396     8
+LT_HIER....................... ZSD_EXC_APPR_ADHESIVE           920    17
+LT_PART....................... ZSD_EXC_APPR_ADHESIVE          1051    19
+                               ZSD_EXC_APPR_ADHESIVE          1052    19
+                               ZSD_EXC_APPR_ADHESIVE          1053    19
+LT_RETCAT..................... ZSD_EXC_APPR_ADHESIVE           359     7
+LT_RETTYP..................... ZSD_EXC_APPR_ADHESIVE           448     9
+--------------------------------------------------------------------------------
+
+
+DELETE:                                                       Line  Page
+
+GT_PARTNER.................... ZSD_EXC_APPR_ADHESIVE           669    13
+LT_KNVV....................... ZSD_EXC_APPR_ADHESIVE           604    11
+--------------------------------------------------------------------------------
