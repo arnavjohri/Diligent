@@ -15,7 +15,8 @@ ones here. Backend objects, if any step needs one, are pasted through ADT as
 usual and are listed in the step.
 
     webapp/manifest.json                     data sources, models, global filter, six cards
-    webapp/annotations/annotation_boepd.xml  ZDPR_Q_BOEPD_TREND_CDS  - cards 1 and 5
+    webapp/annotations/annotation_total.xml  ZDPR_Q_BOEPD_TOTAL_CDS  - card 1 (date-only, 17/09/26)
+    webapp/annotations/annotation_boepd.xml  ZDPR_Q_BOEPD_TREND_CDS  - card 5
     webapp/annotations/annotation_perf.xml   ZDPR_Q_PROD_PERF_CDS    - cards 2 and 3
     webapp/annotations/annotation_target.xml ZDPR_Q_TARGET_QUERY_CDS - card 4
     webapp/annotations/annotation_prod.xml   ZDPR_Q_PROD_QUERY_CDS   - card 6
@@ -85,12 +86,24 @@ Business Unit (derived from the asset prefix) and Product.
 Which card honours which new field (a filter reaches a card only when the
 card's query has an element of that name):
 
-| Field | Cards 1, 5 (BOEPD trend) | Card 4 (target) | Card 6 (records) | Cards 2, 3 (perf table) |
-|---|---|---|---|---|
-| Asset | yes | yes | yes | no — company total by design |
-| BusinessUnit | yes | no | no | no |
-| Block | no | yes | yes | no |
-| Product | yes | yes | yes | no |
+| Field | Card 1 (total) | Card 5 (BU trend) | Card 4 (target) | Card 6 (records) | Cards 2, 3 (perf table) |
+|---|---|---|---|---|---|
+| Asset | no — date only by design | yes | yes | yes | no — company total by design |
+| BusinessUnit | no | yes | no | no | no |
+| Block | no | no | yes | yes | no |
+| Product | no | yes | yes | yes | no |
+
+**Card 1 stays a company total (17/09/26).** The Overview Page applies a
+filter field to every card whose entity type has a property of that name and
+offers no per-card opt-out (SAP docs, "Configuring the Global Filter on the
+Overview Page"). Card 1 and card 5 shared ZDPR_Q_BOEPD_TREND, so card 1 now
+has its own query `ZDPR_Q_BOEPD_TOTAL` (`../zdpr_rap/ZDPR_Q_BOEPD_TOTAL.ddls.asddls`):
+same cube, same two lines, no dimension elements, so only P_DateFrom /
+P_DateTo reach it. Steps: activate, register `ZDPR_Q_BOEPD_TOTAL_CDS`, add it
+in BAS (*Manage Service Models*), copy `annotations/annotation_total.xml`;
+`manifest.json` here already points card 1 at model `ZDPR_Q_BOEPD_TOTAL_CDS`,
+entity set `ZDPR_Q_BOEPD_TOTALResults`. The card 1 block in
+`annotation_boepd.xml` is now unused and kept only for reference.
 
 Fields are plain inputs for now (the main model is loaded with
 `sap-value-list=none`). Dropdown value help is a follow-up: a value-help view

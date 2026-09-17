@@ -68,6 +68,32 @@
           "odataVersion": "2.0"
         }
       },
+      "ZDPR_Q_BOEPD_TOTAL_CDS_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_BOEPD_TOTAL_CDS_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/ZDPR_Q_BOEPD_TOTAL_CDS/ZDPR_Q_BOEPD_TOTAL_CDS_VAN.xml"
+        }
+      },
+      "totalAnnotation": {
+        "type": "ODataAnnotation",
+        "uri": "annotations/annotation_total.xml",
+        "settings": {
+          "localUri": "annotations/annotation_total.xml"
+        }
+      },
+      "ZDPR_Q_BOEPD_TOTAL_CDS": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_BOEPD_TOTAL_CDS/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "ZDPR_Q_BOEPD_TOTAL_CDS_VAN",
+            "totalAnnotation"
+          ],
+          "localUri": "localService/ZDPR_Q_BOEPD_TOTAL_CDS/metadata.xml",
+          "odataVersion": "2.0"
+        }
+      },
       "ZDPR_Q_BOEPD_TREND_CDS_VAN": {
         "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_BOEPD_TREND_CDS_VAN',Version='0001')/$value/",
         "type": "ODataAnnotation",
@@ -244,6 +270,11 @@
         "preload": true,
         "settings": {}
       },
+      "ZDPR_Q_BOEPD_TOTAL_CDS": {
+        "dataSource": "ZDPR_Q_BOEPD_TOTAL_CDS",
+        "preload": true,
+        "settings": {}
+      },
       "ZDPR_Q_BOEPD_TREND_CDS": {
         "dataSource": "ZDPR_Q_BOEPD_TREND_CDS",
         "preload": true,
@@ -285,12 +316,12 @@
     "useDateRangeType": false,
     "cards": {
       "card01_boepdTrend": {
-        "model": "ZDPR_Q_BOEPD_TREND_CDS",
+        "model": "ZDPR_Q_BOEPD_TOTAL_CDS",
         "template": "sap.ovp.cards.charts.analytical",
         "settings": {
           "title": "{{card01Title}}",
           "subTitle": "{{card01Subtitle}}",
-          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
+          "entitySet": "ZDPR_Q_BOEPD_TOTALResults",
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",

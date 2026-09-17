@@ -15,6 +15,16 @@ Block, Product, BusinessUnit, AssetDescription, ProductDescription, from
 `zpra_c_prd_prof` + `zoiu_pr_dn`. The page only reads its `$metadata`. SAC
 plan (`sac/`) is parked — the senior decided to stay with the Overview Page.
 
+## ZDPR_Q_BOEPD_TOTAL.ddls.asddls — card 1 query, date-only (17/09/26, Arnav)
+
+New analytical query on ZDPR_C_BOEPD_DAY: ProductionDate, ProductionDateText,
+ActualBoepdOvl, TargetBoepd, nothing else. Exists so that card 1 (Actual vs
+BE Target) ignores the Asset / Business Unit / Block / Product fields of the
+new filter bar while card 5 on ZDPR_Q_BOEPD_TREND honours them — the Overview
+Page matches filter fields to cards by element name and has no per-card
+opt-out. Service `ZDPR_Q_BOEPD_TOTAL_CDS`, result set
+`ZDPR_Q_BOEPD_TOTALResults`, type `ZDPR_Q_BOEPD_TOTALResult`.
+
 ## v16-09/ — backend revision of 16/09/26 (senior's ZIP / Developer Guide)
 
 Extracted verbatim from `../docs/ZDPR_RAP_Complete_Source_Code_2026-09-16.docx`.
