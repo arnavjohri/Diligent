@@ -1,3 +1,4 @@
+METHOD if_ex_me_bapi_po_cust~inbound.
 *----------------------------------------------------------------------*
 * Class       : ZCL_IM_MM_BAPI_PO_NOROUND                              *
 * BAdI impl.  : ZMM_BAPI_PO_NOROUND  (definition ME_BAPI_PO_CUST)     *
@@ -35,7 +36,6 @@
 *   today. A BAPI BAdI cannot raise a dialog message, so this is       *
 *   documented in NOTES.md instead of being reported at run time.      *
 *----------------------------------------------------------------------*
-METHOD if_ex_me_bapi_po_cust~inbound.
 
   CONSTANTS: lc_tvarv_name TYPE rvari_vnam VALUE 'ZMM_ARIBA_PO_USER',
              lc_tvarv_type TYPE rsscr_kind VALUE 'S',
