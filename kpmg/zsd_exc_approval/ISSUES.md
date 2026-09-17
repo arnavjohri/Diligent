@@ -303,3 +303,31 @@ by the callee's own activation.
 
 **Issue 1 closes with this** once functional confirms the names on the report match
 `ZSD_CUSTOMER_DATA` for the same customers. Not yet activated on the system.
+
+### 17/09/26 — Arnav asked: is `ZSD_CUSTEMP_ASSG` the only source, or is a standard table behind it?
+
+Checked every assignment in the `ZSD_CUSTOMER_DATA` print. The ALV carries **two different
+hierarchies**, and only one of them is labelled "L4 Name / L5 Name / L6 Name":
+
+| Set | ALV columns | Technical fields | Source in the program |
+|---|---|---|---|
+| Old (Carina Jose, 07/2021) | `L1`…`L6`, `L1 Name`…`L6 Name` | `LCATEGORY1`–`6`, `LNAME1`–`6` | **Custom table `ZSD_CUSTEMP_ASSG` only.** One `SELECT` (kunnr, lcategory, lid, startval, endval, lname), rows valid on `SY-DATUM`; `LNAME` copied by `LCATEGORY`. No standard table anywhere on that path. Who fills `ZSD_CUSTEMP_ASSG` is outside this program. |
+| New "SDH" (Archna Gupta 06.03.2026, "BP" 2026) | `LID_1`…`LID_7`, `L1_D`…`L7_D`, `Ln_MOB`, `Ln_EMAIL`, `GID_n`, `Gn_D` | `ZZ1_LID_n_SDH`, `EMP_NAMEn`, `Ln_MOB`, `Ln_EMAIL`, `ZZ1_GID_n_SDH`, `ZZ1_Gn_D_SDH` | Custom FM **`ZSALES_HIERARCHY`** (kunnr, division, customer group 1 → structure `ZST_HIERARCHY_FLAT`, moved by name into the output; its own source is not in the print — likely `KNA1-ZZ1_POSIDn_CUS` / `ZZ1_GEOn_CUS` and `ZSD_HIERARCHY_TB`), then standard HR: `HRP1001` (position → holder, relation 008) and `PA0105` (mobile `CELL`, e-mail `0010`). **`EMP_NAMEn` is declared but never filled in the live code**, so the `L1_D`…`L7_D` name columns are blank in this version of the report. |
+
+So the answer is: the columns the FS names — "L4 Name", "L5 Name", "L6 Name" — come from
+the custom table and nothing else, and the corrected reports read exactly that table. The
+risk is a different one: if `ZSD_CUSTEMP_ASSG` is a 2021-era table that is no longer
+maintained, those columns are blank in `ZSD_CUSTOMER_DATA` too, and what the business
+actually wants may be the newer SDH hierarchy (sales position holders), which even the
+source report does not show as names yet.
+
+Two checks settle it, no code needed:
+
+1. SE16N `ZSD_CUSTEMP_ASSG`, `KUNNR` = 0001000000 and 0001000724 — rows with `LCATEGORY`
+   L4/L5/L6 and `STARTVAL` ≤ today ≤ `ENDVAL`?
+2. Run `ZSD_CUSTOMER_DATA` for the same two customers and scroll to "L4 Name … L6 Name".
+
+Filled there → the corrected reports show the same. Blank there → the table has no data
+for them; Sanjay must then say whether "L5 name" means the SDH position holder's name —
+a different build (`ZSALES_HIERARCHY` + `HRP1001` + an employee-name read the source
+report does not have either).
