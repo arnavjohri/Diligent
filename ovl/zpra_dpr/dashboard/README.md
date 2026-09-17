@@ -22,6 +22,12 @@ usual and are listed in the step.
     webapp/annotations/annotation_prod.xml   ZDPR_Q_PROD_QUERY_CDS   - card 6
     webapp/i18n/i18n.properties              all card titles
 
+## Status 17/09/26 — deployed to the ABAP repository
+`npm run deploy` (ABAP deployment configuration) created BSP application
+`ZDPRPRODDASH` and its two SICF nodes on a workbench TR. Launchpad tile,
+catalog, group and role (`/UI2/FLPD_CUST`, PFCG) are the next step; the
+Cloud Foundry / Work Zone route described in the docs is no longer the plan.
+
 ## Status 16/09/26 (evening)
 All six cards render in the BAS preview. The senior released backend revision
 v16-09 (see `../zdpr_rap/README.md`): BE target now computed like the classic
