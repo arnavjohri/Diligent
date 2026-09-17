@@ -20,10 +20,10 @@ pattern — the `+4(2)` / `(1)` / `(4)` occurrences in the code and in comments 
 `ls_row-zexc_appr_month+4(2)`, `lv_str(lv_off)`, `lv_str+1(lv_off)`) are substring
 offsets, not text-symbol references, and are excluded.
 
-That leaves **54 distinct IDs**: `001`–`003`, `m01`–`m05` + `m07`–`m09` (8 IDs — `m06`
-is not used anywhere in the source and is deliberately absent), `e01`–`e23` (23 IDs,
-no gaps), `a01`–`a06` (6 IDs), `c01`–`c08` (8 IDs), `t01`–`t06` (6 IDs).
-`3 + 8 + 23 + 6 + 8 + 6 = 54`. Every one of the 54 appears in Table 1 below, each
+That leaves **55 distinct IDs**: `001`–`003`, `m01`–`m09` (9 IDs — `m06` was added on
+17/09/26 for the COMMIT WORK AND WAIT warning), `e01`–`e23` (23 IDs, no gaps),
+`a01`–`a06` (6 IDs), `c01`–`c08` (8 IDs), `t01`–`t06` (6 IDs).
+`3 + 9 + 23 + 6 + 8 + 6 = 55`. Every one of the 55 appears in Table 1 below, each
 exactly once, with the literal text taken verbatim from the source as the default.
 Nothing is listed that the source does not reference, and nothing the source
 references is missing. `(m02)` occurs twice in the source (`F_READ_FILE` line 372 and
@@ -51,6 +51,7 @@ before letters).
 | M03 | The database update failed, the row was rolled back | 51 | log fragment, `F_BUILD_LOG` — shown when `G_DBFAIL = 'X'` |
 | M04 | The row was written to the database | 35 | log fragment, `F_BUILD_LOG` — normal insert/change outcome |
 | M05 | Test run - the row is valid, nothing written | 44 | log fragment, `F_BUILD_LOG` — shown when `P_TEST = 'X'` |
+| M06 | Rows saved, but a follow-on update failed - see SM13 | 52 | summary warning, `F_SHOW_SUMMARY` — `SY-SUBRC <> 0` after `COMMIT WORK AND WAIT` (added 17/09/26) |
 | M07 | The result list could not be displayed | 38 | error, `F_DISPLAY_LOG` — `REUSE_ALV_GRID_DISPLAY_LVC` failed |
 | M08 | Select the upload file | 22 | F4 dialog title, `F_F4_FILE` |
 | M09 | The file dialog could not be opened | 35 | error, `F_F4_FILE` |
@@ -98,7 +99,7 @@ before letters).
 | T05 | TEST RUN - nothing was written | 30 | summary-line fragment, `F_SHOW_SUMMARY` — appended when `P_TEST = 'X'` |
 | T06 | DATABASE UPDATE FAILED - nothing was written | 44 | summary-line fragment, `F_SHOW_SUMMARY` — appended when `G_DBFAIL = 'X'` |
 
-54 rows, 54 distinct IDs referenced in the source — the two sets match.
+55 rows, 55 distinct IDs referenced in the source — the two sets match.
 
 ## 2. Selection Texts
 

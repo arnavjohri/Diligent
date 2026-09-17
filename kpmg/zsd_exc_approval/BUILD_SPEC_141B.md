@@ -308,6 +308,9 @@ waers last, `no_out = abap_true`, currency reference for the amount columns.
 | B1 | §6.3 point 7 | `FOR ALL ENTRIES IN @gt_cust` on ACDOCA, guard on `gt_cust` | `FOR ALL ENTRIES IN @gt_partner`, guard on `gt_partner` | only the customers that carry an approval are ever asked for in `f_calc_collection`; identical figures, far smaller ACDOCA read. Marked `*BOC By Arnav on 05/09/26` in the source |
 | B2 | §6.3 point 4 | — | `" ASSUMPTION:` on the UKMBP_CMS_SGM read that BP number = customer number (ISSUES.md #18, shared with 141.A) | greppable, as §0 requires |
 | B3 | §8 / `src/` | hand-written abapGit XML as of 03/09/26 | XML regenerated 05/09/26 in DDIC structure order, `REFKIND`, `CLIDEP`, `EXCLASS 4`, selection-text lengths fixed, ZIP without directory entries | `ZIP_IMPORT_NOTES.md` — the ZIP has still not been tried since |
+| B4 | §5.4 | `sy-subrc` checked after `COMMIT WORK AND WAIT`, rollback plus error on failure | rows count as written; the summary warns "Rows saved, but a follow-on update failed - see SM13" (text symbol M06) | a direct MODIFY is durable at the commit; the code only reports a failed update task and nothing can be rolled back (ISSUES.md #25). 17/09/26 |
+| B5 | §5.3 point 7 | amounts convert cleanly | plus: a third decimal is rejected, not rounded; the length check allows the decimal point (24 characters) | never a silent change of a value. 17/09/26 |
+| B6 | §6.3 point 8 | per-row window, summed independently | unchanged, but the double count across overlapping windows of one customer is now an `" ASSUMPTION:` in `f_calc_collection` | ISSUES.md #24. 17/09/26 |
 
 ## 8. Also deliver
 

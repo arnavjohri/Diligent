@@ -178,7 +178,7 @@ Column order, fixed and unnamed at the file level:
 | 4 | `ZEXC_APPR_TYPE` | Yes | exactly `1`, `2` or `3` |
 | 5 | `ZEXC_DATE_FROM` | Yes | `DD.MM.YYYY` or `DD/MM/YYYY`, day first |
 | 6 | `ZEXC_DATE_TO` | No | same date rule; blank allowed |
-| 7 | `ZEXC_AMOUNT` | No (blank = 0) | digits, one decimal point, comma thousand separators stripped, `+`/`-` sign |
+| 7 | `ZEXC_AMOUNT` | No (blank = 0) | digits, one decimal point with at most two decimals (a third is rejected, never rounded), comma thousand separators stripped, `+`/`-` sign |
 | 8 | `ZCOMMIT_DATE` | No | same date rule; blank allowed |
 | 9 | `ZEX_AMNT` | No (blank = 0) | same amount rule |
 | 10 | `ZCM_AMNT` | No (blank = 0) | same amount rule |
@@ -214,10 +214,14 @@ off deduplicated tables built outside the row loop — never a SELECT per row.
 
 Runs only when `P_TEST` is off **and** at least one row is valid. Valid rows are collected
 into `gt_upd` and written with `MODIFY zsd_exp_paints FROM TABLE @gt_upd` inside one LUW,
-followed by `COMMIT WORK AND WAIT`; a non-zero `sy-subrc` from either the `MODIFY` or the
-`COMMIT` rolls the whole LUW back and marks every row "Not written" — either every valid
-row of the file lands on the table, or none does. Invalid rows are never in `gt_upd` and
-so can never be written regardless of the outcome.
+followed by `COMMIT WORK AND WAIT`. A non-zero `sy-subrc` from the `MODIFY` rolls the LUW
+back and marks every row "Not written" — either every valid row of the file lands on the
+table, or none does. A non-zero `sy-subrc` after the `COMMIT` is a different thing: the
+direct write is already durable by then and the code only says that an update task
+registered in the LUW failed, so (since 17/09/26) the rows count as written and the
+closing message carries the warning "Rows saved, but a follow-on update failed - see
+SM13" instead of claiming a rollback. Invalid rows are never in `gt_upd` and so can never
+be written regardless of the outcome.
 
 On insert, `ERNAM`/`ERDAT` are set from `sy-uname`/`sy-datum`. On change, `AENAM`/`AEDAT`
 are set the same way, and `ERNAM`/`ERDAT` are read back from the existing row and carried
@@ -230,8 +234,9 @@ would be silently overwritten with the changer's.
 (`ICON_GREEN_LIGHT` / `ICON_RED_LIGHT` from `INCLUDE <icon>`), serial number, customer,
 approval month, approval type, the outcome (Inserted / Changed / Would insert / Would
 change / Rejected / Not written) and the message. A closing status-bar message states
-counts read / valid / written / in error, and appends "TEST RUN — nothing was written" or
-"DATABASE UPDATE FAILED — nothing was written" when either applies.
+counts read / valid / written / in error, and appends "TEST RUN — nothing was written",
+"DATABASE UPDATE FAILED — nothing was written" or "Rows saved, but a follow-on update
+failed — see SM13" when one of them applies.
 
 ---
 

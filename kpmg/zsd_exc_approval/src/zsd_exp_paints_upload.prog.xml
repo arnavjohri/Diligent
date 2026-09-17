@@ -65,6 +65,12 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>M06</KEY>
+     <ENTRY>Rows saved, but a follow-on update failed - see SM13</ENTRY>
+     <LENGTH>52</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>M07</KEY>
      <ENTRY>The result list could not be displayed</ENTRY>
      <LENGTH>38</LENGTH>

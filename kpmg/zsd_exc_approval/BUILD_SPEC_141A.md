@@ -195,6 +195,16 @@ Locate by FORM name, never by line number.
 | 6 | commitment date "fetch" from TEXT | defensive parse | TEXT is free text |
 | 7 | no credit segment | p_segmnt on the selection screen | CREDIT_LIMIT is per segment |
 | 8 | status for zero non-fulfilment | 'Fulfilled' | FS covers only (+) and (-) |
+| 9 | KNVV-keyed customer selection | one row per customer after SORT + DELETE ADJACENT DUPLICATES | a customer in several sales areas would otherwise multiply rows (open issue 13) |
+| 10 | required "Date" range, no table/field | applied to BP3100-DATEFR | the only date the FS ties to an approval (open issue 11) |
+| 11 | "Authorization TBD" | no authorization check built | nothing confirmed to check against (open issue 15) |
+| 12 | no division on the Adhesives input table | `s_spart`, optional, added 05/09/26 | the FS reviewer comment asks for it; blank = all divisions (open issue 20) |
+
+Rows 9-11 were tagged in the source on 05/09/26 (they were built from the start but
+carried no `" ASSUMPTION:`); row 12 is new. The TS (`ZSD_EXC_APPR_ADHESIVE_TS.md` §7)
+numbers the same rows identically and adds 13-15 for the BP3100 filter, the BP-number
+assumption and the "all BSID/BSAD lines" assumption, which carry untagged ASSUMPTION
+notes in the source.
 
 ## 4a. Amendments — 05/09/26
 
@@ -210,7 +220,7 @@ logged in `ISSUES.md` #17-#21.
 | A4 | §3 step 8 | `FOR ALL ENTRIES IN @gt_cust` on BSID and BSAD | `FOR ALL ENTRIES IN @gt_partner` | only approval partners are ever asked for; identical figures, far smaller read on a large BSID/BSAD |
 | A5 | §1 block b2 | no division | `s_spart FOR knvv-spart`, optional, applied to the KNVV read | FS reviewer comment (Yogesh Vanani) asks for division; blank = all divisions |
 | A6 | §3 step 7 | DD.MM.YYYY / DD/MM/YYYY / DD-MM-YYYY / YYYYMMDD | plus a two-digit year read as 20YY, plus month-first order when the middle part is > 12 (7/25/2026); an ambiguous 8/5/2026 stays day-first | the FS sample writes M/D/YYYY; only the unambiguous case is taken |
-| A7 | §4 | eight deviations | plus 9 (dedupe), 10 (S_DATE on DATEFR), 11 (no authorization), 12 (division) — all now carry `" ASSUMPTION:` in the source; BP-number = customer-number and "all BSID/BSAD lines summed" are ASSUMPTION notes too (ISSUES.md #18, #19) | every deviation greppable, as §0 requires |
+| A7 | §4 | eight deviations | rows 9-12 added to the table above and tagged in the source; BP-number = customer-number and "all BSID/BSAD lines summed" are ASSUMPTION notes too (ISSUES.md #18, #19) | every deviation greppable, as §0 requires |
 
 ## 5. Also deliver
 

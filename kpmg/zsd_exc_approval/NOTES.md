@@ -30,7 +30,7 @@ generic ALV full-screen function group, not a data source and not SUBMIT-able.
 | `ZSD_EXC_APPR_ADHESIVE` (141.A) | corrected 05/09/26: BP3100 filter on INFOTYPE only, GT_APPR sorted, positional commitment-date link, BSID/BSAD read for approval partners only, optional Division, sturdier date parse | **active** since 02/09/26 with Arnav's hand fix of the BP3100 WHERE clause — that clause was never sent back | `ZR_PROG_DOWNLOAD` the active version, diff against the repo copy, then paste the reconciled repo copy (ISSUES.md #17) |
 | `ZSD_EXP_PAINTS` + 5 domains + 6 data elements | `src/` XML rebuilt 05/09/26 | not yet created | ZIP first (`ABAPGIT_UPLOAD_STEPS.md`); `ZSD_EXP_PAINTS_DDIC.md` by hand if the ZIP dumps |
 | TMG on `ZSD_EXP_PAINTS` | build sheet only | not yet | SE11 by hand after the table is active |
-| `ZSD_EXP_PAINTS_UPLOAD` | unchanged since 02/09/26; reviewed 05/09/26, no defect found | not yet pasted | ZIP or paste after the table is active |
+| `ZSD_EXP_PAINTS_UPLOAD` | corrected 17/09/26: no ROLLBACK after COMMIT WORK AND WAIT (summary warns instead, text symbol M06), amounts with a third decimal rejected, amount length check counts the decimal point | not yet pasted | ZIP or paste after the table is active |
 | `ZSD_EXC_APPR_PAINTS` | ACDOCA read driven by approval partners since 05/09/26 | not yet pasted | ZIP or paste after the table is active |
 
 ## Delivery

@@ -22,9 +22,12 @@
 *&   amounts to derive DEF_PERC and needs it to avoid truncation.
 *&
 *& TEXT ELEMENTS
-*&   Every user visible string is a text symbol with a literal default,
-*&   so the program runs correctly even before Goto -> Text Elements is
-*&   maintained. The list ships as ZSD_EXC_APPR_ADHESIVE_TEXTS.md.
+*&   Every message, heading and status literal is a text symbol with a
+*&   literal default, so the program runs correctly even before Goto ->
+*&   Text Elements is maintained. The two selection-screen block titles
+*&   (TEXT-001, TEXT-002) and the selection texts are bare references
+*&   and stay blank until they are. The list ships as
+*&   ZSD_EXC_APPR_ADHESIVE_TEXTS.md.
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development

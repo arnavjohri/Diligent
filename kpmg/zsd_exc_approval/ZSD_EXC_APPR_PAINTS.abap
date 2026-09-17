@@ -41,9 +41,12 @@
 *&   number. See the ASSUMPTION notes at each such point.
 *&
 *& TEXT ELEMENTS
-*&   Every user visible string is a text symbol with a literal default,
-*&   so the program runs correctly even before Goto -> Text Elements is
-*&   maintained. The list ships as ZSD_EXC_APPR_PAINTS_TEXTS.md.
+*&   Every message, heading and status literal is a text symbol with a
+*&   literal default, so the program runs correctly even before Goto ->
+*&   Text Elements is maintained. The three selection-screen block
+*&   titles (TEXT-001 to TEXT-003) and the selection texts are bare
+*&   references and stay blank until they are. The list ships as
+*&   ZSD_EXC_APPR_PAINTS_TEXTS.md and inside the abapGit ZIP.
 *&
 *& CHANGE HISTORY
 *&   02.09.2026  Arnav Johri  <TR>  Initial development
@@ -638,6 +641,13 @@ FORM f_calc_collection  USING    iv_kunnr       TYPE kna1-kunnr
 * collection across two overlapping approvals for the same customer -
 * see open issue 5. Both dates are required; a row without a commitment
 * date reports no collection rather than an unbounded one.
+* ASSUMPTION: two approvals of one customer whose windows overlap both
+* count a collection posted inside the overlap - every row is summed on
+* its own window and nothing allocates a receipt to one approval only.
+* Neither the table key nor the upload program prevents overlapping
+* windows. If functional wants each receipt counted once, the
+* allocation rule (earliest commitment first?) has to be agreed - see
+* open issue 24.
   IF iv_kunnr IS INITIAL
      OR iv_date_from IS INITIAL
      OR iv_commit_date IS INITIAL.

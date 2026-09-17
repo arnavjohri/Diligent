@@ -48,3 +48,35 @@ linked to its approval row by position instead of by PARTNER + COUNTER (A), BSID
 ACDOCA reads driven by the approval partners instead of every customer of the company code
 (A and B), ASSUMPTION tags added for deviations 9/10/11 (A), Adhesives TS wording corrected
 (0.00, not blank, for cleared amounts), `fs/141B_extract.md` added.
+
+## 17/09/26 — reported on Teams by Sanjay Modhvadiya: "L5 name is not coming"
+
+Screenshots of `ZSD_EXC_APPR_ADHESIVE` output for customers 0001000000 (CPI Test Customer,
+five approvals of 07/2026) and 0001000724 (IDS DISTRIBUTORS-F&S, 09/2026). L4 Name, L5 Name
+and L6 Name are blank on every row. That is **open issue #1, not a defect**: the FS names
+`SAPLSLVC_FULLSCREEN` as the source of the three names, and that is the program name every
+ALV full-screen list shows under System -> Status — the FS author read it off the screen of
+some existing report, and *that report* is the real source. `f_get_hierarchy` is a deliberate
+stub (build spec §3 step 6) in both reports and stays one until the source is named.
+
+Needed from Sanjay: the transaction or report he had open when he saw L4/L5/L6 for a
+customer, or the table that holds them (KNVP partner functions with a sales-employee
+number? a Z sales-hierarchy table keyed by customer or by sales office/group? KNVH?). One
+FORM changes once that arrives, in both reports.
+
+What the screenshots also confirm: the program is active and runs end to end on the
+system copy — BP3100 PARTNER/COUNTER/DATEFR/DATETO/AMNT/TEXT resolve, the commitment date
+is read out of the free text (04.08.2026), the BSID/BSAD as-on figure works (12,359,932.39
+against a 65,006.00 limit -> Not Fulfilled, 18,913.53 %), and rows without a commitment date
+or without a limit show 0.00 and a blank status as designed. Item #17 (reconcile the repo
+copy with the active one) is still open.
+
+| # | Doc | Item | Problem | Needed |
+|---|-----|------|---------|--------|
+| 24 | B | Overlapping approval windows | Two approvals of one customer whose windows overlap both count a receipt posted inside the overlap — each row sums its own window. Nothing prevents overlapping windows. `" ASSUMPTION:` note in `f_calc_collection`. | Accept, or name an allocation rule (earliest commitment first?). |
+| 25 | B | Upload: COMMIT WORK AND WAIT semantics | The 02/09/26 build did `ROLLBACK WORK` and logged "rolled back" when SY-SUBRC <> 0 after the commit. A direct MODIFY is already durable at that point; the non-zero code only means a registered update task failed. Corrected 17/09/26: the rows count as written, the summary warns and points at SM13 (new text symbol M06). | Nothing — recorded for the TS. |
+
+Also 17/09/26 (B, upload): an amount with more than two decimals is rejected (it was rounded
+silently), the amount length check allows for the decimal point (24 characters), and the
+header comments of all three programs no longer claim the block titles have literal defaults
+(bare `TEXT-nnn` references are blank until Text Elements is maintained).
