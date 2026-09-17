@@ -108,7 +108,8 @@ define view entity ZDPR_P_ASOF
               Cal.ProductionDate,
               dats_add_days(
                 dats_add_months(
-                  cast( concat( substring( dats_add_months( Cal.ProductionDate, -3, 'INITIAL' ), 1, 4 ), '0401' )
+                  cast( concat( substring( dats_add_months( Cal.ProductionDate, -3, 'INITIAL' ),
+                                           1, 4 ), '0401' )
                         as abap.dats ), 12, 'INITIAL' ), -1, 'INITIAL' ) )
             as abap.dec( 5, 0 ) )                               as DaysLeft
 }
