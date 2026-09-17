@@ -255,3 +255,26 @@ shows as the technical name until it is entered.
 |---|-----|------|-------|
 | 24 | B | Overlapping approvals for one customer | Two approval rows whose windows overlap count the same ACDOCA posting against both. Tagged `ASSUMPTION` in `F_CALC_COLLECTION`; this is the per-row reading of issue 5 taken to its conclusion. | Confirm with issue 5. |
 | 25 | U | Upload commit semantics | After `COMMIT WORK AND WAIT` a failed follow-on update no longer triggers a `ROLLBACK` that could not undo the committed rows anyway; the summary carries a warning (M06, "see SM13") instead. Amounts with more than two decimals are rejected rather than silently rounded. | None — repo copy only, not yet pasted over the active `ZSD_EXP_PAINTS_UPLOAD`. |
+
+### 17/09/26 — corrected Adhesives pasted and activated; L4/L5/L6 still blank
+
+Arnav activated the 17/09/26 object and ran it: columns still blank. He supplied a
+screenshot of `ZSD_CUSTOMER_DATA` run on its own — an ALV grid titled "CUSTOMER DATA" with
+columns Customer, Partner, Created On, Parent Customer, Parent Customer (second column,
+heading cut), SOrg., DChl., Division, Title, Group, Customer Class, Country, and more to the
+right of the scroll. **No column in view is a level name.** So either the level names are
+further right under headings the token search does not recognise, or the callee does not
+output them as columns at all and derives them from the parent-customer chain, or the
+capture itself failed (a `CL_GUI_ALV_GRID` in a custom container is not captured by
+`CL_SALV_BS_RUNTIME_INFO`; only `REUSE_ALV_*` and `CL_SALV_TABLE` are).
+
+Which of the three it is shows in the status bar after the run — M15 (nothing captured),
+M17 (no level field; the message lists every field name), or M16 (customer field / merge).
+Not yet reported. Also open: whether the callee's own screen appeared during the Adhesives
+run (it would, if the display could not be suppressed).
+
+Needed to finish: `ZR_PROG_DOWNLOAD` of `ZSD_CUSTOMER_DATA`. With the source, the
+recommendation is to read the hierarchy the same way that program does, directly inside
+`F_GET_HIERARCHY`, and drop the `SUBMIT` — no capture, no field-name guessing, no callee
+screen. The "Parent Customer" columns suggest the SAP customer hierarchy (`KNVH`), but the
+level convention is not to be guessed.
