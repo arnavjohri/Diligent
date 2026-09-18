@@ -1,0 +1,81 @@
+@AbapCatalog.viewEnhancementCategory: [#NONE]
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'DPR Production Performance Aggregates'
+@Metadata.ignorePropagatedAnnotations: true
+
+/* ── Inner aggregation for the Production Performance query (Excel tab 3) ──
+ * Emits at most 4 rows: (OIL|GAS) x (YTD|ANNUAL). All heavy lifting (sums,
+ * distinct counts) is grouped and pushed to HANA here; the outer query only
+ * divides these tiny aggregates - the pattern needed because CDS cannot
+ * divide two aggregates in a single view.
+ *   YTD    : actual + target sums over the report window [P_DateFrom..P_DateTo],
+ *            Divisor = number of production days in the window
+ *            -> per-day figures == the Excel "YTD Actual/Target" row values
+ *   ANNUAL : BE-target volume of the whole fiscal year P_FiscalYear
+ *            (ZDPR_I_TARGET_FY: all months, all volume types, scaled like
+ *            the classic report), Divisor = days in the fiscal year
+ *            -> per-day annual target rate == the classic "Target : YYYY-YY"
+ *            grand total; no actuals (Excel shows "-")
+ * ─────────────────────────────────────────────────────────────────────────── */
+define view entity ZDPR_P_PERF_AGG
+  with parameters
+    P_DateFrom   : datum,
+    P_DateTo     : datum,
+    P_FiscalYear : gjahr
+
+  as select from ZDPR_C_BOEPD_DAY
+
+{
+  key cast( 'YTD' as abap.char( 6 ) )                 as ScopeType,
+  key ProductGroup                                    as ProductGroup,
+
+      cast( sum( ActualQtyOvl )   as abap.dec( 23, 7 ) ) as SumActualQty,
+      cast( sum( ActualBoepdOvl ) as abap.dec( 23, 3 ) ) as SumActualBoepd,
+      cast( sum( TargetQty )      as abap.dec( 23, 7 ) ) as SumTargetQty,
+      cast( sum( TargetBoepd )    as abap.dec( 23, 3 ) ) as SumTargetBoepd,
+
+// BOC By Arnav on 16/09/26
+      /* 90 % of the target, pre-computed here because the classic view
+         ZDPR_Q_PROD_PERF may not use arithmetic inside a CASE condition */
+      cast( sum( TargetBoepd ) * cast( '0.9' as abap.dec( 2, 1 ) )
+            as abap.dec( 23, 3 ) )                     as SumTargetBoepd90,
+// EOC By Arnav on 16/09/26
+
+      /* production days in the window */
+      cast( count( distinct ProductionDate ) as abap.dec( 10, 0 ) ) as Divisor
+}
+where ProductionDate >= $parameters.P_DateFrom
+  and ProductionDate <= $parameters.P_DateTo
+  and BusinessUnit <> 'OTHER'   /* screen out test/garbage asset codes */
+group by ProductGroup
+
+union all
+
+  /* ZDPR_I_TARGET_FY holds the scaled annual TAR_BE volume per asset and
+     ProductGroup / DaysInFiscalYear as plain columns, so this branch groups
+     and sums plain fields only (no CASE in GROUP BY / aggregates - rejected
+     by the target release). */
+  select from ZDPR_I_TARGET_FY as Tar
+{
+  key cast( 'ANNUAL' as abap.char( 6 ) )              as ScopeType,
+  key Tar.ProductGroup                                as ProductGroup,
+
+      /* no actuals at annual level - Excel shows "-" */
+      cast( 0 as abap.dec( 23, 7 ) )                  as SumActualQty,
+      cast( 0 as abap.dec( 23, 3 ) )                  as SumActualBoepd,
+
+      cast( sum( Tar.AnnualTargetVolume ) as abap.dec( 23, 7 ) ) as SumTargetQty,
+
+      cast( sum( Tar.AnnualTargetBoe )    as abap.dec( 23, 3 ) ) as SumTargetBoepd,
+
+// BOC By Arnav on 16/09/26
+      /* not used on ANNUAL rows (criticality is 0 there) */
+      cast( 0 as abap.dec( 23, 3 ) )                  as SumTargetBoepd90,
+// EOC By Arnav on 16/09/26
+
+      /* days in the fiscal year (365 / 366) */
+      cast( max( Tar.DaysInFiscalYear ) as abap.dec( 10, 0 ) ) as Divisor
+}
+where Tar.FiscalYear = $parameters.P_FiscalYear
+  and Tar.TargetCode = 'TAR_BE'
+group by Tar.ProductGroup
