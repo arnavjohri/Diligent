@@ -568,3 +568,31 @@ in `GENERATE_ANNUAL` as well; comments updated to say all three modes.
 Files: `src/zcl_pp_fcst.clas.abap` (`zcl_pp_fcst_nocomments.abap` regenerated). No DDIC, no
 message change, no program change.
 TR: not yet transported.
+
+## 18/09/26 — ZPP_FORECAST_UPLOAD, legacy history: one filled month reported as "all twelve zero"
+
+Found by Arnav in the debugger: in `FORM do_history` the `ASSIGN COMPONENT lv_fld OF
+STRUCTURE ls_hist` returned sy-subrc 4, so the month value was never stored or counted.
+
+Root cause: `lv_fld = |M{ lv_i WIDTH = 2 PAD = '0' }|`. A string template aligns LEFT by
+default, so the pad character goes on the right: month 1 gave `M10`, months 2 to 9 gave
+`M20`..`M90`, which are not fields of ZPPT_SLS_HIST. Only months 10 to 12 came out right, and
+month 1 landed in M10 (January). A file with one month filled therefore summed to zero and
+was refused; a file with all twelve months filled was **accepted and stored wrong** —
+April in January's column, May to December lost.
+
+Fix: `ALIGN = RIGHT` added to the template (single line, original kept commented above).
+
+**Data:** every legacy-history row loaded through this upload before the fix is wrong or
+missing. Re-upload the history files after activating, or clear ZPPT_SLS_HIST for the test
+plant first.
+
+**Same idiom, not changed:** `ZCL_PP_FCST_UTIL=>LAST_THREE_MONTHS` line 296 builds the
+month's first date with `{ lv_m WIDTH = 2 PAD = '0' }`, so for months 1 to 9 `datfr` is an
+invalid date such as 20264001. It is only ever used as the upper bound of the billing read
+window, which becomes wider than needed (into months that have no data yet), never
+narrower, and the month buckets are keyed on the correct NUMC month, so results are
+unaffected. Left as is because the class in QAS carries the 07/09 auth bypass and was not to
+be touched; the one-word fix is the same `ALIGN = RIGHT`.
+
+Files: `src/zpp_forecast_upload.prog.abap`. TR: not yet transported.

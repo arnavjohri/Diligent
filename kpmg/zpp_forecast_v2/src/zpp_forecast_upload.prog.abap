@@ -1513,7 +1513,16 @@ FORM do_history.
     WHILE lv_i <= 12.
 
       lv_src = lv_i + 3.
-      lv_fld = |M{ lv_i WIDTH = 2 PAD = '0' }|.
+*BOC By Arnav on 18/09/26
+*     A string template aligns LEFT unless told otherwise, so PAD = '0'
+*     without ALIGN = RIGHT padded on the RIGHT: month 1 became "M10",
+*     months 2 to 9 became "M20".."M90", which do not exist. ASSIGN
+*     failed (sy-subrc 4), the figure was neither stored nor counted,
+*     and one filled month was reported as "all twelve zero". Months 10
+*     to 12 were right by accident; month 1 was written into M10.
+*     lv_fld = |M{ lv_i WIDTH = 2 PAD = '0' }|.
+      lv_fld = |M{ lv_i WIDTH = 2 ALIGN = RIGHT PAD = '0' }|.
+*EOC By Arnav on 18/09/26
 
       UNASSIGN: <lv_in>, <lv_out>.
       ASSIGN COMPONENT lv_src OF STRUCTURE ls_raw  TO <lv_in>.
