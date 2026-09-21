@@ -18,3 +18,24 @@ The Manage Customer Line Items app reads directly from the Universal Journal (AC
 classic FI index tables (BSEG). Once the data pipeline fills the SGTXT field during the
 invoice posting phase, the text will instantly appear in the Fiori report, matching your
 Statement of Account (SOA) view.
+
+---
+
+# Ticket text as raised (received 21/09/26)
+
+ISSUE:
+
+The Manage Customer Line Items report does not display the item text for documents
+generated through S&D. In comparison, item texts for documents posted directly in FI are
+displayed as expected.
+
+EXPECTED RESULT:
+
+Regardless of the source of the document, whether issued directly through FI or through
+S&D, the item text should be viewable in Manage Customer Line Items, similar to the
+descriptions shown in the SOA.
+
+For documents issued through S&D, the details or text maintained in Header Note 1 may be
+used as the item text to be displayed in Manage Customer Line Items. In cases where
+multiple Sales Orders are included in a single invoice, although this is uncommon, the
+Header Note 1 details from the first-created Sales Order may be used.

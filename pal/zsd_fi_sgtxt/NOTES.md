@@ -47,9 +47,11 @@ a new CMOD project (name TBD, e.g. `ZSDFI001`) with `SDVFX002` only.
    `SELECT` on `VBRP` only if the assign fails (VF02 / VFX3 release-to-accounting of an
    already-saved document). Confirm the exit's own signature in SE37 first — if it already
    hands over the items, no assign is needed. **Do not guess the signature.**
-2. **Which sales order when there are several.** Ticket says "by creation date/time or
-   document number". Recommend: lowest `AUBEL` (document number order = creation order in
-   practice, no extra `VBAK` read). Confirm with Omprakash ji.
+2. **Which sales order when there are several.** Ticket wording (business): "the
+   Header Note 1 details from the **first-created** Sales Order". So: collect the distinct
+   `AUBEL`s, `SELECT vbeln, erdat, erzet FROM vbak FOR ALL ENTRIES` (SOs are in the DB),
+   `SORT BY erdat erzet vbeln`, take the first. `VBELN` is the tie-break only. Lowest
+   document number alone is not what was asked, even if it usually gives the same answer.
 3. **The text.** `READ_TEXT` — never read `STXL` directly, it is a compressed cluster.
    `OBJECT = 'VBBK'`, `NAME = <sales order>`, `ID = <Header Note 1 text ID>`,
    `LANGUAGE = vbrk-spras` (fall back to `sy-langu`, then `'E'`), `EXCEPTIONS OTHERS`.
@@ -71,15 +73,21 @@ Not zippable.
 
 ## Scope / behaviour to confirm before writing code
 
-See ISSUES.md "Open questions". None of the code should be written until the text ID and
-the multi-SO rule are answered — both change the code and cost an activation cycle each.
+See ISSUES.md "Open questions". The multi-SO rule is settled by the ticket (first-created).
+The text ID and the CMOD state are the two things that still change the code; do not write
+it before they are known — each guess is an activation cycle.
+
+"Item text" in the ticket = `BSEG-SGTXT`. FI-direct documents show it because the user
+types it in FB70/FB75; SD documents leave it blank. The two document types then look the
+same in the app, which is the stated expected result.
 
 ## Test plan (draft)
 
 1. VF01 on an order-related invoice from one SO with a Header Note 1 → FB03 customer
    line `SGTXT` = the note (first 50 chars); F0711 shows it.
 2. Same, SO without Header Note 1 → `SGTXT` unchanged (blank or whatever it was).
-3. Collective invoice from two SOs → text of the lowest SO number (or the agreed rule).
+3. Collective invoice from two SOs → text of the first-created SO (`VBAK-ERDAT/ERZET`),
+   not the lowest number — build the test with the newer SO having the lower number.
 4. VF02 → release to accounting of a doc saved with posting block → text present
    (fallback path).
 5. VF11 cancellation → cancellation doc's customer line also carries the text.
