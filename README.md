@@ -12,6 +12,11 @@ This repo is the only copy. Nothing of value is laptop-only.
 `CLAUDE.md` at the root is the standing rulebook — change markers, correction rules,
 release constraints, how each object ships. It loads automatically in Claude Code.
 
+`MEMORY.md` beside it is the standing memory: system and project facts, the coding standard
+collected in one place, the release constraints confirmed by activation failure, and a
+write-up of every mistake already made with the rule each one produced. It is in git on
+purpose — web sessions run in a throwaway container, so anything not committed is lost.
+
 Skills in `.claude/skills/` drive the day-to-day work:
 
 | Skill | Does |

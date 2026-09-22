@@ -149,11 +149,18 @@ Drafting is fine; sending stays manual.
 
 ## Release constraints
 
-This landscape is an older S/4 release. Before writing CDS or RAP, read
-`~/.claude/projects/.../memory/sap-release-cds-constraints.md` — it records confirmed
-failures for `year()`/`month()`, INT→NUMC casts, `@Semantics.*` in view entities,
-`@Analytics.query` in OData bindings, key contiguity, and unmanaged-RAP handler placement.
-Do not re-derive these; they were established by activation failures on the real system.
+This landscape is an older S/4 release. Before writing CDS or RAP, read **`MEMORY.md` §4**
+(repo root) — it records confirmed failures for `year()`/`month()`, INT→NUMC casts,
+`@Semantics.*` in view entities, `@Analytics.query` in OData bindings, key contiguity,
+unmanaged-RAP handler placement, and the classic-ABAP ones (`VALUE` with a literal row,
+left-aligned string templates, declaration order in an include). Do not re-derive these;
+they were established by activation failures on the real system.
+
+The same constraints were previously kept in
+`~/.claude/projects/.../memory/sap-release-cds-constraints.md`. **That path does not
+survive** — Claude Code sessions here run in an ephemeral container and start with an empty
+memory directory, so the file is simply not there. `MEMORY.md` is the copy that is in git
+and therefore the one to trust.
 
 ## Repository layout
 
@@ -244,6 +251,11 @@ serialise these, so they never appear in a generated ZIP.
   `/ship-fix` approved fix → commit + ZIP
 - `/from-fs` FS document → new object, built one object at a time ·
   `/atc-fix` ATC findings → corrections · `/status` where every object stands
+
+`MEMORY.md` (repo root) is the standing memory: identity and system facts, the coding
+standard in one place, the release constraints (§4), and **§5 — every mistake already made,
+each one written up as the rule it produced.** Read §4 and §5 before writing CDS/RAP or
+shipping an object; read §10 before handing anything over.
 
 `COPILOT_CONTEXT_HANDOFF.md` (repo root) is the long-form reference: reusable ABAP
 patterns, object-header and program skeletons, the TS document template, project history.
