@@ -143,6 +143,21 @@ card to an Analytical List Page on the same query (step 9, if wanted).
 
 ## Step 9 — detail apps and card navigation (22/09/26)
 
+**Drift found 22/09/26.** The manifest running in BAS / deployed as ZDPRPRODDASH
+(filed as `original/manifest.json`) is the 16/09 evening version: global filter
+on `ZDPR_Q_PROD_PERFSet`, card 1 on ZDPR_Q_BOEPD_TREND, card 3 one card with two
+tabs, no view switch on cards 4/5, no ZDPR_Q_DASH_FILTER / ZDPR_Q_BOEPD_TOTAL
+models. `webapp/manifest.json` in this folder is the forward version (steps 7,
+8, card 1 total query) and needs those two backend views active and added in
+BAS before it can be used. So the navigation was applied to the RUNNING version:
+`deployed/manifest.json` (= original + `identificationAnnotationPath` on the six
+cards) and `deployed/ui5.yaml` (= original + sandbox `flp.apps` entries for the
+four detail-app intents). Copy `deployed/` into BAS. The annotation files in
+BAS were not supplied; the `UI.Identification` blocks are added to whichever
+copies BAS holds, not by overwriting them with the repo files, which assume the
+v16-09 backend elements (ProductionDateText, RowLabel).
+
+
 A table card shows only the rows that fit its height, no scrollbar (card 6
 showed 20 of ~2000). The full list lives in a separate Fiori elements app on
 the same service, opened from the card header / row via intent navigation.
