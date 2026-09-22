@@ -141,6 +141,32 @@ and a card cannot divide by the number of days. Card 1 keeps a single view by
 design (date only). A free "pick any axis" chart needs navigation from the
 card to an Analytical List Page on the same query (step 9, if wanted).
 
+## Step 9 — detail apps and card navigation (22/09/26)
+
+A table card shows only the rows that fit its height, no scrollbar (card 6
+showed 20 of ~2000). The full list lives in a separate Fiori elements app on
+the same service, opened from the card header / row via intent navigation.
+One detail app per service, built and linked one at a time:
+
+| Order | Card | Service | Detail app template | Module / BSP | Semantic object-action |
+|---|---|---|---|---|---|
+| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **card side done in repo** |
+| 2 | 3 Performance (YTD/Annual) | ZDPR_Q_PROD_PERF_CDS | List Report | `zdprperf` / `ZDPRPERF` | `DPRPerformance-display` |
+| 3 | 1, 5 BOEPD trend | ZDPR_Q_BOEPD_TREND_CDS | Analytical List Page | `zdprtrend` / `ZDPRTREND` | `DPRTrend-display` |
+| 4 | 4 Target vs actual | ZDPR_Q_TARGET_QUERY_CDS | Analytical List Page | `zdprtarget` / `ZDPRTARGET` | `DPRTarget-display` |
+
+Card side (per card): `UI.Identification` with one
+`UI.DataFieldForIntentBasedNavigation` (SemanticObject + Action) on the card's
+entity type in the local annotation file, plus
+`"identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification"`
+in the card settings. Card 6: `annotations/annotation_prod.xml` + `manifest.json`.
+Launchpad side: one target mapping per detail app in catalog `ZC_DPR_REPORTING`
+(ID = the app's `sap.app/id`, lowercase; URL `/sap/bc/ui5_ui5/sap/<bsp>`), then
+`/UI5/APP_INDEX_CALCULATE` for the new BSP. No tile needed unless wanted.
+ASSUMPTION: the OVP hands the filter-bar values to the target via
+sap-xapp-state and the target's filter bar applies them by name; confirm on
+the first navigation and adjust if the date parameters do not arrive.
+
 ## Step 1 — generate the project, global filter, card 1
 
 ### 1.1 Prerequisites (already documented in the BTP guide)

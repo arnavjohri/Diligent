@@ -451,6 +451,7 @@
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#ByAsset",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TopAssets",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2

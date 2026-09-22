@@ -75,6 +75,24 @@
           </Record>
         </Annotation>
 
+        <!-- BOC By Arnav on 22/09/26
+             Card navigation (README step 8): header click and row click open the
+             detail app on the same service. SemanticObject/Action must equal the
+             FLP configuration of the detail app (target mapping DPRRecords-display).
+             ASSUMPTION: the OVP passes the filter-bar values (P_DateFrom, P_DateTo,
+             Asset, Block, Product) to the target by name via sap-xapp-state; to be
+             confirmed on the first navigation. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="Production records"/>
+              <PropertyValue Property="SemanticObject" String="DPRRecords"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 22/09/26 -->
+
       </Annotations>
     </Schema>
   </edmx:DataServices>
