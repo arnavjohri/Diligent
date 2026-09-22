@@ -232,6 +232,20 @@
           </Record>
         </Annotation>
 
+        <!-- BOC By Arnav on 22/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRTARGET on ZDPR_Q_TARGET_QUERY_CDS. SemanticObject/Action = target mapping DPRTarget-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="Target vs actual"/>
+              <PropertyValue Property="SemanticObject" String="DPRTarget"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 22/09/26 -->
+
       </Annotations>
     </Schema>
   </edmx:DataServices>

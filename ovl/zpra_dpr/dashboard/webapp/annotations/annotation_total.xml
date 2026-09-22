@@ -99,6 +99,20 @@
           </Record>
         </Annotation>
 
+        <!-- BOC By Arnav on 22/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRTREND on ZDPR_Q_BOEPD_TREND_CDS. SemanticObject/Action = target mapping DPRTrend-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="BOEPD trend"/>
+              <PropertyValue Property="SemanticObject" String="DPRTrend"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 22/09/26 -->
+
       </Annotations>
     </Schema>
   </edmx:DataServices>

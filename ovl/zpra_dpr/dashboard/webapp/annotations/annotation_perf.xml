@@ -185,6 +185,20 @@
           </Record>
         </Annotation>
 
+        <!-- BOC By Arnav on 22/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRPERF on ZDPR_Q_PROD_PERF_CDS. SemanticObject/Action = target mapping DPRPerformance-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="Production performance"/>
+              <PropertyValue Property="SemanticObject" String="DPRPerformance"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 22/09/26 -->
+
       </Annotations>
     </Schema>
   </edmx:DataServices>
