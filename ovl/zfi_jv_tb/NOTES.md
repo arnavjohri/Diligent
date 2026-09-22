@@ -14,7 +14,7 @@ download reads `zzjvtb_test`, so the download may have been taken from a test co
 ## How the venture columns are built (the part that matters)
 
 - `AT SELECTION-SCREEN` builds `lt_alljv`:
-  `SELECT DISTINCT rjvnam FROM jv_jvto1_acdoca_4a_4c_switch`
+  `SELECT DISTINCT rjvnam FROM jv_jvto1_acdoca` (corrected copy: `..._switch_2`)
   `WHERE ryear = p_year AND rbukrs = p_bukrs AND rjvnam IN p_jvnam`
   `AND rldnr = '4A' AND rrcty = '0' AND rrecin IN p_rrecin`.
   No period filter here — `s_period` is used only by the JVSO1 line-item selects.
@@ -35,11 +35,12 @@ and vice versa.
 That is the "73 venture codes" list the business quotes; the posted-totals view is not.
 
 ## Gotchas
-- **Ledger.** All reads of `JV_JVTO1_ACDOCA_4A_4C_SWITCH` were `RLDNR = '4A'`. JV data on
-  this landscape spans 4A **and** 4C (`ZOCV_OVL_TRANSFER_F01` reads both). Reading 4A alone
-  drops the carry-forward (`HSLVT`) → blank opening balance. Corrected copy uses
-  `IN ( '4A', '4C' )` on the totals view only; the `JV_JVSO1_ACDOCA` line-item reads stay
-  on 4A. Whether 4A/4C are split or parallel ledgers is unconfirmed — see ISSUES #2.
+- **Totals view.** Live program (22/09/26 download) reads `JV_JVTO1_ACDOCA` — the ACDOCA-only
+  branch, no legacy JVTO1 fallback, so `HSLVT` comes back blank. Corrected copy reads
+  `JV_JVTO1_ACDOCA_SWITCH_2` (SAP union: ACDOCA branch for years ≥ activation year in
+  `JVAONACDOCAACTIV`, legacy `JV_JVTO1_T8JTPM` before). Ledger filter stays `= '4A'`: that
+  view carries 4C amounts as `_4C` columns, not as separate rows. `JV_JVSO1_ACDOCA` line-item
+  reads are untouched.
 - Opening balance is `HSLVT` (`KSLVT` for USD) from the totals view and nothing else.
 - `break abapuser02.` is left in `get_data` and in `disp_data` — hard-coded user
   breakpoint in a productive report.
