@@ -325,6 +325,7 @@
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2
@@ -340,6 +341,7 @@
           "entitySet": "ZDPR_Q_PROD_PERFSet",
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdByGroup",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2
@@ -355,6 +357,7 @@
           "entitySet": "ZDPR_Q_PROD_PERFSet",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2
@@ -370,6 +373,7 @@
           "entitySet": "ZDPR_Q_PROD_PERFSet",
           "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2
@@ -402,6 +406,7 @@
               "value": "{{card04TabPeriod}}"
             }
           ],
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2
@@ -435,6 +440,7 @@
               "value": "{{card05TabGroup}}"
             }
           ],
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
             "cols": 2

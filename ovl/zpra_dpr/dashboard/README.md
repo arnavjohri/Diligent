@@ -150,12 +150,16 @@ One detail app per service, built and linked one at a time:
 
 | Order | Card | Service | Detail app template | Module / BSP | Semantic object-action |
 |---|---|---|---|---|---|
-| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **card side done in repo** |
+| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` |
 | 2 | 3 Performance (YTD/Annual) | ZDPR_Q_PROD_PERF_CDS | List Report | `zdprperf` / `ZDPRPERF` | `DPRPerformance-display` |
 | 3 | 1, 5 BOEPD trend | ZDPR_Q_BOEPD_TREND_CDS | Analytical List Page | `zdprtrend` / `ZDPRTREND` | `DPRTrend-display` |
 | 4 | 4 Target vs actual | ZDPR_Q_TARGET_QUERY_CDS | Analytical List Page | `zdprtarget` / `ZDPRTARGET` | `DPRTarget-display` |
 
-Card side (per card): `UI.Identification` with one
+Card side — DONE in the repo for all six cards (22/09/26): every annotation
+file carries the `UI.Identification`, every card has
+`identificationAnnotationPath`. One dashboard redeploy once the detail apps
+exist; until an intent resolves the OVP simply shows no navigation on that card.
+Per card: `UI.Identification` with one
 `UI.DataFieldForIntentBasedNavigation` (SemanticObject + Action) on the card's
 entity type in the local annotation file, plus
 `"identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification"`
