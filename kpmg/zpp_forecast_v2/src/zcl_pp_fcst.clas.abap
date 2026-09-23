@@ -382,16 +382,25 @@ CLASS zcl_pp_fcst DEFINITION
 *EOC By Arnav on 15/09/26
 
 *BOC By Arnav on 23/09/26
-    "! Entering a superseded code used to return nothing: the old code is
-    "! dropped from the list (D6a) and its successor sat outside the
-    "! selection. The successor of every old code in IR_MATNR is added to
-    "! ER_MATNR, so the run brings up the new material carrying the old
-    "! one's history. Old codes still get no row of their own.
-    METHODS extend_by_track
+*   EXTEND_BY_TRACK (that morning) widened the selection to the successor
+*   and so pulled in its own history and every other old code. Withdrawn
+*   the same afternoon in favour of RELABEL_OLD_CODES.
+*   METHODS extend_by_track
+*     IMPORTING ir_werks TYPE tr_werks
+*               ir_matnr TYPE tr_matnr
+*     EXPORTING er_matnr TYPE tr_matnr
+*     CHANGING  ct_msg   TYPE bapiret2_t.
+    "! An old code in the material selection is shown under its
+    "! successor, carrying its own figures only: its history buckets are
+    "! moved to the successor after the read. Only when the successor is
+    "! outside the selection - inside it, ADD_OLD_MATERIAL_QTY has already
+    "! absorbed every old code the normal way. Old codes never get a row
+    "! of their own (D6a).
+    METHODS relabel_old_codes
       IMPORTING ir_werks TYPE tr_werks
                 ir_matnr TYPE tr_matnr
-      EXPORTING er_matnr TYPE tr_matnr
-      CHANGING  ct_msg   TYPE bapiret2_t.
+      CHANGING  ct_hist  TYPE tt_hist
+                ct_msg   TYPE bapiret2_t.
 *EOC By Arnav on 23/09/26
 
     METHODS number_get
@@ -431,12 +440,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     read_config( ir_werks ).
 
 *BOC By Arnav on 23/09/26
-*   A superseded code entered on the selection screen brings up its
-*   successor - the material range is widened before anything is read.
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+*   The range widening built that morning is withdrawn the same day:
+*   it pulled in the successor's own history and every other old code.
+*   An old code in the selection is now shown under its successor with
+*   its own figures only - RELABEL_OLD_CODES, below the history read.
+*   LR_MATNR stays as the range every read uses.
+*   extend_by_track( EXPORTING ir_werks = ir_werks
+*                              ir_matnr = ir_matnr
+*                    IMPORTING er_matnr = DATA(lr_matnr)
+*                    CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 *EOC By Arnav on 23/09/26
 
     " The ALV columns run April to March of the PREVIOUS financial year,
@@ -503,6 +516,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*BOC By Arnav on 23/09/26
+*   Old codes in the selection whose successor is not: their buckets
+*   move under the successor, so the list shows one row for it carrying
+*   only what was selected.
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
+
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
@@ -609,12 +632,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     read_config( ir_werks ).
 
 *BOC By Arnav on 23/09/26
-*   A superseded code entered on the selection screen brings up its
-*   successor - the material range is widened before anything is read.
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+*   The range widening built that morning is withdrawn the same day:
+*   it pulled in the successor's own history and every other old code.
+*   An old code in the selection is now shown under its successor with
+*   its own figures only - RELABEL_OLD_CODES, below the history read.
+*   LR_MATNR stays as the range every read uses.
+*   extend_by_track( EXPORTING ir_werks = ir_werks
+*                              ir_matnr = ir_matnr
+*                    IMPORTING er_matnr = DATA(lr_matnr)
+*                    CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 *EOC By Arnav on 23/09/26
 
     DATA(lt_qtr)  = zcl_pp_fcst_util=>quarter_periods( iv_fyear = iv_fyear
@@ -680,6 +707,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*BOC By Arnav on 23/09/26
+*   Old codes in the selection whose successor is not: their buckets
+*   move under the successor, so the list shows one row for it carrying
+*   only what was selected.
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
+
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
@@ -881,12 +918,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     read_config( ir_werks ).
 
 *BOC By Arnav on 23/09/26
-*   A superseded code entered on the selection screen brings up its
-*   successor - the material range is widened before anything is read.
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+*   The range widening built that morning is withdrawn the same day:
+*   it pulled in the successor's own history and every other old code.
+*   An old code in the selection is now shown under its successor with
+*   its own figures only - RELABEL_OLD_CODES, below the history read.
+*   LR_MATNR stays as the range every read uses.
+*   extend_by_track( EXPORTING ir_werks = ir_werks
+*                              ir_matnr = ir_matnr
+*                    IMPORTING er_matnr = DATA(lr_matnr)
+*                    CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 *EOC By Arnav on 23/09/26
 
     DATA(lv_quarter) = zcl_pp_fcst_util=>period_to_quarter( CONV #( iv_period ) ).
@@ -972,6 +1013,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*BOC By Arnav on 23/09/26
+*   Old codes in the selection whose successor is not: their buckets
+*   move under the successor, so the list shows one row for it carrying
+*   only what was selected.
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
+
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
@@ -1854,18 +1905,73 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
 *BOC By Arnav on 23/09/26
 *&---------------------------------------------------------------------*
-*& Successors of superseded codes in the material selection.
-*& A blank selection already covers every material of the plant and is
-*& left alone. For an entered range, every tracking row of the plant
-*& whose OLD_MATNR1..5 falls inside it contributes its NEW_MATNR, and
-*& message 026 records which old code was resolved to which successor.
+*& EXTEND_BY_TRACK - built that morning, withdrawn the same afternoon.
+*& It widened the selection to the successor, which pulled in the
+*& successor's own history and every other old code. Kept commented.
 *&---------------------------------------------------------------------*
-  METHOD extend_by_track.
+*  METHOD extend_by_track.
+*
+*    DATA: lv_old  TYPE matnr,
+*          lv_cand TYPE matnr.
+*
+*    er_matnr = ir_matnr.
+*
+*    CHECK ir_matnr IS NOT INITIAL.
+*
+*    SELECT werks, new_matnr,
+*           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+*      FROM zppt_mat_track
+*      WHERE werks IN @ir_werks
+*        AND (    old_matnr1 IN @ir_matnr
+*              OR old_matnr2 IN @ir_matnr
+*              OR old_matnr3 IN @ir_matnr
+*              OR old_matnr4 IN @ir_matnr
+*              OR old_matnr5 IN @ir_matnr )
+*      INTO TABLE @DATA(lt_trk).
+*
+*    LOOP AT lt_trk INTO DATA(ls_trk).
+*
+*      CHECK ls_trk-new_matnr IS NOT INITIAL
+*        AND ls_trk-new_matnr NOT IN ir_matnr.
+*
+*      CLEAR lv_old.
+*      DO 5 TIMES.
+*        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
+*          TO FIELD-SYMBOL(<lv_o>).
+*        CHECK sy-subrc = 0.
+*        lv_cand = <lv_o>.
+*        IF lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+*          lv_old = lv_cand.
+*          EXIT.
+*        ENDIF.
+*      ENDDO.
+*
+*      APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-new_matnr ) TO er_matnr.
+*
+*      add_msg( EXPORTING iv_type = 'W' iv_number = 026
+*                         iv_v1   = lv_old iv_v2 = ls_trk-new_matnr
+*               CHANGING  ct_msg  = ct_msg ).
+*
+*    ENDLOOP.
+*
+*  ENDMETHOD.
 
-    DATA: lv_old  TYPE matnr,
-          lv_cand TYPE matnr.
 
-    er_matnr = ir_matnr.
+*&---------------------------------------------------------------------*
+*& An old code in the material selection is shown under its successor,
+*& carrying its OWN figures only (Arnav's call, 23/09/26 PM). Only for
+*& tracking rows whose successor is outside the selection - when the
+*& successor is inside, ADD_OLD_MATERIAL_QTY has already absorbed every
+*& old code the normal way. The old code's buckets are moved to the
+*& successor month by month, so two old codes entered together add up
+*& under it, and the old code itself leaves the history so BUILD_SCOPE
+*& has nothing to drop. A blank selection needs nothing here.
+*&---------------------------------------------------------------------*
+  METHOD relabel_old_codes.
+
+    DATA: lv_cand TYPE matnr,
+          lt_move TYPE STANDARD TABLE OF ty_hist WITH DEFAULT KEY,
+          ls_move TYPE ty_hist.
 
     CHECK ir_matnr IS NOT INITIAL.
 
@@ -1885,24 +1991,44 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       CHECK ls_trk-new_matnr IS NOT INITIAL
         AND ls_trk-new_matnr NOT IN ir_matnr.
 
-*     Which of the five old codes was entered - for the message only
-      CLEAR lv_old.
       DO 5 TIMES.
+
         ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
           TO FIELD-SYMBOL(<lv_o>).
         CHECK sy-subrc = 0.
         lv_cand = <lv_o>.
-        IF lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
-          lv_old = lv_cand.
-          EXIT.
-        ENDIF.
+        CHECK lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+
+*       The old code's months, taken out ...
+        CLEAR lt_move.
+        LOOP AT ct_hist INTO ls_move
+          WHERE werks = ls_trk-werks AND matnr = lv_cand.
+          APPEND ls_move TO lt_move.
+        ENDLOOP.
+        CHECK lt_move IS NOT INITIAL.
+
+        DELETE ct_hist WHERE werks = ls_trk-werks AND matnr = lv_cand.
+
+*       ... and put back under the successor, added where a month exists
+        LOOP AT lt_move INTO ls_move.
+          READ TABLE ct_hist ASSIGNING FIELD-SYMBOL(<ls_n>)
+            WITH TABLE KEY werks = ls_move-werks
+                           matnr = ls_trk-new_matnr
+                           gjahr = ls_move-gjahr
+                           month = ls_move-month.
+          IF sy-subrc = 0.
+            <ls_n>-qty = <ls_n>-qty + ls_move-qty.
+          ELSE.
+            ls_move-matnr = ls_trk-new_matnr.
+            INSERT ls_move INTO TABLE ct_hist.
+          ENDIF.
+        ENDLOOP.
+
+        add_msg( EXPORTING iv_type = 'W' iv_number = 026
+                           iv_v1   = lv_cand iv_v2 = ls_trk-new_matnr
+                 CHANGING  ct_msg  = ct_msg ).
+
       ENDDO.
-
-      APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-new_matnr ) TO er_matnr.
-
-      add_msg( EXPORTING iv_type = 'W' iv_number = 026
-                         iv_v1   = lv_old iv_v2 = ls_trk-new_matnr
-               CHANGING  ct_msg  = ct_msg ).
 
     ENDLOOP.
 

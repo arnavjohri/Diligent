@@ -687,3 +687,26 @@ the application toolbar, keep every `&` code as copied. Until the status exists 
 shows the standard toolbar without the four buttons and says so in the status bar.
 
 Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.
+
+## 23/09/26 PM — old code in the selection: shown under the successor with its own figures only (supersedes the morning entry)
+
+Arnav's test rule: enter old material 2 (successor 1, other old code 3) and the list must show
+one row, 1, carrying 2's values only - not 1's own history, not 3. The morning's
+`EXTEND_BY_TRACK` widened the range to 1 and therefore produced 1 + 2 + 3. Withdrawn, kept
+commented (declaration and body).
+
+New `RELABEL_OLD_CODES`, called in all three generators after the history is final and before
+`BUILD_SCOPE`: for each tracking row of the plant whose OLD_MATNR1..5 is in the range and
+whose NEW_MATNR is not, the old code's buckets are moved under the successor month by month
+(added where a month already exists), the old code leaves the history, message 026 logged.
+`LR_MATNR` in the generators is now simply the entered range. Rules that result:
+
+| Entered | List shows |
+|---|---|
+| 2 | 1 with 2's figures |
+| 2 and 3 | 1 with 2 + 3 |
+| 1 (or blank) | 1 with 1 + 2 + 3 - the normal absorption, unchanged |
+| 1 and 2 | 1 with 1 + 2 + 3 - successor in range, absorption wins, no relabel |
+
+Files: `src/zcl_pp_fcst.clas.abap` (`zcl_pp_fcst_nocomments.abap` regenerated). No DDIC or
+message change. TR: not yet transported.

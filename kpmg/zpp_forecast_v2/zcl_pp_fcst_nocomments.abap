@@ -275,11 +275,11 @@ CLASS zcl_pp_fcst DEFINITION
                 iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
 
-    METHODS extend_by_track
+    METHODS relabel_old_codes
       IMPORTING ir_werks TYPE tr_werks
                 ir_matnr TYPE tr_matnr
-      EXPORTING er_matnr TYPE tr_matnr
-      CHANGING  ct_msg   TYPE bapiret2_t.
+      CHANGING  ct_hist  TYPE tt_hist
+                ct_msg   TYPE bapiret2_t.
 
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
@@ -308,10 +308,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 
     DATA(lv_prev) = zcl_pp_fcst_util=>previous_fyear( iv_fyear ).
     IF lv_prev IS INITIAL.
@@ -350,6 +347,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
@@ -440,10 +442,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 
     DATA(lt_qtr)  = zcl_pp_fcst_util=>quarter_periods( iv_fyear = iv_fyear
                                                        iv_quarter = iv_quarter ).
@@ -486,6 +485,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
@@ -628,10 +632,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
-    extend_by_track( EXPORTING ir_werks = ir_werks
-                               ir_matnr = ir_matnr
-                     IMPORTING er_matnr = DATA(lr_matnr)
-                     CHANGING  ct_msg   = et_msg ).
+    DATA(lr_matnr) = ir_matnr.
 
     DATA(lv_quarter) = zcl_pp_fcst_util=>period_to_quarter( CONV #( iv_period ) ).
     DATA(lt_ly)      = zcl_pp_fcst_util=>last_year_quarter( iv_fyear = iv_fyear
@@ -681,6 +682,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    relabel_old_codes( EXPORTING ir_werks = ir_werks
+                                 ir_matnr = lr_matnr
+                       CHANGING  ct_hist  = mt_hist
+                                 ct_msg   = et_msg ).
 
     DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
@@ -1345,12 +1351,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD extend_by_track.
+  METHOD relabel_old_codes.
 
-    DATA: lv_old  TYPE matnr,
-          lv_cand TYPE matnr.
-
-    er_matnr = ir_matnr.
+    DATA: lv_cand TYPE matnr,
+          lt_move TYPE STANDARD TABLE OF ty_hist WITH DEFAULT KEY,
+          ls_move TYPE ty_hist.
 
     CHECK ir_matnr IS NOT INITIAL.
 
@@ -1370,23 +1375,42 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       CHECK ls_trk-new_matnr IS NOT INITIAL
         AND ls_trk-new_matnr NOT IN ir_matnr.
 
-      CLEAR lv_old.
       DO 5 TIMES.
+
         ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
           TO FIELD-SYMBOL(<lv_o>).
         CHECK sy-subrc = 0.
         lv_cand = <lv_o>.
-        IF lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
-          lv_old = lv_cand.
-          EXIT.
-        ENDIF.
+        CHECK lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+
+        CLEAR lt_move.
+        LOOP AT ct_hist INTO ls_move
+          WHERE werks = ls_trk-werks AND matnr = lv_cand.
+          APPEND ls_move TO lt_move.
+        ENDLOOP.
+        CHECK lt_move IS NOT INITIAL.
+
+        DELETE ct_hist WHERE werks = ls_trk-werks AND matnr = lv_cand.
+
+        LOOP AT lt_move INTO ls_move.
+          READ TABLE ct_hist ASSIGNING FIELD-SYMBOL(<ls_n>)
+            WITH TABLE KEY werks = ls_move-werks
+                           matnr = ls_trk-new_matnr
+                           gjahr = ls_move-gjahr
+                           month = ls_move-month.
+          IF sy-subrc = 0.
+            <ls_n>-qty = <ls_n>-qty + ls_move-qty.
+          ELSE.
+            ls_move-matnr = ls_trk-new_matnr.
+            INSERT ls_move INTO TABLE ct_hist.
+          ENDIF.
+        ENDLOOP.
+
+        add_msg( EXPORTING iv_type = 'W' iv_number = 026
+                           iv_v1   = lv_cand iv_v2 = ls_trk-new_matnr
+                 CHANGING  ct_msg  = ct_msg ).
+
       ENDDO.
-
-      APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-new_matnr ) TO er_matnr.
-
-      add_msg( EXPORTING iv_type = 'W' iv_number = 026
-                         iv_v1   = lv_old iv_v2 = ls_trk-new_matnr
-               CHANGING  ct_msg  = ct_msg ).
 
     ENDLOOP.
 
