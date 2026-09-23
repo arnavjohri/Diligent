@@ -732,9 +732,11 @@ in this order:
    `do_business` mode M reads it, refuses a negative value, stores it. The two monthly totals
    in the program (`do_business` text, `do_change` negative guard) include MSL.
 
-Not changed, flagged: `ZPP_FORECAST_REPORT`'s monthly total (`MTH_TOTAL`) does not include
-MSL; quarterly has no MSL; the annual sheet is untouched.
+Flagged and then done on Arnav's "do it": `ZPP_FORECAST_REPORT` gains `MTH_MSL` ("MSL")
+between the additional monthly forecast and `MTH_TOTAL`, and `MTH_TOTAL` includes it. Not
+changed: quarterly has no MSL; the annual sheet is untouched.
 
 Files: `src/zppt_fcst_mn.tabl.xml`, `src/zcl_pp_fcst.clas.abap`, `src/zpp_forecast.prog.abap`,
-`src/zpp_forecast_upload.prog.abap` (`zcl_pp_fcst_nocomments.abap` regenerated).
+`src/zpp_forecast_upload.prog.abap`, `src/zpp_forecast_report.prog.abap`
+(`zcl_pp_fcst_nocomments.abap` regenerated).
 TR: not yet transported.

@@ -35,6 +35,7 @@ TYPES: BEGIN OF ty_out,
          qtr_total  TYPE zde_fcst_qty,
          mth_fcst   TYPE zde_fcst_qty,
          mth_add    TYPE zde_fcst_qty,
+         mth_msl    TYPE zde_fcst_qty,   "Changes by Arnav on 23/09/26 - MSL, before the total
          mth_total  TYPE zde_fcst_qty,
          meins      TYPE meins,
 *BOC By Arnav on 31/08/26
@@ -193,7 +194,14 @@ FORM collect.
                                    mth_fcst = ls_mn-final_qty
                                    mth_add  = ls_mn-bus_fcst_add ).
 
-      ls_out-mth_total = ls_out-mth_fcst + ls_out-mth_add.
+*BOC By Arnav on 23/09/26
+*     MSL, uploaded with the monthly business forecast (request of
+*     23/09/26): shown before the monthly total and included in it, as
+*     on the ZFCST monthly list.
+      ls_out-mth_msl   = ls_mn-msl.
+*     ls_out-mth_total = ls_out-mth_fcst + ls_out-mth_add.
+      ls_out-mth_total = ls_out-mth_fcst + ls_out-mth_add + ls_out-mth_msl.
+*EOC By Arnav on 23/09/26
 
       READ TABLE lt_qt INTO DATA(ls_qt) WITH KEY werks   = ls_yr-werks
                                                  matnr   = ls_yr-matnr
@@ -327,6 +335,7 @@ FORM display.
       PERFORM txt USING lo_cols 'QTR_TOTAL' 'Final Quarter Forecast'.
       PERFORM txt USING lo_cols 'MTH_FCST'  'Monthly Forecast'.
       PERFORM txt USING lo_cols 'MTH_ADD'   'Additional Monthly Forecast'.
+      PERFORM txt USING lo_cols 'MTH_MSL'   'MSL'.   "Changes by Arnav on 23/09/26
       PERFORM txt USING lo_cols 'MTH_TOTAL' 'Final Monthly Forecast'.
 
       lo_alv->get_display_settings( )->set_list_header(
