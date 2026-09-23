@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata">
+    <edmx:Include Namespace="ZDPR_Q_BOEPD_TREND_CDS" Alias="SAP"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="zdprdashboard.annotations.boepd">
+
+      <Annotations Target="ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDResult">
+
+        <Annotation Term="UI.SelectionVariant" Qualifier="Params">
+          <Record Type="UI.SelectionVariantType">
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
+                  <PropertyValue Property="PropertyValue" String="20240401"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
+                  <PropertyValue Property="PropertyValue" String="20240414"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="SelectOptions">
+              <Collection/>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.Chart" Qualifier="BoepdVsTargetOvp">
+          <Record Type="UI.ChartDefinitionType">
+            <PropertyValue Property="Title" String="Actual Production vs BE Target (BOEPD)"/>
+            <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Line"/>
+            <PropertyValue Property="Dimensions">
+              <Collection>
+                <PropertyPath>ProductionDate</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="DimensionAttributes">
+              <Collection>
+                <Record Type="UI.ChartDimensionAttributeType">
+                  <PropertyValue Property="Dimension" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Measures">
+              <Collection>
+                <PropertyPath>ActualBoepdOvl</PropertyPath>
+                <PropertyPath>TargetBoepd</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="MeasureAttributes">
+              <Collection>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="ActualBoepdOvl"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                </Record>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="TargetBoepd"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.PresentationVariant" Qualifier="ByDate">
+          <Record Type="UI.PresentationVariantType">
+            <PropertyValue Property="SortOrder">
+              <Collection>
+                <Record Type="Common.SortOrderType">
+                  <PropertyValue Property="Property" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Descending" Bool="false"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Visualizations">
+              <Collection>
+                <AnnotationPath>@UI.Chart#BoepdVsTargetOvp</AnnotationPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.Chart" Qualifier="ByBusinessUnit">
+          <Record Type="UI.ChartDefinitionType">
+            <PropertyValue Property="Title" String="Daily Production Trend by Business Unit"/>
+            <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Line"/>
+            <PropertyValue Property="Dimensions">
+              <Collection>
+                <PropertyPath>ProductionDate</PropertyPath>
+                <PropertyPath>BusinessUnit</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="DimensionAttributes">
+              <Collection>
+                <Record Type="UI.ChartDimensionAttributeType">
+                  <PropertyValue Property="Dimension" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
+                </Record>
+                <Record Type="UI.ChartDimensionAttributeType">
+                  <PropertyValue Property="Dimension" PropertyPath="BusinessUnit"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Series"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Measures">
+              <Collection>
+                <PropertyPath>ActualBoepdOvl</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="MeasureAttributes">
+              <Collection>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="ActualBoepdOvl"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.PresentationVariant" Qualifier="ByDateBu">
+          <Record Type="UI.PresentationVariantType">
+            <PropertyValue Property="SortOrder">
+              <Collection>
+                <Record Type="Common.SortOrderType">
+                  <PropertyValue Property="Property" PropertyPath="ProductionDate"/>
+                  <PropertyValue Property="Descending" Bool="false"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Visualizations">
+              <Collection>
+                <AnnotationPath>@UI.Chart#ByBusinessUnit</AnnotationPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- BOC By Arnav on 23/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRTREND on ZDPR_Q_BOEPD_TREND_CDS. SemanticObject/Action = target mapping DPRTrend-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="BOEPD trend"/>
+              <PropertyValue Property="SemanticObject" String="DPRTrend"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 23/09/26 -->
+
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

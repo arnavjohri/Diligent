@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_PROD_QUERY_CDS/$metadata">
+    <edmx:Include Namespace="ZDPR_Q_PROD_QUERY_CDS" Alias="SAP"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="zdprdashboard.annotations.prod">
+
+      <Annotations Target="ZDPR_Q_PROD_QUERY_CDS.ZDPR_Q_PROD_QUERYResult">
+
+        <Annotation Term="UI.SelectionVariant" Qualifier="Params">
+          <Record Type="UI.SelectionVariantType">
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
+                  <PropertyValue Property="PropertyValue" String="20240401"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
+                  <PropertyValue Property="PropertyValue" String="20240414"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="SelectOptions">
+              <Collection/>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.LineItem" Qualifier="ByAsset">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="Asset"/>
+              <PropertyValue Property="Value" Path="AssetDescription"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="Product"/>
+              <PropertyValue Property="Value" Path="ProductDescription"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="OVL share"/>
+              <PropertyValue Property="Value" Path="OvlShareQty1"/>
+            </Record>
+          </Collection>
+        </Annotation>
+
+        <Annotation Term="UI.PresentationVariant" Qualifier="TopAssets">
+          <Record Type="UI.PresentationVariantType">
+            <PropertyValue Property="SortOrder">
+              <Collection>
+                <Record Type="Common.SortOrderType">
+                  <PropertyValue Property="Property" PropertyPath="OvlShareQty1"/>
+                  <PropertyValue Property="Descending" Bool="true"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Visualizations">
+              <Collection>
+                <AnnotationPath>@UI.LineItem#ByAsset</AnnotationPath>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- BOC By Arnav on 23/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRRECORDS on ZDPR_Q_PROD_QUERY_CDS. SemanticObject/Action = target mapping DPRRecords-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="Production records"/>
+              <PropertyValue Property="SemanticObject" String="DPRRecords"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 23/09/26 -->
+
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
