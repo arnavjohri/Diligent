@@ -1,0 +1,27 @@
+Message	Text
+001	Enter a plant
+002	Financial year &1 is not in the format YYYY-YYYY
+003	Enter either a quarter or a date range, not both
+004	Year is mandatory when a quarter is entered
+005	Annual forecast does not exist for plant &1 material &2 year &3
+006	No product category maintained for plant &1 material &2
+007	No load factor for plant &1 category &2, 1.000 used
+008	No data selected for the given criteria
+009	&1 material(s) saved, each under its own forecast number
+010	No authorisation for plant &1 activity &2
+011	No authorisation to use legacy data
+012	Material &1 is not created in plant &2
+013	Upload file could not be read: &1
+014	Row &1: &2
+015	&1 rows uploaded, &2 rows in error
+016	Reason is mandatory for a forecast change
+017	Select at least one line
+018	Configuration missing for plant &1
+019	Save is only allowed when the selected period condition is met
+020	Material &1 is excluded from forecasting
+021	Number range ZPPFCST has no interval for financial year &1
+022	Nothing was saved, &1 row(s) refused - see the messages above
+023	&1 month(s) had no legacy data and were read from the standard tables
+024	&1 could not be read as Excel, save it as CSV or tab separated text
+025	TVARVC variable &1 not maintained, material type not restricted
+026	Material &1 is superseded by &2 and is shown under &2
