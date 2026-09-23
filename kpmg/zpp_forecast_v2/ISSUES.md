@@ -596,3 +596,28 @@ unaffected. Left as is because the class in QAS carries the 07/09 auth bypass an
 be touched; the one-word fix is the same `ALIGN = RIGHT`.
 
 Files: `src/zpp_forecast_upload.prog.abap`. TR: not yet transported.
+
+## 23/09/26 — ZFCST: a superseded code entered on the selection screen returned nothing
+
+Tester ran one material that has a product category; the material sits in ZPPT_MAT_TRACK as an
+old code, so `BUILD_SCOPE` dropped it (D6a) while its successor was outside the entered range —
+empty list.
+
+Fix in `ZCL_PP_FCST` only: new `EXTEND_BY_TRACK`, called right after `READ_CONFIG` in all three
+generators, widens the material range with the NEW_MATNR of every tracking row of the plant
+whose OLD_MATNR1..5 falls inside the entered range (a blank selection is left alone). Every
+read in the generator then uses the widened range `LR_MATNR` — history, legacy, old-code
+absorption and scope (12 lines, originals commented above each). Message **026** (W) records
+"Material &1 is superseded by &2 and is shown under &2" in the run log. Result: typing the old
+code brings up the successor row carrying the old code's history. Old codes still get no row
+of their own.
+
+**Open design point raised by Arnav the same day, not built:** the tracking table has no
+validity. For a financial year in which the old code was still the live material (e.g. a
+2025-2026 run when the replacement happened in 2026-2027) the old code is still absorbed and
+removed, and the successor shown instead. Options recorded in NOTES; recommendation is a
+"valid from financial year" on ZPPT_MAT_TRACK if the business needs forecasts for years before
+a replacement, otherwise keep the successor rule.
+
+Manual: SE91 message ZPP_FCST 026. Files: `src/zcl_pp_fcst.clas.abap`, `src/zpp_fcst.msag.xml`
+(`zcl_pp_fcst_nocomments.abap` regenerated). TR: not yet transported.

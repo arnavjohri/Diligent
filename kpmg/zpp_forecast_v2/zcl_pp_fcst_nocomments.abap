@@ -275,6 +275,12 @@ CLASS zcl_pp_fcst DEFINITION
                 iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
 
+    METHODS extend_by_track
+      IMPORTING ir_werks TYPE tr_werks
+                ir_matnr TYPE tr_matnr
+      EXPORTING er_matnr TYPE tr_matnr
+      CHANGING  ct_msg   TYPE bapiret2_t.
+
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
@@ -302,6 +308,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+
     DATA(lv_prev) = zcl_pp_fcst_util=>previous_fyear( iv_fyear ).
     IF lv_prev IS INITIAL.
       add_msg( EXPORTING iv_number = 002 iv_v1 = iv_fyear CHANGING ct_msg = et_msg ).
@@ -318,13 +329,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
                                     iv_from = lv_from iv_to = lv_to
                           CHANGING  ct_hist = lt_std ).
 
@@ -340,7 +351,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       mt_hist = lt_std.
     ENDIF.
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
     filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
 
@@ -429,6 +440,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+
     DATA(lt_qtr)  = zcl_pp_fcst_util=>quarter_periods( iv_fyear = iv_fyear
                                                        iv_quarter = iv_quarter ).
     DATA(lt_ly)   = zcl_pp_fcst_util=>last_year_quarter( iv_fyear = iv_fyear
@@ -449,13 +465,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
                                     iv_from = lv_from iv_to = lv_to
                           CHANGING  ct_hist = lt_std ).
 
@@ -471,7 +487,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       mt_hist = lt_std.
     ENDIF.
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
     filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
     DATA(lt_price) = read_prices( lt_scope ).
@@ -612,6 +628,11 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+
     DATA(lv_quarter) = zcl_pp_fcst_util=>period_to_quarter( CONV #( iv_period ) ).
     DATA(lt_ly)      = zcl_pp_fcst_util=>last_year_quarter( iv_fyear = iv_fyear
                                                             iv_quarter = lv_quarter ).
@@ -636,14 +657,14 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
     add_old_material_qty( EXPORTING ir_werks       = ir_werks
-                                    ir_matnr       = ir_matnr
+                                    ir_matnr       = lr_matnr
                                     iv_from        = lv_from
                                     iv_to          = lv_to
                                     iv_use_billing = abap_true
@@ -661,7 +682,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       mt_hist = lt_std.
     ENDIF.
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).
 
     filter_mtart( CHANGING ct_scope = lt_scope ct_msg = et_msg ).
     DATA(lt_price) = read_prices( lt_scope ).
@@ -1321,6 +1342,53 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         AND gjahr   = @lv_gjahr
         AND fcst_no <> @space
       INTO @rv_no.
+
+  ENDMETHOD.
+
+  METHOD extend_by_track.
+
+    DATA: lv_old  TYPE matnr,
+          lv_cand TYPE matnr.
+
+    er_matnr = ir_matnr.
+
+    CHECK ir_matnr IS NOT INITIAL.
+
+    SELECT werks, new_matnr,
+           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+      FROM zppt_mat_track
+      WHERE werks IN @ir_werks
+        AND (    old_matnr1 IN @ir_matnr
+              OR old_matnr2 IN @ir_matnr
+              OR old_matnr3 IN @ir_matnr
+              OR old_matnr4 IN @ir_matnr
+              OR old_matnr5 IN @ir_matnr )
+      INTO TABLE @DATA(lt_trk).
+
+    LOOP AT lt_trk INTO DATA(ls_trk).
+
+      CHECK ls_trk-new_matnr IS NOT INITIAL
+        AND ls_trk-new_matnr NOT IN ir_matnr.
+
+      CLEAR lv_old.
+      DO 5 TIMES.
+        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
+          TO FIELD-SYMBOL(<lv_o>).
+        CHECK sy-subrc = 0.
+        lv_cand = <lv_o>.
+        IF lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+          lv_old = lv_cand.
+          EXIT.
+        ENDIF.
+      ENDDO.
+
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-new_matnr ) TO er_matnr.
+
+      add_msg( EXPORTING iv_type = 'W' iv_number = 026
+                         iv_v1   = lv_old iv_v2 = ls_trk-new_matnr
+               CHANGING  ct_msg  = ct_msg ).
+
+    ENDLOOP.
 
   ENDMETHOD.
 

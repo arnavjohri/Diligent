@@ -381,6 +381,19 @@ CLASS zcl_pp_fcst DEFINITION
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
 *EOC By Arnav on 15/09/26
 
+*BOC By Arnav on 23/09/26
+    "! Entering a superseded code used to return nothing: the old code is
+    "! dropped from the list (D6a) and its successor sat outside the
+    "! selection. The successor of every old code in IR_MATNR is added to
+    "! ER_MATNR, so the run brings up the new material carrying the old
+    "! one's history. Old codes still get no row of their own.
+    METHODS extend_by_track
+      IMPORTING ir_werks TYPE tr_werks
+                ir_matnr TYPE tr_matnr
+      EXPORTING er_matnr TYPE tr_matnr
+      CHANGING  ct_msg   TYPE bapiret2_t.
+*EOC By Arnav on 23/09/26
+
     METHODS number_get
       IMPORTING iv_fyear     TYPE zde_fyear
       RETURNING VALUE(rv_no) TYPE zde_fcst_no.
@@ -416,6 +429,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: et_alv, et_msg.
 
     read_config( ir_werks ).
+
+*BOC By Arnav on 23/09/26
+*   A superseded code entered on the selection screen brings up its
+*   successor - the material range is widened before anything is read.
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
 
     " The ALV columns run April to March of the PREVIOUS financial year,
     " so history is taken from that year's date range - see 9.4
@@ -454,13 +476,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*     mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+*   lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+*   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                                     iv_from = lv_from iv_to = lv_to
                           CHANGING  ct_hist = lt_std ).
 
@@ -477,7 +502,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 *EOC By Arnav on 31/08/26
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
 *   Material type restriction on annual as well - the morning's build
@@ -582,6 +608,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
+*BOC By Arnav on 23/09/26
+*   A superseded code entered on the selection screen brings up its
+*   successor - the material range is widened before anything is read.
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
+
     DATA(lt_qtr)  = zcl_pp_fcst_util=>quarter_periods( iv_fyear = iv_fyear
                                                        iv_quarter = iv_quarter ).
     DATA(lt_ly)   = zcl_pp_fcst_util=>last_year_quarter( iv_fyear = iv_fyear
@@ -618,13 +653,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*     mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+*   lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+*   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                                     iv_from = lv_from iv_to = lv_to
                           CHANGING  ct_hist = lt_std ).
 
@@ -641,7 +679,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 *EOC By Arnav on 31/08/26
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
 *   Material type restriction and the price list, each read once per run
@@ -841,6 +880,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     read_config( ir_werks ).
 
+*BOC By Arnav on 23/09/26
+*   A superseded code entered on the selection screen brings up its
+*   successor - the material range is widened before anything is read.
+    extend_by_track( EXPORTING ir_werks = ir_werks
+                               ir_matnr = ir_matnr
+                     IMPORTING er_matnr = DATA(lr_matnr)
+                     CHANGING  ct_msg   = et_msg ).
+*EOC By Arnav on 23/09/26
+
     DATA(lv_quarter) = zcl_pp_fcst_util=>period_to_quarter( CONV #( iv_period ) ).
     DATA(lt_ly)      = zcl_pp_fcst_util=>last_year_quarter( iv_fyear = iv_fyear
                                                             iv_quarter = lv_quarter ).
@@ -884,7 +932,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     CLEAR: mt_hist, lt_std, lv_gaps.
 
     IF iv_legacy = abap_true.
-      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+*     mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = ir_matnr
+      mt_hist = read_legacy( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                              iv_from = lv_from iv_to = lv_to ).
     ENDIF.
 
@@ -897,10 +946,12 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   mode - to be corrected in the FS.
 *    lt_std = read_matdoc( ir_werks = ir_werks ir_matnr = ir_matnr   "Changes by Arnav on 15/09/26
 *                          iv_from = lv_from iv_to = lv_to ).
-    lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr    "Changes by Arnav on 15/09/26
+*   lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr    "Changes by Arnav on 15/09/26
+    lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr    "Changes by Arnav on 15/09/26, 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
     add_old_material_qty( EXPORTING ir_werks       = ir_werks
-                                    ir_matnr       = ir_matnr
+*                                   ir_matnr       = ir_matnr
+                                    ir_matnr       = lr_matnr   "Changes by Arnav on 23/09/26
                                     iv_from        = lv_from
                                     iv_to          = lv_to
 *                                   iv_use_billing = abap_false        "Changes by Arnav on 15/09/26
@@ -920,7 +971,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ENDIF.
 *EOC By Arnav on 31/08/26
 
-    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+*   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
+    DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = lr_matnr ).   "Changes by Arnav on 23/09/26
 
 *BOC By Arnav on 15/09/26
 *   Material type restriction and the price list, each read once per run
@@ -1798,6 +1850,64 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
   ENDMETHOD.
 *EOC By Arnav on 15/09/26
+
+
+*BOC By Arnav on 23/09/26
+*&---------------------------------------------------------------------*
+*& Successors of superseded codes in the material selection.
+*& A blank selection already covers every material of the plant and is
+*& left alone. For an entered range, every tracking row of the plant
+*& whose OLD_MATNR1..5 falls inside it contributes its NEW_MATNR, and
+*& message 026 records which old code was resolved to which successor.
+*&---------------------------------------------------------------------*
+  METHOD extend_by_track.
+
+    DATA: lv_old  TYPE matnr,
+          lv_cand TYPE matnr.
+
+    er_matnr = ir_matnr.
+
+    CHECK ir_matnr IS NOT INITIAL.
+
+    SELECT werks, new_matnr,
+           old_matnr1, old_matnr2, old_matnr3, old_matnr4, old_matnr5
+      FROM zppt_mat_track
+      WHERE werks IN @ir_werks
+        AND (    old_matnr1 IN @ir_matnr
+              OR old_matnr2 IN @ir_matnr
+              OR old_matnr3 IN @ir_matnr
+              OR old_matnr4 IN @ir_matnr
+              OR old_matnr5 IN @ir_matnr )
+      INTO TABLE @DATA(lt_trk).
+
+    LOOP AT lt_trk INTO DATA(ls_trk).
+
+      CHECK ls_trk-new_matnr IS NOT INITIAL
+        AND ls_trk-new_matnr NOT IN ir_matnr.
+
+*     Which of the five old codes was entered - for the message only
+      CLEAR lv_old.
+      DO 5 TIMES.
+        ASSIGN COMPONENT |OLD_MATNR{ sy-index }| OF STRUCTURE ls_trk
+          TO FIELD-SYMBOL(<lv_o>).
+        CHECK sy-subrc = 0.
+        lv_cand = <lv_o>.
+        IF lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+          lv_old = lv_cand.
+          EXIT.
+        ENDIF.
+      ENDDO.
+
+      APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-new_matnr ) TO er_matnr.
+
+      add_msg( EXPORTING iv_type = 'W' iv_number = 026
+                         iv_v1   = lv_old iv_v2 = ls_trk-new_matnr
+               CHANGING  ct_msg  = ct_msg ).
+
+    ENDLOOP.
+
+  ENDMETHOD.
+*EOC By Arnav on 23/09/26
 
 
 *&---------------------------------------------------------------------*

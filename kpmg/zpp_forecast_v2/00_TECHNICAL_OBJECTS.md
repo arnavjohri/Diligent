@@ -189,6 +189,7 @@ All        Tonnage    = forecast qty × MARA-NTGEW
 | 023 | W | &1 month(s) had no legacy data and were read from the standard tables |
 | 024 | E | &1 could not be read as Excel, save it as CSV or tab separated text |
 | 025 | W | TVARVC variable &1 not maintained, material type not restricted |
+| 026 | W | Material &1 is superseded by &2 and is shown under &2 |
 
 ---
 

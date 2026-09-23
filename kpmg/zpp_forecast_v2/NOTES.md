@@ -61,6 +61,12 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   row still reads `PRICE` back from `ZPPT_FCST_QT` only so SAVE cannot blank it; the figure
   is overwritten by the A923 result every run. Monthly now carries `M4_VAL` / `M4_TON_VAL`
   (display only, `ZPPT_FCST_MN` has no such fields); quarterly gains `TOTAL_VAL`.
+- **Since 23/09/26 an old code entered on the ZFCST selection screen brings up its
+  successor.** `ZCL_PP_FCST=>EXTEND_BY_TRACK` widens the material range at the start of every
+  run with the NEW_MATNR of each tracking row whose OLD_MATNR1..5 falls in the entered range,
+  and logs message 026. A blank material selection is left alone. Old codes still never get a
+  row of their own (D6a); a tracking entry alone still does not put a new material on the list
+  — it needs history under itself or an old code, or a product category.
 - **`ZCL_PP_FCST_UTIL` still has both authority checks bypassed** (07/09, for QAS initial
   testing). Restore before release — see ISSUES.md 03/09/26, last entry.
 
