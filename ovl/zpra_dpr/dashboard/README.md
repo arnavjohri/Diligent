@@ -152,10 +152,12 @@ models. `webapp/manifest.json` in this folder is the forward version (steps 7,
 BAS before it can be used. So the navigation was applied to the RUNNING version:
 `deployed/manifest.json` (= original + `identificationAnnotationPath` on the six
 cards) and `deployed/ui5.yaml` (= original + sandbox `flp.apps` entries for the
-four detail-app intents). Copy `deployed/` into BAS. The annotation files in
-BAS were not supplied; the `UI.Identification` blocks are added to whichever
-copies BAS holds, not by overwriting them with the repo files, which assume the
-v16-09 backend elements (ProductionDateText, RowLabel).
+four detail-app intents). Copy `deployed/` into BAS. The four annotation files
+BAS holds (supplied 23/09/26, filed in `original/`) are the pre-v16-09 versions
+(ProductionDate, no RowLabel); `deployed/annotations/` = those + the
+`UI.Identification` block each, plus one stray `Q` removed after the first
+`</edmx:Reference>` in `annotation_boepd.xml`. `deployed/` is the complete set
+to copy into BAS; `webapp/` stays the forward version.
 
 
 A table card shows only the rows that fit its height, no scrollbar (card 6

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/UI.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Common.xml">
+    <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+  </edmx:Reference>
+  <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_PROD_PERF_CDS/$metadata">
+    <edmx:Include Namespace="ZDPR_Q_PROD_PERF_CDS" Alias="SAP"/>
+  </edmx:Reference>
+  <edmx:DataServices>
+    <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="zdprdashboard.annotations.perf">
+
+      <Annotations Target="ZDPR_Q_PROD_PERF_CDS.ZDPR_Q_PROD_PERFType">
+
+        <Annotation Term="UI.SelectionVariant" Qualifier="Ytd">
+          <Record Type="UI.SelectionVariantType">
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-01T00:00:00"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-14T00:00:00"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_FiscalYear"/>
+                  <PropertyValue Property="PropertyValue" String="2024"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="SelectOptions">
+              <Collection>
+                <Record Type="UI.SelectOptionType">
+                  <PropertyValue Property="PropertyName" PropertyPath="ScopeType"/>
+                  <PropertyValue Property="Ranges">
+                    <Collection>
+                      <Record Type="UI.SelectionRangeType">
+                        <PropertyValue Property="Sign" EnumMember="UI.SelectionRangeSignType/I"/>
+                        <PropertyValue Property="Option" EnumMember="UI.SelectionRangeOptionType/EQ"/>
+                        <PropertyValue Property="Low" String="YTD"/>
+                      </Record>
+                    </Collection>
+                  </PropertyValue>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.SelectionVariant" Qualifier="Annual">
+          <Record Type="UI.SelectionVariantType">
+            <PropertyValue Property="Parameters">
+              <Collection>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateFrom"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-01T00:00:00"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_DateTo"/>
+                  <PropertyValue Property="PropertyValue" String="2024-04-14T00:00:00"/>
+                </Record>
+                <Record Type="UI.Parameter">
+                  <PropertyValue Property="PropertyName" PropertyPath="P_FiscalYear"/>
+                  <PropertyValue Property="PropertyValue" String="2024"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="SelectOptions">
+              <Collection>
+                <Record Type="UI.SelectOptionType">
+                  <PropertyValue Property="PropertyName" PropertyPath="ScopeType"/>
+                  <PropertyValue Property="Ranges">
+                    <Collection>
+                      <Record Type="UI.SelectionRangeType">
+                        <PropertyValue Property="Sign" EnumMember="UI.SelectionRangeSignType/I"/>
+                        <PropertyValue Property="Option" EnumMember="UI.SelectionRangeOptionType/EQ"/>
+                        <PropertyValue Property="Low" String="ANNUAL"/>
+                      </Record>
+                    </Collection>
+                  </PropertyValue>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.Chart" Qualifier="BoepdByGroup">
+          <Record Type="UI.ChartDefinitionType">
+            <PropertyValue Property="Title" String="Actual vs BE Target (BOEPD, per day)"/>
+            <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Column"/>
+            <PropertyValue Property="Dimensions">
+              <Collection>
+                <PropertyPath>ProductGroupText</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="DimensionAttributes">
+              <Collection>
+                <Record Type="UI.ChartDimensionAttributeType">
+                  <PropertyValue Property="Dimension" PropertyPath="ProductGroupText"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="Measures">
+              <Collection>
+                <PropertyPath>ActualBoepdPerDay</PropertyPath>
+                <PropertyPath>TargetBoepdPerDay</PropertyPath>
+              </Collection>
+            </PropertyValue>
+            <PropertyValue Property="MeasureAttributes">
+              <Collection>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="ActualBoepdPerDay"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                </Record>
+                <Record Type="UI.ChartMeasureAttributeType">
+                  <PropertyValue Property="Measure" PropertyPath="TargetBoepdPerDay"/>
+                  <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
+                </Record>
+              </Collection>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <Annotation Term="UI.LineItem" Qualifier="PerfYtd">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="Product"/>
+              <PropertyValue Property="Value" Path="ProductGroupText"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="Actual per day"/>
+              <PropertyValue Property="Value" Path="ActualPerDay"/>
+            </Record>
+            <Record Type="UI.DataFieldForAnnotation">
+              <PropertyValue Property="Label" String="% Achv"/>
+              <PropertyValue Property="Target" AnnotationPath="@UI.DataPoint#AchvPct"/>
+            </Record>
+          </Collection>
+        </Annotation>
+
+        <Annotation Term="UI.LineItem" Qualifier="PerfAnnual">
+          <Collection>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="Product"/>
+              <PropertyValue Property="Value" Path="ProductGroupText"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="BE Target per day"/>
+              <PropertyValue Property="Value" Path="TargetPerDay"/>
+            </Record>
+            <Record Type="UI.DataField">
+              <PropertyValue Property="Label" String="BE Target BOEPD"/>
+              <PropertyValue Property="Value" Path="TargetBoepdPerDay"/>
+            </Record>
+          </Collection>
+        </Annotation>
+
+        <Annotation Term="UI.DataPoint" Qualifier="AchvPct">
+          <Record Type="UI.DataPointType">
+            <PropertyValue Property="Title" String="% Achv w.r.t. BE Target"/>
+            <PropertyValue Property="Value" Path="AchievementPct"/>
+            <PropertyValue Property="Criticality" Path="AchievementCriticality"/>
+            <PropertyValue Property="ValueFormat">
+              <Record Type="UI.NumberFormat">
+                <PropertyValue Property="NumberOfFractionalDigits" Int="1"/>
+              </Record>
+            </PropertyValue>
+          </Record>
+        </Annotation>
+
+        <!-- BOC By Arnav on 23/09/26
+             Card navigation (README step 9): header click opens the detail app
+             ZDPRPERF on ZDPR_Q_PROD_PERF_CDS. SemanticObject/Action = target mapping DPRPerformance-display. -->
+        <Annotation Term="UI.Identification">
+          <Collection>
+            <Record Type="UI.DataFieldForIntentBasedNavigation">
+              <PropertyValue Property="Label" String="Production performance"/>
+              <PropertyValue Property="SemanticObject" String="DPRPerformance"/>
+              <PropertyValue Property="Action" String="display"/>
+            </Record>
+          </Collection>
+        </Annotation>
+        <!-- EOC By Arnav on 23/09/26 -->
+
+      </Annotations>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>
