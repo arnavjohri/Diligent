@@ -621,3 +621,20 @@ a replacement, otherwise keep the successor rule.
 
 Manual: SE91 message ZPP_FCST 026. Files: `src/zcl_pp_fcst.clas.abap`, `src/zpp_fcst.msag.xml`
 (`zcl_pp_fcst_nocomments.abap` regenerated). TR: not yet transported.
+
+## 23/09/26 — ZFCST list: full standard toolbar (sort, filter, totals, layout) beside the four buttons
+
+Two parts. **SE41 (manual, Arnav):** `PF_STATUS` of ZPP_FORECAST is recreated as a copy of
+`SALV_STANDARD` from `SAPLSALV_METADATA_STATUS` with `ZSAVE`, `ZSELALL`, `ZDESEL`, `ZEXCEL`
+added to the application toolbar; the program already calls `set_screen_status` with
+`c_functions_all`, which switches on every SALV function whose `&` code the status carries.
+The status is not serialised by abapGit and travels only in the transport.
+
+**Code (`ZPP_FORECAST`, `FORM display`):** a layout key was never set, so SALV offered
+"Change layout" only — "Save layout" and "Select layout" need `get_layout( )->set_key( )`.
+Added after `set_all( )`: key = report + mode as handle (annual, quarterly and monthly have
+different column sets, so their layouts must not be offered to each other),
+`set_save_restriction( restrict_none )`, `set_default( abap_true )`. `ZPP_FORECAST_REPORT`
+runs on the standard status but has no layout key either — same three lines if wanted.
+
+Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.

@@ -756,6 +756,19 @@ FORM display.
       "--- toolbar -------------------------------------------------------
       go_alv->get_functions( )->set_all( ).
 
+*BOC By Arnav on 23/09/26
+*     Layout management. Without a layout key SALV offers "Change layout"
+*     only; "Save layout" and "Select layout" need the key that names the
+*     report the variants belong to. The mode is the handle, so a layout
+*     saved on the annual sheet is never offered on the quarterly one,
+*     whose columns are different.
+      DATA(ls_lkey) = VALUE salv_s_layout_key( report = sy-repid
+                                               handle = g_mode ).
+      go_alv->get_layout( )->set_key( ls_lkey ).
+      go_alv->get_layout( )->set_save_restriction( if_salv_c_layout=>restrict_none ).
+      go_alv->get_layout( )->set_default( abap_true ).
+*EOC By Arnav on 23/09/26
+
       DATA(lv_save_ok) = abap_true.
 
       LOOP AT s_werks INTO DATA(ls_w2).
