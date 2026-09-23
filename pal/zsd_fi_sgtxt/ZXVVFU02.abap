@@ -79,8 +79,8 @@ IF xaccit-sgtxt IS INITIAL.
   LOOP AT cvbrp INTO DATA(ls_cvbrp_sgtxt) WHERE aubel IS NOT INITIAL.
     APPEND ls_cvbrp_sgtxt-aubel TO lt_aubel_sgtxt.
   ENDLOOP.
-  SORT lt_aubel_sgtxt.
-  DELETE ADJACENT DUPLICATES FROM lt_aubel_sgtxt.
+  SORT lt_aubel_sgtxt BY table_line.
+  DELETE ADJACENT DUPLICATES FROM lt_aubel_sgtxt COMPARING table_line.
 
   IF lt_aubel_sgtxt IS NOT INITIAL.
 *   First-created sales order (ticket wording), document number as tie-break only
@@ -95,9 +95,10 @@ IF xaccit-sgtxt IS INITIAL.
     IF sy-subrc = 0.
       lv_tdname_sgtxt = ls_vbak_sgtxt-vbeln.
 
-*     Language: billing document language first, else the first language the
-*     note exists in (STXH is the text header, no cluster read needed)
-      lv_spras_sgtxt = vbrk-spras.
+*     Language: logon language first, else the first language the note
+*     exists in (STXH is the text header, no cluster read needed).
+*     VBRK carries no language field.
+      lv_spras_sgtxt = sy-langu.
       SELECT SINGLE tdspras
         FROM stxh
         WHERE tdobject = @lc_tdobject_sgtxt
