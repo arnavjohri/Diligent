@@ -11,6 +11,8 @@
 // Old chart had no dimension/measure attributes and the presentation variant
 // referenced the default @UI.Chart, which does not exist: chart blank in the
 // ALP, SmartChart crash on navigation from the dashboard card.
+// Measures changed to AchievementPct: ActualQty/TargetQty carry a per-product
+// unit (BOPD vs MMSCMD) and the chart refuses to draw Oil and Gas together.
 //@UI.chart: [{
 //  qualifier:  'ActualVsTarget',
 //  title:      'Actual vs Target by Product',
@@ -28,13 +30,12 @@
 
 @UI.chart: [{
   qualifier:           'ActualVsTarget',
-  title:               'Actual vs Target by Product',
-  chartType:           #BAR,
+  title:               'Achievement % by Product',
+  chartType:           #COLUMN,
   dimensions:          ['ProductDescription'],
   dimensionAttributes: [{ dimension: 'ProductDescription', role: #CATEGORY }],
-  measures:            ['ActualQty', 'TargetQty'],
-  measureAttributes:   [{ measure: 'ActualQty', role: #AXIS_1 },
-                        { measure: 'TargetQty', role: #AXIS_1 }]
+  measures:            ['AchievementPct'],
+  measureAttributes:   [{ measure: 'AchievementPct', role: #AXIS_1 }]
 }]
 
 @UI.presentationVariant: [{

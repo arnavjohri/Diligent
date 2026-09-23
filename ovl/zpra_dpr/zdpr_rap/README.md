@@ -108,3 +108,9 @@ crashes (`ChartProvider._getRole`) when opened from the dashboard card.
 DDLX only; no view, service or `/IWFND/MAINT_SERVICE` change. `ZDPR_Q_TARGET_QUERY.ddlx.asddlx` (same folder, original in `original/`, supplied
 23/09/26 and identical to the 16/09 source document): same two defects, same fix,
 chart `ActualVsTarget`.
+
+23/09/26 later: `ZDPR_Q_TARGET_QUERY` chart measure switched to `AchievementPct`
+(unit-free, FORMULA) so the ALP chart draws Oil and Gas together; ActualQty /
+TargetQty remain in the table. Records app default: chart X = AssetDescription,
+Y = OvlShareQty1 with a default selection variant Product = Oil — pending the
+`ZDPR_Q_PROD_QUERY` DDLX source from ADT.
