@@ -49,12 +49,27 @@ server:
           # Changes by Arnav on 23/09/26 - local sandbox knows the detail apps'
           # intents so card navigation can be tested before deployment.
           # local = absolute path of the detail app's project root in the dev
-          # space. Add one entry per detail app once that project exists.
+          # space. Every folder named here must exist before the preview starts.
           apps:
             - target: /apps/zdprrecords
               local: /home/user/projects/zdprrecords
               intent:
                 object: DPRRecords
+                action: display
+            - target: /apps/zdprperf
+              local: /home/user/projects/zdprperf
+              intent:
+                object: DPRPerformance
+                action: display
+            - target: /apps/zdprtrend
+              local: /home/user/projects/zdprtrend
+              intent:
+                object: DPRTrend
+                action: display
+            - target: /apps/zdprtarget
+              local: /home/user/projects/zdprtarget
+              intent:
+                object: DPRTarget
                 action: display
 builder:
   resources:
