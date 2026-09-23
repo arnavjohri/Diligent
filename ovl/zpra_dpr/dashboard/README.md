@@ -167,7 +167,7 @@ One detail app per service, built and linked one at a time:
 
 | Order | Card | Service | Detail app template | Module / BSP | Semantic object-action |
 |---|---|---|---|---|---|
-| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` |
+| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **link proven in the BAS sandbox 23/09/26**: dates carried over, 2,700 rows scroll. ALP chart shows "Invalid data – some measures have different units" (OvlShareQty1 is MCF for gas, BBL for oil; no BOE measure in the query). Workaround: filter Product in the ALP; proper fix: BOE measure in ZDPR_C_PROD_CUBE (backend, senior). Not deployed yet. |
 | 2 | 3 Performance (YTD/Annual) | ZDPR_Q_PROD_PERF_CDS | List Report | `zdprperf` / `ZDPRPERF` | `DPRPerformance-display` |
 | 3 | 1, 5 BOEPD trend | ZDPR_Q_BOEPD_TREND_CDS | Analytical List Page | `zdprtrend` / `ZDPRTREND` | `DPRTrend-display` |
 | 4 | 4 Target vs actual | ZDPR_Q_TARGET_QUERY_CDS | Analytical List Page | `zdprtarget` / `ZDPRTARGET` | `DPRTarget-display` |
