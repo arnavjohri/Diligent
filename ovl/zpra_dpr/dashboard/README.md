@@ -188,6 +188,24 @@ Confirmed 23/09/26: the OVP hands the filter-bar values to the target via
 sap-xapp-state and the target's filter bar applies them by name (dates arrived
 on the first navigation).
 
+## Decision 23/09/26 — charts in the detail apps
+
+Records (`zdprrecords`) and target (`zdprtarget`) ALP charts render only with
+one product filtered: every quantity measure carries a per-product unit
+(M3/BBL, MMSCMD/BOPD) and the SmartChart refuses mixed units; PI % is unit-free
+but a summed percentage, so meaningless as a bar. Trend (`zdprtrend`) is BOEPD
+throughout and charts fine. Decision: ship as is, note the limitation in the
+handover, and ask the senior for BOE measures (OVL Share BOE in
+ZDPR_C_PROD_CUBE / ZDPR_Q_PROD_QUERY; Actual/Target BOE in ZDPR_C_TARGET_CUBE /
+ZDPR_Q_TARGET_QUERY, ZPRA_T_TAR_CF conversion). Chart defaults switch to those
+measures once active. Mail drafted 23/09/26 in chat, sending stays with Arnav.
+
+Detail-app fixes so far: DDLX `ZDPR_Q_BOEPD_TREND` and `ZDPR_Q_TARGET_QUERY`
+(`../zdpr_rap/`) chart attributes + presentation-variant qualifier; ALP
+manifests `defaultFilterMode: compact`, `hideVisualFilter: true`; records app
+filter fields unlabelled (Product/Asset/Block lack `@EndUserText.label`, DDLX
+polish, optional).
+
 ## Step 1 — generate the project, global filter, card 1
 
 ### 1.1 Prerequisites (already documented in the BTP guide)
