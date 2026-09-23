@@ -8,52 +8,53 @@
     <edmx:Reference Uri="https://sap.github.io/odata-vocabularies/vocabularies/Communication.xml">
         <edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
     </edmx:Reference>
-    <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_TARGET_QUERY_CDS/$metadata">
-        <edmx:Include Namespace="ZDPR_Q_TARGET_QUERY_CDS" Alias="SAP"/>
+    <edmx:Reference Uri="/sap/opu/odata/sap/ZDPR_Q_BOEPD_TREND_CDS/$metadata">
+        <edmx:Include Namespace="ZDPR_Q_BOEPD_TREND_CDS" Alias="SAP"/>
     </edmx:Reference>
     <edmx:DataServices>
         <Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="local">
 
             <!-- BOC By Arnav on 23/09/26
-                 The backend UI.Chart#ActualVsTarget has no Dimension/MeasureAttributes
-                 and the backend presentation variant points at @UI.Chart with no
-                 qualifier. The SmartChart needs the attribute blocks and crashes in
-                 ChartProvider._getRole without them. Both charts are defined here in
-                 full; the local copy overrides the backend one of the same qualifier.
-                 Superseded once DDLX ZDPR_Q_TARGET_QUERY carries the same fix. -->
-            <Annotations Target="ZDPR_Q_TARGET_QUERY_CDS.ZDPR_Q_TARGET_QUERYResult">
+                 Same gap as zdprtarget: backend UI.Chart#BoepdVsTarget has no
+                 Dimension/MeasureAttributes and the backend presentation variant
+                 points at @UI.Chart with no qualifier. Both charts defined here in
+                 full. Dimension is ProductionDate (yyyymmdd), the element the
+                 dashboard cards already chart; ASSUMPTION: ProductionDateText not
+                 used because its presence in the running backend is unconfirmed.
+                 Superseded once DDLX ZDPR_Q_BOEPD_TREND (repo: zdpr_rap/) is active. -->
+            <Annotations Target="ZDPR_Q_BOEPD_TREND_CDS.ZDPR_Q_BOEPD_TRENDResult">
 
-                <Annotation Term="UI.Chart" Qualifier="ActualVsTarget">
+                <Annotation Term="UI.Chart" Qualifier="BoepdVsTarget">
                     <Record Type="UI.ChartDefinitionType">
-                        <PropertyValue Property="Title" String="Actual vs Target by Product"/>
-                        <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Column"/>
+                        <PropertyValue Property="Title" String="Actual Production vs BE Target (BOEPD)"/>
+                        <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Line"/>
                         <PropertyValue Property="Dimensions">
                             <Collection>
-                                <PropertyPath>ProductDescription</PropertyPath>
+                                <PropertyPath>ProductionDate</PropertyPath>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="DimensionAttributes">
                             <Collection>
                                 <Record Type="UI.ChartDimensionAttributeType">
-                                    <PropertyValue Property="Dimension" PropertyPath="ProductDescription"/>
+                                    <PropertyValue Property="Dimension" PropertyPath="ProductionDate"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="Measures">
                             <Collection>
-                            <PropertyPath>ActualQty</PropertyPath>
-                            <PropertyPath>TargetQty</PropertyPath>
+                            <PropertyPath>ActualBoepdOvl</PropertyPath>
+                            <PropertyPath>TargetBoepd</PropertyPath>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="MeasureAttributes">
                             <Collection>
                                 <Record Type="UI.ChartMeasureAttributeType">
-                                    <PropertyValue Property="Measure" PropertyPath="ActualQty"/>
+                                    <PropertyValue Property="Measure" PropertyPath="ActualBoepdOvl"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
                                 </Record>
                                 <Record Type="UI.ChartMeasureAttributeType">
-                                    <PropertyValue Property="Measure" PropertyPath="TargetQty"/>
+                                    <PropertyValue Property="Measure" PropertyPath="TargetBoepd"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
                                 </Record>
                             </Collection>
@@ -62,35 +63,35 @@
                 </Annotation>
                 <Annotation Term="UI.Chart">
                     <Record Type="UI.ChartDefinitionType">
-                        <PropertyValue Property="Title" String="Actual vs Target by Product"/>
-                        <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Column"/>
+                        <PropertyValue Property="Title" String="Actual Production vs BE Target (BOEPD)"/>
+                        <PropertyValue Property="ChartType" EnumMember="UI.ChartType/Line"/>
                         <PropertyValue Property="Dimensions">
                             <Collection>
-                                <PropertyPath>ProductDescription</PropertyPath>
+                                <PropertyPath>ProductionDate</PropertyPath>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="DimensionAttributes">
                             <Collection>
                                 <Record Type="UI.ChartDimensionAttributeType">
-                                    <PropertyValue Property="Dimension" PropertyPath="ProductDescription"/>
+                                    <PropertyValue Property="Dimension" PropertyPath="ProductionDate"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartDimensionRoleType/Category"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="Measures">
                             <Collection>
-                            <PropertyPath>ActualQty</PropertyPath>
-                            <PropertyPath>TargetQty</PropertyPath>
+                            <PropertyPath>ActualBoepdOvl</PropertyPath>
+                            <PropertyPath>TargetBoepd</PropertyPath>
                             </Collection>
                         </PropertyValue>
                         <PropertyValue Property="MeasureAttributes">
                             <Collection>
                                 <Record Type="UI.ChartMeasureAttributeType">
-                                    <PropertyValue Property="Measure" PropertyPath="ActualQty"/>
+                                    <PropertyValue Property="Measure" PropertyPath="ActualBoepdOvl"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
                                 </Record>
                                 <Record Type="UI.ChartMeasureAttributeType">
-                                    <PropertyValue Property="Measure" PropertyPath="TargetQty"/>
+                                    <PropertyValue Property="Measure" PropertyPath="TargetBoepd"/>
                                     <PropertyValue Property="Role" EnumMember="UI.ChartMeasureRoleType/Axis1"/>
                                 </Record>
                             </Collection>

@@ -96,3 +96,14 @@ Product · VolumeType char10 · ProductGroup char3 · BusinessUnit char15 ·
 QtyJvPerDay dec(23,7) · QtyOvlPerDay dec(23,7) · BoepdOvlPerDay dec(23,3) ·
 VolumeOvlMmt dec(23,7) (block TOTAL in MMT for oil family / BCM for gas) ·
 ConversionFactor dec(11,6).
+
+## 23/09/26 — DDLX chart fix for the detail apps
+
+`ZDPR_Q_BOEPD_TREND.ddlx.asddlx` (this folder; original in `original/`, identical
+to `v16-09/12_...`): the `@UI.chart` gains `dimensionAttributes` /
+`measureAttributes`, and `@UI.presentationVariant` names the chart qualifier
+`BoepdVsTarget` in its `#AS_CHART` visualization. Without both, the Analytical
+List Page built on the service shows a blank chart standalone and the SmartChart
+crashes (`ChartProvider._getRole`) when opened from the dashboard card.
+DDLX only; no view, service or `/IWFND/MAINT_SERVICE` change. `ZDPR_Q_TARGET_QUERY`
+DDLX has the same two defects (chart `ActualVsTarget`) and gets the same fix next.
