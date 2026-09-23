@@ -392,6 +392,12 @@ FORM template_columns USING pv_type TYPE any
       APPEND 'ZPPT_FCST_MN-PERIOD'   TO lt_pre.
       APPEND 'ZPPT_FCST_MN-GJAHR'    TO lt_pre.
       APPEND 'ZPPT_FCST_MN-BUS_FCST' TO lt_pre.
+*BOC By Arnav on 23/09/26
+*     MSL as column 6. A key without a dash is its own heading (see
+*     FIELD_LABEL), which keeps "MSL" on the template rather than the
+*     data element's "Forecast Quantity".
+      APPEND 'MSL'                   TO lt_pre.
+*EOC By Arnav on 23/09/26
 
     WHEN 'CHGQ'.
       cv_name = 'ZFCST_Forecast_Change_Quarterly'.
@@ -1583,6 +1589,7 @@ FORM do_business USING pv_mode TYPE char1.
         lv_qtr   TYPE zde_quarter,
         lv_poper TYPE poper,
         lv_qty   TYPE zde_fcst_qty,
+        lv_msl   TYPE zde_fcst_qty,   "Changes by Arnav on 23/09/26
         lv_total TYPE zde_fcst_qty,
         lv_ex    TYPE abap_bool,
         lv_err   TYPE string,
@@ -1692,6 +1699,17 @@ FORM do_business USING pv_mode TYPE char1.
       ENDIF.
 
       ls_mn-bus_fcst = lv_qty.
+*BOC By Arnav on 23/09/26
+*     MSL, column 6 of the monthly file (request of 23/09/26). An empty
+*     cell is 0; a negative figure is refused like the forecast quantity.
+      PERFORM to_dec USING ls_raw-f06 CHANGING lv_msl.
+      IF lv_msl < 0.
+        lv_err = 'MSL cannot be negative'.
+        PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.
+        CONTINUE.
+      ENDIF.
+      ls_mn-msl = lv_msl.
+*EOC By Arnav on 23/09/26
 *BOC By Arnav on 03/09/26
 *     PERFORM final_qty CHANGING ls_mn-fcst_qty ls_mn-bus_fcst
 *                                ls_mn-bus_fcst_add ls_mn-final_qty.
@@ -1710,7 +1728,8 @@ FORM do_business USING pv_mode TYPE char1.
         ENDIF.
       ENDIF.
 
-      lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add.
+*     lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add.
+      lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add + ls_mn-msl.   "Changes by Arnav on 23/09/26
 *BOC By Arnav on 03/09/26
 *     lv_txt = |Business forecast { lv_qty }, final quantity now { lv_total }|.
       lv_txt = 'Business forecast uploaded'.
@@ -1970,7 +1989,8 @@ FORM do_change USING pv_mode TYPE char1.
                                  ls_mn-final_qty.
 *EOC By Arnav on 03/09/26
 
-      lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add.
+*     lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add.
+      lv_total = ls_mn-final_qty + ls_mn-bus_fcst_add + ls_mn-msl.   "Changes by Arnav on 23/09/26
       IF lv_total < 0.
         lv_err = 'The reduction is larger than the forecast, the final quantity would be negative'.
         PERFORM log USING lv_row lv_werks lv_matnr lv_per gc_err lv_err.

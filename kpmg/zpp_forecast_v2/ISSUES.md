@@ -710,3 +710,31 @@ whose NEW_MATNR is not, the old code's buckets are moved under the successor mon
 
 Files: `src/zcl_pp_fcst.clas.abap` (`zcl_pp_fcst_nocomments.abap` regenerated). No DDIC or
 message change. TR: not yet transported.
+
+## 23/09/26 PM — MSL on the monthly business forecast: upload column, stored, shown before the total, added into it
+
+Request: a new MSL column on the monthly business-forecast upload; on the monthly ZFCST list
+it appears before "Final Fcst Qty incl. Additional" and that total includes it. Four objects,
+in this order:
+
+1. **SE11 (manual):** `ZPPT_FCST_MN`, append field `MSL`, data element `ZDE_FCST_QTY`,
+   reference table `ZPPT_FCST_MN`, reference field `MEINS` (a QUAN field needs one). Appended
+   after AEDAT so no conversion is needed; position is irrelevant, everything maps by name.
+   `src/zppt_fcst_mn.tabl.xml` updated to match.
+2. **`ZCL_PP_FCST`:** `TY_ALV-MSL`; the monthly read of the business forecast now brings back
+   `MSL` too (SAVE writes with CORRESPONDING, so anything not read would be blanked);
+   `TOTAL_QTY = FINAL_QTY + BUS_FCST_ADD + MSL`. `M4_VAL` and `M4_TON_VAL` multiply `TOTAL_QTY`,
+   so the values include MSL without further change. `FINAL_QTY` itself is untouched.
+3. **`ZPP_FORECAST`:** monthly sheet lists `MSL` between the additional quantity and the
+   total; heading "MSL" - the client's own term, no expansion given.
+4. **`ZPP_FORECAST_UPLOAD`:** monthly business template gains column 6 `MSL` (literal key,
+   so the template heading is "MSL" and not the data element's "Forecast Quantity");
+   `do_business` mode M reads it, refuses a negative value, stores it. The two monthly totals
+   in the program (`do_business` text, `do_change` negative guard) include MSL.
+
+Not changed, flagged: `ZPP_FORECAST_REPORT`'s monthly total (`MTH_TOTAL`) does not include
+MSL; quarterly has no MSL; the annual sheet is untouched.
+
+Files: `src/zppt_fcst_mn.tabl.xml`, `src/zcl_pp_fcst.clas.abap`, `src/zpp_forecast.prog.abap`,
+`src/zpp_forecast_upload.prog.abap` (`zcl_pp_fcst_nocomments.abap` regenerated).
+TR: not yet transported.

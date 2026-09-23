@@ -80,6 +80,9 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   the normal absorption in `ADD_OLD_MATERIAL_QTY` applies and every old code is clubbed. The
   morning's `EXTEND_BY_TRACK` (range widening) is withdrawn and kept commented. Old codes still
   never get a row of their own (D6a).
+- **Since 23/09/26 PM the monthly table carries `MSL`** (uploaded with the monthly business
+  forecast, column 6). ZFCST monthly shows it before the total and `TOTAL_QTY` includes it, so the
+  value columns do too. The final report's monthly total does not include it yet.
 - **`ZCL_PP_FCST_UTIL` still has both authority checks bypassed** (07/09, for QAS initial
   testing). Restore before release — see ISSUES.md 03/09/26, last entry.
 

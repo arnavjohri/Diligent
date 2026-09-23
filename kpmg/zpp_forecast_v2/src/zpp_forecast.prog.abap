@@ -1090,6 +1090,7 @@ FORM visible_columns CHANGING ct_show TYPE tt_fname.
       APPEND 'BUS_FCST'     TO ct_show.   " Business Forecast
       APPEND 'FINAL_QTY'    TO ct_show.   " Final Forecast Qty
       APPEND 'BUS_FCST_ADD' TO ct_show.   " Additonal plan qty july 26
+      APPEND 'MSL'          TO ct_show.   "Changes by Arnav on 23/09/26 - MSL, before the total
       APPEND 'TOTAL_QTY'    TO ct_show.   " final forecast qty, column Q
 
       IF p_tonn = abap_true.
@@ -1280,6 +1281,7 @@ FORM setup_columns USING pt_show TYPE tt_fname.
     PERFORM txt USING 'LOAD_FCT'     'Growth Based on Category'.
     PERFORM txt USING 'BUS_FCST'     'Business Forecast'.
     PERFORM txt USING 'BUS_FCST_ADD' 'Additional Plan Qty'.
+    PERFORM txt USING 'MSL'          'MSL'.   "Changes by Arnav on 23/09/26
 *BOC By Arnav on 03/09/26
 *   The new quarterly columns are named from the financial calendar by
 *   MONTH_HEADINGS, the same routine that names M4_FCST and M4_TON, so

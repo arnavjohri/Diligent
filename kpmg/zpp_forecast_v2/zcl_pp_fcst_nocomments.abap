@@ -128,6 +128,7 @@ CLASS zcl_pp_fcst DEFINITION
              m5_ton_val    TYPE p LENGTH 13 DECIMALS 2,
              m6_ton_val    TYPE p LENGTH 13 DECIMALS 2,
              total_val     TYPE p LENGTH 13 DECIMALS 2,
+             msl          TYPE zde_fcst_qty,
            END OF ty_alv,
            tt_alv   TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY,
            tr_werks TYPE RANGE OF werks_d,
@@ -751,13 +752,14 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
       ls_alv-fcst_qty = nmax( val1 = lv_ly_same val2 = ls_alv-max_qty ).
 
-      SELECT SINGLE bus_fcst, bus_fcst_add FROM zppt_fcst_mn
-        INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add )
+      SELECT SINGLE bus_fcst, bus_fcst_add, msl
+        FROM zppt_fcst_mn
         WHERE werks = @ls_scope-werks AND matnr = @ls_scope-matnr
-          AND gjahr = @ls_alv-gjahr   AND period = @iv_period.
+          AND gjahr = @ls_alv-gjahr   AND period = @iv_period
+        INTO ( @ls_alv-bus_fcst, @ls_alv-bus_fcst_add, @ls_alv-msl ).
 
       ls_alv-final_qty = nmax( val1 = ls_alv-fcst_qty val2 = ls_alv-bus_fcst ).
-      ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add.
+      ls_alv-total_qty = ls_alv-final_qty + ls_alv-bus_fcst_add + ls_alv-msl.
 
       ls_alv-m4_fcst = ls_alv-final_qty.
       IF iv_tonnage = abap_true.

@@ -121,7 +121,8 @@ Field names follow the document's own save layout.
 Key `MANDT` `WERKS` `MATNR` `GJAHR` `PERIOD`, plus `FCST_NO`, the descriptive block,
 then `M4_LAST` `M5_LAST` `M6_LAST` · `LY_QTR_TOT` · `M1_CURR` `M2_CURR` `M3_CURR` ·
 `L3M_AVG` · `MAX_QTY` · `PROD_CAT` `LOAD_FCT` `MTS_MTO` · `FCST_QTY` · `BUS_FCST` ·
-`BUS_FCST_ADD` · `FINAL_QTY` · `M4_FCST` · `M4_TON` · `REASON` · audit fields.
+`BUS_FCST_ADD` · `FINAL_QTY` · `M4_FCST` · `M4_TON` · `REASON` · audit fields · `MSL`
+(since 23/09/26, appended after the audit fields).
 
 ---
 
