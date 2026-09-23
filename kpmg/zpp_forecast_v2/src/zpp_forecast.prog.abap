@@ -43,9 +43,22 @@ CONSTANTS gc_tv_legacy TYPE rvari_vnam VALUE 'ZPP_FCST_LEGACY'.
 * Change here only - it is used to set the status and to report it when
 * it cannot be found.
 CONSTANTS gc_status TYPE sypfkey VALUE 'PF_STATUS'.
-* Since 23/09/26 PM the list runs in a container on the default screen
-* and the buttons are added with ADD_FUNCTION, so no GUI status is set
-* any more. GC_STATUS is kept for the commented-out code in FORM DISPLAY.
+
+*BOC By Arnav on 23/09/26
+* Display mode of the list, Arnav's call of 23/09/26 after seeing both:
+*   abap_false  full screen with GUI status PF_STATUS - a copy of
+*               SALV_STANDARD from SAPLSALV_METADATA_STATUS plus ZSAVE,
+*               ZSELALL, ZDESEL and ZEXCEL. Toolbar in the application
+*               toolbar row where Execute sits, list header in the title
+*               bar. The classic look; needs the status in every system.
+*   abap_true   container on CL_GUI_CONTAINER=>DEFAULT_SCREEN, buttons
+*               added with ADD_FUNCTION, no status needed - but the
+*               toolbar is drawn inside the grid, one row lower, under
+*               its own title line.
+* DATA and not CONSTANTS, so the compiler does not fold the IF and flag
+* the other branch as unreachable.
+DATA gv_container TYPE abap_bool VALUE abap_false.
+*EOC By Arnav on 23/09/26
 
 DATA: gt_msg  TYPE bapiret2_t,
       gt_show TYPE tt_fname,
@@ -764,9 +777,14 @@ FORM display.
 *     routine opens the list screen the container is drawn on.
 *     cl_salv_table=>factory( IMPORTING r_salv_table = go_alv
 *                             CHANGING  t_table      = gt_alv ).
-      cl_salv_table=>factory( EXPORTING r_container  = cl_gui_container=>default_screen
-                              IMPORTING r_salv_table = go_alv
-                              CHANGING  t_table      = gt_alv ).
+      IF gv_container = abap_true.
+        cl_salv_table=>factory( EXPORTING r_container  = cl_gui_container=>default_screen
+                                IMPORTING r_salv_table = go_alv
+                                CHANGING  t_table      = gt_alv ).
+      ELSE.
+        cl_salv_table=>factory( IMPORTING r_salv_table = go_alv
+                                CHANGING  t_table      = gt_alv ).
+      ENDIF.
 *EOC By Arnav on 23/09/26
 
       "--- toolbar -------------------------------------------------------
@@ -812,37 +830,52 @@ FORM display.
 *         report        = sy-repid
 *         set_functions = cl_salv_table=>c_functions_all ).
 *     ENDIF.
-      DATA(lo_fn) = go_alv->get_functions( ).
+      IF gv_container = abap_true.
 
-      IF lv_save_ok = abap_true.
+        DATA(lo_fn) = go_alv->get_functions( ).
+
+        IF lv_save_ok = abap_true.
+          lo_fn->add_function(
+            name     = 'ZSAVE'
+            icon     = CONV string( icon_system_save )
+            text     = 'Save'
+            tooltip  = 'Save the selected rows'
+            position = if_salv_c_function_position=>right_of_salv_functions ).
+        ENDIF.
+
         lo_fn->add_function(
-          name     = 'ZSAVE'
-          icon     = CONV string( icon_system_save )
-          text     = 'Save'
-          tooltip  = 'Save the selected rows'
+          name     = 'ZSELALL'
+          icon     = CONV string( icon_select_all )
+          text     = 'Select all'
+          tooltip  = 'Select every row'
           position = if_salv_c_function_position=>right_of_salv_functions ).
+
+        lo_fn->add_function(
+          name     = 'ZDESEL'
+          icon     = CONV string( icon_deselect_all )
+          text     = 'Deselect all'
+          tooltip  = 'Clear the selection'
+          position = if_salv_c_function_position=>right_of_salv_functions ).
+
+        lo_fn->add_function(
+          name     = 'ZEXCEL'
+          icon     = CONV string( icon_xls )
+          text     = 'Export'
+          tooltip  = 'Save the list as a tab separated file'
+          position = if_salv_c_function_position=>right_of_salv_functions ).
+
+      ELSEIF lv_save_ok = abap_true.
+
+*       Full screen: the GUI status of this program carries the four
+*       buttons on top of the standard functions it was copied with.
+*       Without save authority no status is set and SALV's own standard
+*       status serves the list, buttons absent.
+        go_alv->set_screen_status(
+          pfstatus      = gc_status
+          report        = sy-repid
+          set_functions = cl_salv_table=>c_functions_all ).
+
       ENDIF.
-
-      lo_fn->add_function(
-        name     = 'ZSELALL'
-        icon     = CONV string( icon_select_all )
-        text     = 'Select all'
-        tooltip  = 'Select every row'
-        position = if_salv_c_function_position=>right_of_salv_functions ).
-
-      lo_fn->add_function(
-        name     = 'ZDESEL'
-        icon     = CONV string( icon_deselect_all )
-        text     = 'Deselect all'
-        tooltip  = 'Clear the selection'
-        position = if_salv_c_function_position=>right_of_salv_functions ).
-
-      lo_fn->add_function(
-        name     = 'ZEXCEL'
-        icon     = CONV string( icon_xls )
-        text     = 'Export'
-        tooltip  = 'Save the list as a tab separated file'
-        position = if_salv_c_function_position=>right_of_salv_functions ).
 *EOC By Arnav on 23/09/26
 
       "--- row selection, so the buttons have something to act on -------
@@ -882,8 +915,26 @@ FORM display.
 *           set_functions = cl_salv_table=>c_functions_all ).
 *         go_alv->display( ).
 *     ENDTRY.
-      go_alv->display( ).
-      WRITE: space.
+      IF gv_container = abap_true.
+        go_alv->display( ).
+        WRITE: space.
+      ELSE.
+*       Full screen. SALV resolves the status when it draws the list, so
+*       a status it cannot find surfaces here; redrawn with SALV's own
+*       standard status instead of dumping, and the user is told.
+        TRY.
+            go_alv->display( ).
+          CATCH cx_salv_object_not_found.
+            DATA(lv_stmsg) = |GUI status { gc_status } not found in { sy-repid }, | &&
+                             |standard toolbar used|.
+            MESSAGE lv_stmsg TYPE 'S' DISPLAY LIKE 'W'.
+            go_alv->set_screen_status(
+              report        = 'SAPLSALV_METADATA_STATUS'
+              pfstatus      = 'SALV_STANDARD'
+              set_functions = cl_salv_table=>c_functions_all ).
+            go_alv->display( ).
+        ENDTRY.
+      ENDIF.
 *EOC By Arnav on 23/09/26
 
     CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error

@@ -669,3 +669,21 @@ report stays full screen on SALV's standard status, which already carries the wh
 ZFCST activated by Arnav on 23/09/26 in container mode.
 
 Files: `src/zpp_forecast_report.prog.abap`. TR: not yet transported.
+
+## 23/09/26 PM — ZFCST toolbar position: back to full screen, container kept behind a switch
+
+Arnav's screenshot after activating the container version: the grid toolbar sits under the
+empty application toolbar row and under the grid's own title line. He wants the functions
+where Execute sits and one title on top - which only full screen with a GUI status gives.
+
+`FORM display` now branches on `GV_CONTAINER` (DATA at the top of the program, default
+`abap_false`): full screen = `factory` without container, `set_screen_status( PF_STATUS,
+c_functions_all )` when the user may save, `display( )` with the status-not-found fallback
+to SALV_STANDARD; container = the 23/09 PM code unchanged. Layout key applies to both.
+
+**SE41 is back (one-time, then it travels in the transport):** copy `SALV_STANDARD` from
+program `SAPLSALV_METADATA_STATUS` to `ZPP_FORECAST` / `PF_STATUS`, add the four buttons to
+the application toolbar, keep every `&` code as copied. Until the status exists the program
+shows the standard toolbar without the four buttons and says so in the status bar.
+
+Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.
