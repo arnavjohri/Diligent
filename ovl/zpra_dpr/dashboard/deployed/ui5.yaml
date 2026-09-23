@@ -46,29 +46,15 @@ server:
       configuration:
         flp:
           theme: sap_horizon
-          # Changes by Arnav on 22/09/26 - local sandbox knows the detail apps'
+          # Changes by Arnav on 23/09/26 - local sandbox knows the detail apps'
           # intents so card navigation can be tested before deployment.
-          # local = path from this project root to the detail app's project root.
+          # local = absolute path of the detail app's project root in the dev
+          # space. Add one entry per detail app once that project exists.
           apps:
             - target: /apps/zdprrecords
-              local: ../zdprrecords
+              local: /home/user/projects/zdprrecords
               intent:
                 object: DPRRecords
-                action: display
-            - target: /apps/zdprperf
-              local: ../zdprperf
-              intent:
-                object: DPRPerformance
-                action: display
-            - target: /apps/zdprtrend
-              local: ../zdprtrend
-              intent:
-                object: DPRTrend
-                action: display
-            - target: /apps/zdprtarget
-              local: ../zdprtarget
-              intent:
-                object: DPRTarget
                 action: display
 builder:
   resources:
