@@ -15,19 +15,21 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
 ## Gotchas
 
 - **Screen-free by design, and that is load-bearing.** Everything displays through
-  `CL_SALV_TABLE`: there is no SE51 screen and no SE41 GUI status anywhere in the
-  repo — rows are picked with the standard SALV selection column instead of a checkbox, and
-  Save is added to the SALV toolbar. **`ZPP_FORECAST` has a display-mode switch since 23/09/26**, `GV_CONTAINER` at the top of the
-  program, default `abap_false` = full screen with GUI status `PF_STATUS`, which must be a copy of
-  `SALV_STANDARD` from `SAPLSALV_METADATA_STATUS` plus the four buttons `ZSAVE`, `ZSELALL`,
+  `CL_SALV_TABLE`: there is no SE51 screen anywhere, rows are picked with the standard SALV
+  selection column instead of a checkbox, and a grep for `CALL SCREEN` / `^MODULE ` /
+  `SET PF-STATUS` / `cl_gui_custom_container` across `src/*.abap` returns nothing. That is what
+  makes the object abapGit-shippable and why v1 was rewritten. **Do not reintroduce
+  `CALL SCREEN` or `cl_gui_custom_container` here.** The one manual GUI object is the status
+  below, which abapGit never carries.
+- **`ZPP_FORECAST` has a display-mode switch since 23/09/26**, `GV_CONTAINER` at the top of the
+  program, default `abap_false` = full screen with GUI status `PF_STATUS`, which must be a copy
+  of `SALV_STANDARD` from `SAPLSALV_METADATA_STATUS` plus the four buttons `ZSAVE`, `ZSELALL`,
   `ZDESEL`, `ZEXCEL` (SE41, transported with the program, never in a ZIP). That puts the
   toolbar in the application toolbar row and the list header in the title bar, which is what
-  Arnav wants. `abap_true` = container on `CL_GUI_CONTAINER=>DEFAULT_SCREEN` with `ADD_FUNCTION`,
-  no status needed, but the toolbar sits inside the grid one row lower under its own title
-  line - kept as the fallback for a system without the status. A grep for `CALL SCREEN` / `^MODULE ` / `SET PF-STATUS` /
-  `cl_gui_custom_container` across `src/*.abap` returns nothing. This is precisely what makes
-  the object abapGit-shippable and why v1 was rewritten. **Do not reintroduce `CALL SCREEN`
-  or `cl_gui_custom_container` here** — doing so converts the whole repo back to paste-only.
+  Arnav wants. `abap_true` = container on `CL_GUI_CONTAINER=>DEFAULT_SCREEN` with
+  `ADD_FUNCTION`, no status needed, but the toolbar sits inside the grid one row lower under
+  its own title line - kept as the fallback for a system without the status. Without the
+  status the full-screen mode shows SALV's standard toolbar minus the four buttons and says so.
 - `LVC_T_FNAME` is not available in every release, so the column-name list is typed locally
   over `LVC_FNAME`.
 - Every table name in the source document exceeds SAP's 16-character limit and had to be
@@ -62,7 +64,8 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   order.** `SHARED_NUMBER` looks in `ZPPT_FCST_YR`, then `_QT`, then `_MN`; a quarterly or
   monthly save with no number anywhere draws one from ZPPFCST exactly as annual does, and
   annual reuses it later. Message 005 ("annual forecast does not exist") is no longer raised
-  at save. The SNRO fallback `NUMBER_FROM_TABLE` takes the maximum over all three tables. `PRICE` is derived by `READ_PRICES` from
+  at save. The SNRO fallback `NUMBER_FROM_TABLE` takes the maximum over all three tables.
+- **Since 15/09/26** `PRICE` is derived by `READ_PRICES` from
   `A923` (latest `DATAB`) → `KONP-KBETR`, read on material alone as the change request words
   it — no condition type, sales organisation, valid-to, `KPEIN` or `KONWA`. The quarterly
   row still reads `PRICE` back from `ZPPT_FCST_QT` only so SAVE cannot blank it; the figure
