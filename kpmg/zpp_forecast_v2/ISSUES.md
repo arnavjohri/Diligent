@@ -739,4 +739,6 @@ changed: quarterly has no MSL; the annual sheet is untouched.
 Files: `src/zppt_fcst_mn.tabl.xml`, `src/zcl_pp_fcst.clas.abap`, `src/zpp_forecast.prog.abap`,
 `src/zpp_forecast_upload.prog.abap`, `src/zpp_forecast_report.prog.abap`
 (`zcl_pp_fcst_nocomments.abap` regenerated).
+Status: SE11 field and all four objects activated in DEV on 23/09/26, pasted from chat.
+Functional test pending (re-upload the monthly business forecast with column 6 filled first).
 TR: not yet transported.
