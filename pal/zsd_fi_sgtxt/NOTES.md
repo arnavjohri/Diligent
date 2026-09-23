@@ -59,12 +59,7 @@ invoices and the ticket would come back.
 3. **The text.** `READ_TEXT` — never read `STXL` directly, it is a compressed cluster.
    `OBJECT = 'VBBK'`, `NAME = <sales order>`, `ID = 0002`, language = `VBRK-SPRAS`; if
    the note is not in that language, the first language it exists in (`STXH` header
-   lookup, `ORDER BY tdspras`). `ID = 0002` is an **ASSUMPTION** in the code: the VA02
-   text list at PAL runs Form Header / Header Note 1 / Header Note 2 in SAP's standard
-   order (0001 / 0002 / 0003), which fits, but confirm in **SE75 → Text objects and IDs
-   → VBBK** (or SE16 `TTXIT`, `TDOBJECT = VBBK`, `TDSPRAS = E`) before activating. If
-   the SOA form's `READ_TEXT` uses a different ID, use that one — the two views must
-   match.
+   lookup, `ORDER BY tdspras`). `ID = 0002` confirmed by Arnav in SE16 `TTXIT` on the PAL system, 23/09/26.
 4. **Into SGTXT.** `SGTXT` is CHAR 50. `TLINE` rows joined with a blank, `CONDENSE`,
    assignment truncates. Written only when `xaccit-sgtxt` is still empty and a note was
    found — a value already there (SAP or another exit) is kept.
@@ -75,7 +70,7 @@ is **not** an option here: at VF01 the billing texts are not in `STXH` yet eithe
 ## Paste map
 
 `ZXVVFU02` — the whole file replaces the include (select-all, paste, activate). The
-block `*BOC By Arnav on 21/09/26` … `*EOC` sits between the existing `CONSTANTS` and
+block `*BOC By Arnav on 23/09/26` … `*EOC` sits between the existing `CONSTANTS` and
 `READ TABLE cvbrp INTO ls_cvbrp INDEX 1`. Two header rows filled in the CHANGE HISTORY
 table. Nothing else in the include is touched.
 
@@ -91,8 +86,8 @@ Not zippable.
 
 ## Before activating
 
-Confirm the text ID (SE75 → VBBK). Everything else in ISSUES.md "Open questions" is
-either closed or a business confirmation that does not change the code.
+Nothing outstanding on the code side. Remaining items in ISSUES.md "Open questions" are
+business confirmations that do not change the code.
 
 "Item text" in the ticket = `BSEG-SGTXT`. FI-direct documents show it because the user
 types it in FB70/FB75; SD documents leave it blank. The two document types then look the

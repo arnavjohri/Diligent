@@ -9,13 +9,11 @@ Ticket: INC01740 | Lead: Gaurav sir | Functional: Omprakash ji
 
 | Date | Issue | Cause | Fix | TR |
 |---|---|---|---|---|
-| 21/09/26 | Customer line of SD billing documents shows no text in Manage Customer Line Items; SOA shows the SO Header Note 1 | SD-FI interface leaves `ACCIT-SGTXT` blank on the customer line, so `BSEG`/`ACDOCA-SGTXT` are blank and the app has nothing to show | Proposed: fill `xaccit-sgtxt` in `EXIT_SAPLV60B_002` from the first sales order's Header Note 1 via `READ_TEXT` (`VBBK`). Insert above the SIS `CHECK` in `ZXVVFU02`: distinct `CVBRP-AUBEL` → first-created SO by `VBAK-ERDAT/ERZET` → `READ_TEXT` `VBBK`/`0002` in `VBRK-SPRAS` (fallback: first language in `STXH`) → `xaccit-sgtxt` if still empty. `ZXVVFU02.abap`, 119 → 221 lines. Text ID 0002 is an assumption pending SE75 check | `<TR>` |
+| 21/09/26 | Customer line of SD billing documents shows no text in Manage Customer Line Items; SOA shows the SO Header Note 1 | SD-FI interface leaves `ACCIT-SGTXT` blank on the customer line, so `BSEG`/`ACDOCA-SGTXT` are blank and the app has nothing to show | Proposed: fill `xaccit-sgtxt` in `EXIT_SAPLV60B_002` from the first sales order's Header Note 1 via `READ_TEXT` (`VBBK`). Insert above the SIS `CHECK` in `ZXVVFU02`: distinct `CVBRP-AUBEL` → first-created SO by `VBAK-ERDAT/ERZET` → `READ_TEXT` `VBBK`/`0002` in `VBRK-SPRAS` (fallback: first language in `STXH`) → `xaccit-sgtxt` if still empty. `ZXVVFU02.abap`, 119 → 221 lines. Text ID 0002 confirmed in TTXIT 23/09/26. Delivered for paste 23/09/26 | `<TR>` |
 
 ## Open questions (to close with Gaurav sir / Omprakash ji before coding)
 
-1. **Text ID** of "Header Note 1" at PAL — coded as `0002` (SAP standard; VA02 text
-   list order matches). **Confirm in SE75 → VBBK before activating.** Language handled
-   in code (billing doc language, else first language found).
+1. ~~Text ID~~ — **closed 23/09/26**: Header Note 1 = `0002`, checked in SE16 `TTXIT`.
 2. ~~Multiple sales orders in one invoice~~ — **closed 21/09/26 by the ticket text**:
    first-created SO (`VBAK-ERDAT`, `ERZET`; `VBELN` as tie-break).
 3. **Truncation** — `SGTXT` is 50 chars. First 50 of the concatenated note acceptable?

@@ -27,7 +27,7 @@
 *----------------------------------------------------------------------*
 *Date       | User ID      |Description                  |Change Label *
 *----------------------------------------------------------------------*
-*21/09/2026 | Arnav Johri  |INC01740 SGTXT from SO       |             *
+*23/09/2026 | Arnav Johri  |INC01740 SGTXT from SO       |             *
 *           |              |Header Note 1 (customer line)|             *
 *----------------------------------------------------------------------*
 
@@ -51,16 +51,15 @@ CONSTANTS:
   lc_tousd    TYPE waers VALUE 'USD',
   lc_iatarate TYPE kurst VALUE 'I5'.    "'IATA'.
 
-*BOC By Arnav on 21/09/26
+*BOC By Arnav on 23/09/26
 * INC01740 - Manage Customer Line Items shows no item text for SD documents.
 * Fill the customer line text (ACCIT-SGTXT -> BSEG-SGTXT / ACDOCA-SGTXT) from
 * Header Note 1 of the FIRST-CREATED sales order behind the billing document.
 * Must stay ABOVE the SIS "CHECK ls_cvbrp-kvgr3 = '1'" below: that CHECK leaves
 * the exit for every non-SIS billing document, so anything placed after it would
 * never run for a normal customer invoice.
-* ASSUMPTION: sales order Header Note 1 = text object VBBK, text ID 0002
-*   (SAP standard order: 0001 Form Header, 0002 Header Note 1, 0003 Header Note 2).
-*   Confirm in SE75 -> Text objects and IDs -> VBBK before activating.
+* Text: sales order Header Note 1 = text object VBBK, text ID 0002
+*   (confirmed in TTXIT on the PAL system, 23/09/26).
 * ASSUMPTION: an SGTXT already filled by SAP or by another exit is kept; the note
 *   is only written into an empty SGTXT.
 DATA:
@@ -151,7 +150,7 @@ IF xaccit-sgtxt IS INITIAL.
     ENDIF.
   ENDIF.
 ENDIF.
-*EOC By Arnav on 21/09/26
+*EOC By Arnav on 23/09/26
 
 READ TABLE cvbrp INTO ls_cvbrp INDEX 1.
 "First check if SIS case
