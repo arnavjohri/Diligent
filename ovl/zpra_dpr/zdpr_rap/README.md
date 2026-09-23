@@ -105,5 +105,6 @@ to `v16-09/12_...`): the `@UI.chart` gains `dimensionAttributes` /
 `BoepdVsTarget` in its `#AS_CHART` visualization. Without both, the Analytical
 List Page built on the service shows a blank chart standalone and the SmartChart
 crashes (`ChartProvider._getRole`) when opened from the dashboard card.
-DDLX only; no view, service or `/IWFND/MAINT_SERVICE` change. `ZDPR_Q_TARGET_QUERY`
-DDLX has the same two defects (chart `ActualVsTarget`) and gets the same fix next.
+DDLX only; no view, service or `/IWFND/MAINT_SERVICE` change. `ZDPR_Q_TARGET_QUERY.ddlx.asddlx` (same folder, original in `original/`, supplied
+23/09/26 and identical to the 16/09 source document): same two defects, same fix,
+chart `ActualVsTarget`.

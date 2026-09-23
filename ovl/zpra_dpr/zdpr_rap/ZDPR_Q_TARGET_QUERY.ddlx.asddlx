@@ -1,0 +1,91 @@
+@Metadata.layer: #CUSTOMER
+
+@UI.headerInfo: {
+  typeName:       'Target Record',
+  typeNamePlural: 'Target Record',
+  title:          { type: #STANDARD, value: 'ProductDescription' },
+  description:    { type: #STANDARD, value: 'AssetDescription' }
+}
+
+// BOC By Arnav on 23/09/26
+// Old chart had no dimension/measure attributes and the presentation variant
+// referenced the default @UI.Chart, which does not exist: chart blank in the
+// ALP, SmartChart crash on navigation from the dashboard card.
+//@UI.chart: [{
+//  qualifier:  'ActualVsTarget',
+//  title:      'Actual vs Target by Product',
+//  chartType:  #BAR,
+//  dimensions: ['ProductDescription'],
+//  measures:   ['ActualQty', 'TargetQty']
+//}]
+//
+//@UI.presentationVariant: [{
+//  visualizations: [
+//    { type: #AS_CHART },
+//    { type: #AS_LINEITEM }
+//  ]
+//}]
+
+@UI.chart: [{
+  qualifier:           'ActualVsTarget',
+  title:               'Actual vs Target by Product',
+  chartType:           #BAR,
+  dimensions:          ['ProductDescription'],
+  dimensionAttributes: [{ dimension: 'ProductDescription', role: #CATEGORY }],
+  measures:            ['ActualQty', 'TargetQty'],
+  measureAttributes:   [{ measure: 'ActualQty', role: #AXIS_1 },
+                        { measure: 'TargetQty', role: #AXIS_1 }]
+}]
+
+@UI.presentationVariant: [{
+  visualizations: [
+    { type: #AS_CHART, qualifier: 'ActualVsTarget' },
+    { type: #AS_LINEITEM }
+  ]
+}]
+// EOC By Arnav on 23/09/26
+
+annotate view ZDPR_Q_TARGET_QUERY with
+{
+  @UI.selectionField: [{ position: 10 }]
+  @UI.lineItem: [{ position: 10, importance: #HIGH, label: 'Fiscal Year' }]
+  FiscalYear;
+
+  @UI.selectionField: [{ position: 20 }]
+  @UI.lineItem: [{ position: 20, importance: #HIGH, label: 'Period' }]
+  FiscalPeriod;
+
+  @UI.selectionField: [{ position: 30 }]
+  Product;
+
+  @UI.selectionField: [{ position: 40 }]
+  Asset;
+
+  @UI.selectionField: [{ position: 50 }]
+  TargetCode;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH, label: 'Product' }]
+  ProductDescription;
+
+  @UI.lineItem: [{ position: 40, importance: #HIGH, label: 'Asset' }]
+  AssetDescription;
+
+  @UI.lineItem: [{ position: 50, importance: #MEDIUM, label: 'Block' }]
+  Block;
+
+  @UI.lineItem: [{ position: 60, importance: #MEDIUM, label: 'Target Type' }]
+  TargetTypeDescription;
+
+  @UI.lineItem: [{ position: 70, importance: #HIGH, label: 'Actual Qty' }]
+  ActualQty;
+
+  @UI.lineItem: [{ position: 80, importance: #HIGH, label: 'Target Qty' }]
+  TargetQty;
+
+  @UI.lineItem: [{ position: 90, importance: #HIGH, label: 'Variance' }]
+  VarianceQty;
+
+  @UI.lineItem: [{ position: 100, importance: #HIGH, label: 'Achievement %' }]
+  @UI.dataPoint: { title: 'Achievement %' }
+  AchievementPct;
+}
