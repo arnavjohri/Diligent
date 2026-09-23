@@ -167,7 +167,7 @@ One detail app per service, built and linked one at a time:
 
 | Order | Card | Service | Detail app template | Module / BSP | Semantic object-action |
 |---|---|---|---|---|---|
-| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **link proven in the BAS sandbox 23/09/26**: dates carried over, 2,700 rows scroll. ALP chart shows "Invalid data – some measures have different units" (OvlShareQty1 is MCF for gas, BBL for oil; no BOE measure in the query). Workaround: filter Product in the ALP; proper fix: BOE measure in ZDPR_C_PROD_CUBE (backend, senior). Not deployed yet. |
+| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **link proven end to end in the BAS sandbox 23/09/26**: card title → records ALP opens with the dates in its filter bar, 2,700 rows scroll. Parameter hand-over by name confirmed, assumption closed. Sandbox test runs from the DASHBOARD preview only (`cd zdprdashboard && npm run start`); the records app's own preview knows only `app-preview`. ALP chart shows "Invalid data – some measures have different units" (OvlShareQty1 is MCF for gas, BBL for oil; no BOE measure in the query). Workaround: filter Product in the ALP; proper fix: BOE measure in ZDPR_C_PROD_CUBE (backend, senior). Not deployed yet. |
 | 2 | 3 Performance (YTD/Annual) | ZDPR_Q_PROD_PERF_CDS | List Report | `zdprperf` / `ZDPRPERF` | `DPRPerformance-display` |
 | 3 | 1, 5 BOEPD trend | ZDPR_Q_BOEPD_TREND_CDS | Analytical List Page | `zdprtrend` / `ZDPRTREND` | `DPRTrend-display` |
 | 4 | 4 Target vs actual | ZDPR_Q_TARGET_QUERY_CDS | Analytical List Page | `zdprtarget` / `ZDPRTARGET` | `DPRTarget-display` |
@@ -184,9 +184,9 @@ in the card settings. Card 6: `annotations/annotation_prod.xml` + `manifest.json
 Launchpad side: one target mapping per detail app in catalog `ZC_DPR_REPORTING`
 (ID = the app's `sap.app/id`, lowercase; URL `/sap/bc/ui5_ui5/sap/<bsp>`), then
 `/UI5/APP_INDEX_CALCULATE` for the new BSP. No tile needed unless wanted.
-ASSUMPTION: the OVP hands the filter-bar values to the target via
-sap-xapp-state and the target's filter bar applies them by name; confirm on
-the first navigation and adjust if the date parameters do not arrive.
+Confirmed 23/09/26: the OVP hands the filter-bar values to the target via
+sap-xapp-state and the target's filter bar applies them by name (dates arrived
+on the first navigation).
 
 ## Step 1 — generate the project, global filter, card 1
 
