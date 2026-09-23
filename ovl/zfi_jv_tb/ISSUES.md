@@ -3,7 +3,7 @@
 | # | Date | Issue | Cause | Fix | TR | Status |
 |---|------|-------|-------|-----|----|--------|
 | 1 | 26/08/26 | Q1 FY27 run: last venture **VN2012** not populated in the Excel output (`RawData` sheet). Reported by Gitesh S Lad, Corporate Accounts. | **Still open.** The Excel-template theory was wrong — see "Retraction" below. Current lead: the export is truncated at a fixed `BAL_CLO<k>`, consistent with a saved ALV layout hiding every venture field above the number the layout was saved with. | Not yet determined. | n/a | **RETRACTED 27/08/26 — see below. Reopened.** |
-| 2 | 13/09/26 | Opening balance blank in every venture column since the program was moved from `JVTO1`/`JVSO1` to the ACDOCA compatibility views. Dr/Cr still correct. | Opening balance is `HSLVT` from `JV_JVTO1_ACDOCA_4A_4C_SWITCH` and nothing else (all 8 write sites traced). The view is read with `RLDNR = '4A'`; JV data on this landscape spans ledgers 4A **and** 4C (`ZOCV_OVL_TRANSFER_F01` reads both, and the view is named `_4A_4C_SWITCH`), so the carry-forward rows are filtered out. Second, independent defect: the `Index Based USD` branch was converted as `SUM( hslvt )` where the original was `SUM( kslvt ) AS hslvt` — USD opening read the INR carry-forward. | `ovl/zfi_jv_tb/ZFI_JV_TB.abap`: every read of the totals view (venture list in `AT SELECTION-SCREEN`, account list and the three balance reads in `get_data`) now takes `RLDNR IN ( '4A', '4C' )`; USD branch restored to `SUM( kslvt ) AS hslvt`. Tag `SAP_ABAP 14/09/26`. `JV_JVSO1_ACDOCA` reads left on 4A. **Unverified assumption in code:** 4A/4C are split, not parallel — if parallel the opening doubles and the fix becomes 4C-only. Arnav to confirm with SE16 before paste. | n/a | **Proposed — awaiting SE16 check and a fresh download** |
+| 2 | 13/09/26 | Opening balance blank in every venture column since the program was moved from `JVTO1`/`JVSO1` to the ACDOCA views. Dr/Cr still correct. | Opening balance is `HSLVT` from the totals view and nothing else (all 8 write sites traced). Fresh download 22/09/26 shows the live program reads **`JV_JVTO1_ACDOCA`** — the ACDOCA-only branch. SAP's `JV_JVTO1_ACDOCA_SWITCH_2` (definition supplied by Arnav from OCQ/500) unions that branch for years ≥ the JVA-on-ACDOCA activation year (`JVAONACDOCAACTIV`, id `START`) with legacy JVTO1 (`JV_JVTO1_T8JTPM`) for earlier years; the live view has no legacy branch. Second, independent defect: `Index Based USD` branch summed `hslvt` where the original was `SUM( kslvt ) AS hslvt`. | `ovl/zfi_jv_tb/ZFI_JV_TB.abap` (22/09/26, tag `SAP_ABAP`): all five reads of the totals view → `jv_jvto1_acdoca_switch_2`; USD branch restored to `SUM( kslvt ) AS hslvt`. Ledger stays `= '4A'` — in `_SWITCH_2` the 4C amounts are columns (`HSLVT_4C`), not rows. `JV_JVSO1_ACDOCA` reads untouched. The 14/09 ledger-widening fix is **withdrawn** (built on the 26/08 copy, which was not the live view). | n/a | **Corrected object delivered — awaiting Arnav's test ("values coming or not we will see")** |
 
 ## How it was localised (26–27/08/26)
 
@@ -87,3 +87,19 @@ The draft mail in `MAIL-2026-08-27-gitesh.md` must not be sent.
   `sy-subrc` check and the following `READ TABLE lt_ska1` keys off the possibly stale
   `ls_jvto1-racct`. Real defect in the same path, separate from what was reported.
 - `break abapuser02.` ×4 still in place (see "Separate defects" above).
+
+## Issue 2 — update 22/09/26
+
+- Fresh source pasted by Arnav, filed as `original/ZFI_JV_TB.2026-09-22.abap`. Drift vs the 26/08
+  baseline: the five totals-view reads say `jv_jvto1_acdoca` (baseline said
+  `jv_jvto1_acdoca_4a_4c_switch`); the three `racctrjvnam` lines have their space — that was a
+  transcription defect in the 26/08 copy, as suspected. Nothing else differs.
+- `JV_JVTO1_ACDOCA_SWITCH_2` fields confirmed from the DDL: `rldnr rrcty rvers ryear rbukrs rjvnam
+  racct rrecin hslvt kslvt` plus `hsl01..16`, `ksl01..16`, and `_4c` twins of all amount columns.
+  Swap is the view name only. Arnav: "4A is there."
+- Whether `HSLVT` is populated for activation-year-and-later rows depends on the JVA carry-forward
+  having been posted into ACDOCA. Not resolvable from code; Arnav testing.
+- Open, not touched: `READ TABLE lt_jvto1` ×3 in `set_data` has no `sy-subrc` check and the next
+  read keys `lt_ska1` off the possibly stale `ls_jvto1-racct`; four `break abapuser02.`; in the
+  160206 block `lv_crebal` takes `ls_jvso1_2-hsl` and `lv_debbal` takes `ls_jvso1_1-hsl` (sources
+  swapped); in the 120170 rollup `lv_debbal_u = lv_debbal_i + ...` accumulates onto the INR total.

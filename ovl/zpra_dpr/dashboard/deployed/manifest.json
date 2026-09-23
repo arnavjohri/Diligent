@@ -50,50 +50,6 @@
           "odataVersion": "2.0"
         }
       },
-      "ZDPR_Q_DASH_FILTER_CDS_VAN": {
-        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_DASH_FILTER_CDS_VAN',Version='0001')/$value/",
-        "type": "ODataAnnotation",
-        "settings": {
-          "localUri": "localService/ZDPR_Q_DASH_FILTER_CDS/ZDPR_Q_DASH_FILTER_CDS_VAN.xml"
-        }
-      },
-      "ZDPR_Q_DASH_FILTER_CDS": {
-        "uri": "/sap/opu/odata/sap/ZDPR_Q_DASH_FILTER_CDS/",
-        "type": "OData",
-        "settings": {
-          "annotations": [
-            "ZDPR_Q_DASH_FILTER_CDS_VAN"
-          ],
-          "localUri": "localService/ZDPR_Q_DASH_FILTER_CDS/metadata.xml",
-          "odataVersion": "2.0"
-        }
-      },
-      "ZDPR_Q_BOEPD_TOTAL_CDS_VAN": {
-        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_BOEPD_TOTAL_CDS_VAN',Version='0001')/$value/",
-        "type": "ODataAnnotation",
-        "settings": {
-          "localUri": "localService/ZDPR_Q_BOEPD_TOTAL_CDS/ZDPR_Q_BOEPD_TOTAL_CDS_VAN.xml"
-        }
-      },
-      "totalAnnotation": {
-        "type": "ODataAnnotation",
-        "uri": "annotations/annotation_total.xml",
-        "settings": {
-          "localUri": "annotations/annotation_total.xml"
-        }
-      },
-      "ZDPR_Q_BOEPD_TOTAL_CDS": {
-        "uri": "/sap/opu/odata/sap/ZDPR_Q_BOEPD_TOTAL_CDS/",
-        "type": "OData",
-        "settings": {
-          "annotations": [
-            "ZDPR_Q_BOEPD_TOTAL_CDS_VAN",
-            "totalAnnotation"
-          ],
-          "localUri": "localService/ZDPR_Q_BOEPD_TOTAL_CDS/metadata.xml",
-          "odataVersion": "2.0"
-        }
-      },
       "ZDPR_Q_BOEPD_TREND_CDS_VAN": {
         "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_BOEPD_TREND_CDS_VAN',Version='0001')/$value/",
         "type": "ODataAnnotation",
@@ -265,16 +221,6 @@
         "type": "sap.ui.model.resource.ResourceModel",
         "uri": "i18n/i18n.properties"
       },
-      "ZDPR_Q_DASH_FILTER_CDS": {
-        "dataSource": "ZDPR_Q_DASH_FILTER_CDS",
-        "preload": true,
-        "settings": {}
-      },
-      "ZDPR_Q_BOEPD_TOTAL_CDS": {
-        "dataSource": "ZDPR_Q_BOEPD_TOTAL_CDS",
-        "preload": true,
-        "settings": {}
-      },
       "ZDPR_Q_BOEPD_TREND_CDS": {
         "dataSource": "ZDPR_Q_BOEPD_TREND_CDS",
         "preload": true,
@@ -306,8 +252,8 @@
     }
   },
   "sap.ovp": {
-    "globalFilterModel": "ZDPR_Q_DASH_FILTER_CDS",
-    "globalFilterEntitySet": "ZDPR_Q_DASH_FILTERSet",
+    "globalFilterModel": "mainModel",
+    "globalFilterEntitySet": "ZDPR_Q_PROD_PERFSet",
     "considerAnalyticalParameters": true,
     "enableODataSelect": true,
     "containerLayout": "resizable",
@@ -316,12 +262,12 @@
     "useDateRangeType": false,
     "cards": {
       "card01_boepdTrend": {
-        "model": "ZDPR_Q_BOEPD_TOTAL_CDS",
+        "model": "ZDPR_Q_BOEPD_TREND_CDS",
         "template": "sap.ovp.cards.charts.analytical",
         "settings": {
           "title": "{{card01Title}}",
           "subTitle": "{{card01Subtitle}}",
-          "entitySet": "ZDPR_Q_BOEPD_TOTALResults",
+          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
           "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#BoepdVsTargetOvp",
           "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDate",
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
@@ -344,39 +290,33 @@
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
-            "cols": 2
+            "cols": 1
           }
         }
       },
-      "card03_perfYtd": {
+      "card03_prodPerf": {
         "model": "mainModel",
         "template": "sap.ovp.cards.table",
         "settings": {
-          "title": "{{card03YtdTitle}}",
-          "subTitle": "{{card03YtdSubtitle}}",
+          "title": "{{card03Title}}",
+          "subTitle": "{{card03Subtitle}}",
           "entitySet": "ZDPR_Q_PROD_PERFSet",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+          "tabs": [
+            {
+              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfYtd",
+              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
+              "value": "{{card03TabYtd}}"
+            },
+            {
+              "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
+              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
+              "value": "{{card03TabAnnual}}"
+            }
+          ],
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
-            "rows": 25,
-            "cols": 2
-          }
-        }
-      },
-      "card03_perfAnnual": {
-        "model": "mainModel",
-        "template": "sap.ovp.cards.table",
-        "settings": {
-          "title": "{{card03AnnualTitle}}",
-          "subTitle": "{{card03AnnualSubtitle}}",
-          "entitySet": "ZDPR_Q_PROD_PERFSet",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#PerfAnnual",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Annual",
-          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
-          "defaultSpan": {
-            "rows": 25,
-            "cols": 2
+            "rows": 20,
+            "cols": 1
           }
         }
       },
@@ -387,25 +327,8 @@
           "title": "{{card04Title}}",
           "subTitle": "{{card04Subtitle}}",
           "entitySet": "ZDPR_Q_TARGET_QUERYResults",
-          "tabs": [
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ActualVsTargetOvp",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card04TabProduct}}"
-            },
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByAsset",
-              "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByAsset",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card04TabAsset}}"
-            },
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByPeriod",
-              "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByPeriod",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card04TabPeriod}}"
-            }
-          ],
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ActualVsTargetOvp",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,
@@ -420,26 +343,9 @@
           "title": "{{card05Title}}",
           "subTitle": "{{card05Subtitle}}",
           "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
-          "tabs": [
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByBusinessUnit",
-              "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDateBu",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card05TabBu}}"
-            },
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByAsset",
-              "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByAsset",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card05TabAsset}}"
-            },
-            {
-              "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByProductGroup",
-              "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByProductGroup",
-              "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-              "value": "{{card05TabGroup}}"
-            }
-          ],
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByBusinessUnit",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDateBu",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
             "rows": 25,

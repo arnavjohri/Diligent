@@ -448,10 +448,7 @@ AT SELECTION-SCREEN .
 *       AND rrcty = '0'
 *       AND rrecin IN  p_rrecin.
   SELECT DISTINCT rjvnam
-*BOC By SAP_ABAP on 22/09/26
-*  FROM jv_jvto1_acdoca
-  FROM jv_jvto1_acdoca_switch_2
-*EOC By SAP_ABAP on 22/09/26
+  FROM jv_jvto1_acdoca
   INTO TABLE @lt_alljv
   WHERE ryear  =  @p_year
     AND rbukrs =  @p_bukrs
@@ -560,10 +557,7 @@ FORM get_data.
 *        AND rrcty = '0'
 *  AND rrecin IN p_rrecin.
   SELECT DISTINCT racct
-*BOC By SAP_ABAP on 22/09/26
-*  FROM jv_jvto1_acdoca
-  FROM jv_jvto1_acdoca_switch_2
-*EOC By SAP_ABAP on 22/09/26
+  FROM jv_jvto1_acdoca
   INTO CORRESPONDING FIELDS OF TABLE @lt_jvt
   WHERE ryear  =  @p_year
     AND rbukrs =  @p_bukrs
@@ -620,26 +614,10 @@ FORM get_data.
 *        AND rrcty = '0'
 *        AND rrecin IN  p_rrecin
 *    GROUP BY rjvnam racct.
-*BOC By SAP_ABAP on 22/09/26
-* Issue: opening balance (HSLVT) blank since the move from JVTO1 to the
-* ACDOCA views. The program read JV_JVTO1_ACDOCA, which is only the
-* ACDOCA branch. JV_JVTO1_ACDOCA_SWITCH_2 unions that branch (fiscal years
-* from the JVA-on-ACDOCA activation year, table JVAONACDOCAACTIV) with the
-* legacy JVTO1 data (JV_JVTO1_T8JTPM) for the years before it. Every read
-* of the totals view is moved: venture list (AT SELECTION-SCREEN), account
-* list and the three balance reads here. Ledger stays 4A - in this view
-* the 4C amounts are separate columns (HSLVT_4C), not separate rows.
-* Line-item reads on JV_JVSO1_ACDOCA are unchanged: not part of the issue.
-* ASSUMPTION: HSLVT for the activation year and later depends on the JVA
-* balance carry-forward having been posted into ACDOCA - being verified.
-*EOC By SAP_ABAP on 22/09/26
       SELECT SUM( hslvt ) AS hslvt,
        rjvnam,
        racct
-*BOC By SAP_ABAP on 22/09/26
-*  FROM jv_jvto1_acdoca
-  FROM jv_jvto1_acdoca_switch_2
-*EOC By SAP_ABAP on 22/09/26
+  FROM jv_jvto1_acdoca
   INTO CORRESPONDING FIELDS OF TABLE @lt_jvto1
   WHERE ryear  =  @p_year
     AND rbukrs =  @p_bukrs
@@ -712,25 +690,10 @@ SELECT SUM( hsl ) AS hsl,
 *         AND rrcty = '0'
 *         AND rrecin IN  p_rrecin
 *    GROUP BY rjvnam racct.
-*BOC By SAP_ABAP on 22/09/26
-* Was summing HSLVT (INR) into the USD opening balance - the JVTO1 ->
-* view conversion dropped KSLVT. Restored; view moved as above.
-*SELECT SUM( hslvt ) AS hslvt,
-*       rjvnam,
-*       racct
-*  FROM jv_jvto1_acdoca
-*  INTO CORRESPONDING FIELDS OF TABLE @lt_jvto1
-*  WHERE ryear  =  @p_year
-*    AND rbukrs =  @p_bukrs
-*    AND rjvnam IN @p_jvnam
-*    AND rldnr  =  '4A'
-*    AND rrcty  =  '0'
-*    AND rrecin IN @p_rrecin
-*  GROUP BY rjvnam, racct.
-SELECT SUM( kslvt ) AS hslvt,
+SELECT SUM( hslvt ) AS hslvt,
        rjvnam,
        racct
-  FROM jv_jvto1_acdoca_switch_2
+  FROM jv_jvto1_acdoca
   INTO CORRESPONDING FIELDS OF TABLE @lt_jvto1
   WHERE ryear  =  @p_year
     AND rbukrs =  @p_bukrs
@@ -739,7 +702,6 @@ SELECT SUM( kslvt ) AS hslvt,
     AND rrcty  =  '0'
     AND rrecin IN @p_rrecin
   GROUP BY rjvnam, racct.
-*EOC By SAP_ABAP on 22/09/26
 
 *    SELECT SUM( ksl ) AS ksl rjvnam racct
 *       FROM jvso1 INTO CORRESPONDING FIELDS OF TABLE lt_jvso1_1
@@ -823,10 +785,7 @@ SELECT SUM( hslvt ) AS hslvt,
        SUM( kslvt ) AS kslvt,
        rjvnam,
        racct
-*BOC By SAP_ABAP on 22/09/26
-*  FROM jv_jvto1_acdoca
-  FROM jv_jvto1_acdoca_switch_2
-*EOC By SAP_ABAP on 22/09/26
+  FROM jv_jvto1_acdoca
   INTO CORRESPONDING FIELDS OF TABLE @lt_jvto1
   WHERE ryear  =  @p_year
     AND rbukrs =  @p_bukrs
