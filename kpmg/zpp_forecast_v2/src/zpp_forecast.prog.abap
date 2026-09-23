@@ -43,6 +43,9 @@ CONSTANTS gc_tv_legacy TYPE rvari_vnam VALUE 'ZPP_FCST_LEGACY'.
 * Change here only - it is used to set the status and to report it when
 * it cannot be found.
 CONSTANTS gc_status TYPE sypfkey VALUE 'PF_STATUS'.
+* Since 23/09/26 PM the list runs in a container on the default screen
+* and the buttons are added with ADD_FUNCTION, so no GUI status is set
+* any more. GC_STATUS is kept for the commented-out code in FORM DISPLAY.
 
 DATA: gt_msg  TYPE bapiret2_t,
       gt_show TYPE tt_fname,
@@ -750,8 +753,21 @@ ENDFORM.
 FORM display.
 
   TRY.
-      cl_salv_table=>factory( IMPORTING r_salv_table = go_alv
+*BOC By Arnav on 23/09/26
+*     Container mode on the default screen instead of full screen. In
+*     full screen the custom buttons need a GUI status of this program -
+*     SE41 work in every system, never serialised - and without one the
+*     standard functions vanish. In a container ADD_FUNCTION works and
+*     SALV draws its complete standard toolbar by itself.
+*     CL_GUI_CONTAINER=>DEFAULT_SCREEN needs no SE51 screen, so the
+*     object stays abapGit-shippable; the WRITE at the end of this
+*     routine opens the list screen the container is drawn on.
+*     cl_salv_table=>factory( IMPORTING r_salv_table = go_alv
+*                             CHANGING  t_table      = gt_alv ).
+      cl_salv_table=>factory( EXPORTING r_container  = cl_gui_container=>default_screen
+                              IMPORTING r_salv_table = go_alv
                               CHANGING  t_table      = gt_alv ).
+*EOC By Arnav on 23/09/26
 
       "--- toolbar -------------------------------------------------------
       go_alv->get_functions( )->set_all( ).
@@ -784,12 +800,50 @@ FORM display.
 *     alongside it. If the status cannot be resolved the display below
 *     falls back rather than dumping, and the Save checkbox on the
 *     selection screen still saves.
+*BOC By Arnav on 23/09/26
+*     No GUI status any more - the four buttons go onto SALV's own
+*     toolbar, to the right of the standard functions. ZSAVE only for a
+*     user allowed to save, as before. Every code lands in
+*     LCL_HANDLER=>ON_ADDED_FUNCTION, which ignores anything it does not
+*     know.
+*     IF lv_save_ok = abap_true.
+*       go_alv->set_screen_status(
+*         pfstatus      = gc_status
+*         report        = sy-repid
+*         set_functions = cl_salv_table=>c_functions_all ).
+*     ENDIF.
+      DATA(lo_fn) = go_alv->get_functions( ).
+
       IF lv_save_ok = abap_true.
-        go_alv->set_screen_status(
-          pfstatus      = gc_status
-          report        = sy-repid
-          set_functions = cl_salv_table=>c_functions_all ).
+        lo_fn->add_function(
+          name     = 'ZSAVE'
+          icon     = CONV string( icon_system_save )
+          text     = 'Save'
+          tooltip  = 'Save the selected rows'
+          position = if_salv_c_function_position=>right_of_salv_functions ).
       ENDIF.
+
+      lo_fn->add_function(
+        name     = 'ZSELALL'
+        icon     = CONV string( icon_select_all )
+        text     = 'Select all'
+        tooltip  = 'Select every row'
+        position = if_salv_c_function_position=>right_of_salv_functions ).
+
+      lo_fn->add_function(
+        name     = 'ZDESEL'
+        icon     = CONV string( icon_deselect_all )
+        text     = 'Deselect all'
+        tooltip  = 'Clear the selection'
+        position = if_salv_c_function_position=>right_of_salv_functions ).
+
+      lo_fn->add_function(
+        name     = 'ZEXCEL'
+        icon     = CONV string( icon_xls )
+        text     = 'Export'
+        tooltip  = 'Save the list as a tab separated file'
+        position = if_salv_c_function_position=>right_of_salv_functions ).
+*EOC By Arnav on 23/09/26
 
       "--- row selection, so the buttons have something to act on -------
       go_alv->get_selections( )->set_selection_mode(
@@ -812,18 +866,25 @@ FORM display.
 *     SALV resolves the status when it draws the list, not when
 *     set_screen_status is called, so a status it cannot find surfaces
 *     here. Redrawn with SALV's own status instead of dumping.
-      TRY.
-          go_alv->display( ).
-        CATCH cx_salv_object_not_found.
-          DATA(lv_stmsg) = |GUI status { gc_status } not found in { sy-repid }, | &&
-                           |standard toolbar used|.
-          MESSAGE lv_stmsg TYPE 'S' DISPLAY LIKE 'W'.
-          go_alv->set_screen_status(
-            report        = 'SAPLSALV_METADATA_STATUS'
-            pfstatus      = 'SALV_STANDARD'
-            set_functions = cl_salv_table=>c_functions_all ).
-          go_alv->display( ).
-      ENDTRY.
+*BOC By Arnav on 23/09/26
+*     No status to resolve any more, so no fallback. DISPLAY returns at
+*     once in container mode; the WRITE opens the list screen and the
+*     grid is drawn on it. Nothing else may be written to the list.
+*     TRY.
+*         go_alv->display( ).
+*       CATCH cx_salv_object_not_found.
+*         DATA(lv_stmsg) = |GUI status { gc_status } not found in { sy-repid }, | &&
+*                          |standard toolbar used|.
+*         MESSAGE lv_stmsg TYPE 'S' DISPLAY LIKE 'W'.
+*         go_alv->set_screen_status(
+*           report        = 'SAPLSALV_METADATA_STATUS'
+*           pfstatus      = 'SALV_STANDARD'
+*           set_functions = cl_salv_table=>c_functions_all ).
+*         go_alv->display( ).
+*     ENDTRY.
+      go_alv->display( ).
+      WRITE: space.
+*EOC By Arnav on 23/09/26
 
     CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error
           cx_salv_existing cx_salv_wrong_call

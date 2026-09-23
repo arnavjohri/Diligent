@@ -638,3 +638,25 @@ different column sets, so their layouts must not be offered to each other),
 runs on the standard status but has no layout key either — same three lines if wanted.
 
 Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.
+
+## 23/09/26 PM — ZFCST list in a container: full standard toolbar with no GUI status (supersedes the SE41 entry above)
+
+Arnav's call: the standard toolbar must be complete and must not depend on a hand-built
+status. In full screen SALV can only switch on the standard functions whose codes the given
+status carries, and `ADD_FUNCTION` raises `CX_SALV_WRONG_CALL`; in a container both problems
+go away. `FORM display` in `ZPP_FORECAST`:
+
+- `cl_salv_table=>factory` now receives `r_container = cl_gui_container=>default_screen`.
+  No SE51 screen is involved, so the object stays abapGit-shippable.
+- The four buttons are added with `ADD_FUNCTION` (ZSAVE only when the user may save, as
+  before), positioned right of SALV's own functions. The handler is unchanged.
+- `set_screen_status` and its status-not-found fallback are commented out; `display( )` is
+  followed by `WRITE: space.`, which opens the list screen the container is drawn on.
+- The layout key added that morning stays, so Save / Select layout work.
+
+`PF_STATUS` is no longer referenced at runtime; if it was created, it can stay or go.
+`GC_STATUS` is kept for the commented code. Background execution is expected to fall back
+to SALV's list output but is untested. `ZPP_FORECAST_REPORT` untouched (standard status,
+full toolbar already; no layout key).
+
+Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.

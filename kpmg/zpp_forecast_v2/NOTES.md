@@ -15,9 +15,14 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
 ## Gotchas
 
 - **Screen-free by design, and that is load-bearing.** Everything displays through
-  `CL_SALV_TABLE` full screen: there is no SE51 screen and no SE41 GUI status anywhere in the
+  `CL_SALV_TABLE`: there is no SE51 screen and no SE41 GUI status anywhere in the
   repo — rows are picked with the standard SALV selection column instead of a checkbox, and
-  Save is added to the SALV toolbar. A grep for `CALL SCREEN` / `^MODULE ` / `SET PF-STATUS` /
+  Save is added to the SALV toolbar. **Since 23/09/26 PM `ZPP_FORECAST` shows its list in a
+  container on `CL_GUI_CONTAINER=>DEFAULT_SCREEN`** (factory with `r_container`, then
+  `display( )` and a single `WRITE: space.` that opens the list screen). That is what makes
+  `ADD_FUNCTION` legal, so the four buttons ride on SALV's own complete standard toolbar and
+  the `PF_STATUS` GUI status is no longer needed or set. Do not add any other `WRITE` to that
+  list, and expect background execution to fall back to list output — untested. A grep for `CALL SCREEN` / `^MODULE ` / `SET PF-STATUS` /
   `cl_gui_custom_container` across `src/*.abap` returns nothing. This is precisely what makes
   the object abapGit-shippable and why v1 was rewritten. **Do not reintroduce `CALL SCREEN`
   or `cl_gui_custom_container` here** — doing so converts the whole repo back to paste-only.
