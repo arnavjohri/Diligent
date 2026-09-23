@@ -660,3 +660,12 @@ to SALV's list output but is untested. `ZPP_FORECAST_REPORT` untouched (standard
 full toolbar already; no layout key).
 
 Files: `src/zpp_forecast.prog.abap`. TR: not yet transported.
+
+## 23/09/26 PM — ZPP_FORECAST_REPORT: layout key, so Save / Select layout work on the final report
+
+Same three lines as on ZFCST, in `FORM display` after `set_all( )`: key = report (no handle,
+one column set), `set_save_restriction( restrict_none )`, `set_default( abap_true )`. The
+report stays full screen on SALV's standard status, which already carries the whole toolbar.
+ZFCST activated by Arnav on 23/09/26 in container mode.
+
+Files: `src/zpp_forecast_report.prog.abap`. TR: not yet transported.

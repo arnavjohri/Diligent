@@ -289,6 +289,18 @@ FORM display.
                               CHANGING  t_table      = gt_out ).
 
       lo_alv->get_functions( )->set_all( ).
+
+*BOC By Arnav on 23/09/26
+*     Layout management, as on ZFCST. Without a layout key SALV offers
+*     "Change layout" only; "Save layout" and "Select layout" need the
+*     key that names the report the variants belong to. One list, one
+*     column set, so no handle.
+      DATA(ls_lkey) = VALUE salv_s_layout_key( report = sy-repid ).
+      lo_alv->get_layout( )->set_key( ls_lkey ).
+      lo_alv->get_layout( )->set_save_restriction( if_salv_c_layout=>restrict_none ).
+      lo_alv->get_layout( )->set_default( abap_true ).
+*EOC By Arnav on 23/09/26
+
       DATA(lo_cols) = lo_alv->get_columns( ).
       lo_cols->set_optimize( ).
 
