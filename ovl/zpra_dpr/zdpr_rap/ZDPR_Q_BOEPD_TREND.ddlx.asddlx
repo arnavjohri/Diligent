@@ -1,0 +1,74 @@
+@Metadata.layer: #CUSTOMER
+
+@UI.headerInfo: {
+  typeName:       'BOEPD Trend',
+  typeNamePlural: 'BOEPD Trend',
+  title:          { type: #STANDARD, value: 'ProductionDate' }
+}
+
+// BOC By Arnav on 23/09/26
+// Old chart had no dimension/measure attributes and the presentation variant
+// referenced the default @UI.Chart, which does not exist: chart blank in the
+// ALP, SmartChart crash on navigation from the dashboard card.
+//@UI.chart: [{
+//  qualifier:  'BoepdVsTarget',
+//  title:      'Actual Production vs BE Target (BOEPD)',
+//  chartType:  #LINE,
+//  dimensions: ['ProductionDateText'],
+//  measures:   ['ActualBoepdOvl', 'TargetBoepd']
+//}]
+//
+//@UI.presentationVariant: [{
+//  sortOrder: [{ by: 'ProductionDate', direction: #ASC }],
+//  visualizations: [
+//    { type: #AS_CHART },
+//    { type: #AS_LINEITEM }
+//  ]
+//}]
+
+@UI.chart: [{
+  qualifier:           'BoepdVsTarget',
+  title:               'Actual Production vs BE Target (BOEPD)',
+  chartType:           #LINE,
+  dimensions:          ['ProductionDateText'],
+  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY }],
+  measures:            ['ActualBoepdOvl', 'TargetBoepd'],
+  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 },
+                        { measure: 'TargetBoepd',    role: #AXIS_1 }]
+}]
+
+@UI.presentationVariant: [{
+  sortOrder: [{ by: 'ProductionDate', direction: #ASC }],
+  visualizations: [
+    { type: #AS_CHART, qualifier: 'BoepdVsTarget' },
+    { type: #AS_LINEITEM }
+  ]
+}]
+// EOC By Arnav on 23/09/26
+
+annotate view ZDPR_Q_BOEPD_TREND with
+{
+  @UI.selectionField: [{ position: 10 }]
+  @UI.lineItem: [{ position: 10, importance: #HIGH, label: 'Production Date' }]
+  ProductionDate;
+
+  @UI.lineItem: [{ position: 15, importance: #HIGH, label: 'Date' }]
+  ProductionDateText;
+
+  @UI.selectionField: [{ position: 20 }]
+  Asset;
+
+  @UI.selectionField: [{ position: 30 }]
+  ProductGroup;
+
+  @UI.lineItem: [{ position: 20, importance: #HIGH, label: 'Actual Production (BOEPD)' }]
+  @UI.dataPoint: { title: 'Actual Production (BOEPD)' }
+  ActualBoepdOvl;
+
+  @UI.lineItem: [{ position: 30, importance: #HIGH, label: 'BE Target (BOEPD)' }]
+  @UI.dataPoint: { title: 'BE Target (BOEPD)' }
+  TargetBoepd;
+
+  @UI.lineItem: [{ position: 40, importance: #MEDIUM, label: 'Actual BOEPD (JV)' }]
+  ActualBoepdJv;
+}
