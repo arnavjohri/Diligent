@@ -1,8 +1,7 @@
 sap.ui.define([
-    "sap/ui/core/mvc/Controller",
     "sap/m/MessageToast",
     "sap/m/MessageBox"
-], function (Controller, MessageToast, MessageBox) {
+], function (MessageToast, MessageBox) {
     "use strict";
 
     // BOC By Arnav on 24/09/26
@@ -15,8 +14,13 @@ sap.ui.define([
     // field out of the filter bar, so the mandatory parameter is always set
     // before Go without the user seeing it.
     //
-    // Facts taken from the sap.ovp 1.136.10 and sap.ui.comp 1.136 sources
-    // (not assumptions):
+    // Facts taken from the sap.ui.core, sap.ovp and sap.ui.comp 1.136
+    // sources (not assumptions):
+    // 0. A manifest extension under "sap.ui.controllerExtensions" must be a
+    //    PLAIN OBJECT. UI5 mixes its members into sap.ovp.app.Main; a class
+    //    made with Controller.extend() is loaded and then ignored without any
+    //    visible error. Earlier versions of this file failed exactly there.
+    //    Inside these functions "this" is the OVP Main controller itself.
     // 1. sap.ovp.app.Main is an async XML view; the filter bar does not exist
     //    at onInit. OVP itself waits for getView().loaded(). So do we.
     // 2. Filter bar id is "ovpGlobalFilter"; parameter keys in getFilterData
@@ -30,9 +34,11 @@ sap.ui.define([
     // 5. determineControlByName() returns null for parameters, so the
     //    fallback (hide label + input controls) goes through the internal
     //    _determineEnsuredItemByName(); the item itself stays visible.
+    // Member names carry the prefix _zfy so they cannot collide with OVP's
+    // own controller methods.
 
     // Set to false before deployment. While true, messages report what the
-    // extension does: a pop-up when the page has loaded and one when the
+    // extension does: a pop-up when the filter bar is ready and one when the
     // field has been hidden, grey toasts for the rest.
     var DEBUG = true;
 
@@ -82,8 +88,9 @@ sap.ui.define([
         }
     }
 
-    return Controller.extend("zdprdashboard.ext.controller.FiscalYear", {
+    return {
 
+        // runs after OVP's own onInit (legacy extension lifecycle: "After")
         onInit: function () {
             var oView = this.getView();
             if (!oView || !oView.loaded) {
@@ -96,7 +103,7 @@ sap.ui.define([
                     return;
                 }
                 var fnApply = function () {
-                    this._apply(oFilterBar);
+                    this._zfyApply(oFilterBar);
                 }.bind(this);
                 var fnFirst = function () {
                     var aNames = (oFilterBar.getAllFilterItems(false) || []).map(function (oItem) {
@@ -120,7 +127,7 @@ sap.ui.define([
             }.bind(this));
         },
 
-        _apply: function (oFilterBar) {
+        _zfyApply: function (oFilterBar) {
             var oData = oFilterBar.getFilterData() || {};
             var oDateTo = toDate(oData[KEY_TO]);
             // no Date To yet: seed from today so the field can be hidden at
@@ -133,10 +140,10 @@ sap.ui.define([
                 say((oDateTo ? "Date To -> " : "no Date To yet, today -> ") + "fiscal year " + sFy);
                 return;                                  // the filterChange re-entry hides it
             }
-            this._hide(oFilterBar);
+            this._zfyHide(oFilterBar);
         },
 
-        _hide: function (oFilterBar) {
+        _zfyHide: function (oFilterBar) {
             var oFyItem = null;
             (oFilterBar.getAllFilterItems(false) || []).forEach(function (oItem) {
                 if (oItem.getName && oItem.getName() === KEY_FY) {
@@ -168,6 +175,6 @@ sap.ui.define([
                 shout("item hide was reverted; " + (oCtrl ? "input and label hidden instead" : "no control found"));
             }
         }
-    });
+    };
     // EOC By Arnav on 24/09/26
 });

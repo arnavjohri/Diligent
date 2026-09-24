@@ -223,3 +223,16 @@ next round; `deployed/manifest.json` still carries the DASH_FILTER model and the
 extension registration, so it is NOT the manifest that is running. Take the
 running manifest from git history (commit before the DASH_FILTER change) when
 comparing against SAP.
+
+## 24/09/26 — fiscal-year extension: the actual root cause
+
+`sap/ui/core/mvc/Controller.js` (1.136.10, `Controller.applyExtensions`): a
+manifest extension under `sap.ui.controllerExtensions` must be a **plain
+object**. A module returning `Controller.extend(...)` is loaded, flagged
+("Controller extension should be a plain object", fatal-level log only) and
+then mixed in as an empty object — no error on screen, no effect. Versions 1–4
+of `FiscalYear.controller.js` all returned a class. Version 5 returns a plain
+object; inside its functions `this` is the OVP Main controller. Members are
+prefixed `_zfy` to avoid colliding with OVP's own methods (checked against
+`Main.controller.js`: no `_zfy` there). The async-view and mandatory-field
+facts recorded above still apply and are kept in v5.
