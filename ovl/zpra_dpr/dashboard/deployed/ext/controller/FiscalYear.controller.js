@@ -58,13 +58,8 @@ sap.ui.define([
                 return;
             }
             var fnHide = function () {
-                (oFilterBar.getFilterGroupItems() || []).forEach(function (oItem) {
-                    if (oItem.getName && oItem.getName() === PARAM_FY) {
-                        oItem.setVisibleInFilterBar(false);
-                        oItem.setVisible(false);
-                    }
-                });
-            };
+                this._hideFiscalYear(oFilterBar);
+            }.bind(this);
             if (oFilterBar.isInitialised && oFilterBar.isInitialised()) {
                 fnHide();
             } else {
@@ -72,7 +67,35 @@ sap.ui.define([
             }
             oFilterBar.attachFilterChange(function () {
                 this._deriveFiscalYear(oFilterBar);
+                this._hideFiscalYear(oFilterBar);   // idempotent; survives late init
             }, this);
+        },
+
+        _hideFiscalYear: function (oFilterBar) {
+            // The SmartFilterBar keeps MANDATORY fields in the bar whatever the
+            // "visible in filter bar" flag says, so the item is hidden fully.
+            // Item names may or may not carry the "$Parameter." prefix.
+            var aItems = [].concat(
+                oFilterBar.getFilterGroupItems ? (oFilterBar.getFilterGroupItems() || []) : [],
+                oFilterBar.getFilterItems ? (oFilterBar.getFilterItems() || []) : []
+            );
+            aItems.forEach(function (oItem) {
+                var sName = oItem.getName ? String(oItem.getName()) : "";
+                if (sName === PARAM_FY || sName === "P_FiscalYear" || /P_FiscalYear$/.test(sName)) {
+                    if (oItem.setVisibleInFilterBar) {
+                        oItem.setVisibleInFilterBar(false);
+                    }
+                    if (oItem.setVisible) {
+                        oItem.setVisible(false);
+                    }
+                }
+            });
+            // last resort: hide the field control itself (label goes with it)
+            var oCtrl = oFilterBar.determineControlByName && (
+                oFilterBar.determineControlByName(PARAM_FY) || oFilterBar.determineControlByName("P_FiscalYear"));
+            if (oCtrl && oCtrl.getParent && oCtrl.getParent() && oCtrl.getParent().setVisible) {
+                oCtrl.getParent().setVisible(false);
+            }
         },
 
         _deriveFiscalYear: function (oFilterBar) {
