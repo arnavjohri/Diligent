@@ -145,6 +145,24 @@
           "localUri": "localService/ZDPR_Q_PROD_QUERY_CDS/metadata.xml",
           "odataVersion": "2.0"
         }
+      },
+      "ZDPR_Q_DASH_FILTER_CDS_VAN": {
+        "uri": "/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Annotations(TechnicalName='ZDPR_Q_DASH_FILTER_CDS_VAN',Version='0001')/$value/",
+        "type": "ODataAnnotation",
+        "settings": {
+          "localUri": "localService/ZDPR_Q_DASH_FILTER_CDS/ZDPR_Q_DASH_FILTER_CDS_VAN.xml"
+        }
+      },
+      "ZDPR_Q_DASH_FILTER_CDS": {
+        "uri": "/sap/opu/odata/sap/ZDPR_Q_DASH_FILTER_CDS/",
+        "type": "OData",
+        "settings": {
+          "annotations": [
+            "ZDPR_Q_DASH_FILTER_CDS_VAN"
+          ],
+          "localUri": "localService/ZDPR_Q_DASH_FILTER_CDS/metadata.xml",
+          "odataVersion": "2.0"
+        }
       }
     },
     "crossNavigation": {
@@ -240,6 +258,15 @@
         "dataSource": "ZDPR_Q_PROD_QUERY_CDS",
         "preload": true,
         "settings": {}
+      },
+      "ZDPR_Q_DASH_FILTER_CDS": {
+        "dataSource": "ZDPR_Q_DASH_FILTER_CDS",
+        "preload": true,
+        "settings": {
+          "metadataUrlParams": {
+            "sap-value-list": "none"
+          }
+        }
       }
     },
     "resources": {
@@ -252,8 +279,8 @@
     }
   },
   "sap.ovp": {
-    "globalFilterModel": "mainModel",
-    "globalFilterEntitySet": "ZDPR_Q_PROD_PERFSet",
+    "globalFilterModel": "ZDPR_Q_DASH_FILTER_CDS",
+    "globalFilterEntitySet": "ZDPR_Q_DASH_FILTERSet",
     "considerAnalyticalParameters": true,
     "enableODataSelect": true,
     "containerLayout": "resizable",

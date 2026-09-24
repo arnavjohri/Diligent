@@ -318,3 +318,15 @@ for five BSPs, cache invalidation, S_SERVICE on the role, test as a test user.
 Generator pitfall: `ui5-deploy.yaml` shipped with `transport:
 REPLACE_WITH_TRANSPORT` and lowercase package; deploy fails with HTTP 500
 "Transport request could not be created" until a real TR is entered.
+
+## Step 7 done on the running version 24/09/26
+
+`ZDPR_Q_DASH_FILTER` activated on OCQ (Product wanted as an optional filter on
+the dashboard). `deployed/manifest.json`: data sources
+`ZDPR_Q_DASH_FILTER_CDS_VAN` + `ZDPR_Q_DASH_FILTER_CDS`, model
+`ZDPR_Q_DASH_FILTER_CDS` (sap-value-list none), `globalFilterModel` /
+`globalFilterEntitySet` switched to `ZDPR_Q_DASH_FILTER_CDS` /
+`ZDPR_Q_DASH_FILTERSet`. Cards unchanged: parameters still matched by name.
+Prerequisite in BAS: Manage Service Models → add the service (creates
+localService/ZDPR_Q_DASH_FILTER_CDS/). Fields Asset, Business Unit, Block,
+Product are optional; Product reaches cards 4, 5, 6.
