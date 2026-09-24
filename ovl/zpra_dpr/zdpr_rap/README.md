@@ -144,3 +144,11 @@ two FORMULA measures `ActualQtyChart` / `TargetQtyChart` = the quantities withou
 the unit property, so the ALP SmartChart draws one column pair per product in its
 native unit like dashboard card 4. DDLX `ZDPR_Q_TARGET_QUERY` chart then moves to
 those two measures (next object). AchievementPct stays in the table only.
+
+24/09/26 evening: the two FORMULA chart copies in `ZDPR_Q_TARGET_QUERY` made the
+Overview Page drop card 4 entirely (model metadata / chart failed to load) and
+did not fix the ALP chart either. REVERTED to the 16/09 state (file = original).
+Next route: remove the unit binding from ActualQty/TargetQty/VarianceQty in
+`ZDPR_C_TARGET_CUBE` (unit columns stay as plain table columns) and put the DDLX
+chart back on ActualQty/TargetQty. Lesson: a FORMULA that references one
+unit-bearing measure inherits its unit; only a ratio of two cancels it.

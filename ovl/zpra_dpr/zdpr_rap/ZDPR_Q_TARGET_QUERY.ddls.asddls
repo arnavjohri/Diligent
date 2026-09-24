@@ -82,23 +82,5 @@ define view ZDPR_Q_TARGET_QUERY
   @EndUserText.label: 'Achievement %'
   @Aggregation.default: #FORMULA
   cast( ActualQty as abap.fltp ) * cast( 100 as abap.fltp )
-    / cast( TargetQty as abap.fltp )                 as AchievementPct,
-
-  // BOC By Arnav on 24/09/26
-  /* Chart copies of the two quantities. ActualQty / TargetQty carry a unit
-     property (BOPD for oil, MMSCMD for gas) and the SmartChart of the
-     Analytical List Page refuses to draw measures whose unit differs across
-     the result. A FORMULA element is evaluated after aggregation and carries
-     no unit, so the chart can show one column pair per product in its native
-     unit, as dashboard card 4 does. Float casts: classic view rule. */
-  @AnalyticsDetails.query.axis: #COLUMNS
-  @EndUserText.label: 'Actual (native unit)'
-  @Aggregation.default: #FORMULA
-  cast( ActualQty as abap.fltp )                     as ActualQtyChart,
-
-  @AnalyticsDetails.query.axis: #COLUMNS
-  @EndUserText.label: 'Target (native unit)'
-  @Aggregation.default: #FORMULA
-  cast( TargetQty as abap.fltp )                     as TargetQtyChart
-  // EOC By Arnav on 24/09/26
+    / cast( TargetQty as abap.fltp )                 as AchievementPct
 }
