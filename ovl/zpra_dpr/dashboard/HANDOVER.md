@@ -212,3 +212,14 @@ shows on-screen toasts; set to `false` before deploying.
 (`fiori run` cannot reach the BAS internal service); `npx ui5 serve --config
 ui5.yaml --open "test/flp.html#app-preview"` is the same server. Restarting the
 dev space from the lobby clears it.
+
+## 24/09/26 — decision: ship with Fiscal Year visible, extension parked
+
+Arnav deployed the dashboard and the four detail apps in the state BEFORE the
+`ZDPR_Q_DASH_FILTER` global filter and the fiscal-year extension. Users get
+Fiscal Year as a normal mandatory filter. The extension (v4, on-screen
+diagnostics, untested in preview) stays in `deployed/ext/controller/` for the
+next round; `deployed/manifest.json` still carries the DASH_FILTER model and the
+extension registration, so it is NOT the manifest that is running. Take the
+running manifest from git history (commit before the DASH_FILTER change) when
+comparing against SAP.
