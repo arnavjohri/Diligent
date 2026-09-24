@@ -273,8 +273,8 @@
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
-            "rows": 25,
-            "cols": 2
+            "rows": 42,
+            "cols": 3
           }
         }
       },
@@ -289,8 +289,58 @@
           "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Ytd",
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
-            "rows": 25,
+            "rows": 42,
             "cols": 1
+          }
+        }
+      },
+      "card04_targetVsActual": {
+        "model": "ZDPR_Q_TARGET_QUERY_CDS",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card04Title}}",
+          "subTitle": "{{card04Subtitle}}",
+          "entitySet": "ZDPR_Q_TARGET_QUERYResults",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ActualVsTargetOvp",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
+          "defaultSpan": {
+            "rows": 38,
+            "cols": 2
+          }
+        }
+      },
+      "card05_trendByBu": {
+        "model": "ZDPR_Q_BOEPD_TREND_CDS",
+        "template": "sap.ovp.cards.charts.analytical",
+        "settings": {
+          "title": "{{card05Title}}",
+          "subTitle": "{{card05Subtitle}}",
+          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
+          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByBusinessUnit",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDateBu",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
+          "defaultSpan": {
+            "rows": 38,
+            "cols": 2
+          }
+        }
+      },
+      "card06_prodRecords": {
+        "model": "ZDPR_Q_PROD_QUERY_CDS",
+        "template": "sap.ovp.cards.table",
+        "settings": {
+          "title": "{{card06Title}}",
+          "subTitle": "{{card06Subtitle}}",
+          "entitySet": "ZDPR_Q_PROD_QUERYResults",
+          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#ByAsset",
+          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
+          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TopAssets",
+          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
+          "defaultSpan": {
+            "rows": 40,
+            "cols": 2
           }
         }
       },
@@ -315,57 +365,7 @@
           ],
           "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
           "defaultSpan": {
-            "rows": 20,
-            "cols": 1
-          }
-        }
-      },
-      "card04_targetVsActual": {
-        "model": "ZDPR_Q_TARGET_QUERY_CDS",
-        "template": "sap.ovp.cards.charts.analytical",
-        "settings": {
-          "title": "{{card04Title}}",
-          "subTitle": "{{card04Subtitle}}",
-          "entitySet": "ZDPR_Q_TARGET_QUERYResults",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ActualVsTargetOvp",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
-          "defaultSpan": {
-            "rows": 25,
-            "cols": 2
-          }
-        }
-      },
-      "card05_trendByBu": {
-        "model": "ZDPR_Q_BOEPD_TREND_CDS",
-        "template": "sap.ovp.cards.charts.analytical",
-        "settings": {
-          "title": "{{card05Title}}",
-          "subTitle": "{{card05Subtitle}}",
-          "entitySet": "ZDPR_Q_BOEPD_TRENDResults",
-          "chartAnnotationPath": "com.sap.vocabularies.UI.v1.Chart#ByBusinessUnit",
-          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#ByDateBu",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
-          "defaultSpan": {
-            "rows": 25,
-            "cols": 2
-          }
-        }
-      },
-      "card06_prodRecords": {
-        "model": "ZDPR_Q_PROD_QUERY_CDS",
-        "template": "sap.ovp.cards.table",
-        "settings": {
-          "title": "{{card06Title}}",
-          "subTitle": "{{card06Subtitle}}",
-          "entitySet": "ZDPR_Q_PROD_QUERYResults",
-          "annotationPath": "com.sap.vocabularies.UI.v1.LineItem#ByAsset",
-          "selectionAnnotationPath": "com.sap.vocabularies.UI.v1.SelectionVariant#Params",
-          "presentationAnnotationPath": "com.sap.vocabularies.UI.v1.PresentationVariant#TopAssets",
-          "identificationAnnotationPath": "com.sap.vocabularies.UI.v1.Identification",
-          "defaultSpan": {
-            "rows": 25,
+            "rows": 40,
             "cols": 2
           }
         }

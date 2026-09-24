@@ -298,3 +298,11 @@ Reply with one of:
   page does not depend on whether the manual DDLX creation succeeded.
 - Views run with `@AccessControl.authorizationCheck: #NOT_REQUIRED` — no
   row-level restriction on the dashboard.
+
+## Default layout 24/09/26 (`deployed/manifest.json`)
+
+Arnav's arranged layout made the default for every user: card order 1, 2, 4, 5,
+6, 3 and `defaultSpan` per card — 1: 42×3, 2: 42×1, 4: 38×2, 5: 38×2, 6: 40×2,
+3: 40×2 (rows ≈ 16 px each, 4-column grid). Users can still drag; *Manage
+Cards → Reset* restores this. Row values estimated from a scaled screenshot;
+fine-tune after one look.
