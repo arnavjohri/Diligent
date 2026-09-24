@@ -306,3 +306,15 @@ Arnav's arranged layout made the default for every user: card order 1, 2, 4, 5,
 3: 40×2 (rows ≈ 16 px each, 4-column grid). Users can still drag; *Manage
 Cards → Reset* restores this. Row values estimated from a scaled screenshot;
 fine-tune after one look.
+
+## Deployment 24/09/26
+
+Detail apps `ZDPRRECORDS`, `ZDPRPERF`, `ZDPRTREND`, `ZDPRTARGET` deployed to the
+ABAP repository on OCQ (`npm run deploy`, `ui5-deploy.yaml` per project:
+destination OCQ, client 500, package ZPR_DPR_RAP; TR to be recorded). Pending:
+dashboard redeploy with the layout manifest, four target mappings in
+`ZC_DPR_REPORTING` (no tiles — one tile stays the only entry point), app index
+for five BSPs, cache invalidation, S_SERVICE on the role, test as a test user.
+Generator pitfall: `ui5-deploy.yaml` shipped with `transport:
+REPLACE_WITH_TRANSPORT` and lowercase package; deploy fails with HTTP 500
+"Transport request could not be created" until a real TR is entered.
