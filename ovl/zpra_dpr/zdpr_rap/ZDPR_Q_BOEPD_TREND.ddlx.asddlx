@@ -10,6 +10,9 @@
 // Old chart had no dimension/measure attributes and the presentation variant
 // referenced the default @UI.Chart, which does not exist: chart blank in the
 // ALP, SmartChart crash on navigation from the dashboard card.
+// 24/09/26: default chart is the per-business-unit breakdown, since the app is
+// the drill-down for dashboard cards 1 and 5 and card 1 already shows the
+// company total against target. Target stays in the table.
 //@UI.chart: [{
 //  qualifier:  'BoepdVsTarget',
 //  title:      'Actual Production vs BE Target (BOEPD)',
@@ -28,13 +31,13 @@
 
 @UI.chart: [{
   qualifier:           'BoepdVsTarget',
-  title:               'Actual Production vs BE Target (BOEPD)',
+  title:               'Daily Production by Business Unit (BOEPD)',
   chartType:           #LINE,
-  dimensions:          ['ProductionDateText'],
-  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY }],
-  measures:            ['ActualBoepdOvl', 'TargetBoepd'],
-  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 },
-                        { measure: 'TargetBoepd',    role: #AXIS_1 }]
+  dimensions:          ['ProductionDateText', 'BusinessUnit'],
+  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY },
+                        { dimension: 'BusinessUnit',       role: #SERIES }],
+  measures:            ['ActualBoepdOvl'],
+  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 }]
 }]
 
 @UI.presentationVariant: [{
@@ -44,7 +47,7 @@
     { type: #AS_LINEITEM }
   ]
 }]
-// EOC By Arnav on 23/09/26
+// EOC By Arnav on 24/09/26
 
 annotate view ZDPR_Q_BOEPD_TREND with
 {

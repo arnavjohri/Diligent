@@ -114,3 +114,7 @@ chart `ActualVsTarget`.
 TargetQty remain in the table. Records app default: chart X = AssetDescription,
 Y = OvlShareQty1 with a default selection variant Product = Oil — pending the
 `ZDPR_Q_PROD_QUERY` DDLX source from ADT.
+
+24/09/26: `ZDPR_Q_BOEPD_TREND` default chart = date × BusinessUnit series,
+measure ActualBoepdOvl (the drill-down for cards 1 and 5; card 1 already shows
+total vs target, so the app shows the breakdown). Target stays in the table.
