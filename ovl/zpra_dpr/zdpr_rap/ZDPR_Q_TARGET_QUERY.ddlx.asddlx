@@ -11,8 +11,10 @@
 // Old chart had no dimension/measure attributes and the presentation variant
 // referenced the default @UI.Chart, which does not exist: chart blank in the
 // ALP, SmartChart crash on navigation from the dashboard card.
-// Measures changed to AchievementPct: ActualQty/TargetQty carry a per-product
-// unit (BOPD vs MMSCMD) and the chart refuses to draw Oil and Gas together.
+// 24/09/26: chart on the unit-free FORMULA copies ActualQtyChart/TargetQtyChart
+// (query ZDPR_Q_TARGET_QUERY): ActualQty/TargetQty carry a per-product unit
+// (BOPD vs MMSCMD) and the chart refuses to draw Oil and Gas together;
+// Achievement % was tried as the measure and rejected (figure not trusted).
 //@UI.chart: [{
 //  qualifier:  'ActualVsTarget',
 //  title:      'Actual vs Target by Product',
@@ -30,12 +32,13 @@
 
 @UI.chart: [{
   qualifier:           'ActualVsTarget',
-  title:               'Achievement % by Product',
+  title:               'Actual vs Target by Product (native units)',
   chartType:           #COLUMN,
   dimensions:          ['ProductDescription'],
   dimensionAttributes: [{ dimension: 'ProductDescription', role: #CATEGORY }],
-  measures:            ['AchievementPct'],
-  measureAttributes:   [{ measure: 'AchievementPct', role: #AXIS_1 }]
+  measures:            ['ActualQtyChart', 'TargetQtyChart'],
+  measureAttributes:   [{ measure: 'ActualQtyChart', role: #AXIS_1 },
+                        { measure: 'TargetQtyChart', role: #AXIS_1 }]
 }]
 
 @UI.presentationVariant: [{
@@ -44,7 +47,7 @@
     { type: #AS_LINEITEM }
   ]
 }]
-// EOC By Arnav on 23/09/26
+// EOC By Arnav on 24/09/26
 
 annotate view ZDPR_Q_TARGET_QUERY with
 {
