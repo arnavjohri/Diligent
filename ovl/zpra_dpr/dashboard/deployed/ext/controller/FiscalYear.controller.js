@@ -1,7 +1,8 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
-    "sap/m/MessageToast"
-], function (Controller, MessageToast) {
+    "sap/m/MessageToast",
+    "sap/m/MessageBox"
+], function (Controller, MessageToast, MessageBox) {
     "use strict";
 
     // BOC By Arnav on 24/09/26
@@ -26,9 +27,13 @@ sap.ui.define([
     // 4. Never call setVisible(false) on the item: an invisible item drops
     //    out of getFilterData, OVP's mandatory check then fails and no card
     //    loads. VisibleInFilterBar=false with a value keeps it in the data.
+    // 5. determineControlByName() returns null for parameters, so the
+    //    fallback (hide label + input controls) goes through the internal
+    //    _determineEnsuredItemByName(); the item itself stays visible.
 
-    // Set to false before deployment. While true, short messages appear at
-    // the bottom of the page reporting what the extension does.
+    // Set to false before deployment. While true, messages report what the
+    // extension does: a pop-up when the page has loaded and one when the
+    // field has been hidden, grey toasts for the rest.
     var DEBUG = true;
 
     var KEY_TO = "$Parameter.P_DateTo";
@@ -71,6 +76,12 @@ sap.ui.define([
         }
     }
 
+    function shout(sText) {
+        if (DEBUG) {
+            MessageBox.information("FY ext: " + sText);
+        }
+    }
+
     return Controller.extend("zdprdashboard.ext.controller.FiscalYear", {
 
         onInit: function () {
@@ -81,19 +92,25 @@ sap.ui.define([
             oView.loaded().then(function () {
                 var oFilterBar = oView.byId("ovpGlobalFilter");
                 if (!oFilterBar) {
-                    say("no filter bar in the view");
+                    shout("page loaded, but no filter bar with id ovpGlobalFilter");
                     return;
                 }
-                say("loaded");
                 var fnApply = function () {
                     this._apply(oFilterBar);
                 }.bind(this);
-                if (oFilterBar.isInitialised && oFilterBar.isInitialised()) {
+                var fnFirst = function () {
+                    var aNames = (oFilterBar.getAllFilterItems(false) || []).map(function (oItem) {
+                        return oItem.getName();
+                    });
+                    shout("filter bar ready. Fields: " + aNames.join(", "));
                     fnApply();
+                };
+                if (oFilterBar.isInitialised && oFilterBar.isInitialised()) {
+                    fnFirst();
                 } else if (oFilterBar.attachInitialized) {
-                    oFilterBar.attachInitialized(fnApply);
+                    oFilterBar.attachInitialized(fnFirst);
                 } else {
-                    oFilterBar.attachInitialise(fnApply);
+                    oFilterBar.attachInitialise(fnFirst);
                 }
                 // user typed a date, a variant was applied, or setFilterData ran
                 oFilterBar.attachFilterChange(fnApply);
@@ -120,13 +137,36 @@ sap.ui.define([
         },
 
         _hide: function (oFilterBar) {
-            var aItems = oFilterBar.getAllFilterItems ? oFilterBar.getAllFilterItems(false) : [];
-            aItems.forEach(function (oItem) {
-                if (oItem.getName && oItem.getName() === KEY_FY && oItem.getVisibleInFilterBar()) {
-                    oItem.setVisibleInFilterBar(false);  // allowed: the field has a value
-                    say("fiscal year field hidden");
+            var oFyItem = null;
+            (oFilterBar.getAllFilterItems(false) || []).forEach(function (oItem) {
+                if (oItem.getName && oItem.getName() === KEY_FY) {
+                    oFyItem = oItem;
                 }
             });
+            if (!oFyItem) {
+                say("no field named " + KEY_FY + " in the filter bar");
+                return;
+            }
+            if (oFyItem.getVisibleInFilterBar()) {
+                oFyItem.setVisibleInFilterBar(false);    // allowed: the field has a value
+                if (!oFyItem.getVisibleInFilterBar()) {
+                    shout("fiscal year field hidden (item)");
+                    return;
+                }
+                // reverted by the FilterBar: hide the label and input instead;
+                // the item stays visible, so the value still reaches the cards
+                var oEntry = oFilterBar._determineEnsuredItemByName ?
+                    oFilterBar._determineEnsuredItemByName(KEY_FY) : null;
+                var oCtrl = oEntry && oEntry.control;
+                var oLabel = oEntry && oEntry.filterItem && oEntry.filterItem._oLabel;
+                if (oCtrl && oCtrl.setVisible) {
+                    oCtrl.setVisible(false);
+                }
+                if (oLabel && oLabel.setVisible) {
+                    oLabel.setVisible(false);
+                }
+                shout("item hide was reverted; " + (oCtrl ? "input and label hidden instead" : "no control found"));
+            }
         }
     });
     // EOC By Arnav on 24/09/26
