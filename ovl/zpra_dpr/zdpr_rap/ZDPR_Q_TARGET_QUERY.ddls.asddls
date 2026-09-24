@@ -84,3 +84,4 @@ define view ZDPR_Q_TARGET_QUERY
   cast( ActualQty as abap.fltp ) * cast( 100 as abap.fltp )
     / cast( TargetQty as abap.fltp )                 as AchievementPct
 }
+where FiscalYear = $parameters.P_FiscalYear

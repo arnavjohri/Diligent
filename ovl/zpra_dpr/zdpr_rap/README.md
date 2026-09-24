@@ -152,3 +152,12 @@ Next route: remove the unit binding from ActualQty/TargetQty/VarianceQty in
 `ZDPR_C_TARGET_CUBE` (unit columns stay as plain table columns) and put the DDLX
 chart back on ActualQty/TargetQty. Lesson: a FORMULA that references one
 unit-bearing measure inherits its unit; only a ratio of two cancels it.
+
+24/09/26 night — ROOT CAUSE of card 4 vanishing: my extraction of
+ZDPR_Q_TARGET_QUERY from the 16/09 document stopped at the closing brace and
+dropped the trailing `where FiscalYear = $parameters.P_FiscalYear`. Every
+version pasted today lacked it, the engine reported the parameter as ignored,
+and the Overview Page card that passes a fiscal year stopped rendering. Both
+repo copies corrected (87 lines). Rule reinforced: never rebuild an object
+from a document when ADT can supply the running source; and when a document is
+the only source, read it to the next object heading, not to the first `}`.
