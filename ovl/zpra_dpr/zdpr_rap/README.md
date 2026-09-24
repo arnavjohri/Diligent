@@ -137,3 +137,10 @@ the unit-free `BoepdQty` (JV, O+OEG BOE); the OVL share of it is missing.
    to the line items. Original = 16/09 source document (`original/`).
 Target app stays on AchievementPct: ZDPR_C_TARGET_CUBE has no BOE measure and
 adding one needs the ZPRA_T_TAR_CF factor join — senior's call, mail drafted 23/09.
+
+24/09/26 later: Achievement % rejected as the chart default (figure not trusted
+yet). `ZDPR_Q_TARGET_QUERY.ddls.asddls` (original = 16/09 source document) gains
+two FORMULA measures `ActualQtyChart` / `TargetQtyChart` = the quantities without
+the unit property, so the ALP SmartChart draws one column pair per product in its
+native unit like dashboard card 4. DDLX `ZDPR_Q_TARGET_QUERY` chart then moves to
+those two measures (next object). AchievementPct stays in the table only.
