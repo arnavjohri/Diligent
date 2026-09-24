@@ -33,7 +33,7 @@
   title:               'OVL Share by Asset (BOE)',
   chartType:           #COLUMN,
   dimensions:          ['AssetDescription'],
-  dimensionAttributes: [{ dimension: 'AssetDescription', role: #CATEGORY }],
+  dimensionAttributes: [{ dimension: 'AssetDescription', role: #SERIES }],   // Changes by Arnav on 24/09/26
   measures:            ['OvlShareBoe'],
   measureAttributes:   [{ measure: 'OvlShareBoe', role: #AXIS_1 }]
 }]
