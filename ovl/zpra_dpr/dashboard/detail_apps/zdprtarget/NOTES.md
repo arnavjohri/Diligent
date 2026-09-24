@@ -13,3 +13,8 @@ here; `original/` holds the generator's version as supplied.
   (`Cannot read properties of undefined (reading 'FiscalPeriod')` in
   `ChartProvider._getRole`). Standalone the page used the manifest qualifier and
   was fine.
+- `manifest.json` (24/09/26): `defaultFilterMode: compact`, `hideVisualFilter: true`
+  in the page settings; the ALP opened in the empty visual-filter mode.
+- `annotation.xml` is superseded by DDLX `ZDPR_Q_TARGET_QUERY` (chart on
+  AchievementPct); in BAS restore the generator's empty file so the local copy
+  does not override the backend chart.
