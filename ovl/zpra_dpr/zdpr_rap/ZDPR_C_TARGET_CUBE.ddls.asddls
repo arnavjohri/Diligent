@@ -81,7 +81,10 @@ define view entity ZDPR_C_TARGET_CUBE
   @EndUserText.label: 'Actual Production'
   @Aggregation.default: #SUM
 //  @Semantics.quantity.unitOfMeasure: 'ActualUom'
-  Actual.ProdQty1                                    as ActualQty,
+  // cast: ProdQty1 is QUAN and a QUAN element must carry a unit reference;
+  // the DEC cast makes it a plain decimal like TargetQty / VarianceQty.
+//  Actual.ProdQty1                                    as ActualQty,
+  cast( Actual.ProdQty1 as abap.dec( 23, 3 ) )       as ActualQty,
   Actual.ProdUom1                                    as ActualUom,
 
   @EndUserText.label: 'Target Quantity'
