@@ -132,7 +132,8 @@ the unit-free `BoepdQty` (JV, O+OEG BOE); the OVL share of it is missing.
    before pasting.
 2. `ZDPR_Q_PROD_QUERY` — expose `BoepdQty` and `OvlShareBoe` as column measures
    (next, after 1 activates).
-3. DDLX `ZDPR_Q_PROD_QUERY` — chart X = AssetDescription, Y = OvlShareBoe, with
-   attribute blocks and PV qualifier (after 2).
+3. DDLX `ZDPR_Q_PROD_QUERY.ddlx.asddlx` — chart `ByAsset`: X = AssetDescription,
+   Y = OvlShareBoe, attribute blocks, PV qualifier + sort desc; BOE columns added
+   to the line items. Original = 16/09 source document (`original/`).
 Target app stays on AchievementPct: ZDPR_C_TARGET_CUBE has no BOE measure and
 adding one needs the ZPRA_T_TAR_CF factor join — senior's call, mail drafted 23/09.
