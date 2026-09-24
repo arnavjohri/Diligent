@@ -212,6 +212,15 @@
         "sap.ui.layout": {}
       }
     },
+    "extends": {
+      "extensions": {
+        "sap.ui.controllerExtensions": {
+          "sap.ovp.app.Main": {
+            "controllerName": "zdprdashboard.ext.controller.FiscalYear"
+          }
+        }
+      }
+    },
     "contentDensities": {
       "compact": true,
       "cozy": true

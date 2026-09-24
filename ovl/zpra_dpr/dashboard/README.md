@@ -330,3 +330,19 @@ the dashboard). `deployed/manifest.json`: data sources
 Prerequisite in BAS: Manage Service Models → add the service (creates
 localService/ZDPR_Q_DASH_FILTER_CDS/). Fields Asset, Business Unit, Block,
 Product are optional; Product reaches cards 4, 5, 6.
+
+## Fiscal year derived from Date To (24/09/26, route 1)
+
+Decision: no Fiscal Year field on the dashboard; FY = fiscal year of Date To
+(April–March: year of Date To if month ≥ 4, else year − 1). Cards 1 and 5
+already use each date's own FY in the cube; only cards 2, 3 (PROD_PERF) and 4
+(TARGET_QUERY) take the parameter, and they can serve one FY per run.
+Implementation: `deployed/ext/controller/FiscalYear.controller.js` (legacy
+controller extension of `sap.ovp.app.Main`, registered in
+`deployed/manifest.json` under `sap.ui5.extends.extensions`): hides the
+`$Parameter.P_FiscalYear` field of the SmartFilterBar `ovpGlobalFilter` and
+sets it from `$Parameter.P_DateTo` on every filterChange. BAS path:
+`webapp/ext/controller/FiscalYear.controller.js`. ASSUMPTIONS (SAP docs not
+reachable from the session): view id `ovpGlobalFilter`, parameter keys
+`$Parameter.<name>`, legacy extension lifecycle (`onInit` of the extension runs
+after Main's). Verified only by the first preview run.
