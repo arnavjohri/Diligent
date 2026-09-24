@@ -118,3 +118,21 @@ Y = OvlShareQty1 with a default selection variant Product = Oil — pending the
 24/09/26: `ZDPR_Q_BOEPD_TREND` default chart = date × BusinessUnit series,
 measure ActualBoepdOvl (the drill-down for cards 1 and 5; card 1 already shows
 total vs target, so the app shows the breakdown). Target stays in the table.
+
+## 24/09/26 — OVL Share (BOE) for the records detail app (3 objects, in order)
+
+The records ALP chart cannot draw Oil and Gas together because every quantity
+measure in ZDPR_Q_PROD_QUERY carries a per-product unit. The cube already has
+the unit-free `BoepdQty` (JV, O+OEG BOE); the OVL share of it is missing.
+
+1. `ZDPR_C_PROD_CUBE.ddls.asddls` — new measure `OvlShareBoe` = BoepdQty × PI/100
+   (same conversion and sign as BoepdQty, same PI share as OvlShareQty1), added
+   at the end of the select list. Original = v16-09/07 (`original/`).
+   ASSUMPTION: the active cube on OCQ equals the v16-09 copy; compare in ADT
+   before pasting.
+2. `ZDPR_Q_PROD_QUERY` — expose `BoepdQty` and `OvlShareBoe` as column measures
+   (next, after 1 activates).
+3. DDLX `ZDPR_Q_PROD_QUERY` — chart X = AssetDescription, Y = OvlShareBoe, with
+   attribute blocks and PV qualifier (after 2).
+Target app stays on AchievementPct: ZDPR_C_TARGET_CUBE has no BOE measure and
+adding one needs the ZPRA_T_TAR_CF factor join — senior's call, mail drafted 23/09.
