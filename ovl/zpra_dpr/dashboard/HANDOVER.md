@@ -184,3 +184,31 @@ and were not applied: the PROD_PERF result set is `ZDPR_Q_PROD_PERFSet` (not
 - Keep `README.md` in this folder current: status block at the top, step table,
   and the naming table in 1.5.
 - No model names in anything pushed to the repo.
+
+## 24/09/26 — fiscal-year extension: root cause of "does nothing"
+
+Two earlier versions of `ext/controller/FiscalYear.controller.js` ran without
+effect. Verified against the `sap.ovp` 1.136.10 and `sap.ui.comp` 1.136 library
+sources (downloaded from npm, `@sapui5/sap.ovp`, `@sapui5/sap.ui.comp`):
+
+- `sap.ovp.app.Main` is an **async** XML view. At `onInit` the filter bar does
+  not exist yet; `byId("ovpGlobalFilter")` returns nothing and the extension
+  bailed out. OVP's own `Main.controller` waits for `getView().loaded()`.
+- Filter bar id `ovpGlobalFilter` and parameter key prefix `$Parameter.`
+  (`library.ANALYTICAL_PARAMETER_PREFIX`) are confirmed.
+- A mandatory field can only be removed from the bar with
+  `setVisibleInFilterBar(false)` **after** it has a value
+  (`FilterBar._checkChangePossibleVisibleInFilterBar` reverts it otherwise).
+- `setVisible(false)` must not be used: `getAllFilterItems(true)` skips
+  invisible items, `getFilterData()` then omits the parameter, OVP's mandatory
+  check fails and no card loads.
+
+Third version does: wait for `loaded()`, wait for `initialized`, derive FY from
+Date To (today when Date To is empty), `setFilterData`, then hide from bar; the
+same routine re-runs on `filterChange` and `afterVariantLoad`. `DEBUG = true`
+shows on-screen toasts; set to `false` before deploying.
+
+`npm run start` failing with an empty error in BAS is a dev-space fault
+(`fiori run` cannot reach the BAS internal service); `npx ui5 serve --config
+ui5.yaml --open "test/flp.html#app-preview"` is the same server. Restarting the
+dev space from the lobby clears it.

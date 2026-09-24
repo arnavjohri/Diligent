@@ -10,24 +10,29 @@ sap.ui.define([
     // is April or later, otherwise the year before (rule agreed 24/09/26).
     // The global filter entity ZDPR_Q_DASH_FILTER keeps the P_FiscalYear
     // parameter because cards 2, 3 and 4 receive it by NAME from the filter
-    // bar; this extension hides the field and fills it whenever the dates
-    // change, so the mandatory parameter is always set before Go.
-    // Nothing here depends on the exact field key: the filter bar is located
-    // by control type and the two parameters by the tail of their names, so
-    // "$Parameter.P_DateTo" and "P_DateTo" are both accepted.
+    // bar; this extension fills it whenever the dates change and takes the
+    // field out of the filter bar, so the mandatory parameter is always set
+    // before Go without the user seeing it.
+    //
+    // Facts taken from the sap.ovp 1.136.10 and sap.ui.comp 1.136 sources
+    // (not assumptions):
+    // 1. sap.ovp.app.Main is an async XML view; the filter bar does not exist
+    //    at onInit. OVP itself waits for getView().loaded(). So do we.
+    // 2. Filter bar id is "ovpGlobalFilter"; parameter keys in getFilterData
+    //    and setFilterData are "$Parameter.<name>".
+    // 3. A mandatory field can be removed from the bar with
+    //    setVisibleInFilterBar(false) ONLY once it has a value; without a
+    //    value the FilterBar reverts the change. Hence: fill first, hide after.
+    // 4. Never call setVisible(false) on the item: an invisible item drops
+    //    out of getFilterData, OVP's mandatory check then fails and no card
+    //    loads. VisibleInFilterBar=false with a value keeps it in the data.
 
-    // Set to false before deployment. While true, a short message is shown
-    // at the bottom of the page when the dashboard starts, listing what the
-    // extension found. Harmless for users but not meant for them.
+    // Set to false before deployment. While true, short messages appear at
+    // the bottom of the page reporting what the extension does.
     var DEBUG = true;
 
-    var TAIL_TO = "P_DateTo";
-    var TAIL_FY = "P_FiscalYear";
-
-    function endsWith(sName, sTail) {
-        sName = String(sName || "");
-        return sName === sTail || sName.slice(-(sTail.length + 1)) === "." + sTail;
-    }
+    var KEY_TO = "$Parameter.P_DateTo";
+    var KEY_FY = "$Parameter.P_FiscalYear";
 
     function toDate(vValue) {
         if (!vValue) {
@@ -35,6 +40,10 @@ sap.ui.define([
         }
         if (vValue instanceof Date) {
             return isNaN(vValue.getTime()) ? null : vValue;
+        }
+        // DateRangeType shape: { ranges: [ { value1: Date } ] }
+        if (typeof vValue === "object" && vValue.ranges && vValue.ranges[0]) {
+            return toDate(vValue.ranges[0].value1);
         }
         var s = String(vValue);
         // yyyymmdd (Edm.String dates of the analytical services)
@@ -50,19 +59,15 @@ sap.ui.define([
         return isNaN(d.getTime()) ? null : d;
     }
 
-    function fiscalYearOf(vDateTo) {
-        var d = toDate(vDateTo);
-        if (!d) {
-            return null;
-        }
-        var iYear = d.getFullYear();
-        var iMonth = d.getMonth() + 1;          // 1..12
+    function fiscalYearOf(oDate) {
+        var iYear = oDate.getFullYear();
+        var iMonth = oDate.getMonth() + 1;      // 1..12
         return String(iMonth >= 4 ? iYear : iYear - 1);
     }
 
     function say(sText) {
         if (DEBUG) {
-            MessageToast.show("FY ext: " + sText, { duration: 8000, width: "40em" });
+            MessageToast.show("FY ext: " + sText, { duration: 6000, width: "40em" });
         }
     }
 
@@ -70,108 +75,58 @@ sap.ui.define([
 
         onInit: function () {
             var oView = this.getView();
-            var oFilterBar = oView && oView.byId("ovpGlobalFilter");
-            if (!oFilterBar && oView) {
-                // id assumption failed: find the global SmartFilterBar by type
-                oFilterBar = oView.findAggregatedObjects(true, function (oCtrl) {
-                    return oCtrl.isA && oCtrl.isA("sap.ui.comp.smartfilterbar.SmartFilterBar");
-                })[0];
-            }
-            if (!oFilterBar) {
-                say("started, but no filter bar found in the view");
+            if (!oView || !oView.loaded) {
                 return;
             }
-            say("started, filter bar " + oFilterBar.getId());
-            var fnInit = function () {
-                this._hideFiscalYear(oFilterBar);
-                this._deriveFiscalYear(oFilterBar);
-                say("fields: " + this._itemNames(oFilterBar).join(", "));
-            }.bind(this);
-            if (oFilterBar.isInitialised && oFilterBar.isInitialised()) {
-                fnInit();
-            } else {
-                oFilterBar.attachInitialise(fnInit);
-            }
-            oFilterBar.attachFilterChange(function () {
-                this._deriveFiscalYear(oFilterBar);
-                this._hideFiscalYear(oFilterBar);   // idempotent; survives late init
-            }, this);
-        },
-
-        _items: function (oFilterBar) {
-            var aItems = [];
-            if (oFilterBar.getAllFilterItems) {
-                aItems = aItems.concat(oFilterBar.getAllFilterItems(false) || []);
-            }
-            if (oFilterBar.getFilterGroupItems) {
-                aItems = aItems.concat(oFilterBar.getFilterGroupItems() || []);
-            }
-            return aItems;
-        },
-
-        _itemNames: function (oFilterBar) {
-            var aNames = [];
-            this._items(oFilterBar).forEach(function (oItem) {
-                var sName = oItem.getName ? String(oItem.getName()) : "?";
-                if (aNames.indexOf(sName) < 0) {
-                    aNames.push(sName);
+            oView.loaded().then(function () {
+                var oFilterBar = oView.byId("ovpGlobalFilter");
+                if (!oFilterBar) {
+                    say("no filter bar in the view");
+                    return;
                 }
-            });
-            return aNames;
+                say("loaded");
+                var fnApply = function () {
+                    this._apply(oFilterBar);
+                }.bind(this);
+                if (oFilterBar.isInitialised && oFilterBar.isInitialised()) {
+                    fnApply();
+                } else if (oFilterBar.attachInitialized) {
+                    oFilterBar.attachInitialized(fnApply);
+                } else {
+                    oFilterBar.attachInitialise(fnApply);
+                }
+                // user typed a date, a variant was applied, or setFilterData ran
+                oFilterBar.attachFilterChange(fnApply);
+                if (oFilterBar.attachAfterVariantLoad) {
+                    oFilterBar.attachAfterVariantLoad(fnApply);
+                }
+            }.bind(this));
         },
 
-        _hideFiscalYear: function (oFilterBar) {
-            // Mandatory fields stay in the bar whatever "visible in filter bar"
-            // says, so the item is hidden fully, and its control as a fallback.
-            this._items(oFilterBar).forEach(function (oItem) {
-                if (oItem.getName && endsWith(oItem.getName(), TAIL_FY)) {
-                    if (oItem.setVisibleInFilterBar) {
-                        oItem.setVisibleInFilterBar(false);
-                    }
-                    if (oItem.setVisible) {
-                        oItem.setVisible(false);
-                    }
-                }
-            });
-            var oData = oFilterBar.getFilterData ? (oFilterBar.getFilterData() || {}) : {};
-            Object.keys(oData).forEach(function (sKey) {
-                if (endsWith(sKey, TAIL_FY) && oFilterBar.determineControlByName) {
-                    var oCtrl = oFilterBar.determineControlByName(sKey);
-                    var oParent = oCtrl && oCtrl.getParent && oCtrl.getParent();
-                    if (oParent && oParent.setVisible) {
-                        oParent.setVisible(false);
-                    }
-                }
-            });
-        },
-
-        _deriveFiscalYear: function (oFilterBar) {
+        _apply: function (oFilterBar) {
             var oData = oFilterBar.getFilterData() || {};
-            var sKeyTo = null;
-            var sKeyFy = null;
-            Object.keys(oData).forEach(function (sKey) {
-                if (endsWith(sKey, TAIL_TO)) {
-                    sKeyTo = sKey;
-                }
-                if (endsWith(sKey, TAIL_FY)) {
-                    sKeyFy = sKey;
+            var oDateTo = toDate(oData[KEY_TO]);
+            // no Date To yet: seed from today so the field can be hidden at
+            // once; it is corrected as soon as Date To is entered
+            var sFy = fiscalYearOf(oDateTo || new Date());
+            if (oData[KEY_FY] !== sFy) {
+                var oPatch = {};
+                oPatch[KEY_FY] = sFy;
+                oFilterBar.setFilterData(oPatch);        // merge; fires filterChange
+                say((oDateTo ? "Date To -> " : "no Date To yet, today -> ") + "fiscal year " + sFy);
+                return;                                  // the filterChange re-entry hides it
+            }
+            this._hide(oFilterBar);
+        },
+
+        _hide: function (oFilterBar) {
+            var aItems = oFilterBar.getAllFilterItems ? oFilterBar.getAllFilterItems(false) : [];
+            aItems.forEach(function (oItem) {
+                if (oItem.getName && oItem.getName() === KEY_FY && oItem.getVisibleInFilterBar()) {
+                    oItem.setVisibleInFilterBar(false);  // allowed: the field has a value
+                    say("fiscal year field hidden");
                 }
             });
-            if (!sKeyTo) {
-                return;                          // no Date To in the data yet
-            }
-            var sFy = fiscalYearOf(oData[sKeyTo]);
-            if (!sFy) {
-                return;
-            }
-            sKeyFy = sKeyFy || sKeyTo.replace(TAIL_TO, TAIL_FY);
-            if (oData[sKeyFy] === sFy) {
-                return;                          // already set, avoids re-entry
-            }
-            var oPatch = {};
-            oPatch[sKeyFy] = sFy;
-            oFilterBar.setFilterData(oPatch);    // merge, keeps the other fields
-            say("Date To " + oData[sKeyTo] + " -> fiscal year " + sFy);
         }
     });
     // EOC By Arnav on 24/09/26
