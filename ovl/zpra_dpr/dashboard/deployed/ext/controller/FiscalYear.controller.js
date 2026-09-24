@@ -40,7 +40,7 @@ sap.ui.define([
     // Set to false before deployment. While true, messages report what the
     // extension does: a pop-up when the filter bar is ready and one when the
     // field has been hidden, grey toasts for the rest.
-    var DEBUG = true;
+    var DEBUG = false;
 
     var KEY_TO = "$Parameter.P_DateTo";
     var KEY_FY = "$Parameter.P_FiscalYear";

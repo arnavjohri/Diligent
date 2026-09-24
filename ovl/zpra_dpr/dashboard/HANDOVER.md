@@ -236,3 +236,12 @@ object; inside its functions `this` is the OVP Main controller. Members are
 prefixed `_zfy` to avoid colliding with OVP's own methods (checked against
 `Main.controller.js`: no `_zfy` there). The async-view and mandatory-field
 facts recorded above still apply and are kept in v5.
+
+## 24/09/26 — fiscal-year extension VERIFIED in preview
+
+v5 (plain object) confirmed by Arnav in the BAS preview: pop-up appeared,
+Fiscal Year field hidden, cards load. `DEBUG` set to `false` in the repo copy;
+BAS copy to be set the same before `npm run deploy`. Remaining checks: FY value
+per Date To (Mar → previous year, Apr → same year) and Product filter reaching
+cards 4–6. Then redeploy `ZDPRPRODDASH` with a NEW workbench TR (OCQK901673 is
+in QAS already) and register `ZDPR_Q_DASH_FILTER_CDS` in QAS.
