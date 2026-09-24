@@ -161,3 +161,8 @@ and the Overview Page card that passes a fiscal year stopped rendering. Both
 repo copies corrected (87 lines). Rule reinforced: never rebuild an object
 from a document when ADT can supply the running source; and when a document is
 the only source, read it to the next object heading, not to the first `}`.
+
+24/09/26 late: cube route done — `ZDPR_C_TARGET_CUBE` without unit binding on
+ActualQty/TargetQty/VarianceQty (activated), DDLX `ZDPR_Q_TARGET_QUERY` shows
+ActualUom / TargetUom as table columns (positions 75, 85). Chart stays on
+ActualQty/TargetQty, one column pair per product in its native unit.

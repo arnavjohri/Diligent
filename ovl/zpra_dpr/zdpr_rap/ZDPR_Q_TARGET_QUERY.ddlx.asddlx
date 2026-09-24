@@ -82,8 +82,20 @@ annotate view ZDPR_Q_TARGET_QUERY with
   @UI.lineItem: [{ position: 70, importance: #HIGH, label: 'Actual Qty' }]
   ActualQty;
 
+  // BOC By Arnav on 24/09/26
+  // Unit columns shown explicitly: the unit binding on the quantities was
+  // removed in ZDPR_C_TARGET_CUBE so the ALP chart can draw native units.
+  @UI.lineItem: [{ position: 75, importance: #HIGH, label: 'Unit' }]
+  ActualUom;
+  // EOC By Arnav on 24/09/26
+
   @UI.lineItem: [{ position: 80, importance: #HIGH, label: 'Target Qty' }]
   TargetQty;
+
+  // BOC By Arnav on 24/09/26
+  @UI.lineItem: [{ position: 85, importance: #HIGH, label: 'Target Unit' }]
+  TargetUom;
+  // EOC By Arnav on 24/09/26
 
   @UI.lineItem: [{ position: 90, importance: #HIGH, label: 'Variance' }]
   VarianceQty;
