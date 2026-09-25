@@ -245,3 +245,13 @@ BAS copy to be set the same before `npm run deploy`. Remaining checks: FY value
 per Date To (Mar → previous year, Apr → same year) and Product filter reaching
 cards 4–6. Then redeploy `ZDPRPRODDASH` with a NEW workbench TR (OCQK901673 is
 in QAS already) and register `ZDPR_Q_DASH_FILTER_CDS` in QAS.
+
+## 25/09/26 — verification results (BAS preview)
+
+- Fiscal year derivation: Date To 15 Mar 2026 → FY 2025; 15 Apr 2026 → FY 2026.
+  Field hidden. Confirmed by Arnav.
+- Filter-bar labels From Date / To Date after `ZDPR_Q_DASH_FILTER` labels were
+  moved onto the parameters (commit 8780cc8) and gateway caches cleared.
+- Product filter reaching cards 4–6: not yet reported.
+- `DEBUG = false` in BAS as well. Next: new workbench TR → `npm run deploy` of
+  `ZDPRPRODDASH`, app index, caches, S_SERVICE for `ZDPR_Q_DASH_FILTER_CDS`.
