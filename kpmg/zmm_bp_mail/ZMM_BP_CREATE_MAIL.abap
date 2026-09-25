@@ -716,7 +716,9 @@ FORM display_log.
 
   DATA: lo_salv    TYPE REF TO cl_salv_table,
         lo_columns TYPE REF TO cl_salv_columns_table,
-        lo_column  TYPE REF TO cl_salv_column,
+*BOC By Arnav on 25/09/26
+*        lo_column  TYPE REF TO cl_salv_column,
+*EOC By Arnav on 25/09/26
         lo_cx      TYPE REF TO cx_salv_msg,
         lv_title   TYPE lvc_title.
 
@@ -737,34 +739,46 @@ FORM display_log.
 
       lo_columns = lo_salv->get_columns( ).
 
-      lo_column = lo_columns->get_column( 'PARTNER' ).
-      lo_column->set_medium_text( TEXT-c01 ).
-      lo_column->set_long_text( TEXT-c01 ).
-
-      lo_column = lo_columns->get_column( 'NAME1' ).
-      lo_column->set_medium_text( TEXT-c02 ).
-      lo_column->set_long_text( TEXT-c02 ).
-
-      lo_column = lo_columns->get_column( 'CITY1' ).
-      lo_column->set_medium_text( TEXT-c03 ).
-      lo_column->set_long_text( TEXT-c03 ).
-
-      lo_column = lo_columns->get_column( 'MGR_MAIL' ).
-      lo_column->set_medium_text( TEXT-c04 ).
-      lo_column->set_long_text( TEXT-c04 ).
-
-      lo_column = lo_columns->get_column( 'CONT_MAIL' ).
-      lo_column->set_medium_text( TEXT-c05 ).
-      lo_column->set_long_text( TEXT-c05 ).
-
-      lo_column = lo_columns->get_column( 'STATUS' ).
-      lo_column->set_short_text( TEXT-c06 ).
-      lo_column->set_medium_text( TEXT-c06 ).
-      lo_column->set_long_text( TEXT-c06 ).
-
-      lo_column = lo_columns->get_column( 'MSG' ).
-      lo_column->set_medium_text( TEXT-c07 ).
-      lo_column->set_long_text( TEXT-c07 ).
+*BOC By Arnav on 25/09/26
+* Dump CALL_METHOD_CONFLICT_TYPE on first run: SET_*_TEXT take the
+* typed SCRTEXT_S/M/L, a text symbol is not compatible. Texts now go
+* through SET_COLUMN_TEXT, which moves them into typed variables first.
+*      lo_column = lo_columns->get_column( 'PARTNER' ).
+*      lo_column->set_medium_text( TEXT-c01 ).
+*      lo_column->set_long_text( TEXT-c01 ).
+*
+*      lo_column = lo_columns->get_column( 'NAME1' ).
+*      lo_column->set_medium_text( TEXT-c02 ).
+*      lo_column->set_long_text( TEXT-c02 ).
+*
+*      lo_column = lo_columns->get_column( 'CITY1' ).
+*      lo_column->set_medium_text( TEXT-c03 ).
+*      lo_column->set_long_text( TEXT-c03 ).
+*
+*      lo_column = lo_columns->get_column( 'MGR_MAIL' ).
+*      lo_column->set_medium_text( TEXT-c04 ).
+*      lo_column->set_long_text( TEXT-c04 ).
+*
+*      lo_column = lo_columns->get_column( 'CONT_MAIL' ).
+*      lo_column->set_medium_text( TEXT-c05 ).
+*      lo_column->set_long_text( TEXT-c05 ).
+*
+*      lo_column = lo_columns->get_column( 'STATUS' ).
+*      lo_column->set_short_text( TEXT-c06 ).
+*      lo_column->set_medium_text( TEXT-c06 ).
+*      lo_column->set_long_text( TEXT-c06 ).
+*
+*      lo_column = lo_columns->get_column( 'MSG' ).
+*      lo_column->set_medium_text( TEXT-c07 ).
+*      lo_column->set_long_text( TEXT-c07 ).
+      PERFORM set_column_text USING lo_columns 'PARTNER'   TEXT-c01.
+      PERFORM set_column_text USING lo_columns 'NAME1'     TEXT-c02.
+      PERFORM set_column_text USING lo_columns 'CITY1'     TEXT-c03.
+      PERFORM set_column_text USING lo_columns 'MGR_MAIL'  TEXT-c04.
+      PERFORM set_column_text USING lo_columns 'CONT_MAIL' TEXT-c05.
+      PERFORM set_column_text USING lo_columns 'STATUS'    TEXT-c06.
+      PERFORM set_column_text USING lo_columns 'MSG'       TEXT-c07.
+*EOC By Arnav on 25/09/26
 
       lo_salv->display( ).
 
@@ -775,3 +789,32 @@ FORM display_log.
   ENDTRY.
 
 ENDFORM.
+
+*BOC By Arnav on 25/09/26
+*&---------------------------------------------------------------------*
+*& Form SET_COLUMN_TEXT
+*&---------------------------------------------------------------------*
+*& Short, medium and long heading of one ALV column from one text, via
+*& the typed SCRTEXT_* variables the SALV setters require.
+*&---------------------------------------------------------------------*
+FORM set_column_text USING io_columns TYPE REF TO cl_salv_columns_table
+                           iv_name    TYPE lvc_fname
+                           iv_text    TYPE clike
+                     RAISING cx_salv_not_found.
+
+  DATA: lo_column TYPE REF TO cl_salv_column,
+        lv_short  TYPE scrtext_s,
+        lv_medium TYPE scrtext_m,
+        lv_long   TYPE scrtext_l.
+
+  lv_short  = iv_text.
+  lv_medium = iv_text.
+  lv_long   = iv_text.
+
+  lo_column = io_columns->get_column( iv_name ).
+  lo_column->set_short_text( lv_short ).
+  lo_column->set_medium_text( lv_medium ).
+  lo_column->set_long_text( lv_long ).
+
+ENDFORM.
+*EOC By Arnav on 25/09/26
