@@ -255,3 +255,13 @@ in QAS already) and register `ZDPR_Q_DASH_FILTER_CDS` in QAS.
 - Product filter reaching cards 4–6: not yet reported.
 - `DEBUG = false` in BAS as well. Next: new workbench TR → `npm run deploy` of
   `ZDPRPRODDASH`, app index, caches, S_SERVICE for `ZDPR_Q_DASH_FILTER_CDS`.
+
+## 25/09/26 — decision: trend app keeps ONE default chart (actual vs target)
+
+Cards 1 and 5 both open `zdprtrend`. Verified in the ALP library source
+(`listTemplates/controller/IappStateHandler.js`, 1.136): an inbound
+presentation variant from a card applies only its SortOrder; visualizations
+are ignored, so the app cannot switch its chart per card. Arnav chose option 1:
+default chart = actual vs target by date (`ZDPR_Q_BOEPD_TREND` DDLX, commit
+14efaa5); card 5 users switch to Business Unit via View By. A second app
+(`zdprtrendbu`, qualifier-based PV, own intent) was offered and declined.
