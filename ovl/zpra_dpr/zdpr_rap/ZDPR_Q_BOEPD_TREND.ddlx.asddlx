@@ -29,15 +29,29 @@
 //  ]
 //}]
 
+// 25/09/26: reverted to actual vs target on Arnav's request - the app is
+// reached from card 1 "Actual Production vs BE Target" and users expect the
+// same two lines here. Business unit is available at runtime via View By.
+//@UI.chart: [{
+//  qualifier:           'BoepdVsTarget',
+//  title:               'Daily Production by Business Unit (BOEPD)',
+//  chartType:           #LINE,
+//  dimensions:          ['ProductionDateText', 'BusinessUnit'],
+//  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY },
+//                        { dimension: 'BusinessUnit',       role: #SERIES }],
+//  measures:            ['ActualBoepdOvl'],
+//  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 }]
+//}]
+
 @UI.chart: [{
   qualifier:           'BoepdVsTarget',
-  title:               'Daily Production by Business Unit (BOEPD)',
+  title:               'Actual Production vs BE Target (BOEPD)',
   chartType:           #LINE,
-  dimensions:          ['ProductionDateText', 'BusinessUnit'],
-  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY },
-                        { dimension: 'BusinessUnit',       role: #SERIES }],
-  measures:            ['ActualBoepdOvl'],
-  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 }]
+  dimensions:          ['ProductionDateText'],
+  dimensionAttributes: [{ dimension: 'ProductionDateText', role: #CATEGORY }],
+  measures:            ['ActualBoepdOvl', 'TargetBoepd'],
+  measureAttributes:   [{ measure: 'ActualBoepdOvl', role: #AXIS_1 },
+                        { measure: 'TargetBoepd',    role: #AXIS_1 }]
 }]
 
 @UI.presentationVariant: [{
@@ -47,7 +61,7 @@
     { type: #AS_LINEITEM }
   ]
 }]
-// EOC By Arnav on 24/09/26
+// EOC By Arnav on 25/09/26
 
 annotate view ZDPR_Q_BOEPD_TREND with
 {
