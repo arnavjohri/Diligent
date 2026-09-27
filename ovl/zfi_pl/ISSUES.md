@@ -1,0 +1,5 @@
+# ZFI_PL — issue log
+
+| # | Date | Issue | Cause | Fix | TR | Status |
+|---|------|-------|-------|-----|----|--------|
+| 1 | 27/09/26 | Gitesh Lad (OVL F&A) via Gaurav Sharma (SAP): "5* series GL is coming" in ZFI_PL on RISE Production; did not occur in ECC. 5* GLs are not part of OVL trial balance and must not be mapped. Same thread: "No data reflected" in Production. | Code review of SAPFZFIPL / MZFIPLF01 (print of 27.09.26): the program selects JVSO1 **only** for accounts present in `ZFI_PNL_GL` (`FOR ALL ENTRIES ... racct = it_gls-gl_acct`) and never lists G/L numbers. A 5* account can affect the output only if it has a row in `ZFI_PNL_GL`. No S/4-specific code path introduces unmapped accounts. Root cause is therefore table content (5* rows in ZFI_PNL_GL on OCP) or the underlying JV postings now landing on 5* secondary-cost-element accounts in S/4 — not the ABAP. | None in code. Asked for: SE16 `ZFI_PNL_GL` with `GL_ACCT` = `5*` on OCP; the actual screenshot; `SKA1-GLACCOUNT_TYPE` of one 5* account. | — | Open — awaiting data check |
