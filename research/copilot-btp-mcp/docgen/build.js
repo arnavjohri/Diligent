@@ -148,6 +148,13 @@ function calloutTable(lines, kind, title) {
 // ---------- cover ----------
 function cover(d) {
   const out = []
+  if (d.compactCover) {   // title block at the top of page 1, no separate cover page
+    out.push(new Paragraph({ children: [new TextRun({ text: d.title, font: FONT, size: 36, bold: true, color: NAVY })], spacing: { after: 80 } }))
+    if (d.subtitle) out.push(new Paragraph({ children: [new TextRun({ text: d.subtitle, font: FONT, size: 21, color: GREY })], spacing: { after: 120 } }))
+    const line = Object.entries(d.meta || {}).map(([k, v]) => `${k}: ${v}`).join('   ·   ')
+    out.push(new Paragraph({ children: [new TextRun({ text: line, font: FONT, size: 17, color: GREY })], spacing: { after: 200 }, border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: TEAL } } }))
+    return out
+  }
   out.push(new Paragraph({ spacing: { before: 2400 } }))
   out.push(new Paragraph({ children: [new TextRun({ text: d.org || '', font: FONT, size: 24, color: TEAL, bold: true })], spacing: { after: 240 } }))
   out.push(new Paragraph({ children: [new TextRun({ text: d.title, font: FONT, size: 52, bold: true, color: NAVY })], spacing: { after: 200 } }))
