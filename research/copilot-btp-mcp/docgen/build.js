@@ -9,9 +9,34 @@ const {
   Header, Footer, PageNumber, TabStopType, VerticalAlign,
 } = require('docx')
 
-const [, , contentPath, outPath] = process.argv
-if (!contentPath || !outPath) { console.error('usage: node build.js content.js out.docx'); process.exit(2) }
+const [, , contentPath, outPath, mdPath] = process.argv
+if (!contentPath || !outPath) { console.error('usage: node build.js content.js out.docx [out.md]'); process.exit(2) }
 const doc = require(path.resolve(contentPath))
+
+// ---------- optional Markdown export (same content, for git-readable review) ----------
+function toMarkdown(d) {
+  const out = [`# ${d.title}`, '', d.subtitle ? `_${d.subtitle}_` : '', '']
+  Object.entries(d.meta || {}).forEach(([k, v]) => out.push(`- **${k}:** ${v}`))
+  out.push('')
+  const md = s => String(s).replace(/~([^~]+)~/g, '_$1_')
+  const cell = c => (Array.isArray(c) ? c.map(md).join('<br>') : md(c)).replace(/\|/g, '\\|')
+  for (const b of d.body) {
+    if (typeof b === 'string') { out.push(md(b), ''); continue }
+    switch (b.t) {
+      case 'h1': out.push(`## ${md(b.x)}`, ''); break
+      case 'h2': out.push(`### ${md(b.x)}`, ''); break
+      case 'h3': out.push(`#### ${md(b.x)}`, ''); break
+      case 'p': case 'small': out.push(md(b.x), ''); break
+      case 'bullets': b.x.forEach(li => out.push(`${'  '.repeat(b.level || 0)}- ${md(li)}`)); out.push(''); break
+      case 'numbered': case 'steps': b.x.forEach((li, i) => out.push(`${i + 1}. ${md(li)}`)); out.push(''); break
+      case 'callout': { const items = Array.isArray(b.x) ? b.x : [b.x]; if (b.title) out.push(`> **${b.title}**`, '>'); items.forEach(l => out.push(`> ${md(l)}`)); out.push(''); break }
+      case 'table': out.push(`| ${b.cols.map(cell).join(' | ')} |`, `| ${b.cols.map(() => '---').join(' | ')} |`); b.rows.forEach(r => out.push(`| ${r.map(cell).join(' | ')} |`)); out.push(''); break
+      case 'toc': case 'pagebreak': case 'spacer': break
+    }
+  }
+  return out.join('\n')
+}
+if (mdPath) fs.writeFileSync(mdPath, toMarkdown(doc))
 
 // ---------- palette / metrics ----------
 const FONT = 'Calibri'
@@ -27,17 +52,18 @@ const PAGE_W = 11906, PAGE_H = 16838          // A4 in DXA
 const MARGIN = 1134                           // 2 cm
 const CONTENT_W = PAGE_W - 2 * MARGIN         // 9638
 
-// ---------- inline markup: **bold**, `code`, [text](url), _italic_ ----------
+// ---------- inline markup: **bold**, `code`, [text](url), ~italic~ ----------
+// (tilde, not underscore, for italics: SAP names like API_PURCHASEORDER_PROCESS_SRV are full of underscores)
 function inline(text, base = {}) {
   const runs = []
-  const re = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|_[^_]+_)/g
+  const re = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|~[^~]+~)/g
   let last = 0, m
   while ((m = re.exec(text)) !== null) {
     if (m.index > last) runs.push(new TextRun({ text: text.slice(last, m.index), font: FONT, ...base }))
     const tok = m[0]
     if (tok.startsWith('**')) runs.push(new TextRun({ text: tok.slice(2, -2), bold: true, font: FONT, ...base }))
     else if (tok.startsWith('`')) runs.push(new TextRun({ text: tok.slice(1, -1), font: 'Consolas', size: (base.size || 20) - 1, color: '7F0000', ...base, }))
-    else if (tok.startsWith('_')) runs.push(new TextRun({ text: tok.slice(1, -1), italics: true, font: FONT, ...base }))
+    else if (tok.startsWith('~')) runs.push(new TextRun({ text: tok.slice(1, -1), italics: true, font: FONT, ...base }))
     else {
       const mm = /\[([^\]]+)\]\(([^)]+)\)/.exec(tok)
       runs.push(new ExternalHyperlink({

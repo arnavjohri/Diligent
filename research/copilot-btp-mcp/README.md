@@ -1,5 +1,20 @@
 # Copilot / Claude ↔ SAP via BTP — research, 27/09/26
 
+**Deliverable for management approval:** `Teams_SAP_Automation_Proposal_v1.0.docx` (same content in
+`Teams_SAP_Automation_Proposal_v1.0.md`). Source is `docgen/content.js`; rebuild with
+
+    NODE_PATH=<dir with node_modules containing docx> node docgen/build.js docgen/content.js \
+        Teams_SAP_Automation_Proposal_v1.0.docx Teams_SAP_Automation_Proposal_v1.0.md
+
+(`npm install docx` once, anywhere, and point `NODE_PATH` at its `node_modules`). Section 12 of the
+proposal lists the vendor pages that must be opened by hand before it goes outside Diligent — SAP Help,
+SAP Community, learn.microsoft.com and sap.com were blocked from the research container and were read
+through their GitHub source mirrors or search summaries.
+
+The notes below are the first-pass research that preceded the proposal; the proposal supersedes them
+where they differ (in particular: the RFC source of the MCP Server for ECC, the SAP API Policy
+v4.2026a position, and Digital Access licensing).
+
 Goal: let a business user in Teams (Copilot) or in Claude drive tasks in an SAP backend,
 with SAP BTP Integration Suite as the API/agent layer. Two routes were asked about:
 
