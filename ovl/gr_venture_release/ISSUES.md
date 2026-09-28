@@ -7,5 +7,8 @@
   exposed by `I_CnsldtnIntegRptdFinData`; key-user TAI usage not offered.
 - **Fix:** extend view `ZX_CNSLDTNINTEGRPTDFINVNAME` exposing
   `_Extension.ZZ1_VNAME_COB as ZZ_VNAME_COB`; then functional mapping + re-release.
+- **Addendum 28/09/26:** standard ACDOCA-VNAME wanted too. `ZX_JOURNALENTRYITEMVNAME`
+  (extends `E_JournalEntryItem`, `Persistence.vname as ZZ_VNAME`) — activated.
+  `ZX_CNSLDTNINTEGRPTDFINVNAME` now also carries `_Extension.ZZ_VNAME`.
 - **TR:** —
-- **Status:** drafted, awaiting activation.
+- **Status:** E_JournalEntryItem extension activated; GR view extension awaiting activation.

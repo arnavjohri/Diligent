@@ -2,7 +2,8 @@
 // Object    : ZX_CNSLDTNINTEGRPTDFINVNAME (DDL source, extend view)
 // Extends   : I_CnsldtnIntegRptdFinData (GR Realtime Reported Data TAI)
 // Purpose   : Expose coding-block custom field ZZ1_VNAME_COB (Venture)
-//             to the Group Reporting data release task, so it can be
+//             and standard ACDOCA-VNAME (via ZX_JOURNALENTRYITEMVNAME)
+//             to the Group Reporting data release task, so they can be
 //             mapped to the ACDOCU custom field in "Data Release Task:
 //             Define Mapping for Jrnl Entry to Group Jrnl Entry Fields"
 // Reference : SAP deck slide 105 (customer view extension, OP only);
@@ -22,6 +23,9 @@
 @EndUserText.label: 'GR data release: Venture (ZZ1_VNAME_COB)'
 extend view I_CnsldtnIntegRptdFinData with ZX_CNSLDTNINTEGRPTDFINVNAME
 {
-  _Extension.ZZ1_VNAME_COB as ZZ_VNAME_COB
+  _Extension.ZZ1_VNAME_COB as ZZ_VNAME_COB,
+// Standard ACDOCA-VNAME, exposed on E_JournalEntryItem by
+// ZX_JOURNALENTRYITEMVNAME (activate that one first)
+  _Extension.ZZ_VNAME      as ZZ_VNAME
 }
 //EOC By Arnav on 28/09/26
