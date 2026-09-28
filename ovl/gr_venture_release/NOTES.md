@@ -20,7 +20,18 @@ ADT route from slide 105 is used: a customer extension of
 |---|---|---|
 | `ZX_CNSLDTNINTEGRPTDFINVNAME` | DDL source (extend view), SQL append `ZXINTFINVNAME` | Paste in ADT |
 
-`E_JournalEntryItem` and its generated append are **not** touched.
+| `ZX_JOURNALENTRYITEMVNAME` | DDL source (extend view on `E_JournalEntryItem`), SQL append `ZXEFIJEIVNAME` | Paste in ADT, activate **first** |
+
+`E_JournalEntryItem` itself and its generated key-user append are **not** touched.
+
+## Standard VNAME as well (asked 28/09/26)
+Standard ACDOCA-VNAME is case 3 (slides 104-105): not in any GR view, so it
+needs both extensions — `ZX_JOURNALENTRYITEMVNAME` exposes
+`Persistence.vname as ZZ_VNAME` on `E_JournalEntryItem`, then
+`ZX_CNSLDTNINTEGRPTDFINVNAME` gets a second element `_Extension.ZZ_VNAME`.
+It also needs its **own** ACDOCU custom field (context "Group Reporting:
+Journal Entry Item", same type/length as ACDOCA-VNAME) and its own mapping
+row — one ACDOCU field cannot take two sources.
 
 ## After activation (functional)
 1. Mapping table "DRT: Mapping for Jrnl Entry to Group Jrnl Entry Ext Fields":
