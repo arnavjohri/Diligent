@@ -265,3 +265,30 @@ are ignored, so the app cannot switch its chart per card. Arnav chose option 1:
 default chart = actual vs target by date (`ZDPR_Q_BOEPD_TREND` DDLX, commit
 14efaa5); card 5 users switch to Business Unit via View By. A second app
 (`zdprtrendbu`, qualifier-based PV, own intent) was offered and declined.
+
+## 28/09/26 — per-system setup checklist (learned on ovlrisedev)
+
+Transports carry only WAPA (BSP), SICF nodes (inactive on arrival), CDS and
+service definitions. Everything below is done again in EVERY target system:
+
+1. SICF: activate `/sap/bc/ui5_ui5/sap/{zdprproddash,zdprrecords,zdprperf,
+   zdprtrend,zdprtarget}`. Inactive node = HTTP 403 on every app file and
+   "Could not open app" in the launchpad. Missing node = 404 "ICF node not found".
+2. `/IWFND/MAINT_SERVICE` → Add Service, alias LOCAL, Load Metadata, for the six
+   services `ZDPR_Q_DASH_FILTER_CDS`, `ZDPR_Q_PROD_PERF_CDS`,
+   `ZDPR_Q_BOEPD_TREND_CDS`, `ZDPR_Q_TARGET_QUERY_CDS`, `ZDPR_Q_DAILY_TREND_CDS`,
+   `ZDPR_Q_PROD_QUERY_CDS`. Missing alias on the filter service = OVP
+   "Page failed to load" (global filter $metadata rejected); missing alias on a
+   card service = that card empty. Registration + alias can also be transported
+   (IWSG/IWSV workbench + alias customizing) if registered with a package.
+3. `/UI5/APP_INDEX_CALCULATE` for the five BSPs.
+4. `/IWFND/CACHE_CLEANUP`, `/IWBEP/CACHE_CLEANUP`, `/UI2/INVALIDATE_GLOBAL_CACHES`.
+5. Catalog `ZC_DPR_REPORTING` + group `ZG_DPR_DASHBOARD` arrive by customizing
+   TR (object type PAGE, `X-SAP-UI2-CATALOGPAGE:...` / `X-SAP-UI2-GROUP:...`);
+   they must be assigned to the request with the truck icon in /UI2/FLPD_CUST —
+   creating them does NOT record them. Role `Z_DPR_DASHBOARD` by PFCG transport
+   ("transport generated profiles"). In target: PFCG Generate, users, comparison,
+   S_SERVICE (IWSG + IWSV) for the six services.
+6. Test as end user, private window.
+
+Systems seen so far: OCQ (dev, deploy target), ovlriseqas (QAS), ovlrisedev.
