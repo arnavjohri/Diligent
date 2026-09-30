@@ -279,6 +279,8 @@ CLASS zcl_pp_fcst DEFINITION
     METHODS relabel_old_codes
       IMPORTING ir_werks TYPE tr_werks
                 ir_matnr TYPE tr_matnr
+                iv_from  TYPE dats
+                iv_to    TYPE dats
       CHANGING  ct_hist  TYPE tt_hist
                 ct_msg   TYPE bapiret2_t.
 
@@ -351,6 +353,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 
@@ -489,6 +493,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 
@@ -686,6 +692,8 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 
@@ -1050,6 +1058,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       DATA: lr_old TYPE tr_matnr,
             lr_wrk TYPE tr_werks,
             lt_old TYPE tt_hist.
+      DATA lt_leg TYPE tt_hist.
 
       CLEAR: lr_old, lr_wrk, lt_old.
 
@@ -1076,6 +1085,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                               iv_from  = iv_from
                               iv_to    = iv_to ).
       ENDIF.
+
+      lt_leg = read_legacy( ir_werks = lr_wrk
+                            ir_matnr = lr_old
+                            iv_from  = iv_from
+                            iv_to    = iv_to ).
+      merge_missing( EXPORTING it_from = lt_leg
+                     CHANGING  ct_hist = lt_old ).
 
       LOOP AT lt_old INTO DATA(ls_old).
 
@@ -1358,6 +1374,9 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     DATA: lv_cand TYPE matnr,
           lt_move TYPE STANDARD TABLE OF ty_hist WITH DEFAULT KEY,
           ls_move TYPE ty_hist.
+    DATA: lr_one   TYPE tr_matnr,
+          lr_plant TYPE tr_werks,
+          lt_leg   TYPE tt_hist.
 
     CHECK ir_matnr IS NOT INITIAL.
 
@@ -1384,6 +1403,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         CHECK sy-subrc = 0.
         lv_cand = <lv_o>.
         CHECK lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+
+        CLEAR: lr_one, lr_plant.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cand ) TO lr_one.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-werks ) TO lr_plant.
+        lt_leg = read_legacy( ir_werks = lr_plant
+                              ir_matnr = lr_one
+                              iv_from  = iv_from
+                              iv_to    = iv_to ).
+        merge_missing( EXPORTING it_from = lt_leg
+                       CHANGING  ct_hist = ct_hist ).
 
         CLEAR lt_move.
         LOOP AT ct_hist INTO ls_move

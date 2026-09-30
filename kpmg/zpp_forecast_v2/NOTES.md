@@ -83,6 +83,10 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
 - **Since 23/09/26 PM the monthly table carries `MSL`** (uploaded with the monthly business
   forecast, column 6). ZFCST monthly shows it before the total and `TOTAL_QTY` includes it, so the
   value columns do too. The final report shows it as `MTH_MSL` and its monthly total includes it.
+- **Since 30/09/26 an old code's months that billing does not have are filled from
+  `ZPPT_SLS_HIST`**, always, checkbox or not - in `ADD_OLD_MATERIAL_QTY` (successor in the
+  selection) and in `RELABEL_OLD_CODES` (old code typed alone). Billing wins where both exist.
+  The Legacy checkbox keeps its meaning for the codes in the selection themselves.
 - **`ZCL_PP_FCST_UTIL` still has both authority checks bypassed** (07/09, for QAS initial
   testing). Restore before release — see ISSUES.md 03/09/26, last entry.
 

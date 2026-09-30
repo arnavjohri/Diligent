@@ -402,9 +402,19 @@ CLASS zcl_pp_fcst DEFINITION
     "! outside the selection - inside it, ADD_OLD_MATERIAL_QTY has already
     "! absorbed every old code the normal way. Old codes never get a row
     "! of their own (D6a).
+*   METHODS relabel_old_codes
+*     IMPORTING ir_werks TYPE tr_werks
+*               ir_matnr TYPE tr_matnr
+*     CHANGING  ct_hist  TYPE tt_hist
+*               ct_msg   TYPE bapiret2_t.
+*   30/09/26 (Arnav): the date window is passed in, so the months an old
+*   code has no billing for can be filled from ZPPT_SLS_HIST before the
+*   move (fallback always on, Arnav's call of 30/09/26).
     METHODS relabel_old_codes
       IMPORTING ir_werks TYPE tr_werks
                 ir_matnr TYPE tr_matnr
+                iv_from  TYPE dats
+                iv_to    TYPE dats
       CHANGING  ct_hist  TYPE tt_hist
                 ct_msg   TYPE bapiret2_t.
 *EOC By Arnav on 23/09/26
@@ -526,8 +536,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   Old codes in the selection whose successor is not: their buckets
 *   move under the successor, so the list shows one row for it carrying
 *   only what was selected.
+*   relabel_old_codes( EXPORTING ir_werks = ir_werks
+*                                ir_matnr = lr_matnr
+*                      CHANGING  ct_hist  = mt_hist
+*                                ct_msg   = et_msg ).
+*   30/09/26 (Arnav): the window goes along for the sales-history fallback.
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 *EOC By Arnav on 23/09/26
@@ -717,8 +734,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   Old codes in the selection whose successor is not: their buckets
 *   move under the successor, so the list shows one row for it carrying
 *   only what was selected.
+*   relabel_old_codes( EXPORTING ir_werks = ir_werks
+*                                ir_matnr = lr_matnr
+*                      CHANGING  ct_hist  = mt_hist
+*                                ct_msg   = et_msg ).
+*   30/09/26 (Arnav): the window goes along for the sales-history fallback.
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 *EOC By Arnav on 23/09/26
@@ -1023,8 +1047,15 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   Old codes in the selection whose successor is not: their buckets
 *   move under the successor, so the list shows one row for it carrying
 *   only what was selected.
+*   relabel_old_codes( EXPORTING ir_werks = ir_werks
+*                                ir_matnr = lr_matnr
+*                      CHANGING  ct_hist  = mt_hist
+*                                ct_msg   = et_msg ).
+*   30/09/26 (Arnav): the window goes along for the sales-history fallback.
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
+                                 iv_from  = lv_from
+                                 iv_to    = lv_to
                        CHANGING  ct_hist  = mt_hist
                                  ct_msg   = et_msg ).
 *EOC By Arnav on 23/09/26
@@ -1516,6 +1547,7 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
       DATA: lr_old TYPE tr_matnr,
             lr_wrk TYPE tr_werks,
             lt_old TYPE tt_hist.
+      DATA lt_leg TYPE tt_hist.   "Changes by Arnav on 30/09/26
 
       CLEAR: lr_old, lr_wrk, lt_old.
 
@@ -1556,6 +1588,21 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
                               iv_from  = iv_from
                               iv_to    = iv_to ).
       ENDIF.
+
+*BOC By Arnav on 30/09/26
+*     Fallback, always on (Arnav's call of 30/09/26): a month the old
+*     codes have no billing for is taken from their uploaded sales
+*     history, ZPPT_SLS_HIST. Billing wins where both exist and legacy
+*     fills the gaps month by month - the rule MERGE_MISSING already
+*     applies to the successor's own history. Not tied to the Legacy
+*     checkbox: an old code is a legacy code, its history lives there.
+      lt_leg = read_legacy( ir_werks = lr_wrk
+                            ir_matnr = lr_old
+                            iv_from  = iv_from
+                            iv_to    = iv_to ).
+      merge_missing( EXPORTING it_from = lt_leg
+                     CHANGING  ct_hist = lt_old ).
+*EOC By Arnav on 30/09/26
 
 *     Absorb the old quantities into the successor month by month
       LOOP AT lt_old INTO DATA(ls_old).
@@ -1988,6 +2035,10 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     DATA: lv_cand TYPE matnr,
           lt_move TYPE STANDARD TABLE OF ty_hist WITH DEFAULT KEY,
           ls_move TYPE ty_hist.
+*   30/09/26 (Arnav): for the sales-history fallback below
+    DATA: lr_one   TYPE tr_matnr,
+          lr_plant TYPE tr_werks,
+          lt_leg   TYPE tt_hist.
 
     CHECK ir_matnr IS NOT INITIAL.
 
@@ -2014,6 +2065,20 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
         CHECK sy-subrc = 0.
         lv_cand = <lv_o>.
         CHECK lv_cand IS NOT INITIAL AND lv_cand IN ir_matnr.
+
+*       30/09/26 (Arnav): fallback, always on - the months the old code
+*       has no billing for are taken from its sales history
+*       (ZPPT_SLS_HIST) before the move. Billing first, legacy for the
+*       gaps, as in ADD_OLD_MATERIAL_QTY.
+        CLEAR: lr_one, lr_plant.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = lv_cand ) TO lr_one.
+        APPEND VALUE #( sign = 'I' option = 'EQ' low = ls_trk-werks ) TO lr_plant.
+        lt_leg = read_legacy( ir_werks = lr_plant
+                              ir_matnr = lr_one
+                              iv_from  = iv_from
+                              iv_to    = iv_to ).
+        merge_missing( EXPORTING it_from = lt_leg
+                       CHANGING  ct_hist = ct_hist ).
 
 *       The old code's months, taken out ...
         CLEAR lt_move.

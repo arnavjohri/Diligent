@@ -742,3 +742,27 @@ Files: `src/zppt_fcst_mn.tabl.xml`, `src/zcl_pp_fcst.clas.abap`, `src/zpp_foreca
 Status: SE11 field and all four objects activated in DEV on 23/09/26, pasted from chat.
 Functional test pending (re-upload the monthly business forecast with column 6 filled first).
 TR: not yet transported.
+
+## 30/09/26 — Old codes: sales history fills the months billing does not have (fallback always on)
+
+Question from Arnav: when the successor is read, are the old codes fetched, and if billing has
+nothing for them, is `ZPPT_SLS_HIST` read for the old codes too? Answer: the first half yes
+(`ADD_OLD_MATERIAL_QTY` since 03/09), the second half no - legacy was read only with the Legacy
+checkbox and only under the code it was uploaded against, so history uploaded under an old code
+never reached the successor (the old A13 point). Rule confirmed by Arnav: **fallback always**, not
+tied to the checkbox.
+
+`ZCL_PP_FCST` only (2270 lines, was 2205; paste copy 1559, was 1530):
+
+- `ADD_OLD_MATERIAL_QTY`: after the billing (or MATDOC) read of a tracking row's old codes,
+  `READ_LEGACY` for the same plant, codes and window, merged into the old codes' months with
+  `MERGE_MISSING` - billing wins, legacy fills the gaps month by month. The filled buckets then
+  flow under the successor exactly as before.
+- `RELABEL_OLD_CODES`: gains `IV_FROM` / `IV_TO`; the same fill runs for an old code typed alone
+  before its months are moved under the successor, so both entry paths behave the same.
+- The three generators pass `lv_from` / `lv_to` to `RELABEL_OLD_CODES`. No other object.
+
+Assumption: built on the repo copy Arnav activated on 23/09/26; no fresh SE80 download this
+session. If the class was edited in SAP since, send the SE80 copy and the fix is re-applied.
+No new message: the fill is silent, as the absorption itself is.
+Files: `src/zcl_pp_fcst.clas.abap`, `zcl_pp_fcst_nocomments.abap`. TR: not yet transported.
