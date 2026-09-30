@@ -12,7 +12,7 @@ document.
 
 `UPDATE_AMOUNT` is called from an enhancement in `POST_DOCUMENT` of the standard class
 `CL_FINS_ACDOC_BKPF_BSEG_EVENTS`. It restores the Excel amounts from `ZINV_POST_GL` onto
-`t_bseg` at posting. Method lives in Z class `ZCL_GL_EXCHANGE_AMOUNT_DET` (called from the POST_DOCUMENT enhancement). `T_BSEG` is read-only in its signature (activation error 30/09/26) - parameter kind to be confirmed.
+`t_bseg` at posting. Method lives in Z class `ZCL_GL_EXCHANGE_AMOUNT_DET` (static), called from implicit enhancement `ZFI_ENHGL_POST_DOCUMENT` at the start of update FM `POST_DOCUMENT` (runs in the update task, for every FI posting). `T_BSEG` was Importing `BSEG_T` - changed to Changing 30/09/26.
 
 ## Files
 
