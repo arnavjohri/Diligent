@@ -206,7 +206,14 @@ METHOD update_amount.
       RETURN.
     ENDIF.
 
-    t_bseg = lt_new.
+* Row by row: T_BSEG cannot be assigned as a whole (activation error 30/09/26)
+    LOOP AT t_bseg ASSIGNING FIELD-SYMBOL(<fs_bseg>).
+      READ TABLE lt_new INTO ls_new INDEX sy-tabix.
+      IF sy-subrc = 0.
+        <fs_bseg>-dmbtr = ls_new-dmbtr.
+        <fs_bseg>-dmbe2 = ls_new-dmbe2.
+      ENDIF.
+    ENDLOOP.
 *EOC By Arnav on 30/09/26
 
   ENDMETHOD.
