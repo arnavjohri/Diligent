@@ -19,7 +19,9 @@ Four files, all under `src/`:
 | `zfi_tds_cl34_scr.prog.abap` | 172 | The five selection fields (S_SECTN filters column H, not BSEG-SECCO), plus the manual-steps checklist as a trailer comment. |
 | `zfi_tds_cl34_forms.prog.abap` | 2451 | Every form routine. |
 
-Companion docs: `docs/TS_ZFI_TDS_CL34.md` (the TS), `docs/DDIC_FACTS.md` (the verified
+Companion docs: `docs/TS_337_ZFI_TDS_CL34_Astral.docx` / `.doc` (the TS in the Astral template,
+29/09/26, written from the source as of 15/09/26 - supersedes the markdown TS where they differ),
+`docs/TS_ZFI_TDS_CL34.md` (the original markdown TS, 26/08/26, partly stale), `docs/DDIC_FACTS.md` (the verified
 field list — it overrides both the FS and BUILD_BRIEF §D4), `docs/QUERIES.md` (Q1–Q15,
 open points for Ankita Parikh and Bhavin Suthar), `BUILD_BRIEF.md` (the pinned build
 contract).

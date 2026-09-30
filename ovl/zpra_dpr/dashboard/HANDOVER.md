@@ -184,3 +184,111 @@ and were not applied: the PROD_PERF result set is `ZDPR_Q_PROD_PERFSet` (not
 - Keep `README.md` in this folder current: status block at the top, step table,
   and the naming table in 1.5.
 - No model names in anything pushed to the repo.
+
+## 24/09/26 — fiscal-year extension: root cause of "does nothing"
+
+Two earlier versions of `ext/controller/FiscalYear.controller.js` ran without
+effect. Verified against the `sap.ovp` 1.136.10 and `sap.ui.comp` 1.136 library
+sources (downloaded from npm, `@sapui5/sap.ovp`, `@sapui5/sap.ui.comp`):
+
+- `sap.ovp.app.Main` is an **async** XML view. At `onInit` the filter bar does
+  not exist yet; `byId("ovpGlobalFilter")` returns nothing and the extension
+  bailed out. OVP's own `Main.controller` waits for `getView().loaded()`.
+- Filter bar id `ovpGlobalFilter` and parameter key prefix `$Parameter.`
+  (`library.ANALYTICAL_PARAMETER_PREFIX`) are confirmed.
+- A mandatory field can only be removed from the bar with
+  `setVisibleInFilterBar(false)` **after** it has a value
+  (`FilterBar._checkChangePossibleVisibleInFilterBar` reverts it otherwise).
+- `setVisible(false)` must not be used: `getAllFilterItems(true)` skips
+  invisible items, `getFilterData()` then omits the parameter, OVP's mandatory
+  check fails and no card loads.
+
+Third version does: wait for `loaded()`, wait for `initialized`, derive FY from
+Date To (today when Date To is empty), `setFilterData`, then hide from bar; the
+same routine re-runs on `filterChange` and `afterVariantLoad`. `DEBUG = true`
+shows on-screen toasts; set to `false` before deploying.
+
+`npm run start` failing with an empty error in BAS is a dev-space fault
+(`fiori run` cannot reach the BAS internal service); `npx ui5 serve --config
+ui5.yaml --open "test/flp.html#app-preview"` is the same server. Restarting the
+dev space from the lobby clears it.
+
+## 24/09/26 — decision: ship with Fiscal Year visible, extension parked
+
+Arnav deployed the dashboard and the four detail apps in the state BEFORE the
+`ZDPR_Q_DASH_FILTER` global filter and the fiscal-year extension. Users get
+Fiscal Year as a normal mandatory filter. The extension (v4, on-screen
+diagnostics, untested in preview) stays in `deployed/ext/controller/` for the
+next round; `deployed/manifest.json` still carries the DASH_FILTER model and the
+extension registration, so it is NOT the manifest that is running. Take the
+running manifest from git history (commit before the DASH_FILTER change) when
+comparing against SAP.
+
+## 24/09/26 — fiscal-year extension: the actual root cause
+
+`sap/ui/core/mvc/Controller.js` (1.136.10, `Controller.applyExtensions`): a
+manifest extension under `sap.ui.controllerExtensions` must be a **plain
+object**. A module returning `Controller.extend(...)` is loaded, flagged
+("Controller extension should be a plain object", fatal-level log only) and
+then mixed in as an empty object — no error on screen, no effect. Versions 1–4
+of `FiscalYear.controller.js` all returned a class. Version 5 returns a plain
+object; inside its functions `this` is the OVP Main controller. Members are
+prefixed `_zfy` to avoid colliding with OVP's own methods (checked against
+`Main.controller.js`: no `_zfy` there). The async-view and mandatory-field
+facts recorded above still apply and are kept in v5.
+
+## 24/09/26 — fiscal-year extension VERIFIED in preview
+
+v5 (plain object) confirmed by Arnav in the BAS preview: pop-up appeared,
+Fiscal Year field hidden, cards load. `DEBUG` set to `false` in the repo copy;
+BAS copy to be set the same before `npm run deploy`. Remaining checks: FY value
+per Date To (Mar → previous year, Apr → same year) and Product filter reaching
+cards 4–6. Then redeploy `ZDPRPRODDASH` with a NEW workbench TR (OCQK901673 is
+in QAS already) and register `ZDPR_Q_DASH_FILTER_CDS` in QAS.
+
+## 25/09/26 — verification results (BAS preview)
+
+- Fiscal year derivation: Date To 15 Mar 2026 → FY 2025; 15 Apr 2026 → FY 2026.
+  Field hidden. Confirmed by Arnav.
+- Filter-bar labels From Date / To Date after `ZDPR_Q_DASH_FILTER` labels were
+  moved onto the parameters (commit 8780cc8) and gateway caches cleared.
+- Product filter reaching cards 4–6: not yet reported.
+- `DEBUG = false` in BAS as well. Next: new workbench TR → `npm run deploy` of
+  `ZDPRPRODDASH`, app index, caches, S_SERVICE for `ZDPR_Q_DASH_FILTER_CDS`.
+
+## 25/09/26 — decision: trend app keeps ONE default chart (actual vs target)
+
+Cards 1 and 5 both open `zdprtrend`. Verified in the ALP library source
+(`listTemplates/controller/IappStateHandler.js`, 1.136): an inbound
+presentation variant from a card applies only its SortOrder; visualizations
+are ignored, so the app cannot switch its chart per card. Arnav chose option 1:
+default chart = actual vs target by date (`ZDPR_Q_BOEPD_TREND` DDLX, commit
+14efaa5); card 5 users switch to Business Unit via View By. A second app
+(`zdprtrendbu`, qualifier-based PV, own intent) was offered and declined.
+
+## 28/09/26 — per-system setup checklist (learned on ovlrisedev)
+
+Transports carry only WAPA (BSP), SICF nodes (inactive on arrival), CDS and
+service definitions. Everything below is done again in EVERY target system:
+
+1. SICF: activate `/sap/bc/ui5_ui5/sap/{zdprproddash,zdprrecords,zdprperf,
+   zdprtrend,zdprtarget}`. Inactive node = HTTP 403 on every app file and
+   "Could not open app" in the launchpad. Missing node = 404 "ICF node not found".
+2. `/IWFND/MAINT_SERVICE` → Add Service, alias LOCAL, Load Metadata, for the six
+   services `ZDPR_Q_DASH_FILTER_CDS`, `ZDPR_Q_PROD_PERF_CDS`,
+   `ZDPR_Q_BOEPD_TREND_CDS`, `ZDPR_Q_TARGET_QUERY_CDS`, `ZDPR_Q_DAILY_TREND_CDS`,
+   `ZDPR_Q_PROD_QUERY_CDS`. Missing alias on the filter service = OVP
+   "Page failed to load" (global filter $metadata rejected); missing alias on a
+   card service = that card empty. Registration + alias can also be transported
+   (IWSG/IWSV workbench + alias customizing) if registered with a package.
+3. `/UI5/APP_INDEX_CALCULATE` for the five BSPs.
+4. `/IWFND/CACHE_CLEANUP`, `/IWBEP/CACHE_CLEANUP`, `/UI2/INVALIDATE_GLOBAL_CACHES`.
+5. Catalog `ZC_DPR_REPORTING` + group `ZG_DPR_DASHBOARD` arrive by customizing
+   TR (object type PAGE, `X-SAP-UI2-CATALOGPAGE:...` / `X-SAP-UI2-GROUP:...`);
+   they must be assigned to the request with the truck icon in /UI2/FLPD_CUST —
+   creating them does NOT record them. Role `Z_DPR_DASHBOARD` by PFCG transport
+   ("transport generated profiles"). In target: PFCG Generate, users, comparison,
+   S_SERVICE (IWSG + IWSV) for the six services.
+6. Test as end user, private window.
+
+Systems seen so far: OCQ (dev, deploy target), ovlriseqas (QAS), ovlrisedev.

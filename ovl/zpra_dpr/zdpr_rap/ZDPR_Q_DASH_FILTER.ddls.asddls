@@ -30,9 +30,21 @@
 
 define view ZDPR_Q_DASH_FILTER
   with parameters
+    // BOC By Arnav on 25/09/26
+    // Filter-bar labels. Both date parameters are typed DATUM, so without
+    // these both fields were captioned "Date" (the data element's label).
+    // The label must sit on the PARAMETER; the hidden column copies below
+    // never appear in the filter bar.
+    //  P_DateFrom   : datum,
+    //  P_DateTo     : datum,
+    //  P_FiscalYear : gjahr
+    @EndUserText.label: 'From Date'
     P_DateFrom   : datum,
+    @EndUserText.label: 'To Date'
     P_DateTo     : datum,
+    @EndUserText.label: 'Fiscal Year'
     P_FiscalYear : gjahr
+    // EOC By Arnav on 25/09/26
 
   as select distinct from zpra_c_prd_prof as Prof
 

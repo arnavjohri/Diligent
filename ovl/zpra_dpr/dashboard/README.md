@@ -167,7 +167,7 @@ One detail app per service, built and linked one at a time:
 
 | Order | Card | Service | Detail app template | Module / BSP | Semantic object-action |
 |---|---|---|---|---|---|
-| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **link proven in the BAS sandbox 23/09/26**: dates carried over, 2,700 rows scroll. ALP chart shows "Invalid data – some measures have different units" (OvlShareQty1 is MCF for gas, BBL for oil; no BOE measure in the query). Workaround: filter Product in the ALP; proper fix: BOE measure in ZDPR_C_PROD_CUBE (backend, senior). Not deployed yet. |
+| 1 | 6 Production Records | ZDPR_Q_PROD_QUERY_CDS | Analytical List Page | `zdprrecords` / `ZDPRRECORDS` | `DPRRecords-display` — **link proven end to end in the BAS sandbox 23/09/26**: card title → records ALP opens with the dates in its filter bar, 2,700 rows scroll. Parameter hand-over by name confirmed, assumption closed. Sandbox test runs from the DASHBOARD preview only (`cd zdprdashboard && npm run start`); the records app's own preview knows only `app-preview`. ALP chart shows "Invalid data – some measures have different units" (OvlShareQty1 is MCF for gas, BBL for oil; no BOE measure in the query). Workaround: filter Product in the ALP; proper fix: BOE measure in ZDPR_C_PROD_CUBE (backend, senior). Not deployed yet. |
 | 2 | 3 Performance (YTD/Annual) | ZDPR_Q_PROD_PERF_CDS | List Report | `zdprperf` / `ZDPRPERF` | `DPRPerformance-display` |
 | 3 | 1, 5 BOEPD trend | ZDPR_Q_BOEPD_TREND_CDS | Analytical List Page | `zdprtrend` / `ZDPRTREND` | `DPRTrend-display` |
 | 4 | 4 Target vs actual | ZDPR_Q_TARGET_QUERY_CDS | Analytical List Page | `zdprtarget` / `ZDPRTARGET` | `DPRTarget-display` |
@@ -184,9 +184,27 @@ in the card settings. Card 6: `annotations/annotation_prod.xml` + `manifest.json
 Launchpad side: one target mapping per detail app in catalog `ZC_DPR_REPORTING`
 (ID = the app's `sap.app/id`, lowercase; URL `/sap/bc/ui5_ui5/sap/<bsp>`), then
 `/UI5/APP_INDEX_CALCULATE` for the new BSP. No tile needed unless wanted.
-ASSUMPTION: the OVP hands the filter-bar values to the target via
-sap-xapp-state and the target's filter bar applies them by name; confirm on
-the first navigation and adjust if the date parameters do not arrive.
+Confirmed 23/09/26: the OVP hands the filter-bar values to the target via
+sap-xapp-state and the target's filter bar applies them by name (dates arrived
+on the first navigation).
+
+## Decision 23/09/26 — charts in the detail apps
+
+Records (`zdprrecords`) and target (`zdprtarget`) ALP charts render only with
+one product filtered: every quantity measure carries a per-product unit
+(M3/BBL, MMSCMD/BOPD) and the SmartChart refuses mixed units; PI % is unit-free
+but a summed percentage, so meaningless as a bar. Trend (`zdprtrend`) is BOEPD
+throughout and charts fine. Decision: ship as is, note the limitation in the
+handover, and ask the senior for BOE measures (OVL Share BOE in
+ZDPR_C_PROD_CUBE / ZDPR_Q_PROD_QUERY; Actual/Target BOE in ZDPR_C_TARGET_CUBE /
+ZDPR_Q_TARGET_QUERY, ZPRA_T_TAR_CF conversion). Chart defaults switch to those
+measures once active. Mail drafted 23/09/26 in chat, sending stays with Arnav.
+
+Detail-app fixes so far: DDLX `ZDPR_Q_BOEPD_TREND` and `ZDPR_Q_TARGET_QUERY`
+(`../zdpr_rap/`) chart attributes + presentation-variant qualifier; ALP
+manifests `defaultFilterMode: compact`, `hideVisualFilter: true`; records app
+filter fields unlabelled (Product/Asset/Block lack `@EndUserText.label`, DDLX
+polish, optional).
 
 ## Step 1 — generate the project, global filter, card 1
 
@@ -280,3 +298,51 @@ Reply with one of:
   page does not depend on whether the manual DDLX creation succeeded.
 - Views run with `@AccessControl.authorizationCheck: #NOT_REQUIRED` — no
   row-level restriction on the dashboard.
+
+## Default layout 24/09/26 (`deployed/manifest.json`)
+
+Arnav's arranged layout made the default for every user: card order 1, 2, 4, 5,
+6, 3 and `defaultSpan` per card — 1: 42×3, 2: 42×1, 4: 38×2, 5: 38×2, 6: 40×2,
+3: 40×2 (rows ≈ 16 px each, 4-column grid). Users can still drag; *Manage
+Cards → Reset* restores this. Row values estimated from a scaled screenshot;
+fine-tune after one look.
+
+## Deployment 24/09/26
+
+Detail apps `ZDPRRECORDS`, `ZDPRPERF`, `ZDPRTREND`, `ZDPRTARGET` deployed to the
+ABAP repository on OCQ (`npm run deploy`, `ui5-deploy.yaml` per project:
+destination OCQ, client 500, package ZPR_DPR_RAP; TR to be recorded). Pending:
+dashboard redeploy with the layout manifest, four target mappings in
+`ZC_DPR_REPORTING` (no tiles — one tile stays the only entry point), app index
+for five BSPs, cache invalidation, S_SERVICE on the role, test as a test user.
+Generator pitfall: `ui5-deploy.yaml` shipped with `transport:
+REPLACE_WITH_TRANSPORT` and lowercase package; deploy fails with HTTP 500
+"Transport request could not be created" until a real TR is entered.
+
+## Step 7 done on the running version 24/09/26
+
+`ZDPR_Q_DASH_FILTER` activated on OCQ (Product wanted as an optional filter on
+the dashboard). `deployed/manifest.json`: data sources
+`ZDPR_Q_DASH_FILTER_CDS_VAN` + `ZDPR_Q_DASH_FILTER_CDS`, model
+`ZDPR_Q_DASH_FILTER_CDS` (sap-value-list none), `globalFilterModel` /
+`globalFilterEntitySet` switched to `ZDPR_Q_DASH_FILTER_CDS` /
+`ZDPR_Q_DASH_FILTERSet`. Cards unchanged: parameters still matched by name.
+Prerequisite in BAS: Manage Service Models → add the service (creates
+localService/ZDPR_Q_DASH_FILTER_CDS/). Fields Asset, Business Unit, Block,
+Product are optional; Product reaches cards 4, 5, 6.
+
+## Fiscal year derived from Date To (24/09/26, route 1)
+
+Decision: no Fiscal Year field on the dashboard; FY = fiscal year of Date To
+(April–March: year of Date To if month ≥ 4, else year − 1). Cards 1 and 5
+already use each date's own FY in the cube; only cards 2, 3 (PROD_PERF) and 4
+(TARGET_QUERY) take the parameter, and they can serve one FY per run.
+Implementation: `deployed/ext/controller/FiscalYear.controller.js` (legacy
+controller extension of `sap.ovp.app.Main`, registered in
+`deployed/manifest.json` under `sap.ui5.extends.extensions`): hides the
+`$Parameter.P_FiscalYear` field of the SmartFilterBar `ovpGlobalFilter` and
+sets it from `$Parameter.P_DateTo` on every filterChange. BAS path:
+`webapp/ext/controller/FiscalYear.controller.js`. ASSUMPTIONS (SAP docs not
+reachable from the session): view id `ovpGlobalFilter`, parameter keys
+`$Parameter.<name>`, legacy extension lifecycle (`onInit` of the extension runs
+after Main's). Verified only by the first preview run.

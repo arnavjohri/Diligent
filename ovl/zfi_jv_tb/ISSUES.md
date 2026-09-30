@@ -4,6 +4,7 @@
 |---|------|-------|-------|-----|----|--------|
 | 1 | 26/08/26 | Q1 FY27 run: last venture **VN2012** not populated in the Excel output (`RawData` sheet). Reported by Gitesh S Lad, Corporate Accounts. | **Still open.** The Excel-template theory was wrong — see "Retraction" below. Current lead: the export is truncated at a fixed `BAL_CLO<k>`, consistent with a saved ALV layout hiding every venture field above the number the layout was saved with. | Not yet determined. | n/a | **RETRACTED 27/08/26 — see below. Reopened.** |
 | 2 | 13/09/26 | Opening balance blank in every venture column since the program was moved from `JVTO1`/`JVSO1` to the ACDOCA views. Dr/Cr still correct. | Opening balance is `HSLVT` from the totals view and nothing else (all 8 write sites traced). Fresh download 22/09/26 shows the live program reads **`JV_JVTO1_ACDOCA`** — the ACDOCA-only branch. SAP's `JV_JVTO1_ACDOCA_SWITCH_2` (definition supplied by Arnav from OCQ/500) unions that branch for years ≥ the JVA-on-ACDOCA activation year (`JVAONACDOCAACTIV`, id `START`) with legacy JVTO1 (`JV_JVTO1_T8JTPM`) for earlier years; the live view has no legacy branch. Second, independent defect: `Index Based USD` branch summed `hslvt` where the original was `SUM( kslvt ) AS hslvt`. | `ovl/zfi_jv_tb/ZFI_JV_TB.abap` (22/09/26, tag `SAP_ABAP`): all five reads of the totals view → `jv_jvto1_acdoca_switch_2`; USD branch restored to `SUM( kslvt ) AS hslvt`. Ledger stays `= '4A'` — in `_SWITCH_2` the 4C amounts are columns (`HSLVT_4C`), not rows. `JV_JVSO1_ACDOCA` reads untouched. The 14/09 ledger-widening fix is **withdrawn** (built on the 26/08 copy, which was not the live view). | n/a | **Corrected object delivered — awaiting Arnav's test ("values coming or not we will see")** |
+| 3 | 27/09/26 | ECC-vs-RISE validation (Gitesh S Lad, via Gaurav Sharma/SAP): FY2026 periods 01–06, Index Based USD, all 73 ventures. Obs 1: GL 300100 row present in ECC output (all-zero closing), absent in RISE. Obs 2: "22 ventures / 585 GLs" not matching. | **Obs 2 as quoted is a spreadsheet artefact** — the workbook's Difference/PIVOT sheets subtract an ECC pivot sorted numerically (leading zero lost, 010415→10415 first) from a RISE list sorted as text (100121 first), row by row. Matched on GL number, only **6 GLs** differ; 21 ventures differ solely because **GL 120170 (JV Balancing Account – JV6) is zero on RISE** and each RISE venture total equals −ECC 120170 to the paisa. Obs 1: JVSO1 line items for 300100/CP0001 are identical in ECC and OCP (8 docs 6426000001–08, H/S pairs, periods 1–5, USD Dr = Cr = 90,614.36); the GL list comes from the totals view, so the row disappears only if `JV_JVTO1_ACDOCA_SWITCH_2` has no 2026 row for 300100/CP0001 — **SE16N 28/09/26: no row — confirmed.** | Obs 1: `PATCH-2026-09-28-issue3-obs1.abap` — in `get_data`, `SELECT DISTINCT racct FROM jv_jvso1_acdoca APPENDING CORRESPONDING FIELDS OF TABLE @lt_jvt` with the same filters plus the period range, inserted before the existing `SORT lt_jvt` / `DELETE ADJACENT DUPLICATES`. Fragment because the only OCP source is a 72-char-truncated list print. Obs 2 (120170) still open. | n/a | **Obs 1: patch delivered, awaiting Arnav's test. Obs 2: open** |
 
 ## How it was localised (26–27/08/26)
 
@@ -103,3 +104,33 @@ The draft mail in `MAIL-2026-08-27-gitesh.md` must not be sent.
   read keys `lt_ska1` off the possibly stale `ls_jvto1-racct`; four `break abapuser02.`; in the
   160206 block `lv_crebal` takes `ls_jvso1_2-hsl` and `lv_debbal` takes `ls_jvso1_1-hsl` (sources
   swapped); in the 120170 rollup `lv_debbal_u = lv_debbal_i + ...` accumulates onto the INR total.
+
+## Issue 3 — notes (28/09/26)
+
+- Workbook `ZJVTB_ECC_Vs_RISE.xlsx` (Gitesh, 27/09): `Data - ECC` 631 GLs, `Data - RISE` 630 GLs, 73 venture
+  columns each, header says FY 2026 / OVL / Index Based USD / periods 01 to 06 / rate 79.2267. Real deltas by GL:
+  - **120170** — ECC non-zero in 21 ventures, RISE zero everywhere. Whole cause of the "22 ventures" observation.
+  - **190281, 92604, 201920** — amounts ECC reports under RU2002 / VN1101 sit under CP0001 in RISE; GL totals agree.
+    Venture assignment of the data, not code. RU2002 has 5 non-zero GLs in ECC, 1 in RISE.
+  - **192604 / 92608** (IGST-RCM) — RISE carries an extra ±16,062.61 pair CP0001↔CL1202 absent in ECC; net zero per GL.
+  - **300100** — Obs 1, zero closing in both; no amount impact.
+- 120170 is never read; `after_set_data` moves GLs 500000–599999 into `lt_bfinal` and their venture-wise sum is
+  added onto the 120170 row **only if `flag = 'X'`**. In the Index Based USD branch `lt_jvso1_1/_2` carry only
+  `ksl`, so the `hsl IS NOT INITIAL` tests can never set the flag; it is set solely by a `READ TABLE lt_jvto1` hit
+  for a P&L GL. Diagnostic: run Company Code INR for one venture on RISE — if 120170 fills there and not in USD, it is
+  the flag (code); if still zero, no 5xxxxx line items in ledger 4A (data).
+- **Drift, 28/09/26.** SE38 list print from **OCP** (last changed 26.09.2026 by SAP_ABAP), filed as
+  `original/ZFI_JV_TB.se38-list-2026-09-28.txt`. The live program carries a **25/09/26 change that is not in the
+  repo's corrected copy**: new `FORM get_opening` (opening from `JVTO1` carry-forward of the JVA-on-ACDOCA START
+  year via `JVAONACDOCAACTIV`, plus `JV_JVSO1_ACDOCA` movements for the years between START and p_year−1, COLLECTed
+  into `lt_jvto1`; USD branch copies `kslvt` into `hslvt`), all five totals-view `SUM(hslvt)` selects commented
+  out, and `get_data` appending every `lt_jvto1` racct/rjvnam into `lt_jvt`/`lt_alljv`. Header line 25-09-2026
+  added. The repo copy `ZFI_JV_TB.abap` is therefore **behind the system** and must not be pasted whole.
+- The list print truncates every line at 72 characters (190 lines affected) — **not usable as paste source**.
+  Need `ZR_PROG_DOWNLOAD` or SE38 → Utilities → Download before any correction.
+- **Obs 1 root cause confirmed 28/09/26.** SE16N on `JV_JVTO1_ACDOCA_SWITCH_2` (OVL / 2026 / 4A / CP0001 /
+  0000300100) returns nothing: the ACDOCA branch of the view carries no row for an account whose postings in the
+  year net to zero, while ECC's `JVTO1` kept a totals record. `lt_jvt` is built from the view only, so the account
+  never reached the output. Fix is the one-select patch above. Deliberately not touched: the venture list
+  `lt_alljv` (AT SELECTION-SCREEN) has the same exposure — a venture with only zero-netting postings would lose its
+  column — but no venture is missing in Gitesh's run, so it stays as is; flag if it ever shows up.
