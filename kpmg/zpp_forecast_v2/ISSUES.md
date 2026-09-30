@@ -766,3 +766,13 @@ Assumption: built on the repo copy Arnav activated on 23/09/26; no fresh SE80 do
 session. If the class was edited in SAP since, send the SE80 copy and the fix is re-applied.
 No new message: the fill is silent, as the absorption itself is.
 Files: `src/zcl_pp_fcst.clas.abap`, `zcl_pp_fcst_nocomments.abap`. TR: not yet transported.
+
+Status 30/09/26 PM: active in DEV - the tester's monthly run (plant 2439, M000814011, FY 2026-2027,
+period 6, Legacy ticked) shows Jun-26 27,580 / Jul-26 19,390 / Aug-26 29,120, which are exactly the
+month sums of the two old codes' `ZPPT_SLS_HIST` rows (M000814035 + M000814110, GJAHR 2026, M03..M05).
+The "old material records not coming" report was a reading of the layout: Apr/May-26 are not on the
+monthly sheet for period 6, Jul-Sep 25 have no 2025 history row so show billing, annual never reads
+the current year. Two data findings in `ZPPT_MAT_TRACK` plant 2439 handed back: a sales-history line
+uploaded as a tracking row (M000814009 / 2026 / 15190 ...), and M000814035 listed as an old code under
+two successors (M000814011 and M004602055), so it is absorbed twice. The upload refuses chains only,
+not a shared old code - a check can be added to `DO_TRACKING` if the business wants it refused.
