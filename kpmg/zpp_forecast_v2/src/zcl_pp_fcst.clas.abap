@@ -514,9 +514,14 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
 *   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
-                                    iv_from = lv_from iv_to = lv_to
-                          CHANGING  ct_hist = lt_std ).
+*   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
+*                                   iv_from = lv_from iv_to = lv_to
+*                         CHANGING  ct_hist = lt_std ).
+*   30/09/26 (Arnav): the old codes are absorbed AFTER the legacy merge,
+*   into MT_HIST, see below. Absorbed into LT_STD as here they were
+*   dropped by MERGE_MISSING for every month the successor's own legacy
+*   row covers, so a successor with sales history of its own lost its
+*   old codes (tester's finding of 30/09/26).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -529,6 +534,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+*   30/09/26 (Arnav): old codes absorbed here, into the merged history,
+*   so their figures are ADDED to the successor's month whether that
+*   month came from the successor's own legacy row or from billing.
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = mt_hist ).
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
@@ -712,9 +724,14 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
 *   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = ir_matnr
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
-                                    iv_from = lv_from iv_to = lv_to
-                          CHANGING  ct_hist = lt_std ).
+*   add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr   "Changes by Arnav on 23/09/26
+*                                   iv_from = lv_from iv_to = lv_to
+*                         CHANGING  ct_hist = lt_std ).
+*   30/09/26 (Arnav): the old codes are absorbed AFTER the legacy merge,
+*   into MT_HIST, see below. Absorbed into LT_STD as here they were
+*   dropped by MERGE_MISSING for every month the successor's own legacy
+*   row covers, so a successor with sales history of its own lost its
+*   old codes (tester's finding of 30/09/26).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -727,6 +744,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+*   30/09/26 (Arnav): old codes absorbed here, into the merged history,
+*   so their figures are ADDED to the successor's month whether that
+*   month came from the successor's own legacy row or from billing.
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = mt_hist ).
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).
@@ -1020,14 +1044,19 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 *   lt_std = read_billing( ir_werks = ir_werks ir_matnr = ir_matnr    "Changes by Arnav on 15/09/26
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr    "Changes by Arnav on 15/09/26, 23/09/26
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks       = ir_werks
+*   add_old_material_qty( EXPORTING ir_werks       = ir_werks
 *                                   ir_matnr       = ir_matnr
-                                    ir_matnr       = lr_matnr   "Changes by Arnav on 23/09/26
-                                    iv_from        = lv_from
-                                    iv_to          = lv_to
+*                                   ir_matnr       = lr_matnr   "Changes by Arnav on 23/09/26
+*                                   iv_from        = lv_from
+*                                   iv_to          = lv_to
 *                                   iv_use_billing = abap_false        "Changes by Arnav on 15/09/26
-                                    iv_use_billing = abap_true         "Changes by Arnav on 15/09/26
-                          CHANGING  ct_hist        = lt_std ).
+*                                   iv_use_billing = abap_true         "Changes by Arnav on 15/09/26
+*                         CHANGING  ct_hist        = lt_std ).
+*   30/09/26 (Arnav): the old codes are absorbed AFTER the legacy merge,
+*   into MT_HIST, see below. Absorbed into LT_STD as here they were
+*   dropped by MERGE_MISSING for every month the successor's own legacy
+*   row covers, so a successor with sales history of its own lost its
+*   old codes (tester's finding of 30/09/26).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -1040,6 +1069,16 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+*   30/09/26 (Arnav): old codes absorbed here, into the merged history,
+*   so their figures are ADDED to the successor's month whether that
+*   month came from the successor's own legacy row or from billing.
+    add_old_material_qty( EXPORTING ir_werks       = ir_werks
+                                    ir_matnr       = lr_matnr
+                                    iv_from        = lv_from
+                                    iv_to          = lv_to
+                                    iv_use_billing = abap_true
+                          CHANGING  ct_hist        = mt_hist ).
 *EOC By Arnav on 31/08/26
 
 *   DATA(lt_scope) = build_scope( ir_werks = ir_werks ir_matnr = ir_matnr ).

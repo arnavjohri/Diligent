@@ -776,3 +776,21 @@ the current year. Two data findings in `ZPPT_MAT_TRACK` plant 2439 handed back: 
 uploaded as a tracking row (M000814009 / 2026 / 15190 ...), and M000814035 listed as an old code under
 two successors (M000814011 and M004602055), so it is absorbed twice. The upload refuses chains only,
 not a shared old code - a check can be added to `DO_TRACKING` if the business wants it refused.
+
+## 30/09/26 PM — Successor with its own sales history lost its old codes (Legacy ticked)
+
+Tester's finding, confirmed in the code: with the Legacy checkbox ticked the successor's own
+`ZPPT_SLS_HIST` months went into `MT_HIST` first, the old codes were absorbed into `LT_STD`, and
+`MERGE_MISSING` then added `LT_STD` only for months `MT_HIST` did not have - so every month the
+successor's own history row covered dropped the old codes' figures. A successor with no history
+row of its own showed the old codes (as in the morning's screenshots), one with a row did not.
+
+Fix, `ZCL_PP_FCST` only, the three generators: `ADD_OLD_MATERIAL_QTY` is called after the legacy /
+billing merge, on `MT_HIST`, so the old codes' figures (billing, sales history for the gaps) are
+added to the successor's month whether that month came from legacy or from billing. Without the
+checkbox nothing changes (`MT_HIST = LT_STD` before the absorption). Side effect, welcome: with a
+blank selection the old codes' own legacy buckets in `MT_HIST` are now deleted by the absorption
+instead of lingering until `BUILD_SCOPE` drops them. Message 023 now counts the selected codes'
+months filled from billing only, no longer the absorbed ones.
+Files: `src/zcl_pp_fcst.clas.abap` (2299 lines), `zcl_pp_fcst_nocomments.abap` (1564).
+TR: not yet transported.

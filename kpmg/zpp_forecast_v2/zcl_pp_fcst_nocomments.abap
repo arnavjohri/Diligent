@@ -335,9 +335,6 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
-                                    iv_from = lv_from iv_to = lv_to
-                          CHANGING  ct_hist = lt_std ).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -350,6 +347,10 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = mt_hist ).
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
@@ -475,9 +476,6 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
-                                    iv_from = lv_from iv_to = lv_to
-                          CHANGING  ct_hist = lt_std ).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -490,6 +488,10 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    add_old_material_qty( EXPORTING ir_werks = ir_werks ir_matnr = lr_matnr
+                                    iv_from = lv_from iv_to = lv_to
+                          CHANGING  ct_hist = mt_hist ).
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr
@@ -671,12 +673,6 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
 
     lt_std = read_billing( ir_werks = ir_werks ir_matnr = lr_matnr
                            iv_from = lv_from iv_to = lv_to ).
-    add_old_material_qty( EXPORTING ir_werks       = ir_werks
-                                    ir_matnr       = lr_matnr
-                                    iv_from        = lv_from
-                                    iv_to          = lv_to
-                                    iv_use_billing = abap_true
-                          CHANGING  ct_hist        = lt_std ).
 
     IF iv_legacy = abap_true.
       merge_missing( EXPORTING it_from  = lt_std
@@ -689,6 +685,13 @@ CLASS zcl_pp_fcst IMPLEMENTATION.
     ELSE.
       mt_hist = lt_std.
     ENDIF.
+
+    add_old_material_qty( EXPORTING ir_werks       = ir_werks
+                                    ir_matnr       = lr_matnr
+                                    iv_from        = lv_from
+                                    iv_to          = lv_to
+                                    iv_use_billing = abap_true
+                          CHANGING  ct_hist        = mt_hist ).
 
     relabel_old_codes( EXPORTING ir_werks = ir_werks
                                  ir_matnr = lr_matnr

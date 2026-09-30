@@ -87,6 +87,8 @@ ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` 
   `ZPPT_SLS_HIST`**, always, checkbox or not - in `ADD_OLD_MATERIAL_QTY` (successor in the
   selection) and in `RELABEL_OLD_CODES` (old code typed alone). Billing wins where both exist.
   The Legacy checkbox keeps its meaning for the codes in the selection themselves.
+  Since 30/09/26 PM the absorption runs AFTER the legacy merge (on `MT_HIST`), so a successor's
+  own history month and its old codes' figures add up instead of the former hiding the latter.
 - **`ZCL_PP_FCST_UTIL` still has both authority checks bypassed** (07/09, for QAS initial
   testing). Restore before release — see ISSUES.md 03/09/26, last entry.
 
