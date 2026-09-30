@@ -792,5 +792,5 @@ checkbox nothing changes (`MT_HIST = LT_STD` before the absorption). Side effect
 blank selection the old codes' own legacy buckets in `MT_HIST` are now deleted by the absorption
 instead of lingering until `BUILD_SCOPE` drops them. Message 023 now counts the selected codes'
 months filled from billing only, no longer the absorbed ones.
-Files: `src/zcl_pp_fcst.clas.abap` (2299 lines), `zcl_pp_fcst_nocomments.abap` (1564).
+Files: `src/zcl_pp_fcst.clas.abap` (2309 lines), `zcl_pp_fcst_nocomments.abap` (1562).
 TR: not yet transported.
