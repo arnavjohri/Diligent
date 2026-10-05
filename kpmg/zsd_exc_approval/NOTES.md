@@ -29,3 +29,10 @@ Table + data elements are ZIP-able. TMG (SE11 maintenance generator), any number
 range (SNRO) and the authorisation object are manual. Reports are ZIP-able only if
 they stay screen-free — use `REUSE_ALV_GRID_DISPLAY_LVC` full-screen, no custom
 container, no `CALL SCREEN`.
+
+## Functional flow note
+
+`WRICEF_141AB_Exceptional_Approval_Flow.docx` (05/10/26) — business-language walkthrough of
+141.A and 141.B for the functional team: flow per object, selection screens, column logic,
+status rules, worked examples and the open confirmation points. Regenerate rather than
+hand-edit if the build changes.
