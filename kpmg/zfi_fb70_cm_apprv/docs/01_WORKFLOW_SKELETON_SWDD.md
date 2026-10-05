@@ -4,11 +4,18 @@
 The number `WS9xxxxxxx` is assigned by the system on the first save. Write it down: every
 later object binds to it.
 
-**What the skeleton does:** parking any FI document raises event `FIPP.CREATED`, the workflow
-starts, the person who parked gets ONE decision work item (Approve / Reject) in SBWP, and a
-mail comes back with the result. No amounts, no approver table, no posting, no PDF. It exists
-to prove that event linkage, agent assignment and mail work on this system before a line of
-ABAP is written. Objects 2 to 5 turn it into the real approval.
+**What the skeleton does:** the workflow starts on event `FIPP.CREATED`, the person who parked
+gets ONE decision work item (Approve / Reject) in SBWP, and a mail comes back with the result.
+No amounts, no approver table, no posting, no PDF. It exists to prove that event linkage, agent
+assignment and mail work on this system before the real logic is written. Objects 2 to 7 turn
+it into the real approval.
+
+**Who raises the event:** SAP raises `FIPP.CREATED` on park only when a workflow variant with
+*Posting release* is customised (OBWA, OBWJ). This build deliberately does not customise that,
+because the release-required flag it sets would block posting from a custom workflow. Instead
+object 2, a Z function module on BTE `00002218` (PRELIMINARY POSTING: When Document is Saved),
+raises the event for credit memos only. Until object 2 exists the skeleton is tested by direct
+start from SWUS (section 8). The FB70 test (section 9) comes after object 2.
 
 Do the sections in order. Each one says what you should see; if you do not see it, stop and
 send me the screen.
@@ -78,10 +85,8 @@ Expected tray content afterwards: the system elements (`_WF_INITIATOR`, `_WORKIT
 4. Click the **activation** icon of the row. The light must turn green. This writes the type
    linkage: `SWETYPV` now shows Object `FIPP`, Event `CREATED`, Receiver type `WS9xxxxxxx`,
    *Linkage activated* ticked. Look at it once so you know where it lives.
-5. Leave the **start condition** empty for the first test. Consequence: every parked FI document
-   in this client, by any user, starts this workflow and its parker gets a work item. Acceptable
-   in DEV for the test day. Set the light back to red when you stop testing, or add the condition
-   in section 10 once SWO1 has shown a document-type attribute.
+5. Leave the **start condition** empty. The document-type and company-code filter lives in the
+   BTE function module of object 2, so no start condition is needed (section 10).
 6. Back to the builder. Save.
 
 ---
@@ -155,37 +160,32 @@ Pass criterion: work item appeared, decision taken, mail received, log complete.
 
 ---
 
-## 9. Test 2 — the real trigger from FB70
+## 9. Test 2 — the real trigger from FB70 (only after object 2 is active)
+
+Before object 2 this test cannot pass: SAP does not raise the event on park, see the note at the
+top. Do it once the BTE function module is registered in FIBF.
 
 1. `SWELS`: trace on.
 2. `FB70`: transaction dropdown *Credit memo*, customer, amount, one G/L line, tax code. Toolbar
    **Park**. Not *Hold*: a held document is not a parked document and raises no event. Note the
    document number from the status bar.
 3. `SWEL`: one line Object type `FIPP`, Event `CREATED`, Receiver type `WS9xxxxxxx`, no error.
-   - Event line present, receiver empty → linkage not active (section 4 step 4) or start condition false.
+   - Event line present, receiver empty → linkage not active (section 4 step 4).
    - Event line present, receiver `WS` with error → double-click the line. Usually agent
      assignment (section 7) or the RFC destination in SWU3 (Basis).
-   - No event line at all → the document was held, not parked, or the trace was off.
+   - No event line at all → the BTE of object 2 is not registered or not active in FIBF, the
+     document type was filtered out by it, the document was held not parked, or the trace was off.
 4. `SBWP`: the work item. Approve. Mail. `SWI6` log as in test 1.
-5. Done for the day: set the start-event light to red (section 4) unless section 10 is in place.
+5. Done for the day: nothing to switch off. Only credit memos of the configured document type
+   raise the event, by construction of object 2.
 
 ---
 
-## 10. Start condition, only once SWO1 shows a document-type attribute
+## 10. Start condition — not used
 
-`SWB_COND`: Object type `FIPP`, Event `CREATED`, find the row for `WS9xxxxxxx`, create the condition:
-
-    &FIPP.<document type attribute>& = <credit memo document type>
-    AND &FIPP.<company code attribute>& = <DEV company code>
-
-Pick both attributes from the F4 list, never typed. Activate the condition. From then on only
-credit memos of that document type in that company code start the workflow. Re-run test 2 once
-with a credit memo (starts) and once with a customer invoice (must not start, SWEL shows the
-event with *start condition not fulfilled*).
-
-If FIPP has no document-type attribute, skip this; the check moves into the Z class in object 3
-and the workflow ends immediately for other document types.
-
+The filter on document type and company code is in the BTE function module (object 2): the
+event is raised only for the credit memo document type, so every start is wanted. `SWB_COND`
+stays empty. If FI later asks for a second filter that the BTE cannot see, it goes here.
 ---
 
 ## 11. Common errors on a first workflow
@@ -193,7 +193,8 @@ and the workflow ends immediately for other document types.
 | Symptom | Cause | Fix |
 |---|---|---|
 | Save refuses: no prefix number | SWU3 prefix missing | Section 0 |
-| SWEL: event, no receiver | Linkage inactive or condition false | Section 4 step 4, section 10 |
+| SWEL: no event at all on park | BTE not registered or inactive, or doc type filtered | Object 2, FIBF |
+| SWEL: event, no receiver | Linkage inactive | Section 4 step 4 |
 | SWEL: receiver error, "no agent" or "not started by user" | WS not a general task | Section 7 step 3 |
 | Work item exists, nobody sees it | TS00008267 not general, or buffer stale | Section 7 steps 4 and 5 |
 | SWI1 shows work items in ERROR immediately | RFC destination or WF-BATCH | SWU3, Basis |
@@ -204,11 +205,12 @@ and the workflow ends immediately for other document types.
 
 ## 12. What this object deliberately leaves out
 
-- Amount ranges and approver per level: object 2 (tables) and object 3 (class).
-- Loop over levels, background steps, approver from the container: object 4.
-- The approver seeing the parked document from the work item: object 5 (Z copy of TS00008267
+- Raising the event from FB70: object 2 (BTE 00002218 function module, FIBF registration).
+- Amount ranges and approver per level: object 3 (tables) and object 4 (class).
+- Loop over levels, background steps, approver from the container: object 5.
+- The approver seeing the parked document from the work item: object 6 (Z copy of TS00008267
   with a FIPP container element).
-- Posting after the last approval and the mails with the PDF: objects 4 and 6.
+- Posting after the last approval and the mails with the PDF: objects 5 and 7.
 - Outlook delivery: Basis (SU01 communication method, SCOT). Not a workflow problem.
 
 ---
@@ -217,4 +219,6 @@ and the workflow ends immediately for other document types.
 
 1. The `WS` number and the two `TS` numbers.
 2. The four SWO1 lists from section 1.
-3. Test 2 result: pass, or the SWEL screen.
+3. Test 1 result: pass, or the SWUS / SBWP screen.
+4. `SE37`: display `SAMPLE_INTERFACE_00002218`, screenshots of the Import, Export, Changing and
+   Tables tabs. Object 2 is written against that exact signature.

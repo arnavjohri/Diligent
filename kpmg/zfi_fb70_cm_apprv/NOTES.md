@@ -26,3 +26,6 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
 - Agent changes are buffered: run `SWU_OBUF` after every PFTC change.
 - Without a start condition the linkage fires for every parked FI document in the client.
 - Object names are chosen by Claude with a Z prefix; Arnav creates them in the system.
+- `FIPP.CREATED` is NOT raised by SAP on park unless OBWA posting-release customising exists.
+  This build raises it itself from BTE `00002218` (object 2). Without object 2, FB70 park
+  starts nothing, and SWEL shows no event line at all.

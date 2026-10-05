@@ -1,6 +1,8 @@
 # Design — FB70 customer credit memo approval workflow
 
 Status: design agreed in chat on 29/09/26 and 30/09/26. Build started 30/09/26 with object 1.
+Trigger corrected 05/10/26: SAP does not raise `FIPP.CREATED` on park without release
+customising; object 2 (BTE 00002218) raises it.
 Client folder is a placeholder (`kpmg/`) until Arnav names the project; move with `git mv`.
 
 ## Requirement (as stated)
@@ -27,16 +29,38 @@ Standard pieces reused: event `FIPP.CREATED` as trigger, generic decision task `
 (copied to Z so the document shows on the work item), background posting task `TS00008142`
 (`FIPP.POST`, uses `PRELIMINARY_POSTING_POST_ALL`).
 
+## Trigger
+
+SAP raises `FIPP.CREATED` on park **only** when a workflow variant with *Posting release* exists
+(OBWA) and the company code is assigned to it (OBWJ). Confirmed by several community threads
+("FIPP - Created event not getting triggered"). That customising also marks the parked document
+release-required, which FBV0 and `FIPP.POST` honour, so a custom workflow could never post it.
+Therefore no OBWA variant. The event is raised by our own function module on publish-and-
+subscribe BTE `00002218` (PRELIMINARY POSTING: When Document is Saved), which fires in the
+Enjoy parking transactions (SAP Note 1888123 discusses it for FV60). The function module:
+
+- filters on company code and credit memo document type (from the config table once it exists,
+  hardcoded `" ASSUMPTION:` constants until then),
+- guards against a second raise when the same parked document is saved again (FBV2, Save as
+  completed) by checking for an existing workflow on the object,
+- raises `FIPP.CREATED` with `SAP_WAPI_CREATE_EVENT`, `COMMIT_WORK` = space, so the event
+  commits together with the parking transaction and never inside it.
+
+BTEs `00002213` (check for release) and `00002214` (determine release approval path) belong to
+the standard release framework and are not used. There is no BAdI for "after park" in FB70;
+`AC_DOCUMENT` fires on posting only, `BADI_FDCB_SUBBAS01..05` are screen subscreens.
+
 ## Objects, in build order
 
 | # | Object | Name | Created via | Sheet |
 |---|---|---|---|---|
 | 1 | Workflow skeleton | abbr `ZFB70CMAPR`, number `WS9xxxxxxx` | SWDD by hand | `01_WORKFLOW_SKELETON_SWDD.md` |
-| 2 | Config + log tables | `ZFI_CM_APPR_CFG`, `ZFI_CM_APPR_LOG` | SE11 by hand, TMG | next |
-| 3 | Class | `ZCL_FI_CM_APPR_WF` | SE24, paste | |
-| 4 | Workflow, full version | same `WS` | SWDD by hand | |
-| 5 | Decision task | copy of `TS00008267`, abbr `ZCM_DECIDE` | PFTC by hand | |
-| 6 | Form | `ZFI_CM_APPR_FORM` or Smart Form | SFP / SMARTFORMS by hand | after ADS check |
+| 2 | BTE trigger | FG `ZFI_CM_APPR`, FM `Z_FI_CM_APPR_PARK_EVENT`, BTE `00002218` | SE80 paste, FIBF by hand | next |
+| 3 | Config + log tables | `ZFI_CM_APPR_CFG`, `ZFI_CM_APPR_LOG` | SE11 by hand, TMG | |
+| 4 | Class | `ZCL_FI_CM_APPR_WF` | SE24, paste | |
+| 5 | Workflow, full version | same `WS` | SWDD by hand | |
+| 6 | Decision task | copy of `TS00008267`, abbr `ZCM_DECIDE` | PFTC by hand | |
+| 7 | Form | `ZFI_CM_APPR_FORM` or Smart Form | SFP / SMARTFORMS by hand | after ADS check |
 
 Generated on the way: mail tasks `ZCM_MAIL_OK`, `ZCM_MAIL_REJ` (Send Mail steps, object 1).
 
@@ -55,7 +79,8 @@ Generated on the way: mail tasks `ZCM_MAIL_OK`, `ZCM_MAIL_REJ` (Send Mail steps,
 ## Open inputs
 
 Document type(s), company code(s), currency, three limits, approver IDs per level,
-rejection handling, ADS yes/no (`FP_PDF_TEST_00`), client Z package, SWO1 lists for FIPP.
+rejection handling, ADS yes/no (`FP_PDF_TEST_00`), client Z package, SWO1 lists for FIPP,
+SE37 signature of `SAMPLE_INTERFACE_00002218` (object 2 is written against it).
 
 ## Shipping
 
