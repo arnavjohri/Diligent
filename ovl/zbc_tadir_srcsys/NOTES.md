@@ -1,14 +1,12 @@
 # ZBC_TADIR_SRCSYS_CHANGE — reset TADIR source system for Z/Y objects
 
-**What:** OCQ (old dev, now quality) was the original system of the OVL custom objects.
+**What:** Fixed OCQ -> OCD. Resets `TADIR-SRCSYSTEM` for every custom object created in OCQ so it is an original in OCD.
 In the new development system they carry `TADIR-SRCSYSTEM = OCQ`, so every edit is a repair.
 This report sets `SRCSYSTEM = SY-SYSID` for customer objects only, making them originals here.
 
 **Run it in:** the development system only (it refuses when old system = current system).
 
-**Guards:** `PGMID = R3TR`; object name `Z*`/`Y*`; package `Z*`/`Y*` (else listed as skipped);
-`SRCSYSTEM = <old>` re-checked in the UPDATE itself; test mode default; confirmation popup;
-no update in background.
+**Guards:** `R3TR` + `SRCSYSTEM = OCQ` (standard objects carry `SAP`, even when modified); plus name Z/Y or package Z/Y/$ — anything else is listed, not changed. Runs only when SY-SYSID = OCD. Test flag default on; confirm popup.
 
 **Ships:** paste-only, single report, no includes, no screens. Create in SE38 as type 1,
 then maintain text elements (listed in the program header). Local `$TMP` is fine — it is a

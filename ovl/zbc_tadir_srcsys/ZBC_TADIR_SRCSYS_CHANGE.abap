@@ -1,276 +1,151 @@
 *&---------------------------------------------------------------------*
 *& Report         : ZBC_TADIR_SRCSYS_CHANGE
-*& Title          : Change source (original) system of Z/Y objects in TADIR
+*& Title          : Change TADIR source system OCQ -> OCD for Z/Y objects
 *& Project        : OVL                          Module: BC
 *& Related FS     : None - utility, requested by mail
 *& Author         : Arnav Johri                  Date: 05.10.2026
 *& Transport      : <TR>
 *&---------------------------------------------------------------------*
 *& DESCRIPTION
-*&   Development was done in OCQ, which is now the quality system. The
-*&   objects arrived in this (development) system with TADIR-SRCSYSTEM =
-*&   OCQ, so every edit here is a repair. This report resets SRCSYSTEM to
-*&   the current system (SY-SYSID) so the objects become originals here.
+*&   Development was done in OCQ (now quality). In OCD the custom objects
+*&   carry TADIR-SRCSYSTEM = OCQ, so every edit is a repair. This report
+*&   sets SRCSYSTEM = OCD so they become originals in OCD.
 *&
-*&   Safety rules, all enforced in code:
-*&   - Only PGMID R3TR, object name starting Z or Y, AND package starting
-*&     Z or Y. A Z/Y-named object in a non-Z/Y package is listed as
-*&     skipped and never updated. Nothing standard can qualify.
-*&   - Only rows whose SRCSYSTEM equals the "old" system entered.
-*&   - Test mode is the default; the update needs a confirmation popup
-*&     and runs in dialog only.
-*&   - Refuses to run when old system = current system.
+*&   Which objects: every R3TR entry with SRCSYSTEM = OCQ, i.e. every
+*&   object created in OCQ. Standard objects carry SRCSYSTEM = SAP (also
+*&   when modified), so they can never qualify. As a second guard the
+*&   entry must also be customer namespace by NAME (Z*, Y*) or PACKAGE
+*&   (Z*, Y*, local $*). Anything else with OCQ is listed, not changed.
+*&   Runs in OCD only.
 *&
-*&   Selection texts (SE38 > Goto > Text elements > Selection texts):
-*&     P_OLD  Current Source System      S_OBJ  Object Type
-*&     S_NAME Object Name                S_DEVC Package
-*&     P_TEST Test Run (No Update)
-*&   Text symbols: 001 Selection   002 Processing Options
+*&   Selection text: P_TEST  Test Run (No Update)
 *&
 *& CHANGE HISTORY
 *&   05.10.2026  Arnav Johri  <TR>  Initial development
+*&   05.10.2026  Arnav Johri  <TR>  Simplified: fixed OCQ -> OCD, all
+*&                                  custom objects, only a test flag
 *&---------------------------------------------------------------------*
 REPORT zbc_tadir_srcsys_change.
 
-TABLES tadir.
+* Systems fixed as per requirement: OCQ (old dev, now quality) -> OCD
+CONSTANTS: gc_old TYPE tadir-srcsystem VALUE 'OCQ',
+           gc_new TYPE tadir-srcsystem VALUE 'OCD'.
 
-TYPES: BEGIN OF ty_out,
+TYPES: BEGIN OF ty_obj,
          pgmid    TYPE tadir-pgmid,
          object   TYPE tadir-object,
          obj_name TYPE tadir-obj_name,
          devclass TYPE tadir-devclass,
-         author   TYPE tadir-author,
-         src_old  TYPE tadir-srcsystem,
-         src_new  TYPE tadir-srcsystem,
-         status   TYPE c LENGTH 60,
-       END OF ty_out.
+       END OF ty_obj.
 
-DATA: gt_out   TYPE STANDARD TABLE OF ty_out,
-      gv_upd   TYPE i,
-      gv_skip  TYPE i,
-      gv_fail  TYPE i.
+DATA: gt_obj    TYPE STANDARD TABLE OF ty_obj,
+      gt_chg    TYPE STANDARD TABLE OF ty_obj,
+      gt_skip   TYPE STANDARD TABLE OF ty_obj,
+      gt_fail   TYPE STANDARD TABLE OF ty_obj,
+      gv_answer TYPE c LENGTH 1,
+      gv_text   TYPE string,
+      gv_count  TYPE i.
 
-*----------------------------------------------------------------------*
-* Selection screen
-*----------------------------------------------------------------------*
-SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-001.
-* ASSUMPTION: OCQ is the old development system, now quality. The
-* default is only a convenience - overwrite it on the screen if needed.
-PARAMETERS p_old TYPE tadir-srcsystem OBLIGATORY DEFAULT 'OCQ'.
-SELECT-OPTIONS: s_obj  FOR tadir-object,
-                s_name FOR tadir-obj_name,
-                s_devc FOR tadir-devclass.
-SELECTION-SCREEN END OF BLOCK b1.
-
-SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
 PARAMETERS p_test AS CHECKBOX DEFAULT abap_true.
-SELECTION-SCREEN END OF BLOCK b2.
-
-*----------------------------------------------------------------------*
-AT SELECTION-SCREEN.
-  PERFORM validate_selection.
 
 START-OF-SELECTION.
-  PERFORM fetch_data.
-  IF gt_out IS INITIAL.
-    MESSAGE |No Z/Y objects with source system { p_old } found| TYPE 'S' DISPLAY LIKE 'W'.
+
+  IF sy-sysid <> gc_new.
+    MESSAGE |Run this program in { gc_new } only (current system { sy-sysid })|
+      TYPE 'S' DISPLAY LIKE 'E'.
     RETURN.
   ENDIF.
-  PERFORM classify.
 
-  IF p_test = abap_false.
-    IF sy-batch = abap_true.
-      MESSAGE 'Update runs in dialog only - start without background, or use test mode'
-        TYPE 'S' DISPLAY LIKE 'E'.
-      RETURN.
-    ENDIF.
-    PERFORM confirm_and_update.
-  ENDIF.
-
-END-OF-SELECTION.
-  IF gt_out IS NOT INITIAL.
-    PERFORM display_alv.
-  ENDIF.
-
-*&---------------------------------------------------------------------*
-*& Form validate_selection
-*&---------------------------------------------------------------------*
-FORM validate_selection.
-  IF p_old = sy-sysid.
-    MESSAGE |Source system { p_old } is this system ({ sy-sysid }) - nothing to change|
-      TYPE 'E'.
-  ENDIF.
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form fetch_data
-*& TADIR is client-independent - no client handling needed.
-*&---------------------------------------------------------------------*
-FORM fetch_data.
-  SELECT pgmid, object, obj_name, devclass, author, srcsystem
+* Everything created in OCQ
+  SELECT pgmid, object, obj_name, devclass
     FROM tadir
     WHERE pgmid     = 'R3TR'
-      AND srcsystem = @p_old
-      AND object   IN @s_obj
-      AND obj_name IN @s_name
-      AND devclass IN @s_devc
-      AND ( obj_name LIKE 'Z%' OR obj_name LIKE 'Y%' )
+      AND srcsystem = @gc_old
     ORDER BY object, obj_name
-    INTO TABLE @gt_out.
-ENDFORM.
+    INTO TABLE @gt_obj.
 
-*&---------------------------------------------------------------------*
-*& Form classify
-*& Second guard: the package must also be a customer (Z/Y) package.
-*&---------------------------------------------------------------------*
-FORM classify.
-  LOOP AT gt_out ASSIGNING FIELD-SYMBOL(<ls_out>).
-    IF <ls_out>-devclass(1) = 'Z' OR <ls_out>-devclass(1) = 'Y'.
-      <ls_out>-src_new = sy-sysid.
-      IF p_test = abap_true.
-        <ls_out>-status = 'Test run - would be changed'.
-      ELSE.
-        <ls_out>-status = 'Pending'.
-      ENDIF.
-    ELSE.
-      <ls_out>-src_new = <ls_out>-src_old.
-      <ls_out>-status  = 'Skipped - package is not Z/Y, not changed'.
-      gv_skip = gv_skip + 1.
-    ENDIF.
-  ENDLOOP.
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form confirm_and_update
-*&---------------------------------------------------------------------*
-FORM confirm_and_update.
-  DATA: lv_answer TYPE c LENGTH 1,
-        lv_count  TYPE i,
-        lv_text   TYPE string.
-
-  LOOP AT gt_out TRANSPORTING NO FIELDS WHERE status = 'Pending'.
-    lv_count = lv_count + 1.
-  ENDLOOP.
-  IF lv_count = 0.
-    MESSAGE 'No objects qualify for update (all skipped)' TYPE 'S' DISPLAY LIKE 'W'.
+  IF gt_obj IS INITIAL.
+    MESSAGE |No objects with source system { gc_old } found| TYPE 'S' DISPLAY LIKE 'W'.
     RETURN.
   ENDIF.
 
-  lv_text = |Change source system { p_old } -> { sy-sysid } for { lv_count } objects?|.
-
-  CALL FUNCTION 'POPUP_TO_CONFIRM'
-    EXPORTING
-      titlebar              = 'Change Source System in TADIR'
-      text_question         = lv_text
-      text_button_1         = 'Yes'
-      text_button_2         = 'No'
-      default_button        = '2'
-      display_cancel_button = abap_false
-    IMPORTING
-      answer                = lv_answer
-    EXCEPTIONS
-      text_not_found        = 1
-      OTHERS                = 2.
-  IF sy-subrc <> 0 OR lv_answer <> '1'.
-    LOOP AT gt_out ASSIGNING FIELD-SYMBOL(<ls_cancel>) WHERE status = 'Pending'.
-      <ls_cancel>-src_new = <ls_cancel>-src_old.
-      <ls_cancel>-status  = 'Cancelled by user - not changed'.
-    ENDLOOP.
-    MESSAGE 'Update cancelled - nothing changed' TYPE 'S' DISPLAY LIKE 'W'.
-    RETURN.
-  ENDIF.
-
-* The SRCSYSTEM = old-system condition re-checks each row at update
-* time, so a row changed by someone else meanwhile is not overwritten.
-  LOOP AT gt_out ASSIGNING FIELD-SYMBOL(<ls_upd>) WHERE status = 'Pending'.
-    UPDATE tadir SET srcsystem = @sy-sysid
-      WHERE pgmid     = @<ls_upd>-pgmid
-        AND object    = @<ls_upd>-object
-        AND obj_name  = @<ls_upd>-obj_name
-        AND srcsystem = @p_old.
-    IF sy-subrc = 0 AND sy-dbcnt = 1.
-      <ls_upd>-status = 'Changed'.
-      gv_upd = gv_upd + 1.
+* Second guard: customer namespace by name or by package
+  LOOP AT gt_obj ASSIGNING FIELD-SYMBOL(<ls_obj>).
+    IF <ls_obj>-obj_name(1) = 'Z' OR <ls_obj>-obj_name(1) = 'Y'
+    OR <ls_obj>-devclass(1) = 'Z' OR <ls_obj>-devclass(1) = 'Y'
+    OR <ls_obj>-devclass(1) = '$'.
+      APPEND <ls_obj> TO gt_chg.
     ELSE.
-      <ls_upd>-src_new = <ls_upd>-src_old.
-      <ls_upd>-status  = 'Not changed - entry no longer matches'.
-      gv_fail = gv_fail + 1.
+      APPEND <ls_obj> TO gt_skip.
     ENDIF.
   ENDLOOP.
 
-  IF gv_upd > 0.
-    COMMIT WORK.
-  ENDIF.
+  gv_count = lines( gt_chg ).
 
-  MESSAGE |Changed: { gv_upd }, skipped: { gv_skip }, not changed: { gv_fail }| TYPE 'S'.
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form display_alv
-*&---------------------------------------------------------------------*
-FORM display_alv.
-  DATA: lo_alv  TYPE REF TO cl_salv_table,
-        lo_cols TYPE REF TO cl_salv_columns_table.
-
-  TRY.
-      cl_salv_table=>factory( IMPORTING r_salv_table = lo_alv
-                              CHANGING  t_table      = gt_out ).
-    CATCH cx_salv_msg INTO DATA(lx_msg).
-      MESSAGE lx_msg->get_text( ) TYPE 'S' DISPLAY LIKE 'E'.
+  IF p_test = abap_false AND gv_count > 0.
+    gv_text = |Change source system { gc_old } -> { gc_new } for { gv_count } objects?|.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = 'Change Source System in TADIR'
+        text_question         = gv_text
+        text_button_1         = 'Yes'
+        text_button_2         = 'No'
+        default_button        = '2'
+        display_cancel_button = abap_false
+      IMPORTING
+        answer                = gv_answer
+      EXCEPTIONS
+        text_not_found        = 1
+        OTHERS                = 2.
+    IF sy-subrc <> 0 OR gv_answer <> '1'.
+      MESSAGE 'Cancelled - nothing changed' TYPE 'S' DISPLAY LIKE 'W'.
       RETURN.
-  ENDTRY.
+    ENDIF.
 
-  lo_alv->get_functions( )->set_all( abap_true ).
-  lo_alv->get_display_settings( )->set_striped_pattern( abap_true ).
-  IF p_test = abap_true.
-    lo_alv->get_display_settings( )->set_list_header( 'TADIR Source System - TEST RUN' ).
+    gv_count = 0.
+    LOOP AT gt_chg ASSIGNING FIELD-SYMBOL(<ls_chg>).
+      UPDATE tadir SET srcsystem = @gc_new
+        WHERE pgmid     = @<ls_chg>-pgmid
+          AND object    = @<ls_chg>-object
+          AND obj_name  = @<ls_chg>-obj_name
+          AND srcsystem = @gc_old.
+      IF sy-subrc = 0.
+        gv_count = gv_count + 1.
+      ELSE.
+        APPEND <ls_chg> TO gt_fail.
+      ENDIF.
+    ENDLOOP.
+    COMMIT WORK.
+
+    WRITE: / |UPDATE RUN - { gv_count } objects changed { gc_old } -> { gc_new }|.
+  ELSEIF p_test = abap_true.
+    WRITE: / |TEST RUN - { gv_count } objects would change { gc_old } -> { gc_new }|.
   ELSE.
-    lo_alv->get_display_settings( )->set_list_header( 'TADIR Source System - UPDATE RUN' ).
+    WRITE: / 'No custom objects qualify - nothing changed'.
   ENDIF.
 
-  lo_cols = lo_alv->get_columns( ).
-  lo_cols->set_optimize( abap_true ).
-
-  PERFORM set_col_text USING lo_cols 'PGMID'    'Program ID' 'Program ID' 'Program ID'.
-  PERFORM set_col_text USING lo_cols 'OBJECT'   'Obj. Type' 'Object Type' 'Object Type'.
-  PERFORM set_col_text USING lo_cols 'OBJ_NAME' 'Obj. Name' 'Object Name' 'Object Name'.
-  PERFORM set_col_text USING lo_cols 'DEVCLASS' 'Package' 'Package' 'Package'.
-  PERFORM set_col_text USING lo_cols 'AUTHOR'   'Author' 'Person Responsible'
-                                                'Person Responsible'.
-  PERFORM set_col_text USING lo_cols 'SRC_OLD'  'Old Src' 'Old Source System'
-                                                'Old Source System'.
-  PERFORM set_col_text USING lo_cols 'SRC_NEW'  'New Src' 'New Source System'
-                                                'New Source System'.
-  PERFORM set_col_text USING lo_cols 'STATUS'   'Status' 'Status' 'Status'.
-
-  lo_alv->display( ).
-ENDFORM.
+  PERFORM print_list USING 'Changed / to be changed' gt_chg.
+  PERFORM print_list USING 'Update failed - entry changed meanwhile' gt_fail.
+  PERFORM print_list USING 'NOT changed - not Z/Y by name or package, check manually'
+                           gt_skip.
 
 *&---------------------------------------------------------------------*
-*& Form set_col_text
+*& Form print_list
 *&---------------------------------------------------------------------*
-FORM set_col_text USING io_cols  TYPE REF TO cl_salv_columns_table
-                        iv_col   TYPE csequence
-                        iv_short TYPE csequence
-                        iv_med   TYPE csequence
-                        iv_long  TYPE csequence.
-  DATA: lo_col   TYPE REF TO cl_salv_column,
-        lv_col   TYPE lvc_fname,
-        lv_short TYPE scrtext_s,
-        lv_med   TYPE scrtext_m,
-        lv_long  TYPE scrtext_l.
+FORM print_list USING iv_title TYPE csequence
+                      it_list  LIKE gt_obj.
+  DATA lv_lines TYPE i.
 
-  lv_col   = iv_col.
-  lv_short = iv_short.
-  lv_med   = iv_med.
-  lv_long  = iv_long.
-
-  TRY.
-      lo_col = io_cols->get_column( lv_col ).
-      lo_col->set_short_text( lv_short ).
-      lo_col->set_medium_text( lv_med ).
-      lo_col->set_long_text( lv_long ).
-    CATCH cx_salv_not_found.
-      MESSAGE |ALV column { lv_col } not found| TYPE 'S' DISPLAY LIKE 'W'.
-  ENDTRY.
+  IF it_list IS INITIAL.
+    RETURN.
+  ENDIF.
+  lv_lines = lines( it_list ).
+  SKIP.
+  WRITE: / iv_title, '(', lv_lines, ')'.
+  ULINE.
+  WRITE: / 'Object Type', 15 'Object Name', 58 'Package'.
+  ULINE.
+  LOOP AT it_list ASSIGNING FIELD-SYMBOL(<ls_line>).
+    WRITE: / <ls_line>-object, 15 <ls_line>-obj_name(40), 58 <ls_line>-devclass.
+  ENDLOOP.
 ENDFORM.
