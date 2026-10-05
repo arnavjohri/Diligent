@@ -231,7 +231,25 @@ FORM display_alv.
   lo_cols = lo_alv->get_columns( ).
   lo_cols->set_optimize( abap_true ).
 
-  PERFORM set_col_text USING io_cols  TYPE REF TO cl_salv_columns_table
+  PERFORM set_col_text USING lo_cols 'PGMID'    'Program ID' 'Program ID' 'Program ID'.
+  PERFORM set_col_text USING lo_cols 'OBJECT'   'Obj. Type' 'Object Type' 'Object Type'.
+  PERFORM set_col_text USING lo_cols 'OBJ_NAME' 'Obj. Name' 'Object Name' 'Object Name'.
+  PERFORM set_col_text USING lo_cols 'DEVCLASS' 'Package' 'Package' 'Package'.
+  PERFORM set_col_text USING lo_cols 'AUTHOR'   'Author' 'Person Responsible'
+                                                'Person Responsible'.
+  PERFORM set_col_text USING lo_cols 'SRC_OLD'  'Old Src' 'Old Source System'
+                                                'Old Source System'.
+  PERFORM set_col_text USING lo_cols 'SRC_NEW'  'New Src' 'New Source System'
+                                                'New Source System'.
+  PERFORM set_col_text USING lo_cols 'STATUS'   'Status' 'Status' 'Status'.
+
+  lo_alv->display( ).
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form set_col_text
+*&---------------------------------------------------------------------*
+FORM set_col_text USING io_cols  TYPE REF TO cl_salv_columns_table
                         iv_col   TYPE csequence
                         iv_short TYPE csequence
                         iv_med   TYPE csequence
