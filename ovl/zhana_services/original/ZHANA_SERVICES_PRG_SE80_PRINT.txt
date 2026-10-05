@@ -1,0 +1,3614 @@
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG attrib             Page      1
+--------------------------------------------------------------------------------
+
+
+
+Created on....27.02.2026    Last changed on/by........ 15.08.2026 SAP_ABAP
+Author........ABAPUSER02
+--------------------------------------------------------------------------------
+
+Title.........SAP Timesheet
+
+Type..................M     Module Pool
+Status................K     Customer Program
+Application...........
+Class.................
+
+
+
+Authorization group...
+Package...............ZFI_OTH
+
+
+  Deactivate editor lock
+X Fixed point arithmetic active
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      2
+--------------------------------------------------------------------------------
+
+    1  *&---------------------------------------------------------------------*
+    2  *& Modulpool  ZHANA_SERVICES_PRG
+    3  *&
+    4  *&---------------------------------------------------------------------*
+    5  *&
+    6  *&
+    7  *&---------------------------------------------------------------------*
+    8  PROGRAM zhana_services_prg.
+    9
+   10  TABLES : zsap_timesheet, zresource_mappin,zstages, zapprovers.
+   11  DATA flag TYPE c.
+   12  DATA : loan            TYPE c,
+   13         upload          TYPE c,
+   14         form            TYPE c,
+   15         create          TYPE c,
+   16         change          TYPE c,
+   17         schange         TYPE c,
+   18         display         TYPE c,
+   19         approve         TYPE c,
+   20         print           TYPE c,
+   21         r1              TYPE c,
+   22         r2              TYPE c,
+   23         month           TYPE c LENGTH 10,
+   24         doc_no          TYPE zsap_timesheet-doc_no,
+   25         creator_release TYPE c,
+   26         sap_pm          TYPE c,
+   27         core_team       TYPE c,
+   28         ovl_pm          TYPE c,
+   29         head_it         TYPE c,
+   30         release         TYPE c,
+   31
+   32         gv_loaded       TYPE c,
+   33         lv_role         TYPE zapprovers-role,
+   34         reason          TYPE c LENGTH 120,
+   35         reject          TYPE c
+   36         .
+   37
+   38  TYPES: BEGIN OF st_data,
+   39           sel             TYPE c,
+   40           consultant_name LIKE zsap_timesheet-consultant_name,
+   41           ZCONSULTANT_ID  like zsap_timesheet-ZCONSULTANT_ID,       "adde
+       d by mohd mobassir 30.06.2026
+   42           service_element LIKE zsap_timesheet-service_element,
+   43           zmodulec        LIKE zsap_timesheet-zmodulec,
+   44           datec           LIKE zsap_timesheet-datec,
+   45           daysc           LIKE zsap_timesheet-daysc,
+   46           activity        LIKE zsap_timesheet-activity,
+   47           scope           LIKE zsap_timesheet-scope,
+   48           stages          LIKE zsap_timesheet-stages,
+   49           location        LIKE zsap_timesheet-location,
+   50           remarks         LIKE zsap_timesheet-remarks,
+   51         END OF st_data.
+   52  TYPES: BEGIN OF st_role,
+   53           role LIKE zapprovers-role,
+   54         END OF st_role.
+   55  DATA: lt_role TYPE TABLE OF st_role.
+   56
+   57  DATA: lt_data   TYPE TABLE OF st_data,
+   58        lt_delete TYPE TABLE OF st_data,
+   59        ls_data   TYPE st_data.
+   60  DATA : namet TYPE c LENGTH 20.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      3
+--------------------------------------------------------------------------------
+
+   61  DATA: lv_sap_id         TYPE syuname,
+   62        lv_addrnumber     TYPE usr21-addrnumber,
+   63        lv_persnumber     TYPE usr21-persnumber,
+   64        lv_email          TYPE adr6-smtp_addr,
+   65        lv_email_receiver TYPE adr6-smtp_addr,
+   66        lv_email_sender   TYPE adr6-smtp_addr.
+   67  DATA: lv_addrnum TYPE usr21-addrnumber,
+   68        lv_persnum TYPE usr21-persnumber.
+   69
+   70  DATA: ld_mail TYPE zapprovers.
+   71  DATA: ld_mail1 TYPE zsap_timesheet.
+   72
+   73  DATA: lv_addrnum1 TYPE adr6-addrnumber,
+   74        lv_persnum1 TYPE adr6-persnumber,
+   75        lv_email1   TYPE adr6-smtp_addr.
+   76
+   77  TYPES: BEGIN OF ty_recipient,
+   78           userid TYPE syuname,
+   79           email  TYPE adr6-smtp_addr,
+   80         END OF ty_recipient.
+   81
+   82  DATA: lt_recipients TYPE STANDARD TABLE OF ty_recipient,
+   83        ls_recipient  TYPE ty_recipient.
+   84
+   85  INCLUDE ztimesheet_mail.
+   86
+   87  *&SPWIZARD: DECLARATION OF TABLECONTROL 'TIMESHEET' ITSELF
+   88  CONTROLS: timesheet TYPE TABLEVIEW USING SCREEN 9002.
+   89
+   90
+   91
+   92
+   93
+   94  *&SPWIZARD: LINES OF TABLECONTROL 'TIMESHEET'
+   95  DATA:     g_timesheet_lines  LIKE sy-loopc.
+   96
+   97  DATA:     ok_code LIKE sy-ucomm.
+   98
+   99  *&SPWIZARD: OUTPUT MODULE FOR TC 'TIMESHEET'. DO NOT CHANGE THIS LINE!
+  100  *&SPWIZARD: UPDATE LINES FOR EQUIVALENT SCROLLBAR
+  101  MODULE timesheet_change_tc_attr OUTPUT.
+  102    DESCRIBE TABLE lt_data LINES timesheet-lines.
+  103    DATA(lv_lines) = lines( lt_data ).
+  104    IF lt_data IS INITIAL AND create = 'X'.
+  105      CLEAR ls_data.
+  106      APPEND ls_data TO lt_data.
+  107    ELSE.
+  108      READ TABLE lt_data INTO ls_data INDEX lv_lines.
+  109      IF ls_data-consultant_name IS NOT INITIAL.
+  110        APPEND INITIAL LINE TO lt_data.
+  111      ENDIF.
+  112    ENDIF.
+  113
+  114  ENDMODULE.
+  115
+  116  *&SPWIZARD: OUTPUT MODULE FOR TC 'TIMESHEET'. DO NOT CHANGE THIS LINE!
+  117  *&SPWIZARD: GET LINES OF TABLECONTROL
+  118  MODULE timesheet_get_lines OUTPUT.
+  119    g_timesheet_lines = sy-loopc.
+  120
+  121  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      4
+--------------------------------------------------------------------------------
+
+  122
+  123  *&SPWIZARD: INPUT MODULE FOR TC 'TIMESHEET'. DO NOT CHANGE THIS LINE!
+  124  *&SPWIZARD: MODIFY TABLE
+  125  MODULE timesheet_modify INPUT.
+  126    MODIFY lt_data
+  127      FROM ls_data
+  128      INDEX timesheet-current_line.
+  129  ENDMODULE.
+  130
+  131  *&SPWIZARD: INPUT MODUL FOR TC 'TIMESHEET'. DO NOT CHANGE THIS LINE!
+  132  *&SPWIZARD: MARK TABLE
+  133  MODULE timesheet_mark INPUT.
+  134    DATA: g_timesheet_wa2 LIKE LINE OF lt_data.
+  135    IF timesheet-line_sel_mode = 1
+  136    AND ls_data-sel = 'X'.
+  137      LOOP AT lt_data INTO g_timesheet_wa2
+  138        WHERE sel = 'X'.
+  139        g_timesheet_wa2-sel = ''.
+  140        MODIFY lt_data
+  141          FROM g_timesheet_wa2
+  142          TRANSPORTING sel.
+  143      ENDLOOP.
+  144    ENDIF.
+  145    MODIFY lt_data
+  146      FROM ls_data
+  147      INDEX timesheet-current_line
+  148      TRANSPORTING sel.
+  149  ENDMODULE.
+  150
+  151  *&SPWIZARD: INPUT MODULE FOR TC 'TIMESHEET'. DO NOT CHANGE THIS LINE!
+  152  *&SPWIZARD: PROCESS USER COMMAND
+  153  MODULE timesheet_user_command INPUT.
+  154    ok_code = sy-ucomm.
+  155    PERFORM user_ok_tc USING    'TIMESHEET'
+  156                                'LT_DATA'
+  157                                'SEL'
+  158                       CHANGING ok_code.
+  159    sy-ucomm = ok_code.
+  160  ENDMODULE.
+  161
+  162  *----------------------------------------------------------------------*
+  163  *   INCLUDE TABLECONTROL_FORMS                                         *
+  164  *----------------------------------------------------------------------*
+  165
+  166  *&---------------------------------------------------------------------*
+  167  *&      Form  USER_OK_TC                                               *
+  168  *&---------------------------------------------------------------------*
+  169  FORM user_ok_tc USING    p_tc_name TYPE dynfnam
+  170                           p_table_name
+  171                           p_mark_name
+  172                  CHANGING p_ok      LIKE sy-ucomm.
+  173
+  174  *&SPWIZARD: BEGIN OF LOCAL DATA----------------------------------------*
+  175    DATA: l_ok     TYPE sy-ucomm,
+  176          l_offset TYPE i.
+  177  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  178
+  179  *&SPWIZARD: Table control specific operations                          *
+  180  *&SPWIZARD: evaluate TC name and operations                            *
+  181    SEARCH p_ok FOR p_tc_name.
+  182    IF sy-subrc <> 0.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      5
+--------------------------------------------------------------------------------
+
+  183      EXIT.
+  184    ENDIF.
+  185    l_offset = strlen( p_tc_name ) + 1.
+  186    l_ok = p_ok+l_offset.
+  187  *&SPWIZARD: execute general and TC specific operations                 *
+  188    CASE l_ok.
+  189      WHEN 'INSR'.                      "insert row
+  190        PERFORM fcode_insert_row USING    p_tc_name
+  191                                          p_table_name.
+  192        CLEAR p_ok.
+  193
+  194      WHEN 'DELE'.                      "delete row
+  195
+  196        lt_delete = lt_data.
+  197
+  198        PERFORM fcode_delete_row USING    p_tc_name
+  199                                          p_table_name
+  200                                          p_mark_name.
+  201        CLEAR p_ok.
+  202
+  203      WHEN 'P--' OR                     "top of list
+  204           'P-'  OR                     "previous page
+  205           'P+'  OR                     "next page
+  206           'P++'.                       "bottom of list
+  207        PERFORM compute_scrolling_in_tc USING p_tc_name
+  208                                              l_ok.
+  209        CLEAR p_ok.
+  210  *     WHEN 'L--'.                       "total left
+  211  *       PERFORM FCODE_TOTAL_LEFT USING P_TC_NAME.
+  212  *
+  213  *     WHEN 'L-'.                        "column left
+  214  *       PERFORM FCODE_COLUMN_LEFT USING P_TC_NAME.
+  215  *
+  216  *     WHEN 'R+'.                        "column right
+  217  *       PERFORM FCODE_COLUMN_RIGHT USING P_TC_NAME.
+  218  *
+  219  *     WHEN 'R++'.                       "total right
+  220  *       PERFORM FCODE_TOTAL_RIGHT USING P_TC_NAME.
+  221  *
+  222      WHEN 'MARK'.                      "mark all filled lines
+  223        PERFORM fcode_tc_mark_lines USING p_tc_name
+  224                                          p_table_name
+  225                                          p_mark_name   .
+  226        CLEAR p_ok.
+  227
+  228      WHEN 'DMRK'.                      "demark all filled lines
+  229        PERFORM fcode_tc_demark_lines USING p_tc_name
+  230                                            p_table_name
+  231                                            p_mark_name .
+  232        CLEAR p_ok.
+  233
+  234  *     WHEN 'SASCEND'   OR
+  235  *          'SDESCEND'.                  "sort column
+  236  *       PERFORM FCODE_SORT_TC USING P_TC_NAME
+  237  *                                   l_ok.
+  238
+  239    ENDCASE.
+  240
+  241  ENDFORM.                              " USER_OK_TC
+  242
+  243  *&---------------------------------------------------------------------*
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      6
+--------------------------------------------------------------------------------
+
+  244  *&      Form  FCODE_INSERT_ROW                                         *
+  245  *&---------------------------------------------------------------------*
+  246  FORM fcode_insert_row
+  247                USING    p_tc_name           TYPE dynfnam
+  248                         p_table_name             .
+  249
+  250  *&SPWIZARD: BEGIN OF LOCAL DATA----------------------------------------*
+  251    DATA l_lines_name       LIKE feld-name.
+  252    DATA l_selline          LIKE sy-stepl.
+  253    DATA l_lastline         TYPE i.
+  254    DATA l_line             TYPE i.
+  255    DATA l_table_name       LIKE feld-name.
+  256    FIELD-SYMBOLS <tc>                 TYPE cxtab_control.
+  257    FIELD-SYMBOLS <table>              TYPE STANDARD TABLE.
+  258    FIELD-SYMBOLS <lines>              TYPE i.
+  259  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  260
+  261    ASSIGN (p_tc_name) TO <tc>.
+  262
+  263  *&SPWIZARD: get the table, which belongs to the tc                     *
+  264    CONCATENATE p_table_name '[]' INTO l_table_name. "table body
+  265    ASSIGN (l_table_name) TO <table>.                "not headerline
+  266
+  267  *&SPWIZARD: get looplines of TableControl                              *
+  268    CONCATENATE 'G_' p_tc_name '_LINES' INTO l_lines_name.
+  269    ASSIGN (l_lines_name) TO <lines>.
+  270
+  271  *&SPWIZARD: get current line                                           *
+  272    GET CURSOR LINE l_selline.
+  273    IF sy-subrc <> 0.                   " append line to table
+  274      l_selline = <tc>-lines + 1.
+  275  *&SPWIZARD: set top line                                               *
+  276      IF l_selline > <lines>.
+  277        <tc>-top_line = l_selline - <lines> + 1 .
+  278      ELSE.
+  279        <tc>-top_line = 1.
+  280      ENDIF.
+  281    ELSE.                               " insert line into table
+  282      l_selline = <tc>-top_line + l_selline - 1.
+  283      l_lastline = <tc>-top_line + <lines> - 1.
+  284    ENDIF.
+  285  *&SPWIZARD: set new cursor line                                        *
+  286    l_line = l_selline - <tc>-top_line + 1.
+  287
+  288  *&SPWIZARD: insert initial line                                        *
+  289    INSERT INITIAL LINE INTO <table> INDEX l_selline.
+  290    <tc>-lines = <tc>-lines + 1.
+  291  *&SPWIZARD: set cursor                                                 *
+  292    SET CURSOR LINE l_line.
+  293
+  294  ENDFORM.                              " FCODE_INSERT_ROW
+  295
+  296  *&---------------------------------------------------------------------*
+  297  *&      Form  FCODE_DELETE_ROW                                         *
+  298  *&---------------------------------------------------------------------*
+  299  FORM fcode_delete_row
+  300                USING    p_tc_name           TYPE dynfnam
+  301                         p_table_name
+  302                         p_mark_name   .
+  303
+  304  *&SPWIZARD: BEGIN OF LOCAL DATA----------------------------------------*
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      7
+--------------------------------------------------------------------------------
+
+  305    DATA l_table_name       LIKE feld-name.
+  306
+  307    FIELD-SYMBOLS <tc>         TYPE cxtab_control.
+  308    FIELD-SYMBOLS <table>      TYPE STANDARD TABLE.
+  309    FIELD-SYMBOLS <wa>.
+  310    FIELD-SYMBOLS <mark_field>.
+  311  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  312
+  313    ASSIGN (p_tc_name) TO <tc>.
+  314
+  315  *&SPWIZARD: get the table, which belongs to the tc                     *
+  316    CONCATENATE p_table_name '[]' INTO l_table_name. "table body
+  317    ASSIGN (l_table_name) TO <table>.                "not headerline
+  318
+  319  *&SPWIZARD: delete marked lines                                        *
+  320    DESCRIBE TABLE <table> LINES <tc>-lines.
+  321
+  322    LOOP AT <table> ASSIGNING <wa>.
+  323
+  324  *&SPWIZARD: access to the component 'FLAG' of the table header         *
+  325      ASSIGN COMPONENT p_mark_name OF STRUCTURE <wa> TO <mark_field>.
+  326
+  327      IF <mark_field> = 'X'.
+  328        DELETE <table> INDEX syst-tabix.
+  329        IF sy-subrc = 0.
+  330          <tc>-lines = <tc>-lines - 1.
+  331        ENDIF.
+  332      ENDIF.
+  333    ENDLOOP.
+  334
+  335  ENDFORM.                              " FCODE_DELETE_ROW
+  336
+  337  *&---------------------------------------------------------------------*
+  338  *&      Form  COMPUTE_SCROLLING_IN_TC
+  339  *&---------------------------------------------------------------------*
+  340  *       text
+  341  *----------------------------------------------------------------------*
+  342  *      -->P_TC_NAME  name of tablecontrol
+  343  *      -->P_OK       ok code
+  344  *----------------------------------------------------------------------*
+  345  FORM compute_scrolling_in_tc USING    p_tc_name
+  346                                        p_ok.
+  347  *&SPWIZARD: BEGIN OF LOCAL DATA----------------------------------------*
+  348    DATA l_tc_new_top_line     TYPE i.
+  349    DATA l_tc_name             LIKE feld-name.
+  350    DATA l_tc_lines_name       LIKE feld-name.
+  351    DATA l_tc_field_name       LIKE feld-name.
+  352
+  353    FIELD-SYMBOLS <tc>         TYPE cxtab_control.
+  354    FIELD-SYMBOLS <lines>      TYPE i.
+  355  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  356
+  357    ASSIGN (p_tc_name) TO <tc>.
+  358  *&SPWIZARD: get looplines of TableControl                              *
+  359    CONCATENATE 'G_' p_tc_name '_LINES' INTO l_tc_lines_name.
+  360    ASSIGN (l_tc_lines_name) TO <lines>.
+  361
+  362
+  363  *&SPWIZARD: is no line filled?                                         *
+  364    IF <tc>-lines = 0.
+  365  *&SPWIZARD: yes, ...                                                   *
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      8
+--------------------------------------------------------------------------------
+
+  366      l_tc_new_top_line = 1.
+  367    ELSE.
+  368  *&SPWIZARD: no, ...                                                    *
+  369      CALL FUNCTION 'SCROLLING_IN_TABLE'
+  370        EXPORTING
+  371          entry_act      = <tc>-top_line
+  372          entry_from     = 1
+  373          entry_to       = <tc>-lines
+  374          last_page_full = 'X'
+  375          loops          = <lines>
+  376          ok_code        = p_ok
+  377          overlapping    = 'X'
+  378        IMPORTING
+  379          entry_new      = l_tc_new_top_line
+  380        EXCEPTIONS
+  381  *       NO_ENTRY_OR_PAGE_ACT  = 01
+  382  *       NO_ENTRY_TO    = 02
+  383  *       NO_OK_CODE_OR_PAGE_GO = 03
+  384          OTHERS         = 0.
+  385    ENDIF.
+  386
+  387  *&SPWIZARD: get actual tc and column                                   *
+  388    GET CURSOR FIELD l_tc_field_name
+  389               AREA  l_tc_name.
+  390
+  391    IF syst-subrc = 0.
+  392      IF l_tc_name = p_tc_name.
+  393  *&SPWIZARD: et actual column                                           *
+  394        SET CURSOR FIELD l_tc_field_name LINE 1.
+  395      ENDIF.
+  396    ENDIF.
+  397
+  398  *&SPWIZARD: set the new top line                                       *
+  399    <tc>-top_line = l_tc_new_top_line.
+  400
+  401
+  402  ENDFORM.                              " COMPUTE_SCROLLING_IN_TC
+  403
+  404  *&---------------------------------------------------------------------*
+  405  *&      Form  FCODE_TC_MARK_LINES
+  406  *&---------------------------------------------------------------------*
+  407  *       marks all TableControl lines
+  408  *----------------------------------------------------------------------*
+  409  *      -->P_TC_NAME  name of tablecontrol
+  410  *----------------------------------------------------------------------*
+  411  FORM fcode_tc_mark_lines USING p_tc_name
+  412                                 p_table_name
+  413                                 p_mark_name.
+  414  *&SPWIZARD: EGIN OF LOCAL DATA-----------------------------------------*
+  415    DATA l_table_name       LIKE feld-name.
+  416
+  417    FIELD-SYMBOLS <tc>         TYPE cxtab_control.
+  418    FIELD-SYMBOLS <table>      TYPE STANDARD TABLE.
+  419    FIELD-SYMBOLS <wa>.
+  420    FIELD-SYMBOLS <mark_field>.
+  421  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  422
+  423    ASSIGN (p_tc_name) TO <tc>.
+  424
+  425  *&SPWIZARD: get the table, which belongs to the tc                     *
+  426    CONCATENATE p_table_name '[]' INTO l_table_name. "table body
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page      9
+--------------------------------------------------------------------------------
+
+  427    ASSIGN (l_table_name) TO <table>.                "not headerline
+  428
+  429  *&SPWIZARD: mark all filled lines                                      *
+  430    LOOP AT <table> ASSIGNING <wa>.
+  431
+  432  *&SPWIZARD: access to the component 'FLAG' of the table header         *
+  433      ASSIGN COMPONENT p_mark_name OF STRUCTURE <wa> TO <mark_field>.
+  434
+  435      <mark_field> = 'X'.
+  436    ENDLOOP.
+  437  ENDFORM.                                          "fcode_tc_mark_lines
+  438
+  439  *&---------------------------------------------------------------------*
+  440  *&      Form  FCODE_TC_DEMARK_LINES
+  441  *&---------------------------------------------------------------------*
+  442  *       demarks all TableControl lines
+  443  *----------------------------------------------------------------------*
+  444  *      -->P_TC_NAME  name of tablecontrol
+  445  *----------------------------------------------------------------------*
+  446  FORM fcode_tc_demark_lines USING p_tc_name
+  447                                   p_table_name
+  448                                   p_mark_name .
+  449  *&SPWIZARD: BEGIN OF LOCAL DATA----------------------------------------*
+  450    DATA l_table_name       LIKE feld-name.
+  451
+  452    FIELD-SYMBOLS <tc>         TYPE cxtab_control.
+  453    FIELD-SYMBOLS <table>      TYPE STANDARD TABLE.
+  454    FIELD-SYMBOLS <wa>.
+  455    FIELD-SYMBOLS <mark_field>.
+  456  *&SPWIZARD: END OF LOCAL DATA------------------------------------------*
+  457
+  458    ASSIGN (p_tc_name) TO <tc>.
+  459
+  460  *&SPWIZARD: get the table, which belongs to the tc                     *
+  461    CONCATENATE p_table_name '[]' INTO l_table_name. "table body
+  462    ASSIGN (l_table_name) TO <table>.                "not headerline
+  463
+  464  *&SPWIZARD: demark all filled lines                                    *
+  465    LOOP AT <table> ASSIGNING <wa>.
+  466
+  467  *&SPWIZARD: access to the component 'FLAG' of the table header         *
+  468      ASSIGN COMPONENT p_mark_name OF STRUCTURE <wa> TO <mark_field>.
+  469
+  470      <mark_field> = space.
+  471    ENDLOOP.
+  472  ENDFORM.                                          "fcode_tc_mark_lines
+  473
+  474  INCLUDE zhana_services_prg_status_9o01.
+  475
+  476  INCLUDE zhana_services_prg_status_9o02.
+  477
+  478  INCLUDE zhana_services_prg_status_9o03.
+  479
+  480  INCLUDE zhana_services_prg_get_c_nai01.
+  481
+  482  INCLUDE zhana_services_prg_get_modui01.
+  483
+  484  INCLUDE zhana_services_prg_get_stagi01.
+  485
+  486  INCLUDE zhana_services_prg_get_doc_i01.
+  487
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG                    Page     10
+--------------------------------------------------------------------------------
+
+  488  INCLUDE zhana_services_prg_mailf01.
+  489
+  490  INCLUDE zhana_services_prg_get_servi01.
+  491
+  492  INCLUDE zhana_services_prg_get_rolei01.
+  493
+  494  INCLUDE zhana_services_prg_get_rolei02.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_C_NAI01        Page     11
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_C_NAI01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_C_NAME  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE get_c_name INPUT.
+   10
+   11    TYPES: BEGIN OF ty_doc_f4,
+   12             consultant_name TYPE zcname, "Returned value
+   13  *         doc_no_disp TYPE char10, "Displayed value (no ALPHA)
+   14           END OF ty_doc_f4.
+   15
+   16    DATA: lt_doc_f4 TYPE STANDARD TABLE OF ty_doc_f4,
+   17          ls_doc_f4 TYPE ty_doc_f4,
+   18          lt_return TYPE STANDARD TABLE OF ddshretval,
+   19          ls_return TYPE ddshretval..
+   20    CLEAR : lt_doc_f4 ,ls_doc_f4,lt_return,ls_return.
+   21  *---------------------------------------------------------------------*
+   22  *  Fetch data from DB
+   23  *---------------------------------------------------------------------*
+   24  *  BREAK-POINT
+   25    .
+   26    SELECT  consultant_name
+   27      FROM zresource_mappin
+   28      INTO TABLE @DATA(lt_doc_db)
+   29      WHERE consultant_name IS NOT NULL AND zconsultant_id = @sy-uname.
+   30
+   31    IF lt_doc_db IS INITIAL.
+   32      RETURN.
+   33    ENDIF.
+   34
+   35  *---------------------------------------------------------------------*
+   36  *  Remove duplicates
+   37  *---------------------------------------------------------------------*
+   38    SORT lt_doc_db.
+   39    DELETE ADJACENT DUPLICATES FROM lt_doc_db COMPARING consultant_name.
+   40
+   41  *---------------------------------------------------------------------*
+   42  *  Prepare F4 internal table (KEEP LEADING ZEROS)
+   43  *---------------------------------------------------------------------*
+   44    LOOP AT lt_doc_db INTO DATA(lv_doc).
+   45      CLEAR ls_doc_f4.
+   46      ls_doc_f4-consultant_name      = lv_doc.                "0000000002
+   47  *  ls_doc_f4-doc_no_disp = lv_doc.   "Displayed exactly
+   48      APPEND ls_doc_f4 TO lt_doc_f4.
+   49    ENDLOOP.
+   50
+   51  *---------------------------------------------------------------------*
+   52  *  Call F4 Help
+   53  *---------------------------------------------------------------------*
+   54    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   55      EXPORTING
+   56        retfield    = 'CONSULTANT_NAME'
+   57        dynpprog    = sy-repid
+   58        dynpnr      = sy-dynnr
+   59        dynprofield = 'ZRESOURCE_MAPPIN-CONSULTANT_NAME'
+   60        value_org   = 'S'
+   61      TABLES
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_C_NAI01        Page     12
+--------------------------------------------------------------------------------
+
+   62        value_tab   = lt_doc_f4
+   63        return_tab  = lt_return.
+   64
+   65  *---------------------------------------------------------------------*
+   66  *  Get selected value
+   67  *---------------------------------------------------------------------*
+   68    IF sy-subrc = 0 AND lt_return IS NOT INITIAL.
+   69      READ TABLE lt_return INTO ls_return INDEX 1.
+   70      IF sy-subrc = 0.
+   71        zresource_mappin-consultant_name = ls_return-fieldval.
+   72      ENDIF.
+   73    ENDIF.
+   74
+   75    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+       """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   76
+   77  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_DOC_I01        Page     13
+--------------------------------------------------------------------------------
+
+    1  MODULE get_doc_no INPUT.
+    2
+    3  *---------------------------------------------------------------------*
+    4  * FULL Unique Type Declaration
+    5  *---------------------------------------------------------------------*
+    6    TYPES: BEGIN OF ty_full_docno_f4,
+    7             doc_no          TYPE zsap_timesheet-doc_no,
+    8
+    9             consultant_name TYPE zsap_timesheet-consultant_name,
+   10             service_element TYPE zsap_timesheet-service_element,
+   11             zmodulec        TYPE zsap_timesheet-zmodulec,
+   12             created_on      TYPE zsap_timesheet-created_on,
+   13           END OF ty_full_docno_f4.
+   14
+   15  *---------------------------------------------------------------------*
+   16  * FULL Unique Data Declaration
+   17  *---------------------------------------------------------------------*
+   18    DATA: lt_full_docno_f4_tab TYPE STANDARD TABLE OF ty_full_docno_f4,
+   19          ls_full_docno_f4_tab TYPE ty_full_docno_f4,
+   20          lt_full_return_tab   TYPE STANDARD TABLE OF ddshretval,
+   21          ls_full_return_tab   TYPE ddshretval.
+   22
+   23  *---------------------------------------------------------------------*
+   24  * Fetch Data from DB
+   25  *---------------------------------------------------------------------*
+   26    CLEAR lt_full_docno_f4_tab.
+   27    IF sap_pm NE 'X' AND core_team NE 'X' AND ovl_pm NE 'X'AND head_it NE
+       'X' AND creator_release NE 'X'  AND change NE 'X' .
+   28      SELECT doc_no
+   29             consultant_name
+   30             service_element
+   31             zmodulec
+   32             created_on
+   33        INTO TABLE lt_full_docno_f4_tab
+   34        FROM zsap_timesheet
+   35        WHERE stages IS NOT NULL AND zconsultant_id EQ sy-uname.
+   36    ENDIF.
+   37
+   38    IF change = 'X'.
+   39      SELECT doc_no
+   40             consultant_name
+   41             service_element
+   42             zmodulec
+   43             created_on
+   44        INTO TABLE lt_full_docno_f4_tab
+   45        FROM zsap_timesheet
+   46        WHERE stages IS NOT NULL AND zconsultant_id EQ sy-uname AND creato
+       r_release_r NE 'X'.
+   47
+   48    ENDIF.
+   49
+   50    IF creator_release = 'X' .
+   51      SELECT doc_no
+   52             consultant_name
+   53             service_element
+   54             zmodulec
+   55             created_on
+   56        INTO TABLE lt_full_docno_f4_tab
+   57        FROM zsap_timesheet
+   58        WHERE stages IS NOT NULL AND zconsultant_id EQ sy-uname AND creato
+       r_release_r NE 'X'.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_DOC_I01        Page     14
+--------------------------------------------------------------------------------
+
+   59    ENDIF.
+   60
+   61
+   62    IF sap_pm = 'X'.
+   63      " SAP PM level: SAP_PM_APPROVE blank
+   64      SELECT doc_no
+   65             consultant_name
+   66             service_element
+   67             zmodulec
+   68             created_on
+   69        INTO TABLE lt_full_docno_f4_tab
+   70        FROM zsap_timesheet
+   71  *      WHERE stages IS NOT NULL
+   72  *        AND ( sap_pm_approve IS NULL OR sap_pm_approve = '' ) AND rejec
+       t_reason = ' '  AND creator_release_r = 'X'.
+   73        WHERE stages IS NOT NULL
+   74    AND ( sap_pm_approve IS NULL OR sap_pm_approve = '' ) AND sap_pm_rejec
+       t NE 'X'  AND creator_release_r = 'X'.   "addded by mohd mobassir - 22.0
+       7.2026
+   75
+   76    ELSEIF core_team = 'X'.
+   77      " CORE TEAM level: CORE_TEAM_APPROVE blank
+   78      SELECT doc_no
+   79             consultant_name
+   80             service_element
+   81             zmodulec
+   82             created_on
+   83        INTO TABLE lt_full_docno_f4_tab
+   84        FROM zsap_timesheet
+   85        WHERE stages IS NOT NULL
+   86          AND ( core_team_approve IS NULL OR core_team_approve = '' ) AND
+       reject_reason = ' ' AND sap_pm_approve = 'X' .
+   87
+   88    ELSEIF ovl_pm = 'X'.
+   89      " OVL PM level: OVL_PM_APPROVE blank
+   90      SELECT doc_no
+   91             consultant_name
+   92             service_element
+   93             zmodulec
+   94             created_on
+   95        INTO TABLE lt_full_docno_f4_tab
+   96        FROM zsap_timesheet
+   97        WHERE stages IS NOT NULL
+   98          AND ( ovl_pm_approve IS NULL OR ovl_pm_approve = '' ) AND reject
+       _reason = ' ' AND sap_pm_approve = 'X' AND core_team_approve = 'X' .
+   99
+  100    ELSEIF head_it = 'X'.
+  101      " HEAD IT level: HEAD_IT_APPROVE blank
+  102      SELECT doc_no
+  103             consultant_name
+  104             service_element
+  105             zmodulec
+  106             created_on
+  107        INTO TABLE lt_full_docno_f4_tab
+  108        FROM zsap_timesheet
+  109        WHERE stages IS NOT NULL
+  110          AND ( head_it_approve IS NULL OR head_it_approve = '' ) AND reje
+       ct_reason = ' ' AND sap_pm_approve = 'X' AND core_team_approve = 'X' AND
+         ovl_pm_approve = 'X'.
+  111    ENDIF.
+  112
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_DOC_I01        Page     15
+--------------------------------------------------------------------------------
+
+  113    IF lt_full_docno_f4_tab IS INITIAL.
+  114      MESSAGE 'No Document Found' TYPE 'I'.
+  115      RETURN.
+  116    ENDIF.
+  117
+  118  *---------------------------------------------------------------------*
+  119  * Remove Duplicate DOC_NO
+  120  *---------------------------------------------------------------------*
+  121    SORT lt_full_docno_f4_tab BY doc_no.
+  122    DELETE ADJACENT DUPLICATES FROM lt_full_docno_f4_tab COMPARING doc_no.
+  123
+  124  *---------------------------------------------------------------------*
+  125  * Force Leading Zero Format (For Internal Table & F4)
+  126  *---------------------------------------------------------------------*
+  127  **  LOOP AT lt_full_docno_f4_tab INTO ls_full_docno_f4_tab.
+  128  **
+  129  **    " Pad DOC_NO with leading zeros (width 10)
+  130  **    ls_full_docno_f4_tab-doc_no =
+  131  **      |{ ls_full_docno_f4_tab-doc_no WIDTH = 10 PAD = '0' }|.
+  132  **
+  133  **    MODIFY lt_full_docno_f4_tab FROM ls_full_docno_f4_tab.
+  134  **
+  135  **  ENDLOOP.
+  136
+  137  *---------------------------------------------------------------------*
+  138  * Call F4 Help (Multi-Column)
+  139  *---------------------------------------------------------------------*
+  140    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+  141      EXPORTING
+  142        retfield    = 'DOC_NO'
+  143        dynpprog    = sy-repid
+  144        dynpnr      = sy-dynnr
+  145        dynprofield = 'ZSAP_TIMESHEET-DOC_NO'
+  146        value_org   = 'S'
+  147      TABLES
+  148        value_tab   = lt_full_docno_f4_tab
+  149        return_tab  = lt_full_return_tab.
+  150
+  151  *---------------------------------------------------------------------*
+  152  * Get Selected Value (Ensure Leading Zeros)
+  153  *---------------------------------------------------------------------*
+  154    IF sy-subrc = 0 AND lt_full_return_tab IS NOT INITIAL.
+  155
+  156      READ TABLE lt_full_return_tab INTO ls_full_return_tab INDEX 1.
+  157      IF sy-subrc = 0.
+  158
+  159        " Pad selected DOC_NO to 10 chars
+  160        zsap_timesheet-doc_no =
+  161          |{ ls_full_return_tab-fieldval WIDTH = 10 PAD = '0' }|.
+  162
+  163      ENDIF.
+  164
+  165    ENDIF.
+  166
+  167  *---------------------------------------------------------------------*
+  168  * Clear Internal Tables
+  169  *---------------------------------------------------------------------*
+  170    CLEAR: lt_full_docno_f4_tab,
+  171           ls_full_docno_f4_tab,
+  172           lt_full_return_tab,
+  173           ls_full_return_tab.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_DOC_I01        Page     16
+--------------------------------------------------------------------------------
+
+  174
+  175  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_MODUI01        Page     17
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_MODUI01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_MODULE  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE get_module INPUT.
+   10
+   11
+   12    TYPES: BEGIN OF ty_doc,
+   13             zmodulec TYPE zcmodule, "Returned value
+   14  *         doc_no_disp TYPE char10, "Displayed value (no ALPHA)
+   15           END OF ty_doc.
+   16
+   17    DATA: lt_doc TYPE STANDARD TABLE OF ty_doc,
+   18          ls_doc TYPE ty_doc.
+   19  *        lt_return TYPE STANDARD TABLE OF ddshretval,
+   20  *        ls_return TYPE ddshretval..
+   21    CLEAR : lt_doc ,ls_doc,lt_return,ls_return.
+   22  *---------------------------------------------------------------------*
+   23  *  Fetch data from DB
+   24  *---------------------------------------------------------------------*
+   25    SELECT  zmodulec
+   26      FROM zresource_mappin
+   27      INTO TABLE @DATA(lt_doc_db1) FOR ALL ENTRIES IN @lt_data
+   28      WHERE consultant_name EQ @lt_data-consultant_name AND  zmodulec IS N
+       OT NULL.
+   29
+   30    IF lt_doc_db1 IS INITIAL.
+   31      RETURN.
+   32    ENDIF.
+   33
+   34  *---------------------------------------------------------------------*
+   35  *  Remove duplicates
+   36  *---------------------------------------------------------------------*
+   37    SORT lt_doc_db1.
+   38    DELETE ADJACENT DUPLICATES FROM lt_doc_db1.
+   39
+   40  *---------------------------------------------------------------------*
+   41  *  Prepare F4 internal table (KEEP LEADING ZEROS)
+   42  *---------------------------------------------------------------------*
+   43    LOOP AT lt_doc_db1 INTO DATA(lv_doc1).
+   44      CLEAR ls_doc.
+   45      ls_doc-zmodulec     = lv_doc1.                          "0000000002
+   46  *  ls_doc_f4-doc_no_disp = lv_doc.   "Displayed exactly
+   47      APPEND ls_doc TO lt_doc.
+   48    ENDLOOP.
+   49
+   50  *---------------------------------------------------------------------*
+   51  *  Call F4 Help
+   52  *---------------------------------------------------------------------*
+   53    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   54      EXPORTING
+   55        retfield    = 'ZMODULEC'
+   56        dynpprog    = sy-repid
+   57        dynpnr      = sy-dynnr
+   58        dynprofield = 'ZRESOURCE_MAPPIN-ZMODULEC'
+   59        value_org   = 'S'
+   60      TABLES
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_MODUI01        Page     18
+--------------------------------------------------------------------------------
+
+   61        value_tab   = lt_doc
+   62        return_tab  = lt_return.
+   63
+   64  *---------------------------------------------------------------------*
+   65  *  Get selected value
+   66  *---------------------------------------------------------------------*
+   67    IF sy-subrc = 0 AND lt_return IS NOT INITIAL.
+   68      READ TABLE lt_return INTO ls_return INDEX 1.
+   69      IF sy-subrc = 0.
+   70        zresource_mappin-zmodulec = ls_return-fieldval.
+   71      ENDIF.
+   72    ENDIF.
+   73
+   74    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+       """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   75
+   76
+   77  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_ROLEI01        Page     19
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_ROLEI01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_ROLE  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  **MODULE get_role INPUT.
+   10  ***---------------------------------------------------------------------
+       *
+   11  *** FULL Unique Type Declaration
+   12  ***---------------------------------------------------------------------
+       *
+   13  **  TYPES: BEGIN OF ty_full_role_f4,
+   14  **           role TYPE zapprovers-role,
+   15  **           name TYPE zapprovers-name,
+   16  **
+   17  **         END OF ty_full_role_f4.
+   18  **
+   19  ***---------------------------------------------------------------------
+       *
+   20  *** FULL Unique Data Declaration
+   21  ***---------------------------------------------------------------------
+       *
+   22  **  DATA: lt_full_role_f4_tab  TYPE STANDARD TABLE OF ty_full_role_f4,
+   23  **        ls_full_role_f4_tab  TYPE ty_full_role_f4,
+   24  **        lt_full_return_tab_2 TYPE STANDARD TABLE OF ddshretval,
+   25  **        ls_full_return_tab_2 TYPE ddshretval.
+   26  **
+   27  ***---------------------------------------------------------------------
+       *
+   28  *** Fetch Data from DB
+   29  ***---------------------------------------------------------------------
+       *
+   30  **  DATA: lv_rolef TYPE zapprovers-role.
+   31  **
+   32  **  CLEAR lv_rolef.
+   33  **
+   34  **  IF sap_pm = 'X'.
+   35  **    lv_rolef = 'SAP_PM'.
+   36  **
+   37  **  ELSEIF core_team = 'X'.
+   38  **    lv_rolef = 'Core_Team'.
+   39  **
+   40  **  ELSEIF ovl_pm = 'X'.
+   41  **    lv_rolef = 'OVL_PM'.
+   42  **
+   43  **  ELSEIF head_it = 'X'.
+   44  **    lv_rolef = 'Head_IT'.
+   45  **
+   46  **  ENDIF.
+   47  **
+   48  **  SELECT role name
+   49  **    INTO TABLE lt_full_role_f4_tab
+   50  **    FROM zapprovers
+   51  **    WHERE role EQ  lv_rolef.
+   52  **
+   53  **  IF lt_full_role_f4_tab IS INITIAL.
+   54  **    MESSAGE 'No Role Found' TYPE 'I'.
+   55  **    RETURN.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_ROLEI01        Page     20
+--------------------------------------------------------------------------------
+
+   56  **  ENDIF.
+   57  **
+   58  ***---------------------------------------------------------------------
+       *
+   59  *** Remove Duplicate Role
+   60  ***---------------------------------------------------------------------
+       *
+   61  **  SORT lt_full_role_f4_tab BY role.
+   62  **  DELETE ADJACENT DUPLICATES FROM lt_full_role_f4_tab COMPARING role.
+   63  **
+   64  **
+   65  ***---------------------------------------------------------------------
+       *
+   66  *** Call F4 Help (Multi-Column)
+   67  ***---------------------------------------------------------------------
+       *
+   68  **  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   69  **    EXPORTING
+   70  **      retfield    = 'ROLE'
+   71  **      dynpprog    = sy-repid
+   72  **      dynpnr      = sy-dynnr
+   73  **      dynprofield = 'ZAPPROVERS_ROLE'
+   74  **      value_org   = 'S'
+   75  **    TABLES
+   76  **      value_tab   = lt_full_role_f4_tab
+   77  **      return_tab  = lt_full_return_tab_2.
+   78  **
+   79  ***---------------------------------------------------------------------
+       *
+   80  *** Get Selected Value (Ensure Leading Zeros)
+   81  ***---------------------------------------------------------------------
+       *
+   82  **  IF sy-subrc = 0 AND lt_full_return_tab_2 IS NOT INITIAL.
+   83  **
+   84  **    READ TABLE lt_full_return_tab_2 INTO ls_full_return_tab_2 INDEX 1.
+   85  **    IF sy-subrc = 0.
+   86  **
+   87  **      " Pad selected DOC_NO to 10 chars
+   88  **      zsap_timesheet-doc_no =
+   89  **        |{ ls_full_return_tab_2-fieldval WIDTH = 10 PAD = '0' }|.
+   90  **
+   91  **    ENDIF.
+   92  **
+   93  **  ENDIF.
+   94  **
+   95  ***---------------------------------------------------------------------
+       *
+   96  *** Clear Internal Tables
+   97  ***---------------------------------------------------------------------
+       *
+   98  **  CLEAR: lt_full_role_f4_tab,
+   99  **         ls_full_role_f4_tab,
+  100  **         lt_full_return_tab_2,
+  101  **         ls_full_return_tab_2.
+  102  **
+  103  **ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_ROLEI02        Page     21
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_ROLEI02.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_ROLE  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9
+   10  MODULE get_role INPUT.
+   11
+   12    TYPES: BEGIN OF ty_full_role_f4,
+   13             role TYPE zapprovers-role,
+   14             name TYPE zapprovers-name,
+   15           END OF ty_full_role_f4.
+   16
+   17    DATA: lt_full_role_f4_tab TYPE STANDARD TABLE OF ty_full_role_f4,
+   18          ls_full_role_f4_tab TYPE ty_full_role_f4,
+   19          lt_role_return_tab  TYPE STANDARD TABLE OF ddshretval,
+   20          ls_role_return_tab  TYPE ddshretval,
+   21          lv_rolef            TYPE zapprovers-role.
+   22
+   23    CLEAR: lt_full_role_f4_tab,
+   24           lt_role_return_tab.
+   25
+   26    " Determine Role
+   27    IF sap_pm = 'X'.
+   28      lv_rolef = 'CORE_TEAM'.
+   29    ELSEIF core_team = 'X'.
+   30      lv_rolef = 'OVL_PM'.
+   31    ELSEIF ovl_pm = 'X'.
+   32      lv_rolef = 'HEAD_IT'.
+   33    ELSEIF head_it = 'X'.
+   34      lv_rolef = 'HEAD_IT'.
+   35    ENDIF.
+   36
+   37    IF lv_rolef IS INITIAL.
+   38      MESSAGE 'Select Role checkbox first' TYPE 'I'.
+   39      RETURN.
+   40    ENDIF.
+   41
+   42    " Fetch Data
+   43    SELECT role name
+   44      INTO TABLE lt_full_role_f4_tab
+   45      FROM zapprovers
+   46      WHERE role = lv_rolef.
+   47
+   48    IF lt_full_role_f4_tab IS INITIAL.
+   49      MESSAGE 'No data found for selected role' TYPE 'I'.
+   50      RETURN.
+   51    ENDIF.
+   52
+   53    " Remove duplicates
+   54    SORT lt_full_role_f4_tab BY role.
+   55  *  DELETE ADJACENT DUPLICATES FROM lt_full_role_f4_tab COMPARING role.
+   56
+   57    " Call F4
+   58    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   59      EXPORTING
+   60        retfield    = 'NAME'
+   61        dynpprog    = sy-repid
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_ROLEI02        Page     22
+--------------------------------------------------------------------------------
+
+   62        dynpnr      = sy-dynnr
+   63        dynprofield = 'ZAPPROVERS_ROLE'
+   64        value_org   = 'S'
+   65      TABLES
+   66        value_tab   = lt_full_role_f4_tab
+   67        return_tab  = lt_role_return_tab.
+   68
+   69
+   70    " Get Selected ROLE
+   71    IF sy-subrc = 0 AND lt_role_return_tab IS NOT INITIAL.
+   72
+   73      READ TABLE lt_role_return_tab INTO ls_role_return_tab INDEX 1.
+   74      IF sy-subrc = 0.
+   75  *      namet = ls_role_return_tab-fieldval.
+   76        lv_role = ls_role_return_tab-fieldval.
+   77      ENDIF.
+   78
+   79      READ TABLE lt_full_role_f4_tab  INTO DATA(id) WITH KEY name = ls_rol
+       e_return_tab-fieldval.
+   80      IF sy-subrc = 0.
+   81  *    lv_role = id-role.
+   82        namet = id-role.
+   83      ENDIF.
+   84    ENDIF.
+   85
+   86    " Clear Internal Tables
+   87    CLEAR: lt_full_role_f4_tab,
+   88           ls_full_role_f4_tab,
+   89           lt_role_return_tab,
+   90           ls_role_return_tab,id.
+   91
+   92  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_SERVI01        Page     23
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_SERVI01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_SERVICE_ELEMENT  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE get_service_element INPUT.
+   10
+   11    TYPES: BEGIN OF ty_serv_f4,
+   12             service_element TYPE zser_ele, "Returned value
+   13           END OF ty_serv_f4.
+   14
+   15    DATA: lt_serv_f4     TYPE STANDARD TABLE OF ty_serv_f4,
+   16          ls_serv_f4     TYPE ty_serv_f4,
+   17          lt_serv_return TYPE STANDARD TABLE OF ddshretval,
+   18          ls_serv_return TYPE ddshretval..
+   19    CLEAR : lt_serv_f4 ,ls_serv_f4,lt_serv_return,ls_serv_return.
+   20  *---------------------------------------------------------------------*
+   21  *  Fetch data from DB
+   22  *---------------------------------------------------------------------*
+   23    SELECT  service_element
+   24      FROM ZSERVICE_ELEMENT
+   25      INTO TABLE @DATA(lt_serv_db)
+   26      WHERE service_element IS NOT NULL.
+   27
+   28    IF lt_serv_db IS INITIAL.
+   29      RETURN.
+   30    ENDIF.
+   31
+   32  *---------------------------------------------------------------------*
+   33  *  Remove duplicates
+   34  *---------------------------------------------------------------------*
+   35    SORT lt_serv_db.
+   36    DELETE ADJACENT DUPLICATES FROM lt_serv_db.
+   37
+   38  *---------------------------------------------------------------------*
+   39  *  Prepare F4 internal table (KEEP LEADING ZEROS)
+   40  *---------------------------------------------------------------------*
+   41    LOOP AT lt_serv_db INTO DATA(lv_serv).
+   42      CLEAR ls_serv_f4.
+   43      ls_serv_f4-service_element     = lv_serv.
+   44      APPEND ls_serv_f4 TO lt_serv_f4.
+   45    ENDLOOP.
+   46
+   47  *---------------------------------------------------------------------*
+   48  *  Call F4 Help
+   49  *---------------------------------------------------------------------*
+   50    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   51      EXPORTING
+   52        retfield    = 'SERVICE_ELEMENT'
+   53        dynpprog    = sy-repid
+   54        dynpnr      = sy-dynnr
+   55        dynprofield = 'ZRESOURCE_MAPPIN-SERVICE_ELEMENT'
+   56        value_org   = 'S'
+   57      TABLES
+   58        value_tab   = lt_serv_f4
+   59        return_tab  = lt_serv_return.
+   60
+   61  *---------------------------------------------------------------------*
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_SERVI01        Page     24
+--------------------------------------------------------------------------------
+
+   62  *  Get selected value
+   63  *---------------------------------------------------------------------*
+   64    IF sy-subrc = 0 AND lt_serv_return IS NOT INITIAL.
+   65      READ TABLE lt_serv_return INTO ls_serv_return INDEX 1.
+   66      IF sy-subrc = 0.
+   67        zresource_mappin-service_element = ls_serv_return-fieldval.
+   68      ENDIF.
+   69    ENDIF.
+   70
+   71    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+       """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   72
+   73  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_STAGI01        Page     25
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_GET_STAGI01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  GET_STAGE  INPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE get_stage INPUT.
+   10
+   11
+   12
+   13
+   14    TYPES: BEGIN OF ty_doc1,
+   15             stages TYPE zstagec, "Returned value
+   16  *         doc_no_disp TYPE char10, "Displayed value (no ALPHA)
+   17           END OF ty_doc1.
+   18
+   19    DATA: lt_doc1 TYPE STANDARD TABLE OF ty_doc1,
+   20          ls_doc1 TYPE ty_doc1.
+   21  *        lt_return TYPE STANDARD TABLE OF ddshretval,
+   22  *        ls_return TYPE ddshretval..
+   23    CLEAR : lt_doc1 ,ls_doc1,lt_return,ls_return.
+   24  *---------------------------------------------------------------------*
+   25  *  Fetch data from DB
+   26  *---------------------------------------------------------------------*
+   27    SELECT  stages
+   28      FROM zstages
+   29      INTO TABLE @DATA(lt_doc_db2)
+   30      WHERE stages IS NOT NULL.
+   31
+   32    IF lt_doc_db2 IS INITIAL.
+   33      RETURN.
+   34    ENDIF.
+   35
+   36  *---------------------------------------------------------------------*
+   37  *  Remove duplicates
+   38  *---------------------------------------------------------------------*
+   39    SORT lt_doc_db2.
+   40    DELETE ADJACENT DUPLICATES FROM lt_doc_db2.
+   41
+   42  *---------------------------------------------------------------------*
+   43  *  Prepare F4 internal table (KEEP LEADING ZEROS)
+   44  *---------------------------------------------------------------------*
+   45    LOOP AT lt_doc_db2 INTO DATA(lv_doc2).
+   46      CLEAR ls_doc1.
+   47      ls_doc1-stages  = lv_doc2.                            "0000000002
+   48  *  ls_doc_f4-doc_no_disp = lv_doc.   "Displayed exactly
+   49      APPEND ls_doc1 TO lt_doc1.
+   50    ENDLOOP.
+   51
+   52  *---------------------------------------------------------------------*
+   53  *  Call F4 Help
+   54  *---------------------------------------------------------------------*
+   55    CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+   56      EXPORTING
+   57        retfield    = 'STAGES'
+   58        dynpprog    = sy-repid
+   59        dynpnr      = sy-dynnr
+   60        dynprofield = 'ZSTAGES-STAGES'
+   61        value_org   = 'S'
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_GET_STAGI01        Page     26
+--------------------------------------------------------------------------------
+
+   62      TABLES
+   63        value_tab   = lt_doc1
+   64        return_tab  = lt_return.
+   65
+   66  *---------------------------------------------------------------------*
+   67  *  Get selected value
+   68  *---------------------------------------------------------------------*
+   69    IF sy-subrc = 0 AND lt_return IS NOT INITIAL.
+   70      READ TABLE lt_return INTO ls_return INDEX 1.
+   71      IF sy-subrc = 0.
+   72        zstages-stages = ls_return-fieldval.
+   73      ENDIF.
+   74    ENDIF.
+   75
+   76    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+       """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+   77
+   78
+   79
+   80  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_MAILF01            Page     27
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_MAILF01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Form  MAIL
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  *  -->  p1        text
+   10  *  <--  p2        text
+   11  *----------------------------------------------------------------------*
+   12  FORM mail .
+   13
+   14  ENDFORM.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O01        Page     28
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_STATUS_9O01.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  STATUS_9001  OUTPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE status_9001 OUTPUT.
+   10    SET PF-STATUS '9001'.
+   11    SET TITLEBAR '9001'.
+   12  ENDMODULE.
+   13  *&---------------------------------------------------------------------*
+   14  *&      Module  USER_COMMAND_9001  INPUT
+   15  *&---------------------------------------------------------------------*
+   16  *       text
+   17  *----------------------------------------------------------------------*
+   18  MODULE user_command_9001 INPUT.
+   19
+   20    CASE sy-ucomm.
+   21
+   22      WHEN 'EXIT' OR 'BACK' OR 'CANC'.
+   23        CLEAR : change , create ,display.
+   24  *      perform cleardata.
+   25        LEAVE PROGRAM.
+   26
+   27      WHEN 'CREATE'.
+   28        AUTHORITY-CHECK OBJECT 'ZSAP_TIME' ID 'ACTVT' FIELD '01'.
+   29        IF sy-subrc EQ 0.
+   30          create = 'X'.
+   31          CALL SCREEN '9002'.
+   32        ELSE .
+   33          MESSAGE 'You are not authorized to create entries.' TYPE 'E'.
+   34        ENDIF.
+   35
+   36      WHEN 'CHANGE'.
+   37        AUTHORITY-CHECK OBJECT 'ZSAP_TIME' ID 'ACTVT' FIELD '02'.
+   38        IF sy-subrc EQ 0.
+   39          change = 'X'.
+   40          CALL SCREEN '9009'.
+   41        ELSE .
+   42          MESSAGE 'You are not authorized to change entries.' TYPE 'E'.
+   43        ENDIF.
+   44
+   45      WHEN 'DISPLAY'.
+   46        AUTHORITY-CHECK OBJECT 'ZSAP_TIME' ID 'ACTVT' FIELD '03'.
+   47        IF sy-subrc EQ 0.
+   48          display = 'X'.
+   49          CALL SCREEN '9009'.
+   50        ELSE .
+   51          MESSAGE 'You are not authorized to display entries.' TYPE 'E'.
+   52        ENDIF.
+   53
+   54      WHEN 'ZSER_ELE'.
+   55        CALL TRANSACTION 'ZSERVICE_ELEMENTS'.
+   56
+   57      WHEN 'ZRES_MAP'.
+   58        CALL TRANSACTION 'ZRESOURCE_MAPPIN'.
+   59
+   60      WHEN 'ZSTAGES'.
+   61        CALL TRANSACTION 'ZSTAGES'.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O01        Page     29
+--------------------------------------------------------------------------------
+
+   62
+   63      WHEN 'APP'.
+   64        CALL TRANSACTION 'ZAPPROVERS'.
+   65
+   66      WHEN 'REPORTS'.
+   67        CALL TRANSACTION 'ZTIMESHEET_REP'.
+   68
+   69      WHEN 'CON'.
+   70        CALL TRANSACTION 'ZCON'.
+   71
+   72      WHEN 'C_REL'.
+   73        creator_release = 'X'.
+   74        CALL SCREEN '9009'.
+   75
+   76      WHEN 'SAP_PM'.
+   77        sap_pm = 'X'.
+   78        CALL SCREEN '9009'.
+   79
+   80
+   81      WHEN 'C_TEAM'.
+   82        core_team = 'X'.
+   83        CALL SCREEN '9009'.
+   84
+   85      WHEN 'OVL_PM'.
+   86        ovl_pm = 'X'.
+   87        CALL SCREEN '9009'.
+   88
+   89      WHEN 'HEAD_IT'.
+   90        head_it  = 'X'.
+   91        CALL SCREEN '9009'.
+   92
+   93  " Code Remediation changes S4 2025_1_A Conversion **BEGIN OF CHANGE BY S
+       AP_ABAP 09.06.2026  FOR ATC
+   94  *      WHEN 'FORM'.
+   95        WHEN 'FORM'. "#EC CI_USAGE_OK[2270335]
+   96  " Code Remediation changes S4 2025_1_A Conversion **END OF CHANGE BY SAP
+       _ABAP 09.06.2026 FOR ATC
+   97          CALL TRANSACTION 'ZSAPT_FORM'.
+   98
+   99
+  100    ENDCASE.
+  101
+  102
+  103
+  104  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     30
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_STATUS_9O02.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  STATUS_9002  OUTPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE status_9002 OUTPUT.
+   10    SET PF-STATUS '9002'.
+   11    SET TITLEBAR '9001'.
+   12
+   13    IF change = 'X' AND gv_loaded IS INITIAL..
+   14
+   15      SELECT * FROM zsap_timesheet INTO TABLE @DATA(it_temp) WHERE doc_no
+       = @doc_no.
+   16      LOOP AT it_temp INTO DATA(ls_temp).
+   17
+   18        CLEAR ls_data.
+   19
+   20        ls_data-consultant_name = ls_temp-consultant_name.
+   21        ls_data-service_element = ls_temp-service_element.
+   22        ls_data-zmodulec        = ls_temp-zmodulec.
+   23        ls_data-datec           = ls_temp-datec.
+   24        ls_data-daysc           = ls_temp-daysc.
+   25        ls_data-activity        = ls_temp-activity.
+   26        ls_data-scope           = ls_temp-scope.
+   27        ls_data-stages          = ls_temp-stages.
+   28        ls_data-location        = ls_temp-location.
+   29        ls_data-remarks         = ls_temp-remarks.
+   30
+   31        APPEND ls_data TO lt_data.
+   32
+   33      ENDLOOP.
+   34      CLEAR: it_temp , ls_temp.
+   35      gv_loaded = 'X'.
+   36    ENDIF.
+   37
+   38    IF display = 'X' AND gv_loaded IS INITIAL..
+   39
+   40      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+   41      LOOP AT it_temp INTO ls_temp.
+   42
+   43        CLEAR ls_data.
+   44
+   45        ls_data-consultant_name = ls_temp-consultant_name.
+   46        ls_data-service_element = ls_temp-service_element.
+   47        ls_data-zmodulec        = ls_temp-zmodulec.
+   48        ls_data-datec           = ls_temp-datec.
+   49        ls_data-daysc           = ls_temp-daysc.
+   50        ls_data-activity        = ls_temp-activity.
+   51        ls_data-scope           = ls_temp-scope.
+   52        ls_data-stages          = ls_temp-stages.
+   53        ls_data-location        = ls_temp-location.
+   54        ls_data-remarks         = ls_temp-remarks.
+   55
+   56        APPEND ls_data TO lt_data.
+   57      ENDLOOP.
+   58      gv_loaded = 'X'.
+   59
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     31
+--------------------------------------------------------------------------------
+
+   60      CLEAR :it_temp , ls_temp.
+   61
+   62    ENDIF.
+   63
+   64    IF creator_release = 'X' AND gv_loaded IS INITIAL..
+   65
+   66      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+   67      LOOP AT it_temp INTO ls_temp.
+   68
+   69        CLEAR ls_data.
+   70
+   71        ls_data-consultant_name = ls_temp-consultant_name.
+   72        ls_data-service_element = ls_temp-service_element.
+   73        ls_data-zmodulec        = ls_temp-zmodulec.
+   74        ls_data-datec           = ls_temp-datec.
+   75        ls_data-daysc           = ls_temp-daysc.
+   76        ls_data-activity        = ls_temp-activity.
+   77        ls_data-scope           = ls_temp-scope.
+   78        ls_data-stages          = ls_temp-stages.
+   79        ls_data-location        = ls_temp-location.
+   80        ls_data-remarks         = ls_temp-remarks.
+   81
+   82        APPEND ls_data TO lt_data.
+   83      ENDLOOP.
+   84      gv_loaded = 'X'.
+   85
+   86      CLEAR :it_temp , ls_temp.
+   87
+   88    ENDIF.
+   89
+   90
+   91    IF sap_pm = 'X' AND gv_loaded IS INITIAL..
+   92
+   93      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+   94      LOOP AT it_temp INTO ls_temp.
+   95
+   96        CLEAR ls_data.
+   97
+   98        ls_data-consultant_name = ls_temp-consultant_name.
+   99        ls_data-service_element = ls_temp-service_element.
+  100        ls_data-zmodulec        = ls_temp-zmodulec.
+  101        ls_data-datec           = ls_temp-datec.
+  102        ls_data-daysc           = ls_temp-daysc.
+  103        ls_data-activity        = ls_temp-activity.
+  104        ls_data-scope           = ls_temp-scope.
+  105        ls_data-stages          = ls_temp-stages.
+  106        ls_data-location        = ls_temp-location.
+  107        ls_data-remarks         = ls_temp-remarks.
+  108
+  109        APPEND ls_data TO lt_data.
+  110      ENDLOOP.
+  111      gv_loaded = 'X'.
+  112
+  113      CLEAR :it_temp , ls_temp.
+  114
+  115    ENDIF.
+  116
+  117    IF core_team = 'X' AND gv_loaded IS INITIAL..
+  118
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     32
+--------------------------------------------------------------------------------
+
+  119      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+  120      LOOP AT it_temp INTO ls_temp.
+  121
+  122        CLEAR ls_data.
+  123
+  124        ls_data-consultant_name = ls_temp-consultant_name.
+  125        ls_data-service_element = ls_temp-service_element.
+  126        ls_data-zmodulec        = ls_temp-zmodulec.
+  127        ls_data-datec           = ls_temp-datec.
+  128        ls_data-daysc           = ls_temp-daysc.
+  129        ls_data-activity        = ls_temp-activity.
+  130        ls_data-scope           = ls_temp-scope.
+  131        ls_data-stages          = ls_temp-stages.
+  132        ls_data-location        = ls_temp-location.
+  133        ls_data-remarks         = ls_temp-remarks.
+  134
+  135        APPEND ls_data TO lt_data.
+  136      ENDLOOP.
+  137      gv_loaded = 'X'.
+  138
+  139      CLEAR :it_temp , ls_temp.
+  140
+  141    ENDIF.
+  142
+  143
+  144    IF ovl_pm = 'X' AND gv_loaded IS INITIAL..
+  145
+  146      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+  147      LOOP AT it_temp INTO ls_temp.
+  148
+  149        CLEAR ls_data.
+  150
+  151        ls_data-consultant_name = ls_temp-consultant_name.
+  152        ls_data-service_element = ls_temp-service_element.
+  153        ls_data-zmodulec        = ls_temp-zmodulec.
+  154        ls_data-datec           = ls_temp-datec.
+  155        ls_data-daysc           = ls_temp-daysc.
+  156        ls_data-activity        = ls_temp-activity.
+  157        ls_data-scope           = ls_temp-scope.
+  158        ls_data-stages          = ls_temp-stages.
+  159        ls_data-location        = ls_temp-location.
+  160        ls_data-remarks         = ls_temp-remarks.
+  161
+  162        APPEND ls_data TO lt_data.
+  163      ENDLOOP.
+  164      gv_loaded = 'X'.
+  165
+  166      CLEAR :it_temp , ls_temp.
+  167
+  168    ENDIF.
+  169
+  170    IF head_it = 'X' AND gv_loaded IS INITIAL..
+  171
+  172      SELECT * FROM zsap_timesheet INTO TABLE @it_temp WHERE doc_no = @doc
+       _no.
+  173      LOOP AT it_temp INTO ls_temp.
+  174
+  175        CLEAR ls_data.
+  176
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     33
+--------------------------------------------------------------------------------
+
+  177        ls_data-consultant_name = ls_temp-consultant_name.
+  178        ls_data-service_element = ls_temp-service_element.
+  179        ls_data-zmodulec        = ls_temp-zmodulec.
+  180        ls_data-datec           = ls_temp-datec.
+  181        ls_data-daysc           = ls_temp-daysc.
+  182        ls_data-activity        = ls_temp-activity.
+  183        ls_data-scope           = ls_temp-scope.
+  184        ls_data-stages          = ls_temp-stages.
+  185        ls_data-location        = ls_temp-location.
+  186        ls_data-remarks         = ls_temp-remarks.
+  187
+  188        APPEND ls_data TO lt_data.
+  189      ENDLOOP.
+  190      gv_loaded = 'X'.
+  191
+  192      CLEAR :it_temp , ls_temp.
+  193
+  194    ENDIF.
+  195
+  196
+  197  *  DELETE  lt_data WHERE consultant_name EQ ' '.
+  198  ENDMODULE.
+  199  *&---------------------------------------------------------------------*
+  200  *&      Module  USER_COMMAND_9002  INPUT
+  201  *&---------------------------------------------------------------------*
+  202  *       text
+  203  *----------------------------------------------------------------------*
+  204  MODULE user_command_9002 INPUT.
+  205
+  206    """"""""""""""""""""""""""""""""""""""""""""""""""""""VALIDATION
+  207    DATA lv_total TYPE zsap_timesheet-daysc.
+  208    IF create = 'X' AND doc_no IS INITIAL AND sy-ucomm NE 'BACK' AND sy-uc
+       omm NE 'EXIT' AND sy-ucomm NE 'CANC' .
+  209      LOOP AT lt_data INTO ls_data.
+  210
+  211  *      IF  ls_data-consultant_name IS INITIAL OR ls_data-service_element
+        IS INITIAL OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INITIAL
+  212  *        OR ls_data-daysc IS INITIAL OR ls_data-location IS INITIAL
+  213  *     .
+  214  *        MESSAGE 'All fields are required'
+  215  *            TYPE 'S' DISPLAY LIKE 'E'.
+  216  *        LEAVE TO SCREEN sy-dynnr.
+  217  *      ENDIF.
+  218
+  219        IF ls_data-datec > sy-datum.
+  220          MESSAGE 'Future date is not allowed'
+  221          TYPE 'S' DISPLAY LIKE 'E'.
+  222          LEAVE TO SCREEN sy-dynnr.
+  223        ENDIF.
+  224
+  225        SELECT SUM( daysc )
+  226          INTO @lv_total
+  227          FROM zsap_timesheet
+  228          WHERE consultant_name = @ls_data-consultant_name and
+  229           ZCONSULTANT_ID = @ls_data-ZCONSULTANT_ID and                "ad
+       ded by mohd mobassir 30.06.2026
+  230           ZMODULEC = @ls_data-ZMODULEC                                "ad
+       ded by mohd mobassir 30.06.2026
+  231          AND   datec           = @ls_data-datec AND reject_reason = ' '.
+  232
+  233        IF lv_total IS INITIAL.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     34
+--------------------------------------------------------------------------------
+
+  234          lv_total = 0.
+  235        ENDIF.
+  236
+  237        IF lv_total + ls_data-daysc > 1.
+  238          MESSAGE 'Data already exist'
+  239          TYPE 'S' DISPLAY LIKE 'E'.
+  240          LEAVE TO SCREEN sy-dynnr.
+  241        ENDIF.
+  242
+  243        CLEAR: ls_data, lv_total.
+  244      ENDLOOP.
+  245
+  246    ENDIF.
+  247
+  248    """"""""""""""""""""""""""""""""""""""""""""""""
+  249
+  250
+  251    CASE sy-ucomm.
+  252      WHEN 'EXIT' OR 'CANC'.
+  253        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_lo
+       aded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_ema
+       il , namet ,lv_role,reject,reason,approve.
+  254        LEAVE PROGRAM.
+  255
+  256
+  257      WHEN 'BACK'.
+  258        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_lo
+       aded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_ema
+       il , namet ,lv_role,reject,reason,approve.
+  259        CALL SCREEN '9001'.
+  260      WHEN  'SAVE' .
+  261        IF lt_data IS NOT INITIAL.
+  262          DELETE  lt_data WHERE consultant_name EQ ' '.
+  263
+  264
+  265          IF create = 'X' OR change = 'X' .
+  266            LOOP AT lt_data INTO ls_data.
+  267              IF  ls_data-consultant_name IS INITIAL OR ls_data-service_el
+       ement IS INITIAL OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INIT
+       IAL
+  268              OR ls_data-daysc IS INITIAL OR ls_data-location IS INITIAL O
+       R ls_data-activity IS INITIAL OR ls_data-scope IS INITIAL
+  269           .
+  270                MESSAGE 'All fields are required'
+  271                    TYPE 'S' DISPLAY LIKE 'E'.
+  272                LEAVE TO SCREEN sy-dynnr.
+  273              ENDIF.
+  274
+  275            ENDLOOP.
+  276          ENDIF.
+  277
+  278          IF create = 'X' AND doc_no IS INITIAL.
+  279            DATA: lv_doc_no TYPE zsap_timesheet-doc_no,
+  280                  wa_final  TYPE zsap_timesheet.
+  281
+  282            " 1. Generate DOC_NO
+  283            CALL FUNCTION 'NUMBER_GET_NEXT'
+  284              EXPORTING
+  285                nr_range_nr = '01'
+  286                object      = 'ZTIMESHEET'
+  287              IMPORTING
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     35
+--------------------------------------------------------------------------------
+
+  288                number      = lv_doc_no
+  289              EXCEPTIONS
+  290                OTHERS      = 1.
+  291
+  292            IF sy-subrc <> 0.
+  293              MESSAGE 'DOC NO generation failed' TYPE 'E'.
+  294            ENDIF.
+  295
+  296            doc_no = lv_doc_no.
+  297          ENDIF.
+  298
+  299          IF  change = 'X' .
+  300            DATA: lt_screen_dates TYPE HASHED TABLE OF zsap_timesheet
+  301                  WITH UNIQUE KEY consultant_name datec.
+  302
+  303            LOOP AT lt_data INTO ls_data.
+  304
+  305              " Future date check
+  306              IF ls_data-datec > sy-datum.
+  307                MESSAGE 'Future date is not allowed' TYPE 'S'.
+  308                RETURN.
+  309              ENDIF.
+  310
+  311  **            " DB duplicate check (ignore current doc_no)
+  312  **            DATA(lv_exists) = 0.
+  313  **            SELECT COUNT(*)
+  314  **              INTO @lv_exists
+  315  **              FROM zsap_timesheet
+  316  **              WHERE consultant_name = @ls_data-consultant_name
+  317  **                AND datec = @ls_data-datec
+  318  **                AND reject_reason = ' '
+  319  **                AND doc_no <> @doc_no.
+  320  **
+  321  **            IF lv_exists > 0.
+  322  **              MESSAGE |Data already exist for { ls_data-consultant_nam
+       e } on { ls_data-datec }|
+  323  **                TYPE 'S'.
+  324  **              RETURN.
+  325  **            ENDIF.
+  326  **
+  327  **            " Screen duplicate check
+  328  **            READ TABLE lt_screen_dates
+  329  **              WITH KEY consultant_name = ls_data-consultant_name
+  330  **                       datec = ls_data-datec TRANSPORTING NO FIELDS.
+  331  **            IF sy-subrc = 0.
+  332  **              MESSAGE |Data already exist  for { ls_data-consultant_na
+       me } on { ls_data-datec }|
+  333  **                TYPE 'S'.
+  334  **              RETURN.
+  335  **            ELSE.
+  336  **              wa_final-doc_no = doc_no.
+  337  **              wa_final-consultant_name = ls_data-consultant_name.
+  338  **              wa_final-service_element = ls_data-service_element.
+  339  **              IF ls_data-service_element NE 'EXECUTION SERVICES'.
+  340  **                ls_data-scope = 'AS IS'.
+  341  **              ENDIF.
+  342  **              wa_final-zconsultant_id = sy-uname.
+  343  **              wa_final-zmodulec = ls_data-zmodulec.
+  344  **              wa_final-datec = ls_data-datec.
+  345  **              wa_final-daysc = ls_data-daysc.
+  346  **              wa_final-activity = ls_data-activity.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     36
+--------------------------------------------------------------------------------
+
+  347  **              wa_final-scope = ls_data-scope.
+  348  **              wa_final-stages = ls_data-stages.
+  349  **              wa_final-location = ls_data-location.
+  350  **              wa_final-remarks = ls_data-remarks.
+  351  **              wa_final-created_on = sy-datum.
+  352  **              INSERT wa_final INTO TABLE lt_screen_dates.
+  353  **            ENDIF.
+  354              CLEAR : wa_final , ls_data.
+  355            ENDLOOP.
+  356
+  357          ENDIF.
+  358
+  359
+  360
+  361          DELETE  lt_data WHERE consultant_name EQ ' '.
+  362          IF sap_pm NE 'X' AND core_team NE 'X' AND ovl_pm NE 'X' AND head
+       _it NE 'X' AND creator_release NE 'X' .
+  363            LOOP AT lt_data INTO ls_data.
+  364
+  365              wa_final-doc_no = doc_no.
+  366              wa_final-consultant_name = ls_data-consultant_name.
+  367              wa_final-service_element = ls_data-service_element.
+  368              IF ls_data-service_element NE 'EXECUTION SERVICES'.
+  369                ls_data-scope = 'AS IS'.
+  370              ENDIF.
+  371              wa_final-zconsultant_id = sy-uname.
+  372              wa_final-zmodulec = ls_data-zmodulec.
+  373              wa_final-datec = ls_data-datec.
+  374              wa_final-daysc = ls_data-daysc.
+  375              wa_final-activity = ls_data-activity.
+  376              wa_final-scope = ls_data-scope.
+  377              wa_final-stages = ls_data-stages.
+  378              wa_final-location = ls_data-location.
+  379              wa_final-remarks = ls_data-remarks.
+  380              wa_final-created_on = sy-datum.
+  381
+  382              MODIFY zsap_timesheet FROM wa_final.
+  383
+  384  *            IF ls_data-sel = 'X'.
+  385  *              DELETE FROM zsap_timesheet
+  386  *                 WHERE datec = ls_data-datec
+  387  *               AND doc_no =  wa_final-doc_no.
+  388  *            ENDIF.
+  389
+  390              CLEAR: wa_final, ls_data.
+  391
+  392
+  393
+  394            ENDLOOP.
+  395
+  396            LOOP AT lt_delete INTO ls_data .
+  397              wa_final-doc_no = doc_no.
+  398              IF ls_data-sel = 'X'.
+  399                DELETE FROM zsap_timesheet
+  400                   WHERE datec = ls_data-datec
+  401                 AND doc_no =  wa_final-doc_no.
+  402              ENDIF.
+  403              CLEAR: wa_final, ls_data.
+  404            ENDLOOP.
+  405
+  406            " # Final Message Logic
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     37
+--------------------------------------------------------------------------------
+
+  407            IF create = 'X'.
+  408              MESSAGE |Doc No { doc_no } generated and data updated succes
+       sfully| TYPE 'S'.
+  409              CLEAR : change , create ,display , lt_delete,lt_data , ls_da
+       ta,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head
+       _it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+  410              LEAVE TO SCREEN 9001.
+  411            ELSEIF change = 'X'.
+  412              MESSAGE 'Data updated successfully' TYPE 'S'.
+  413              CLEAR : change , create ,display , lt_data, lt_delete,  ls_d
+       ata,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,hea
+       d_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+  414              LEAVE TO SCREEN 9001.
+  415            ENDIF.
+  416          ENDIF.
+  417        ENDIF.
+  418
+  419
+  420      WHEN 'RELEASE'.
+  421
+  422        LOOP AT lt_data INTO ls_data.
+  423
+  424
+  425          UPDATE zsap_timesheet
+  426               SET creator_release_r    = 'X'
+  427                   creator_release_date = sy-datum
+  428                   creator_release_time = sy-uzeit
+  429             WHERE doc_no = doc_no.
+  430
+  431        ENDLOOP.
+  432
+  433        MESSAGE 'Data Released Successfully' TYPE 'I'.
+  434
+  435  ****************************************************************
+  436  *        Email ID for Reciever
+  437  ****************************************************************
+  438        SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_temp4) WHERE role =
+        'SAP_PM'.
+  439        IF sy-subrc = 0.
+  440          lv_sap_id = ls_temp4-sap_id.
+  441  *        step 1: get address and person number
+  442          SELECT SINGLE addrnumber persnumber
+  443            INTO (lv_addrnumber, lv_persnumber)
+  444            FROM usr21
+  445            WHERE bname = lv_sap_id.
+  446
+  447          IF sy-subrc = 0.
+  448
+  449  *        step 2: get email address
+  450            SELECT SINGLE smtp_addr
+  451              INTO lv_email_receiver
+  452              FROM adr6
+  453              WHERE addrnumber = lv_addrnumber
+  454                AND persnumber = lv_persnumber
+  455                AND flgdefault = 'X'.   "Fetch default email
+  456
+  457          ENDIF.
+  458        ENDIF.
+  459  ********************************************************************
+  460  *        Email ID for sender
+  461  ********************************************************************
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     38
+--------------------------------------------------------------------------------
+
+  462  * Step 1: Get address and person number
+  463        SELECT SINGLE addrnumber persnumber
+  464          INTO (lv_addrnum, lv_persnum)
+  465          FROM usr21
+  466          WHERE bname = sy-uname.
+  467
+  468        IF sy-subrc = 0.
+  469
+  470  * step 2: get email address
+  471          SELECT SINGLE smtp_addr
+  472            INTO @lv_email_sender
+  473            FROM adr6
+  474            WHERE addrnumber = @lv_addrnum
+  475              AND persnumber = @lv_persnum
+  476              AND flgdefault = 'X'.   "Fetch default email
+  477
+  478        ENDIF.
+  479
+  480  *      lcl_ast_mail=>me2n_mail( ).
+  481        TRY.
+  482            lcl_ast_mail=>me2n_mail( ).
+  483          CATCH cx_root INTO DATA(lx_error).
+  484            " Handle the exception (log, message, etc.)
+  485            MESSAGE lx_error->get_text( ) TYPE 'E'.
+  486        ENDTRY.
+  487
+  488        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_lo
+       aded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_ema
+       il , namet ,lv_role,reject,reason,approve.
+  489        LEAVE TO SCREEN 9001.
+  490
+  491      WHEN 'REJECT'.
+  492
+  493        reject = 'X'.
+  494        reason = reason.
+  495        IF reason IS NOT INITIAL.
+  496          IF sap_pm  = 'X'.
+  497            SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_app1) WHERE sap
+       _id = @sy-uname AND role = 'SAP_PM' .
+  498          ENDIF.
+  499
+  500          IF core_team = 'X'.
+  501            SELECT SINGLE * FROM  zapprovers INTO @ls_app1 WHERE sap_id =
+       @sy-uname AND role = 'CORE_TEAM'.
+  502          ENDIF.
+  503
+  504          IF ovl_pm = 'X'.
+  505            SELECT SINGLE * FROM  zapprovers INTO @ls_app1 WHERE sap_id =
+       @sy-uname AND role = 'OVL_PM'.
+  506          ENDIF.
+  507
+  508          IF head_it = 'X'.
+  509            SELECT SINGLE * FROM  zapprovers INTO @ls_app1 WHERE sap_id =
+       @sy-uname AND role = 'HEAD_IT'.
+  510          ENDIF.
+  511          IF sy-subrc EQ 0.
+  512            IF sap_pm  = 'X'  AND ls_app1-role EQ 'SAP_PM'.
+  513              flag = 'X'.
+  514            ELSEIF  core_team = 'X' AND ls_app1-role EQ 'CORE_TEAM'.
+  515              flag = 'X'.
+  516            ELSEIF  ovl_pm = 'X' AND  ls_app1-role EQ 'OVL_PM'.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     39
+--------------------------------------------------------------------------------
+
+  517              flag = 'X'.
+  518            ELSEIF head_it = 'X' AND  ls_app1-role EQ 'HEAD_IT'.
+  519              flag = 'X'.
+  520            ENDIF.
+  521          ENDIF.
+  522          IF flag = 'X'.
+  523
+  524            SELECT SINGLE * FROM zsap_timesheet INTO @DATA(t_id) WHERE doc
+       _no = @doc_no. "added by mohd mobassir - 23.07.2026
+  525
+  526            LOOP AT lt_data INTO ls_data.
+  527
+  528              IF sap_pm = 'X'.
+  529
+  530                UPDATE zsap_timesheet
+  531                   SET sap_pm_reject       = 'X',
+  532                       sap_pm_reject_date  = @sy-datum,
+  533                       sap_pm_reject_time  = @sy-uzeit,
+  534                       sap_pm_reject_by    = @sy-uname,
+  535                      reject_reason   = @reason
+  536  *                    sap_pm_approve = ' '
+  537                 WHERE doc_no = @doc_no.
+  538
+  539              ENDIF.
+  540
+  541
+  542              IF core_team = 'X'.
+  543
+  544                UPDATE zsap_timesheet
+  545                   SET core_team_reject      = 'X',
+  546                       core_team_reject_date = @sy-datum,
+  547                       core_team_reject_time = @sy-uzeit,
+  548                       core_team_reject_by   = @sy-uname,
+  549                       reject_reason   = @reason,
+  550                       sap_pm_approve = ' '                   "added by mo
+       hd mobassir
+  551                 WHERE doc_no = @doc_no.
+  552
+  553              ENDIF.
+  554
+  555
+  556              IF ovl_pm = 'X'.
+  557
+  558                UPDATE zsap_timesheet
+  559                   SET ovl_pm_reject      = 'X',
+  560                       ovl_pm_reject_date = @sy-datum,
+  561                       ovl_pm_reject_time = @sy-uzeit,
+  562                       ovl_pm_reject_by   = @sy-uname,
+  563                       reject_reason   = @reason,
+  564                       sap_pm_approve = ' '
+  565                 WHERE doc_no = @doc_no.
+  566
+  567              ENDIF.
+  568
+  569
+  570              IF head_it = 'X'.
+  571
+  572                UPDATE zsap_timesheet
+  573                   SET head_it_reject      = 'X',
+  574                       head_it_reject_date = @sy-datum,
+  575                       head_it_reject_time = @sy-uzeit,
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     40
+--------------------------------------------------------------------------------
+
+  576                       head_it_reject_by   = @sy-uname,
+  577                       reject_reason   = @reason,
+  578                       sap_pm_approve = ' '
+  579                 WHERE doc_no = @doc_no.
+  580
+  581              ENDIF.
+  582
+  583            ENDLOOP.
+  584
+  585
+  586            MESSAGE 'Rejected Successfully' TYPE 'I'.
+  587
+  588  ****************************************************************
+  589  *        Email ID for Reciever
+  590  ****************************************************************
+  591  *        SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_temp4) WHERE rol
+       e = 'SAP_PM'.
+  592  *        IF sy-subrc = 0.
+  593  *          lv_sap_id = ls_temp4-sap_id.
+  594  *        step 1: get address and person number
+  595
+  596  *          SELECT SINGLE * FROM zsap_timesheet INTO @DATA(t_id) WHERE do
+       c_no = @doc_no.
+  597
+  598            CLEAR: lt_recipients.
+  599
+  600            "------------------------------
+  601            " SAP PM
+  602            "------------------------------
+  603            IF t_id-sap_pm_approve = 'X' AND t_id-sap_pm_approve_by IS NOT
+        INITIAL.
+  604              " Fetch mail for SAP_PM_APPROVE_BY
+  605              SELECT SINGLE addrnumber ,persnumber
+  606                INTO (@lv_addrnum1, @lv_persnum1)
+  607                FROM usr21
+  608                WHERE bname = @t_id-sap_pm_approve_by.
+  609
+  610              IF sy-subrc = 0.
+  611                SELECT SINGLE smtp_addr
+  612                  INTO @lv_email1
+  613                  FROM adr6
+  614                  WHERE addrnumber = @lv_addrnum1
+  615                    AND persnumber = @lv_persnum1
+  616                    AND flgdefault = 'X'.
+  617                IF sy-subrc = 0.
+  618                  ls_recipient-userid = t_id-sap_pm_approve_by.
+  619                  ls_recipient-email  = lv_email1.
+  620                  APPEND ls_recipient TO lt_recipients.
+  621                ENDIF.
+  622              ENDIF.
+  623            ENDIF.
+  624
+  625            "------------------------------
+  626            " CORE TEAM
+  627            "------------------------------
+  628            IF t_id-core_team_approve = 'X' AND t_id-core_team_approve_by
+       IS NOT INITIAL.
+  629              SELECT SINGLE addrnumber, persnumber
+  630                INTO (@lv_addrnum1, @lv_persnum1)
+  631                FROM usr21
+  632                WHERE bname = @t_id-core_team_approve_by.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     41
+--------------------------------------------------------------------------------
+
+  633
+  634              IF sy-subrc = 0.
+  635                SELECT SINGLE smtp_addr
+  636                  INTO @lv_email1
+  637                  FROM adr6
+  638                  WHERE addrnumber = @lv_addrnum1
+  639                    AND persnumber = @lv_persnum1
+  640                    AND flgdefault = 'X'.
+  641                IF sy-subrc = 0.
+  642                  ls_recipient-userid = t_id-core_team_approve_by.
+  643                  ls_recipient-email  = lv_email1.
+  644                  APPEND ls_recipient TO lt_recipients.
+  645                ENDIF.
+  646              ENDIF.
+  647            ENDIF.
+  648
+  649            "------------------------------
+  650            " OVL PM
+  651            "------------------------------
+  652            IF t_id-ovl_pm_approve = 'X' AND t_id-ovl_pm_approve_by IS NOT
+        INITIAL.
+  653              SELECT SINGLE addrnumber ,persnumber
+  654                INTO (@lv_addrnum1, @lv_persnum1)
+  655                FROM usr21
+  656                WHERE bname = @t_id-ovl_pm_approve_by.
+  657
+  658              IF sy-subrc = 0.
+  659                SELECT SINGLE smtp_addr
+  660                  INTO @lv_email1
+  661                  FROM adr6
+  662                  WHERE addrnumber = @lv_addrnum1
+  663                    AND persnumber = @lv_persnum1
+  664                    AND flgdefault = 'X'.
+  665                IF sy-subrc = 0.
+  666                  ls_recipient-userid = t_id-ovl_pm_approve_by.
+  667                  ls_recipient-email  = lv_email1.
+  668                  APPEND ls_recipient TO lt_recipients.
+  669                ENDIF.
+  670              ENDIF.
+  671            ENDIF.
+  672
+  673            "------------------------------
+  674            " HEAD IT
+  675            "------------------------------
+  676            IF t_id-head_it_approve = 'X' AND t_id-head_it_approve_by IS N
+       OT INITIAL.
+  677              SELECT SINGLE addrnumber ,persnumber
+  678                INTO (@lv_addrnum1, @lv_persnum1)
+  679                FROM usr21
+  680                WHERE bname = @t_id-head_it_approve_by.
+  681
+  682              IF sy-subrc = 0.
+  683                SELECT SINGLE smtp_addr
+  684                  INTO @lv_email1
+  685                  FROM adr6
+  686                  WHERE addrnumber = @lv_addrnum1
+  687                    AND persnumber = @lv_persnum1
+  688                    AND flgdefault = 'X'.
+  689                IF sy-subrc = 0.
+  690                  ls_recipient-userid = t_id-head_it_approve_by.
+  691                  ls_recipient-email  = lv_email1.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     42
+--------------------------------------------------------------------------------
+
+  692                  APPEND ls_recipient TO lt_recipients.
+  693                ENDIF.
+  694              ENDIF.
+  695            ENDIF.
+  696
+  697            """""""""""""""""""""""""""""""""""
+  698
+  699  *****        IF sy-subrc EQ 0.
+  700  *****          lv_sap_id = t_id-zconsultant_id.
+  701  *****        ENDIF.
+  702  *****        SELECT SINGLE addrnumber persnumber
+  703  *****          INTO (lv_addrnumber, lv_persnumber)
+  704  *****          FROM usr21
+  705  *****          WHERE bname = lv_sap_id.
+  706  *****
+  707  *****        IF sy-subrc = 0.
+  708  *****
+  709  ******        step 2: get email address
+  710  *****          SELECT SINGLE smtp_addr
+  711  *****            INTO lv_email_receiver
+  712  *****            FROM adr6
+  713  *****            WHERE addrnumber = lv_addrnumber
+  714  *****              AND persnumber = lv_persnumber
+  715  *****              AND flgdefault = 'X'.   "Fetch default email
+  716  *****
+  717  *****        ENDIF.
+  718  *        ENDIF.
+  719  ********************************************************************
+  720  *        Email ID for sender
+  721  ********************************************************************
+  722  * Step 1: Get address and person number
+  723            SELECT SINGLE addrnumber persnumber
+  724              INTO (lv_addrnum, lv_persnum)
+  725              FROM usr21
+  726              WHERE bname = sy-uname.
+  727
+  728            IF sy-subrc = 0.
+  729
+  730  * step 2: get email address
+  731              SELECT SINGLE smtp_addr
+  732                INTO @lv_email_sender
+  733                FROM adr6
+  734                WHERE addrnumber = @lv_addrnum
+  735                  AND persnumber = @lv_persnum
+  736                  AND flgdefault = 'X'.   "Fetch default email
+  737
+  738            ENDIF.
+  739
+  740  *        lcl_ast_mail=>me2n_mail( ).
+  741  if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
+  742            TRY.
+  743                lcl_ast_mail=>me2n_mail( ).
+  744              CATCH cx_root INTO DATA(lx_error1).
+  745                " Handle the exception (log, message, etc.)
+  746                MESSAGE lx_error1->get_text( ) TYPE 'E'.
+  747            ENDTRY.
+  748      endif.
+  749          ELSE.
+  750            MESSAGE 'You are not authorized for reject' TYPE 'I'.
+  751          ENDIF.
+  752        ELSE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     43
+--------------------------------------------------------------------------------
+
+  753
+  754          MESSAGE 'Please enter a reason for rejection.' TYPE 'I'.
+  755        ENDIF.
+  756        IF reason IS NOT INITIAL.
+  757          CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_
+       loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_e
+       mail , namet ,lv_role,reject,reason,approve.
+  758          LEAVE TO SCREEN 9001.
+  759        ENDIF.
+  760
+  761      WHEN 'APPROVE'.
+  762        approve = 'X'.
+  763        IF lv_role IS INITIAL AND head_it NE 'X'.
+  764          MESSAGE 'Please select an approver' TYPE 'I'.
+  765        ELSE.
+  766          IF sap_pm  = 'X'.
+  767            SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_app) WHERE sap_
+       id = @sy-uname AND role = 'SAP_PM' .
+  768          ENDIF.
+  769
+  770          IF core_team = 'X'.
+  771            SELECT SINGLE * FROM  zapprovers INTO @ls_app WHERE sap_id = @
+       sy-uname AND role = 'CORE_TEAM'.
+  772          ENDIF.
+  773
+  774          IF ovl_pm = 'X'.
+  775            SELECT SINGLE * FROM  zapprovers INTO @ls_app WHERE sap_id = @
+       sy-uname AND role = 'OVL_PM'.
+  776          ENDIF.
+  777
+  778          IF head_it = 'X'.
+  779            SELECT SINGLE * FROM  zapprovers INTO @ls_app WHERE sap_id = @
+       sy-uname AND role = 'HEAD_IT'.
+  780          ENDIF.
+  781
+  782          IF sy-subrc EQ 0.
+  783            IF sap_pm  = 'X'  AND ls_app-role EQ 'SAP_PM'.
+  784              flag = 'X'.
+  785            ELSEIF  core_team = 'X' AND ls_app-role EQ 'CORE_TEAM'.
+  786              flag = 'X'.
+  787            ELSEIF  ovl_pm = 'X' AND  ls_app-role EQ 'OVL_PM'.
+  788              flag = 'X'.
+  789
+  790            ELSEIF head_it = 'X' AND  ls_app-role EQ 'HEAD_IT'.
+  791              flag = 'X'.
+  792            ENDIF.
+  793          ENDIF.
+  794          IF flag = 'X'.
+  795            LOOP AT lt_data INTO ls_data.
+  796
+  797              IF sap_pm = 'X'.
+  798
+  799                UPDATE zsap_timesheet
+  800                   SET sap_pm_approve       = 'X',
+  801                       sap_pm_approve_date  = @sy-datum,
+  802                       sap_pm_approve_time  = @sy-uzeit,
+  803                       sap_pm_approve_by    = @sy-uname
+  804                 WHERE doc_no = @doc_no.
+  805
+  806              ENDIF.
+  807
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     44
+--------------------------------------------------------------------------------
+
+  808
+  809              IF core_team = 'X'.
+  810
+  811                UPDATE zsap_timesheet
+  812                   SET core_team_approve       = 'X',
+  813                       core_team_approve_date  = @sy-datum,
+  814                       core_team_approve_time  = @sy-uzeit,
+  815                       core_team_approve_by    = @sy-uname
+  816                 WHERE doc_no = @doc_no.
+  817
+  818              ENDIF.
+  819
+  820
+  821              IF ovl_pm = 'X'.
+  822
+  823                UPDATE zsap_timesheet
+  824                   SET ovl_pm_approve       = 'X',
+  825                       ovl_pm_approve_date  = @sy-datum,
+  826                       ovl_pm_approve_time  = @sy-uzeit,
+  827                       ovl_pm_approve_by    = @sy-uname
+  828                 WHERE doc_no = @doc_no.
+  829
+  830              ENDIF.
+  831
+  832
+  833              IF head_it = 'X'.
+  834
+  835                UPDATE zsap_timesheet
+  836                   SET head_it_approve       = 'X',
+  837                       head_it_approve_date  = @sy-datum,
+  838                       head_it_approve_time  = @sy-uzeit,
+  839                       head_it_approve_by    = @sy-uname
+  840                 WHERE doc_no = @doc_no.
+  841
+  842              ENDIF.
+  843
+  844            ENDLOOP.
+  845
+  846
+  847            MESSAGE 'Approved Successfully' TYPE 'I'.
+  848
+  849  ****************************************************************
+  850  *        Email ID for Reciever
+  851  ****************************************************************
+  852  *        SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_temp4) WHERE rol
+       e = 'SAP_PM'.
+  853  *        IF sy-subrc = 0.
+  854  *          lv_sap_id = ls_temp4-sap_id.
+  855  *        step 1: get address and person number
+  856            IF lv_role IS NOT INITIAL.
+  857              SELECT SINGLE * FROM  zapprovers INTO @DATA(ls_temp6) WHERE
+       role = @namet AND name = @lv_role.
+  858              lv_sap_id = ls_temp6-sap_id.
+  859            ENDIF.
+  860
+  861            SELECT SINGLE addrnumber persnumber
+  862              INTO (lv_addrnumber, lv_persnumber)
+  863              FROM usr21
+  864              WHERE bname = lv_sap_id.
+  865
+  866            IF sy-subrc = 0.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     45
+--------------------------------------------------------------------------------
+
+  867
+  868  *        step 2: get email address
+  869              SELECT SINGLE smtp_addr
+  870                INTO lv_email_receiver
+  871                FROM adr6
+  872                WHERE addrnumber = lv_addrnumber
+  873                  AND persnumber = lv_persnumber
+  874                  AND flgdefault = 'X'.   "Fetch default email
+  875
+  876            ENDIF.
+  877  *        ENDIF.
+  878  ********************************************************************
+  879  *        Email ID for sender
+  880  ********************************************************************
+  881  * Step 1: Get address and person number
+  882            SELECT SINGLE addrnumber persnumber
+  883              INTO (lv_addrnum, lv_persnum)
+  884              FROM usr21
+  885              WHERE bname = sy-uname.
+  886
+  887            IF sy-subrc = 0.
+  888
+  889  * step 2: get email address
+  890              SELECT SINGLE smtp_addr
+  891                INTO @lv_email_sender
+  892                FROM adr6
+  893                WHERE addrnumber = @lv_addrnum
+  894                  AND persnumber = @lv_persnum
+  895                  AND flgdefault = 'X'.   "Fetch default email
+  896
+  897            ENDIF.
+  898
+  899  *        lcl_ast_mail=>me2n_mail( ).
+  900            IF head_it NE 'X'.
+  901              TRY.
+  902                  lcl_ast_mail=>me2n_mail( ).
+  903                CATCH cx_root INTO DATA(lx_error2).
+  904                  " Handle the exception (log, message, etc.)
+  905                  MESSAGE lx_error2->get_text( ) TYPE 'E'.
+  906              ENDTRY.
+  907            ENDIF.
+  908          ELSE.
+  909
+  910            MESSAGE 'You are not authorized for approval' TYPE 'I'.
+  911
+  912          ENDIF.
+  913
+  914        ENDIF.
+  915
+  916        IF lv_role IS NOT INITIAL.
+  917          CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_
+       loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_e
+       mail , namet ,lv_role,reject,reason,approve.
+  918          LEAVE TO SCREEN 9001.
+  919        ENDIF.
+  920      WHEN 'RETURN'.
+  921
+  922        UPDATE zsap_timesheet
+  923        SET creator_release_r = ' '
+  924        WHERE doc_no = @doc_no
+  925        AND creator_release_r = 'X'.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     46
+--------------------------------------------------------------------------------
+
+  926
+  927        MESSAGE 'Document returned to change successfully' TYPE 'S'.
+  928        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_lo
+       aded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_ema
+       il , namet ,lv_role,reject,reason,approve.
+  929        LEAVE TO SCREEN 9001.
+  930    ENDCASE.
+  931
+  932    IF create = 'X' OR change = 'X'.
+  933
+  934      LOOP AT lt_data INTO ls_data .
+  935        IF ls_data-consultant_name IS NOT INITIAL.
+  936          SELECT SINGLE service_element, zmodulec
+  937              FROM zresource_mappin
+  938              INTO @DATA(ser_ele)
+  939              WHERE consultant_name = @ls_data-consultant_name.
+  940
+  941  **        SELECT SINGLE service_element
+  942  **                      zmodulec
+  943  **          FROM zresource_mappin
+  944  **          INTO (ls_data-service_element,
+  945  **                ls_data-zmodulec)
+  946  **          WHERE consultant_name = ls_data-consultant_name.
+  947          ls_data-service_element = ser_ele-service_element.
+  948  *        ls_data-zmodulec = ser_ele-zmodulec.
+  949          IF ls_data-service_element NE 'EXECUTION SERVICES'.
+  950            ls_data-scope = 'AS IS'.
+  951          ELSE.
+  952  *          ls_data-scope = 'ADDITIONAL'.
+  953          ENDIF.
+  954          MODIFY lt_data FROM ls_data.
+  955
+  956        ENDIF.
+  957      ENDLOOP.
+  958    ENDIF.
+  959  ENDMODULE.
+  960  *&---------------------------------------------------------------------*
+  961  *&      Module  DISP  OUTPUT
+  962  *&---------------------------------------------------------------------*
+  963  *       text
+  964  *----------------------------------------------------------------------*
+  965  MODULE disp OUTPUT.
+  966    IF display = 'X' OR creator_release = 'X' OR sap_pm = 'X' OR core_team
+        = 'X' OR ovl_pm = 'X' OR head_it = 'X' .
+  967      LOOP AT SCREEN.
+  968        IF screen-group1 = 'A1'.
+  969          screen-input = 0.         " Disable editing
+  970          MODIFY SCREEN.
+  971        ENDIF.
+  972      ENDLOOP.
+  973    ENDIF.
+  974
+  975    IF display = 'X' OR change = 'X' OR create = 'X'  .
+  976      LOOP AT SCREEN.
+  977        IF screen-group1 = 'A2' OR screen-group1 = 'A3'.
+  978          screen-active = 0.        " HIDE
+  979          MODIFY SCREEN.
+  980        ENDIF.
+  981      ENDLOOP.
+  982    ENDIF.
+  983
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     47
+--------------------------------------------------------------------------------
+
+  984    IF  creator_release = 'X'  .
+  985      LOOP AT SCREEN.
+  986        IF screen-group1 = 'A3'.
+  987          screen-active = 0.        " HIDE
+  988          MODIFY SCREEN.
+  989        ENDIF.
+  990      ENDLOOP.
+  991    ENDIF.
+  992
+  993    IF  sap_pm EQ 'X' OR core_team EQ 'X' OR ovl_pm EQ 'X' OR head_it EQ '
+       X'.
+  994      LOOP AT SCREEN.
+  995        IF screen-group1 = 'A2'.
+  996          screen-active = 0.        " HIDE
+  997          MODIFY SCREEN.
+  998        ENDIF.
+  999      ENDLOOP.
+ 1000    ENDIF.
+ 1001    """"""""""""""""""""""""""""""""""""""""""""""""RELEASE
+ 1002    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND cre
+       ator_release EQ 'X' .
+ 1003      SELECT SINGLE * FROM  zsap_timesheet INTO @DATA(ls_form1) WHERE  doc
+       _no =  @doc_no.
+ 1004      IF  sy-subrc EQ 0.
+ 1005        IF ls_form1-creator_release_r EQ 'X'.
+ 1006          LOOP AT SCREEN.
+ 1007            IF screen-group1 = 'A2'.
+ 1008              screen-input = 0.        " HIDE
+ 1009              MODIFY SCREEN.
+ 1010            ENDIF.
+ 1011          ENDLOOP.
+ 1012        ENDIF.
+ 1013      ENDIF.
+ 1014    ENDIF.
+ 1015
+ 1016    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND sap
+       _pm EQ 'X' .
+ 1017      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1018      IF  sy-subrc EQ 0.
+ 1019  *      IF ls_form1-sap_pm_r EQ 'X'.
+ 1020  *      IF ls_form1-sap_pm_r EQ 'X'.
+ 1021        LOOP AT SCREEN.
+ 1022          IF screen-group1 = 'A2'.
+ 1023            screen-input = 0.        " HIDE
+ 1024            MODIFY SCREEN.
+ 1025          ENDIF.
+ 1026        ENDLOOP.
+ 1027  *      ENDIF.
+ 1028  *      ENDIF.
+ 1029      ENDIF.
+ 1030    ENDIF.
+ 1031
+ 1032    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND cor
+       e_team EQ 'X' .
+ 1033      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1034      IF  sy-subrc EQ 0.
+ 1035  *      IF ls_form1-core_team_r EQ 'X'.
+ 1036        LOOP AT SCREEN.
+ 1037          IF screen-group1 = 'A2'.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     48
+--------------------------------------------------------------------------------
+
+ 1038            screen-input = 0.        " HIDE
+ 1039            MODIFY SCREEN.
+ 1040          ENDIF.
+ 1041        ENDLOOP.
+ 1042  *      ENDIF.
+ 1043      ENDIF.
+ 1044    ENDIF.
+ 1045
+ 1046    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND ovl
+       _pm EQ 'X' .
+ 1047      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1048      IF  sy-subrc EQ 0.
+ 1049  *      IF ls_form1-ovl_pm_r EQ 'X'.
+ 1050        LOOP AT SCREEN.
+ 1051          IF screen-group1 = 'A2'.
+ 1052            screen-input = 0.        " HIDE
+ 1053            MODIFY SCREEN.
+ 1054          ENDIF.
+ 1055        ENDLOOP.
+ 1056  *      ENDIF.
+ 1057      ENDIF.
+ 1058    ENDIF.
+ 1059
+ 1060    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND hea
+       d_it EQ 'X' .
+ 1061      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1062      IF  sy-subrc EQ 0.
+ 1063  *      IF ls_form1-head_it_r EQ 'X'.
+ 1064        LOOP AT SCREEN.
+ 1065          IF screen-group1 = 'A2'.
+ 1066            screen-input = 0.        " HIDE
+ 1067            MODIFY SCREEN.
+ 1068          ENDIF.
+ 1069        ENDLOOP.
+ 1070  *      ENDIF.
+ 1071      ENDIF.
+ 1072    ENDIF.
+ 1073
+ 1074    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+       """"""APPROVAL
+ 1075    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND cre
+       ator_release EQ 'X' .
+ 1076      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1077      IF  sy-subrc EQ 0.
+ 1078        IF ls_form1-creator_release_r EQ 'X'.
+ 1079  *      IF ls_form1-creator_release_approve EQ 'X'.
+ 1080          LOOP AT SCREEN.
+ 1081            IF screen-group1 = 'A3'.
+ 1082              screen-input = 0.        " HIDE
+ 1083              MODIFY SCREEN.
+ 1084            ENDIF.
+ 1085          ENDLOOP.
+ 1086  *      ENDIF.
+ 1087        ENDIF.
+ 1088      ENDIF.
+ 1089    ENDIF.
+ 1090
+ 1091    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND sap
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     49
+--------------------------------------------------------------------------------
+
+       _pm EQ 'X' .
+ 1092      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1093      IF  sy-subrc EQ 0.
+ 1094        IF ls_form1-sap_pm_approve EQ 'X'.
+ 1095          LOOP AT SCREEN.
+ 1096            IF screen-group1 = 'A3'.
+ 1097              screen-input = 0.        " HIDE
+ 1098              MODIFY SCREEN.
+ 1099            ENDIF.
+ 1100          ENDLOOP.
+ 1101        ENDIF.
+ 1102      ENDIF.
+ 1103    ENDIF.
+ 1104
+ 1105    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND cor
+       e_team EQ 'X' .
+ 1106      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1107      IF  sy-subrc EQ 0.
+ 1108        IF ls_form1-core_team_approve EQ 'X'.
+ 1109          LOOP AT SCREEN.
+ 1110            IF screen-group1 = 'A3'.
+ 1111              screen-input = 0.        " HIDE
+ 1112              MODIFY SCREEN.
+ 1113            ENDIF.
+ 1114          ENDLOOP.
+ 1115        ENDIF.
+ 1116      ENDIF.
+ 1117    ENDIF.
+ 1118
+ 1119    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND ovl
+       _pm EQ 'X' .
+ 1120      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1121      IF  sy-subrc EQ 0.
+ 1122        IF ls_form1-ovl_pm_approve EQ 'X'.
+ 1123          LOOP AT SCREEN.
+ 1124            IF screen-group1 = 'A3'.
+ 1125              screen-input = 0.        " HIDE
+ 1126              MODIFY SCREEN.
+ 1127            ENDIF.
+ 1128          ENDLOOP.
+ 1129        ENDIF.
+ 1130      ENDIF.
+ 1131    ENDIF.
+ 1132
+ 1133    IF  doc_no IS NOT INITIAL AND create NE 'X' AND display NE 'X' AND hea
+       d_it EQ 'X' .
+ 1134      SELECT SINGLE * FROM  zsap_timesheet INTO @ls_form1 WHERE  doc_no =
+        @doc_no.
+ 1135      IF  sy-subrc EQ 0.
+ 1136        IF ls_form1-head_it_approve EQ 'X'.
+ 1137          LOOP AT SCREEN.
+ 1138            IF screen-group1 = 'A3'.
+ 1139              screen-input = 0.        " HIDE
+ 1140              MODIFY SCREEN.
+ 1141            ENDIF.
+ 1142          ENDLOOP.
+ 1143        ENDIF.
+ 1144      ENDIF.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     50
+--------------------------------------------------------------------------------
+
+ 1145    ENDIF.
+ 1146
+ 1147    IF  head_it EQ 'X'.
+ 1148      LOOP AT SCREEN.
+ 1149
+ 1150        IF screen-group2 = 'A4'.
+ 1151          screen-active = 0.        " HIDE
+ 1152          MODIFY SCREEN.
+ 1153        ENDIF.
+ 1154      ENDLOOP.
+ 1155    ENDIF.
+ 1156
+ 1157    IF reject NE 'X'.
+ 1158      LOOP AT SCREEN.
+ 1159
+ 1160        IF screen-group1 = 'R1'.
+ 1161          screen-active = 0.        " HIDE
+ 1162          MODIFY SCREEN.
+ 1163        ENDIF.
+ 1164      ENDLOOP.
+ 1165
+ 1166    ENDIF.
+ 1167
+ 1168  *  IF sap_pm NE 'X'.
+ 1169  *
+ 1170  *    LOOP AT SCREEN.
+ 1171  *
+ 1172  *      IF screen-group1 = 'Z4'.
+ 1173  *        screen-active = 0.        " HIDE
+ 1174  *        MODIFY SCREEN.
+ 1175  *      ENDIF.
+ 1176  *    ENDLOOP.
+ 1177  *
+ 1178  *  ENDIF.
+ 1179
+ 1180
+ 1181    "boc by mohd mobassir - 22.07.2026
+ 1182
+ 1183    IF sap_pm NE 'X'
+ 1184     AND core_team NE 'X'
+ 1185     AND ovl_pm NE 'X'
+ 1186     AND head_it NE 'X'.
+ 1187
+ 1188    LOOP AT SCREEN.
+ 1189      IF screen-group1 = 'Z4'.
+ 1190        screen-active = 0.
+ 1191        MODIFY SCREEN.
+ 1192      ENDIF.
+ 1193    ENDLOOP.
+ 1194
+ 1195  ENDIF.
+ 1196  "eoc by mohd mobassir - 22.07.2026
+ 1197
+ 1198    IF sap_pm = 'X' OR core_team = 'X' OR ovl_pm = 'X' OR head_it = 'X' OR
+        creator_release = 'X' OR display = 'X'.
+ 1199
+ 1200      SET PF-STATUS '9002' EXCLUDING 'SAVE'.
+ 1201
+ 1202  * LOOP AT SCREEN.
+ 1203  *
+ 1204  *    IF screen-ucomm = 'SAVE'.  " function code of the Save button
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O02        Page     51
+--------------------------------------------------------------------------------
+
+ 1205  *      screen-active = 0.
+ 1206  *      screen-invisible = 1.
+ 1207  *      MODIFY SCREEN.
+ 1208  *    ENDIF.
+ 1209  *  ENDLOOP.
+ 1210
+ 1211    ENDIF.
+ 1212
+ 1213
+ 1214  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O03        Page     52
+--------------------------------------------------------------------------------
+
+    1  *----------------------------------------------------------------------*
+    2  ***INCLUDE ZHANA_SERVICES_PRG_STATUS_9O03.
+    3  *----------------------------------------------------------------------*
+    4  *&---------------------------------------------------------------------*
+    5  *&      Module  STATUS_9009  OUTPUT
+    6  *&---------------------------------------------------------------------*
+    7  *       text
+    8  *----------------------------------------------------------------------*
+    9  MODULE status_9009 OUTPUT.
+   10    SET PF-STATUS '9002'.
+   11    SET TITLEBAR '9001'.
+   12  ENDMODULE.
+   13  *&---------------------------------------------------------------------*
+   14  *&      Module  USER_COMMAND_9009  INPUT
+   15  *&---------------------------------------------------------------------*
+   16  *       text
+   17  *----------------------------------------------------------------------*
+   18  MODULE user_command_9009 INPUT.
+   19    " Auto-pad DOC_NO to 10 characters with leading zeros (ECC compatible)
+   20    " --------------------------------------------
+   21  *  IF doc_no IS NOT INITIAL.
+   22  *
+   23  *    DATA lv_len TYPE i.
+   24  *    DATA lv_pad TYPE i.
+   25  *    DATA lv_zeros TYPE c LENGTH 10.
+   26  *
+   27  *    lv_len = strlen( doc_no ).
+   28  *    lv_pad = 10 - lv_len.
+   29  *
+   30  *    IF lv_pad > 0.
+   31  *      " Create string with lv_pad zeros
+   32  *      lv_zeros = ''.
+   33  *      DO lv_pad TIMES.
+   34  *        lv_zeros = lv_zeros && '0'.
+   35  *      ENDDO.
+   36  *
+   37  *      " Prepend zeros
+   38  *      doc_no = lv_zeros && doc_no.
+   39  *    ENDIF.
+   40  *
+   41  *  ENDIF.
+   42    CASE sy-ucomm.
+   43      WHEN 'EXIT' OR 'CANC'.
+   44
+   45        LEAVE PROGRAM.
+   46
+   47
+   48      WHEN 'BACK'.
+   49        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_lo
+       aded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_ema
+       il.
+   50        CALL SCREEN '9001'.
+   51
+   52
+   53      WHEN 'SUB'.
+   54
+   55        IF doc_no IS NOT INITIAL.
+   56
+   57          SELECT *
+   58   FROM ZSAP_TIMESHEET INTO @DATA(LS_FORM) UP TO 1 ROWS WHERE DOC_NO = @DO
+       C_NO
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O03        Page     53
+--------------------------------------------------------------------------------
+
+   59   ORDER BY PRIMARY KEY .
+   60   ENDSELECT.
+   61
+   62          IF sy-subrc <> 0.
+   63            MESSAGE 'Data not found for given Doc No'
+   64              TYPE 'S' DISPLAY LIKE 'E'.
+   65            LEAVE TO SCREEN sy-dynnr.
+   66            RETURN.
+   67          ENDIF.
+   68
+   69          IF ls_form-creator_release_r = 'X' AND change = 'X'.
+   70            MESSAGE 'Document already released. Cannot be changed.'
+   71              TYPE 'S' DISPLAY LIKE 'E'.
+   72            LEAVE TO SCREEN sy-dynnr.
+   73            RETURN.
+   74          ENDIF.
+   75
+   76          "-----------------------------
+   77          " Approval Validations
+   78          "-----------------------------
+   79
+   80  ***        IF sap_pm = 'X'. "Level 2
+   81  ***          IF ls_form-creator_release_r <> 'X'.
+   82  ***            MESSAGE 'Cannot approve. Creator Release not approved yet
+       .'
+   83  ***              TYPE 'S' DISPLAY LIKE 'E'.
+   84  ***            LEAVE TO SCREEN sy-dynnr.
+   85  ***            RETURN.
+   86  ***          ENDIF.
+   87  ***        ENDIF.
+   88  ***
+   89  ***        IF core_team = 'X'. "Level 3
+   90  ***          IF ls_form-sap_pm_approve <> 'X'.
+   91  ***            MESSAGE 'Cannot approve. SAP PM not approved yet.'
+   92  ***              TYPE 'S' DISPLAY LIKE 'E'.
+   93  ***            LEAVE TO SCREEN sy-dynnr.
+   94  ***            RETURN.
+   95  ***          ENDIF.
+   96  ***        ENDIF.
+   97  ***
+   98  ***        IF ovl_pm = 'X'. "Level 4
+   99  ***          IF ls_form-core_team_approve <> 'X'.
+  100  ***            MESSAGE 'Cannot approve. Core Team not approved yet.'
+  101  ***              TYPE 'S' DISPLAY LIKE 'E'.
+  102  ***            LEAVE TO SCREEN sy-dynnr.
+  103  ***            RETURN.
+  104  ***          ENDIF.
+  105  ***        ENDIF.
+  106  ***
+  107  ***        IF head_it = 'X'. "Level 5
+  108  ***          IF ls_form-ovl_pm_approve <> 'X'.
+  109  ***            MESSAGE 'Cannot approve. OVL PM not approved yet.'
+  110  ***              TYPE 'S' DISPLAY LIKE 'E'.
+  111  ***            LEAVE TO SCREEN sy-dynnr.
+  112  ***            RETURN.
+  113  ***          ENDIF.
+  114  ***        ENDIF.
+  115
+  116          "-----------------------------
+  117          " Approval Validations with Master Data Authorization
+  118          "-----------------------------
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O03        Page     54
+--------------------------------------------------------------------------------
+
+  119
+  120          DATA: lv_sap_user   TYPE zsap_user_id,
+  121                ls_approver   TYPE zapprovers,
+  122                lv_authorized TYPE abap_bool.
+  123
+  124          lv_sap_user = sy-uname. " current SAP user
+  125
+  126          " === LEVEL 2: SAP_PM ===
+  127          IF sap_pm = 'X'.
+  128
+  129            " Previous approval check
+  130            IF ls_form-creator_release_r <> 'X'.
+  131              MESSAGE 'Cannot approve. Creator Release not approved yet.'
+  132                TYPE 'S' DISPLAY LIKE 'E'.
+  133              LEAVE TO SCREEN sy-dynnr.
+  134              RETURN.
+  135            ENDIF.
+  136
+  137            " Authorization check
+  138            lv_authorized = abap_false.
+  139            SELECT SINGLE *
+  140              INTO ls_approver
+  141              FROM zapprovers
+  142              WHERE role = 'SAP_PM'
+  143                AND sap_id = lv_sap_user.
+  144            IF sy-subrc = 0.
+  145              lv_authorized = abap_true.
+  146            ENDIF.
+  147
+  148            IF lv_authorized = abap_false.
+  149              MESSAGE 'You are not authorized to approve as SAP PM.'
+  150                TYPE 'S' DISPLAY LIKE 'E'.
+  151              LEAVE TO SCREEN sy-dynnr.
+  152              RETURN.
+  153            ENDIF.
+  154
+  155          ENDIF. "sap_pm
+  156
+  157          " === LEVEL 3: CORE_TEAM ===
+  158          IF core_team = 'X'.
+  159
+  160            " Previous approval check
+  161            IF ls_form-sap_pm_approve <> 'X'.
+  162              MESSAGE 'Cannot approve. SAP PM not approved yet.'
+  163                TYPE 'S' DISPLAY LIKE 'E'.
+  164              LEAVE TO SCREEN sy-dynnr.
+  165              RETURN.
+  166            ENDIF.
+  167
+  168            " Authorization check
+  169            lv_authorized = abap_false.
+  170            SELECT SINGLE *
+  171              INTO ls_approver
+  172              FROM zapprovers
+  173              WHERE role = 'CORE_TEAM'
+  174                AND sap_id = lv_sap_user.
+  175            IF sy-subrc = 0.
+  176              lv_authorized = abap_true.
+  177            ENDIF.
+  178
+  179            IF lv_authorized = abap_false.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O03        Page     55
+--------------------------------------------------------------------------------
+
+  180              MESSAGE 'You are not authorized to approve as Core Team.'
+  181                TYPE 'S' DISPLAY LIKE 'E'.
+  182              LEAVE TO SCREEN sy-dynnr.
+  183              RETURN.
+  184            ENDIF.
+  185
+  186          ENDIF. "core_team
+  187
+  188          " === LEVEL 4: OVL_PM ===
+  189          IF ovl_pm = 'X'.
+  190
+  191            " Previous approval check
+  192            IF ls_form-core_team_approve <> 'X'.
+  193              MESSAGE 'Cannot approve. Core Team not approved yet.'
+  194                TYPE 'S' DISPLAY LIKE 'E'.
+  195              LEAVE TO SCREEN sy-dynnr.
+  196              RETURN.
+  197            ENDIF.
+  198
+  199            " Authorization check
+  200            lv_authorized = abap_false.
+  201            SELECT SINGLE *
+  202              INTO ls_approver
+  203              FROM zapprovers
+  204              WHERE role = 'OVL_PM'
+  205                AND sap_id = lv_sap_user.
+  206            IF sy-subrc = 0.
+  207              lv_authorized = abap_true.
+  208            ENDIF.
+  209
+  210            IF lv_authorized = abap_false.
+  211              MESSAGE 'You are not authorized to approve as OVL PM.'
+  212                TYPE 'S' DISPLAY LIKE 'E'.
+  213              LEAVE TO SCREEN sy-dynnr.
+  214              RETURN.
+  215            ENDIF.
+  216
+  217          ENDIF. "ovl_pm
+  218
+  219          " === LEVEL 5: HEAD_IT ===
+  220          IF head_it = 'X'.
+  221
+  222            " Previous approval check
+  223            IF ls_form-ovl_pm_approve <> 'X'.
+  224              MESSAGE 'Cannot approve. OVL PM not approved yet.'
+  225                TYPE 'S' DISPLAY LIKE 'E'.
+  226              LEAVE TO SCREEN sy-dynnr.
+  227              RETURN.
+  228            ENDIF.
+  229
+  230            " Authorization check
+  231            lv_authorized = abap_false.
+  232            SELECT SINGLE *
+  233              INTO ls_approver
+  234              FROM zapprovers
+  235              WHERE role = 'HEAD_IT'
+  236                AND sap_id = lv_sap_user.
+  237            IF sy-subrc = 0.
+  238              lv_authorized = abap_true.
+  239            ENDIF.
+  240
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZHANA_SERVICES_PRG_STATUS_9O03        Page     56
+--------------------------------------------------------------------------------
+
+  241            IF lv_authorized = abap_false.
+  242              MESSAGE 'You are not authorized to approve as Head IT.'
+  243                TYPE 'S' DISPLAY LIKE 'E'.
+  244              LEAVE TO SCREEN sy-dynnr.
+  245              RETURN.
+  246            ENDIF.
+  247
+  248          ENDIF. "head_it
+  249
+  250          "-----------------------------
+  251          " Call Screen AFTER validation
+  252          "-----------------------------
+  253          CALL SCREEN 9002.
+  254
+  255        ENDIF.
+  256    ENDCASE.
+  257
+  258
+  259    " --------------------------------------------
+  260
+  261
+  262  *  IF ls_form-approve IS NOT INITIAL AND change = 'X'.
+  263  *    MESSAGE 'Data has already been approved and cannot be changed' TYPE
+        'S' DISPLAY LIKE 'E'.
+  264  *    LEAVE TO SCREEN sy-dynnr.
+  265  *    RETURN.
+  266  *  ENDIF.
+  267
+  268  ENDMODULE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZTIMESHEET_MAIL                       Page     57
+--------------------------------------------------------------------------------
+
+    1  *---------------------------------------------------------------------*
+    2  * Class for Sending Mail
+    3  *---------------------------------------------------------------------*
+    4  CLASS lcl_ast_mail DEFINITION.
+    5    PUBLIC SECTION.
+    6      CLASS-METHODS:
+    7        me2n_mail.
+    8  ENDCLASS.
+    9
+   10  CLASS lcl_ast_mail IMPLEMENTATION.
+   11    METHOD me2n_mail.
+   12
+   13      DATA: lv_subject     TYPE so_obj_des,
+   14            lv_text1       TYPE string,
+   15            lv_text2       TYPE string,
+   16            lv_text3       TYPE string,
+   17            lv_text4       TYPE string,
+   18            lv_text5       TYPE string,
+   19            lv_text6       TYPE string,
+   20            lv_text7       TYPE string,
+   21            lt_body        TYPE bcsy_text,
+   22            lv_min_date    TYPE zsap_timesheet-datec,
+   23            lv_max_date    TYPE zsap_timesheet-datec,
+   24            lv_duration    TYPE string,
+   25            lv_status_text TYPE string.
+   26
+   27      TRY.
+   28
+   29          DATA(lo_send_request) = cl_bcs=>create_persistent( ).
+   30
+   31  *--------------------------------------------------------------------*
+   32  * Get Min / Max Date
+   33  *--------------------------------------------------------------------*
+   34          SELECT MIN( datec ),
+   35                 MAX( datec )
+   36            INTO (@lv_min_date, @lv_max_date)
+   37            FROM zsap_timesheet
+   38            WHERE doc_no = @doc_no.
+   39
+   40  *--------------------------------------------------------------------*
+   41  * Get Consultant Details
+   42  *--------------------------------------------------------------------*
+   43          SELECT SINGLE *
+   44            INTO @DATA(min_data)
+   45            FROM zsap_timesheet
+   46            WHERE doc_no = @doc_no.
+   47
+   48  *--------------------------------------------------------------------*
+   49  * Format Duration
+   50  *--------------------------------------------------------------------*
+   51          lv_duration = |{ lv_min_date DATE = USER } to { lv_max_date DATE
+        = USER }|.
+   52
+   53  *--------------------------------------------------------------------*
+   54  * Check Approve / Reject
+   55  *--------------------------------------------------------------------*
+   56          IF approve = 'X' OR creator_release = 'X'  .
+   57
+   58            lv_status_text = 'has been submitted for necessary action'.
+   59
+   60          ELSE.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZTIMESHEET_MAIL                       Page     58
+--------------------------------------------------------------------------------
+
+   61
+   62            lv_status_text = 'has been rejected'.
+   63
+   64          ENDIF.
+   65
+   66  *--------------------------------------------------------------------*
+   67  * Subject
+   68  *--------------------------------------------------------------------*
+   69          SHIFT doc_no LEFT DELETING LEADING '0'.
+   70          CONCATENATE min_data-consultant_name
+   71                      '-Timesheet Submission-Doc no-'
+   72                      doc_no
+   73                 INTO lv_subject
+   74            SEPARATED BY space.
+   75
+   76  *--------------------------------------------------------------------*
+   77  * Mail Body
+   78  *--------------------------------------------------------------------*
+   79          lv_text1 = |Timesheet with the following details { lv_status_tex
+       t }.|.
+   80          lv_text2 = |Name of Consultant - { min_data-consultant_name }|.
+   81          lv_text3 = |Service Element - { min_data-service_element }|.
+   82          lv_text4 = |Module - { min_data-zmodulec }|.
+   83          lv_text5 = |Duration - { lv_duration }|.
+   84          lv_text6 = |Document Number - { doc_no }|.
+   85          lv_text7 = |{ sy-uname }|.
+   86
+   87          lt_body = VALUE bcsy_text(
+   88                      ( line = 'Dear Sir/Madam,' )
+   89                      ( line = '' )
+   90                      ( line = lv_text1 )
+   91                      ( line = '' )
+   92                      ( line = lv_text2 )
+   93                      ( line = lv_text3 )
+   94                      ( line = lv_text4 )
+   95                      ( line = lv_text5 )
+   96                      ( line = lv_text6 )
+   97                      ( line = '' )
+   98                      ( line = 'Regards,' )
+   99                      ( line = lv_text7 )
+  100                    ).
+  101
+  102  *--------------------------------------------------------------------*
+  103  * Create Document
+  104  *--------------------------------------------------------------------*
+  105          DATA(lo_document) = cl_document_bcs=>create_document(
+  106                                i_type    = 'RAW'
+  107                                i_text    = lt_body
+  108                                i_subject = lv_subject ).
+  109
+  110          lo_send_request->set_document( lo_document ).
+  111
+  112  *--------------------------------------------------------------------*
+  113  * Recipient
+  114  *--------------------------------------------------------------------*
+  115          IF approve = 'X' OR creator_release = 'X'  .
+  116            lo_send_request->add_recipient(
+  117              i_recipient = cl_cam_address_bcs=>create_internet_address(
+  118                              i_address_string = lv_email_receiver )
+  119              i_express = abap_true ).
+  120
+--------------------------------------------------------------------------------
+05.10.26 OCD      Include ZTIMESHEET_MAIL                       Page     59
+--------------------------------------------------------------------------------
+
+  121  "boc by mohd mobassir - 24.07.2026
+  122
+  123  lo_send_request->add_recipient(
+  124      i_recipient = cl_cam_address_bcs=>create_internet_address(
+  125                      i_address_string = 'ovl_infocom@ongcvidesh.in' )
+  126      i_copy      = abap_true
+  127      i_express   = abap_true ).
+  128
+  129  "boc by mohd mobassir - 24.07.2026
+  130
+  131          ELSE.
+  132
+  133            LOOP AT lt_recipients INTO ls_recipient.
+  134              lo_send_request->add_recipient(
+  135                i_recipient = cl_cam_address_bcs=>create_internet_address(
+  136                                i_address_string = ls_recipient-email )
+  137                i_express = abap_true ).
+  138            ENDLOOP.
+  139
+  140
+  141          ENDIF.
+  142
+  143  *--------------------------------------------------------------------*
+  144  * Sender
+  145  *--------------------------------------------------------------------*
+  146          lo_send_request->set_sender(
+  147            cl_cam_address_bcs=>create_internet_address(
+  148              i_address_string = lv_email_sender ) ).
+  149
+  150  *--------------------------------------------------------------------*
+  151  * Send Mail
+  152  *--------------------------------------------------------------------*
+  153          DATA(lv_sent) = lo_send_request->send( ).
+  154          COMMIT WORK.
+  155
+  156          IF lv_sent = abap_true.
+  157            MESSAGE 'Mail Sent Successfully' TYPE 'S'.
+  158          ELSE.
+  159            MESSAGE 'Mail Not Sent' TYPE 'E'.
+  160          ENDIF.
+  161
+  162        CATCH cx_bcs INTO DATA(lx_bcs).
+  163          MESSAGE lx_bcs->get_text( ) TYPE 'E'.
+  164      ENDTRY.
+  165
+  166      CLEAR : lv_email_receiver , lv_email_sender.
+  167
+  168    ENDMETHOD.
+  169
+  170  ENDCLASS.
+--------------------------------------------------------------------------------
+05.10.26 OCD      Program ZHANA_SERVICES_PRG text e             Page     60
+--------------------------------------------------------------------------------
+
+Title:
+   SAP Timesheet
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     61
+--------------------------------------------------------------------------------
+
+PAI modules:                                                  Line  Page
+
+GET_C_NAME.................... ZHANA_SERVICES_PRG_GET_C_NAI01    9    11
+GET_DOC_NO.................... ZHANA_SERVICES_PRG_GET_DOC_I01    1    13
+GET_MODULE.................... ZHANA_SERVICES_PRG_GET_MODUI01    9    17
+GET_ROLE...................... ZHANA_SERVICES_PRG_GET_ROLEI02   10    21
+GET_SERVICE_ELEMENT........... ZHANA_SERVICES_PRG_GET_SERVI01    9    23
+GET_STAGE..................... ZHANA_SERVICES_PRG_GET_STAGI01    9    25
+TIMESHEET_MARK................ ZHANA_SERVICES_PRG              133     4
+TIMESHEET_MODIFY.............. ZHANA_SERVICES_PRG              125     4
+TIMESHEET_USER_COMMAND........ ZHANA_SERVICES_PRG              153     4
+USER_COMMAND_9001............. ZHANA_SERVICES_PRG_STATUS_9O01   18    28
+USER_COMMAND_9002............. ZHANA_SERVICES_PRG_STATUS_9O02  204    33
+USER_COMMAND_9009............. ZHANA_SERVICES_PRG_STATUS_9O03   18    52
+--------------------------------------------------------------------------------
+
+PBO modules:                                                  Line  Page
+
+DISP.......................... ZHANA_SERVICES_PRG_STATUS_9O02  965    46
+STATUS_9001................... ZHANA_SERVICES_PRG_STATUS_9O01    9    28
+STATUS_9002................... ZHANA_SERVICES_PRG_STATUS_9O02    9    30
+STATUS_9009................... ZHANA_SERVICES_PRG_STATUS_9O03    9    52
+TIMESHEET_CHANGE_TC_ATTR...... ZHANA_SERVICES_PRG              101     3
+TIMESHEET_GET_LINES........... ZHANA_SERVICES_PRG              118     3
+--------------------------------------------------------------------------------
+
+Subroutines:                                                  Line  Page
+
+COMPUTE_SCROLLING_IN_TC....... ZHANA_SERVICES_PRG              207     5
+                               ZHANA_SERVICES_PRG              345     7
+FCODE_DELETE_ROW.............. ZHANA_SERVICES_PRG              198     5
+                               ZHANA_SERVICES_PRG              299     6
+FCODE_INSERT_ROW.............. ZHANA_SERVICES_PRG              190     5
+                               ZHANA_SERVICES_PRG              246     6
+FCODE_TC_DEMARK_LINES......... ZHANA_SERVICES_PRG              229     5
+                               ZHANA_SERVICES_PRG              446     9
+FCODE_TC_MARK_LINES........... ZHANA_SERVICES_PRG              223     5
+                               ZHANA_SERVICES_PRG              411     8
+MAIL.......................... ZHANA_SERVICES_PRG_MAILF01       12    27
+USER_OK_TC.................... ZHANA_SERVICES_PRG              155     4
+                               ZHANA_SERVICES_PRG              169     4
+--------------------------------------------------------------------------------
+
+Screens:                                                      Line  Page
+
+9001.......................... ZHANA_SERVICES_PRG_STATUS_9O02  259    34
+                               ZHANA_SERVICES_PRG_STATUS_9O03   50    52
+9002.......................... ZHANA_SERVICES_PRG_STATUS_9O01   31    28
+                               ZHANA_SERVICES_PRG_STATUS_9O03  253    56
+9009.......................... ZHANA_SERVICES_PRG_STATUS_9O01   40    28
+                               ZHANA_SERVICES_PRG_STATUS_9O01   49    28
+                               ZHANA_SERVICES_PRG_STATUS_9O01   74    29
+                               ZHANA_SERVICES_PRG_STATUS_9O01   78    29
+                               ZHANA_SERVICES_PRG_STATUS_9O01   83    29
+                               ZHANA_SERVICES_PRG_STATUS_9O01   87    29
+                               ZHANA_SERVICES_PRG_STATUS_9O01   91    29
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     62
+--------------------------------------------------------------------------------
+
+Status:                                                       Line  Page
+
+9001.......................... ZHANA_SERVICES_PRG_STATUS_9O01   10    28
+9002.......................... ZHANA_SERVICES_PRG_STATUS_9O02   10    30
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1200    50
+                               ZHANA_SERVICES_PRG_STATUS_9O03   10    52
+--------------------------------------------------------------------------------
+
+Messages:
+
+                                                              Line  Page
+
+.............................. ZHANA_SERVICES_PRG_STATUS_9O02  408    37
+?............................. ZHANA_SERVICES_PRG_GET_DOC_I01  114    15
+?............................. ZHANA_SERVICES_PRG_GET_ROLEI02   38    21
+?............................. ZHANA_SERVICES_PRG_GET_ROLEI02   49    21
+?............................. ZHANA_SERVICES_PRG_STATUS_9O01   33    28
+?............................. ZHANA_SERVICES_PRG_STATUS_9O01   42    28
+?............................. ZHANA_SERVICES_PRG_STATUS_9O01   51    28
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  220    33
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  238    34
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  270    34
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  293    35
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  307    35
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  412    37
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  433    37
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  586    40
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  750    42
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  754    43
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  764    43
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  847    44
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  910    45
+?............................. ZHANA_SERVICES_PRG_STATUS_9O02  927    46
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03   63    53
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03   70    53
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  131    54
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  149    54
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  162    54
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  180    55
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  193    55
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  211    55
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  224    55
+?............................. ZHANA_SERVICES_PRG_STATUS_9O03  242    56
+?............................. ZTIMESHEET_MAIL                 157    59
+?............................. ZTIMESHEET_MAIL                 159    59
+ROR->GET_TEXTX_E.............. ZHANA_SERVICES_PRG_STATUS_9O02  485    38
+ROR1->GET_TEXTX_E............. ZHANA_SERVICES_PRG_STATUS_9O02  746    42
+ROR2->GET_TEXTX_E............. ZHANA_SERVICES_PRG_STATUS_9O02  905    45
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     63
+--------------------------------------------------------------------------------
+
+External calls
+
+
+Function Modules                                              Line  Page
+
+F4IF_INT_TABLE_VALUE_REQUEST.. ZHANA_SERVICES_PRG_GET_C_NAI01   54    11
+                               ZHANA_SERVICES_PRG_GET_DOC_I01  140    15
+                               ZHANA_SERVICES_PRG_GET_MODUI01   53    17
+                               ZHANA_SERVICES_PRG_GET_ROLEI02   58    21
+                               ZHANA_SERVICES_PRG_GET_SERVI01   50    23
+                               ZHANA_SERVICES_PRG_GET_STAGI01   55    25
+NUMBER_GET_NEXT............... ZHANA_SERVICES_PRG_STATUS_9O02  283    34
+SCROLLING_IN_TABLE............ ZHANA_SERVICES_PRG              369     8
+--------------------------------------------------------------------------------
+
+
+Transactions:                                                 Line  Page
+
+ZAPPROVERS.................... ZHANA_SERVICES_PRG_STATUS_9O01   64    29
+ZCON.......................... ZHANA_SERVICES_PRG_STATUS_9O01   70    29
+ZRESOURCE_MAPPIN.............. ZHANA_SERVICES_PRG_STATUS_9O01   58    28
+ZSAPT_FORM.................... ZHANA_SERVICES_PRG_STATUS_9O01   97    29
+ZSERVICE_ELEMENTS............. ZHANA_SERVICES_PRG_STATUS_9O01   55    28
+ZSTAGES....................... ZHANA_SERVICES_PRG_STATUS_9O01   61    28
+ZTIMESHEET_REP................ ZHANA_SERVICES_PRG_STATUS_9O01   67    29
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     64
+--------------------------------------------------------------------------------
+
+DATABASE OPERATIONS
+
+
+SELECT:                                                       Line  Page
+
+ADR6.......................... ZHANA_SERVICES_PRG_STATUS_9O02  452    37
+                               ZHANA_SERVICES_PRG_STATUS_9O02  473    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  613    40
+                               ZHANA_SERVICES_PRG_STATUS_9O02  637    41
+                               ZHANA_SERVICES_PRG_STATUS_9O02  661    41
+                               ZHANA_SERVICES_PRG_STATUS_9O02  685    41
+                               ZHANA_SERVICES_PRG_STATUS_9O02  733    42
+                               ZHANA_SERVICES_PRG_STATUS_9O02  871    45
+                               ZHANA_SERVICES_PRG_STATUS_9O02  892    45
+USR21......................... ZHANA_SERVICES_PRG_STATUS_9O02  444    37
+                               ZHANA_SERVICES_PRG_STATUS_9O02  465    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  607    40
+                               ZHANA_SERVICES_PRG_STATUS_9O02  631    40
+                               ZHANA_SERVICES_PRG_STATUS_9O02  655    41
+                               ZHANA_SERVICES_PRG_STATUS_9O02  679    41
+                               ZHANA_SERVICES_PRG_STATUS_9O02  725    42
+                               ZHANA_SERVICES_PRG_STATUS_9O02  863    44
+                               ZHANA_SERVICES_PRG_STATUS_9O02  884    45
+ZAPPROVERS.................... ZHANA_SERVICES_PRG_GET_ROLEI02   45    21
+                               ZHANA_SERVICES_PRG_STATUS_9O02  438    37
+                               ZHANA_SERVICES_PRG_STATUS_9O02  497    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  501    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  505    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  509    38
+                               ZHANA_SERVICES_PRG_STATUS_9O02  767    43
+                               ZHANA_SERVICES_PRG_STATUS_9O02  771    43
+                               ZHANA_SERVICES_PRG_STATUS_9O02  775    43
+                               ZHANA_SERVICES_PRG_STATUS_9O02  779    43
+                               ZHANA_SERVICES_PRG_STATUS_9O02  857    44
+                               ZHANA_SERVICES_PRG_STATUS_9O03  141    54
+                               ZHANA_SERVICES_PRG_STATUS_9O03  172    54
+                               ZHANA_SERVICES_PRG_STATUS_9O03  203    55
+                               ZHANA_SERVICES_PRG_STATUS_9O03  234    55
+ZRESOURCE_MAPPIN.............. ZHANA_SERVICES_PRG_GET_C_NAI01   27    11
+                               ZHANA_SERVICES_PRG_GET_MODUI01   26    17
+                               ZHANA_SERVICES_PRG_STATUS_9O02  937    46
+ZSAP_TIMESHEET................ ZHANA_SERVICES_PRG_GET_DOC_I01   34    13
+                               ZHANA_SERVICES_PRG_GET_DOC_I01   45    13
+                               ZHANA_SERVICES_PRG_GET_DOC_I01   57    13
+                               ZHANA_SERVICES_PRG_GET_DOC_I01   70    14
+                               ZHANA_SERVICES_PRG_GET_DOC_I01   84    14
+                               ZHANA_SERVICES_PRG_GET_DOC_I01   96    14
+                               ZHANA_SERVICES_PRG_GET_DOC_I01  108    14
+                               ZHANA_SERVICES_PRG_STATUS_9O02   15    30
+                               ZHANA_SERVICES_PRG_STATUS_9O02   40    30
+                               ZHANA_SERVICES_PRG_STATUS_9O02   66    31
+                               ZHANA_SERVICES_PRG_STATUS_9O02   93    31
+                               ZHANA_SERVICES_PRG_STATUS_9O02  119    32
+                               ZHANA_SERVICES_PRG_STATUS_9O02  146    32
+                               ZHANA_SERVICES_PRG_STATUS_9O02  172    32
+                               ZHANA_SERVICES_PRG_STATUS_9O02  227    33
+                               ZHANA_SERVICES_PRG_STATUS_9O02  524    39
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1003    47
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1017    47
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1033    47
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1047    48
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     65
+--------------------------------------------------------------------------------
+
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1061    48
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1076    48
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1092    49
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1106    49
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1120    49
+                               ZHANA_SERVICES_PRG_STATUS_9O02 1134    49
+                               ZHANA_SERVICES_PRG_STATUS_9O03   58    52
+                               ZTIMESHEET_MAIL                  37    57
+                               ZTIMESHEET_MAIL                  45    57
+ZSERVICE_ELEMENT.............. ZHANA_SERVICES_PRG_GET_SERVI01   24    23
+ZSTAGES....................... ZHANA_SERVICES_PRG_GET_STAGI01   28    25
+--------------------------------------------------------------------------------
+
+
+UPDATE:                                                       Line  Page
+
+ZSAP_TIMESHEET................ ZHANA_SERVICES_PRG_STATUS_9O02  425    37
+                               ZHANA_SERVICES_PRG_STATUS_9O02  530    39
+                               ZHANA_SERVICES_PRG_STATUS_9O02  544    39
+                               ZHANA_SERVICES_PRG_STATUS_9O02  558    39
+                               ZHANA_SERVICES_PRG_STATUS_9O02  572    39
+                               ZHANA_SERVICES_PRG_STATUS_9O02  799    43
+                               ZHANA_SERVICES_PRG_STATUS_9O02  811    44
+                               ZHANA_SERVICES_PRG_STATUS_9O02  823    44
+                               ZHANA_SERVICES_PRG_STATUS_9O02  835    44
+                               ZHANA_SERVICES_PRG_STATUS_9O02  922    45
+--------------------------------------------------------------------------------
+
+
+MODIFY:                                                       Line  Page
+
+ZSAP_TIMESHEET................ ZHANA_SERVICES_PRG_STATUS_9O02  382    36
+--------------------------------------------------------------------------------
+
+DELETE:
+
+                                                              Line  Page
+
+ZSAP_TIMESHEET................ ZHANA_SERVICES_PRG_STATUS_9O02  399    36
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+05.10.26 OCD      Internal Program Environment ZHANA_SERVICES_PRPage     66
+--------------------------------------------------------------------------------
+
+INTERNAL TABLE OPERATIONS
+
+
+READ TABLE:                                                   Line  Page
+
+LT_DATA....................... ZHANA_SERVICES_PRG              108     3
+LT_FULL_RETURN_TAB............ ZHANA_SERVICES_PRG_GET_DOC_I01  156    15
+LT_FULL_ROLE_F4_TAB........... ZHANA_SERVICES_PRG_GET_ROLEI02   79    22
+LT_RETURN..................... ZHANA_SERVICES_PRG_GET_C_NAI01   69    12
+                               ZHANA_SERVICES_PRG_GET_MODUI01   68    18
+                               ZHANA_SERVICES_PRG_GET_STAGI01   70    26
+LT_ROLE_RETURN_TAB............ ZHANA_SERVICES_PRG_GET_ROLEI02   73    22
+LT_SERV_RETURN................ ZHANA_SERVICES_PRG_GET_SERVI01   65    24
+--------------------------------------------------------------------------------
+
+
+MODIFY:                                                       Line  Page
+
+LT_DATA....................... ZHANA_SERVICES_PRG              126     4
+                               ZHANA_SERVICES_PRG              140     4
+                               ZHANA_SERVICES_PRG              145     4
+                               ZHANA_SERVICES_PRG_STATUS_9O02  954    46
+--------------------------------------------------------------------------------
+
+
+DELETE:                                                       Line  Page
+
+<TABLE>....................... ZHANA_SERVICES_PRG              328     7
+LT_DATA....................... ZHANA_SERVICES_PRG_STATUS_9O02  262    34
+                               ZHANA_SERVICES_PRG_STATUS_9O02  361    36
+LT_DOC_DB..................... ZHANA_SERVICES_PRG_GET_C_NAI01   39    11
+LT_DOC_DB1.................... ZHANA_SERVICES_PRG_GET_MODUI01   38    17
+LT_DOC_DB2.................... ZHANA_SERVICES_PRG_GET_STAGI01   40    25
+LT_FULL_DOCNO_F4_TAB.......... ZHANA_SERVICES_PRG_GET_DOC_I01  122    15
+LT_SERV_DB.................... ZHANA_SERVICES_PRG_GET_SERVI01   36    23
+--------------------------------------------------------------------------------
