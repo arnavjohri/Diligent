@@ -15,3 +15,4 @@ Tables: ZMM_PREP_ROLEREQ (header), ZMM_PREP_ROLEREI (items).
   program (`MODULE ICE_ARMS`). Find out which tcode the client actually runs before changing
   anything.
 - Hardcoded values are listed in `HARDCODES.md`.
+- Functional overview (Claude Doc): https://claude.ai/code/artifact/745608d2-f5ad-4d87-937e-f39dada3474c

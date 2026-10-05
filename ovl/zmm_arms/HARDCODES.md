@@ -94,6 +94,11 @@ A new role that needs its own approver list needs a table change and a code chan
 
 ## 4. Approval levels and release codes (authorisation)
 
+These are the program's **only** authorisation checks. 7 hardcoded `AUTHORITY-CHECK OBJECT 'M_EINK_FRG' ID 'FRGCO'`
+calls test whether the user holds a given release code. The code checks no PFCG role names
+(AGR_USERS) and no other authorisation object. Adding a release code, or giving an existing
+code a different level, means a code change.
+
 `FORM get_user` (F01 1808–1871) works out the user's level from authorisation object
 `M_EINK_FRG`, field `FRGCO`. The first match wins.
 
