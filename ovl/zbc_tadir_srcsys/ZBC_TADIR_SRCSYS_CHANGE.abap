@@ -69,9 +69,12 @@ START-OF-SELECTION.
     RETURN.
   ENDIF.
 
-* Second guard: customer namespace by name or by package
+* Second guard: customer namespace by name or by package.
+* SMIM keys are GUIDs and SICF keys can be lower case, so those qualify
+* through their Z/Y/$ package; lower-case z/y names are accepted too.
   LOOP AT gt_obj ASSIGNING FIELD-SYMBOL(<ls_obj>).
     IF <ls_obj>-obj_name(1) = 'Z' OR <ls_obj>-obj_name(1) = 'Y'
+    OR <ls_obj>-obj_name(1) = 'z' OR <ls_obj>-obj_name(1) = 'y'
     OR <ls_obj>-devclass(1) = 'Z' OR <ls_obj>-devclass(1) = 'Y'
     OR <ls_obj>-devclass(1) = '$'.
       APPEND <ls_obj> TO gt_chg.

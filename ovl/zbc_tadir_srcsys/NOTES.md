@@ -20,3 +20,12 @@ one-off utility; delete it afterwards.
 - Z/Y objects in `$TMP` / SAP packages are not changed by design — they are listed as skipped.
 - Standard alternative for a handful of objects: SE03 → Object Directory →
   *Change Object Directory Entries* → Original system.
+
+**Non-Z-named custom objects (SICF, SMIM, OData registrations):**
+- SMIM (MIME) keys are GUIDs; SICF keys are node name + hash and can be lower case. They
+  qualify through their package (Z/Y/$). If created in OCQ they carry SRCSYSTEM = OCQ like
+  any other custom object, so the report changes them.
+- OData stack, all R3TR, all covered: IWPR (SEGW project), IWMO/IWSV (backend model/service),
+  IWOM/IWSG (hub registration), SICF node, DPC/MPC classes; SRVD/SRVB/DDLS/BDEF for RAP.
+- Anything listed under "NOT changed - check manually" → SE03 → Object Directory →
+  Change Object Directory Entries → enter PGMID/type/key (F4 for SICF/SMIM) → Original system = OCD.
