@@ -1,6 +1,6 @@
 *&---------------------------------------------------------------------*
 *& Report         : ZBC_TADIR_SRCSYS_CHANGE
-*& Title          : Change TADIR source system OCQ -> OCD for Z/Y objects
+*& Title          : Change TADIR source system OCQ -> OCD, all custom objects
 *& Project        : OVL                          Module: BC
 *& Related FS     : None - utility, requested by mail
 *& Author         : Arnav Johri                  Date: 05.10.2026
@@ -12,10 +12,9 @@
 *&   sets SRCSYSTEM = OCD so they become originals in OCD.
 *&
 *&   Which objects: every R3TR entry with SRCSYSTEM = OCQ, i.e. every
-*&   object created in OCQ. Standard objects carry SRCSYSTEM = SAP (also
-*&   when modified), so they can never qualify. As a second guard the
-*&   entry must also be customer namespace by NAME (Z*, Y*) or PACKAGE
-*&   (Z*, Y*, local $*). Anything else with OCQ is listed, not changed.
+*&   object created in OCQ - Z/Y objects, SICF nodes, SMIM (MIME), OData
+*&   registrations, generated objects alike. Standard objects carry
+*&   SRCSYSTEM = SAP (also when modified), so they can never qualify.
 *&   Runs in OCD only.
 *&
 *&   Selection text: P_TEST  Test Run (No Update)
@@ -24,6 +23,8 @@
 *&   05.10.2026  Arnav Johri  <TR>  Initial development
 *&   05.10.2026  Arnav Johri  <TR>  Simplified: fixed OCQ -> OCD, all
 *&                                  custom objects, only a test flag
+*&   05.10.2026  Arnav Johri  <TR>  Name/package filter dropped - every
+*&                                  OCQ entry is changed (SICF, SMIM...)
 *&---------------------------------------------------------------------*
 REPORT zbc_tadir_srcsys_change.
 
@@ -40,7 +41,6 @@ TYPES: BEGIN OF ty_obj,
 
 DATA: gt_obj    TYPE STANDARD TABLE OF ty_obj,
       gt_chg    TYPE STANDARD TABLE OF ty_obj,
-      gt_skip   TYPE STANDARD TABLE OF ty_obj,
       gt_fail   TYPE STANDARD TABLE OF ty_obj,
       gv_answer TYPE c LENGTH 1,
       gv_text   TYPE string,
@@ -69,19 +69,8 @@ START-OF-SELECTION.
     RETURN.
   ENDIF.
 
-* Second guard: customer namespace by name or by package.
-* SMIM keys are GUIDs and SICF keys can be lower case, so those qualify
-* through their Z/Y/$ package; lower-case z/y names are accepted too.
-  LOOP AT gt_obj ASSIGNING FIELD-SYMBOL(<ls_obj>).
-    IF <ls_obj>-obj_name(1) = 'Z' OR <ls_obj>-obj_name(1) = 'Y'
-    OR <ls_obj>-obj_name(1) = 'z' OR <ls_obj>-obj_name(1) = 'y'
-    OR <ls_obj>-devclass(1) = 'Z' OR <ls_obj>-devclass(1) = 'Y'
-    OR <ls_obj>-devclass(1) = '$'.
-      APPEND <ls_obj> TO gt_chg.
-    ELSE.
-      APPEND <ls_obj> TO gt_skip.
-    ENDIF.
-  ENDLOOP.
+* Every entry created in OCQ is changed - no further filter
+  gt_chg = gt_obj.
 
   gv_count = lines( gt_chg ).
 
@@ -124,13 +113,11 @@ START-OF-SELECTION.
   ELSEIF p_test = abap_true.
     WRITE: / |TEST RUN - { gv_count } objects would change { gc_old } -> { gc_new }|.
   ELSE.
-    WRITE: / 'No custom objects qualify - nothing changed'.
+    WRITE: / 'No objects qualify - nothing changed'.
   ENDIF.
 
   PERFORM print_list USING 'Changed / to be changed' gt_chg.
   PERFORM print_list USING 'Update failed - entry changed meanwhile' gt_fail.
-  PERFORM print_list USING 'NOT changed - not Z/Y by name or package, check manually'
-                           gt_skip.
 
 *&---------------------------------------------------------------------*
 *& Form print_list

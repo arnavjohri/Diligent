@@ -6,7 +6,7 @@ This report sets `SRCSYSTEM = SY-SYSID` for customer objects only, making them o
 
 **Run it in:** the development system only (it refuses when old system = current system).
 
-**Guards:** `R3TR` + `SRCSYSTEM = OCQ` (standard objects carry `SAP`, even when modified); plus name Z/Y or package Z/Y/$ — anything else is listed, not changed. Runs only when SY-SYSID = OCD. Test flag default on; confirm popup.
+**Guards:** `R3TR` + `SRCSYSTEM = OCQ` only — every object created in OCQ is changed (Z/Y, SICF, SMIM, OData, generated). Standard objects carry `SAP`, even when modified, so they never match. Runs only when SY-SYSID = OCD. Test flag default on; confirm popup.
 
 **Ships:** paste-only, single report, no includes, no screens. Create in SE38 as type 1,
 then maintain text elements (listed in the program header). Local `$TMP` is fine — it is a
@@ -23,9 +23,9 @@ one-off utility; delete it afterwards.
 
 **Non-Z-named custom objects (SICF, SMIM, OData registrations):**
 - SMIM (MIME) keys are GUIDs; SICF keys are node name + hash and can be lower case. They
-  qualify through their package (Z/Y/$). If created in OCQ they carry SRCSYSTEM = OCQ like
+  are changed like everything else. If created in OCQ they carry SRCSYSTEM = OCQ like
   any other custom object, so the report changes them.
 - OData stack, all R3TR, all covered: IWPR (SEGW project), IWMO/IWSV (backend model/service),
   IWOM/IWSG (hub registration), SICF node, DPC/MPC classes; SRVD/SRVB/DDLS/BDEF for RAP.
-- Anything listed under "NOT changed - check manually" → SE03 → Object Directory →
+- Single object by hand, if ever needed: SE03 → Object Directory →
   Change Object Directory Entries → enter PGMID/type/key (F4 for SICF/SMIM) → Original system = OCD.
