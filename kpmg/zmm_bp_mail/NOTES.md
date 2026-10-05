@@ -28,7 +28,10 @@ selection texts, program attributes, TVARVC, SE93, SM36 and SCOT steps are in
   ticked ignores any date range typed into it.
 - Recipient logic is ADR6 CONSNUMBER `004` / `005` **by position** (Q3) — data entry order
   in the BP address decides who gets the mail. Functional accepted the risk.
-- One mail per run to everyone (Q10 / R1): supplier contacts see other suppliers' data.
+- ~~One mail per run to everyone (Q10 / R1)~~ — replaced 05/10/26: one mail per BP, sent as up
+  to three separate mails (MDM / ADR6 004 / ADR6 005). A supplier now sees only its own data.
+  10 BPs -> up to 30 mails per run; each is committed on its own, so one failure does not undo
+  the rest. The per-BP result is in the log column ("MDM: sent; Supplier Manager (004): sent ...").
 - Subject is 63 chars, longer than `CREATE_DOCUMENT`'s 50 — set via `SET_MESSAGE_SUBJECT`.
 - Nothing prevents a manual re-run from sending the same day's mail again (by decision).
 - Mail leaves the system only when the SCOT send job runs; check SOST first when "nothing

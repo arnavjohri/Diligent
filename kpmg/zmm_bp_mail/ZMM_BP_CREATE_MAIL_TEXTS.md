@@ -46,15 +46,23 @@ unmaintained symbol produces a blank line in the mail.**
 | M03 | No address found for this BP |
 | M04 | No supplier manager email (ADR6 sequence 004) |
 | M05 | No supplier contact email (ADR6 sequence 005) |
-| M06 | TVARVC ZMM_BP_MAIL_MDM not maintained - MDM not copied |
+| M06 | TVARVC ZMM_BP_MAIL_MDM not maintained - no MDM mail |
 | M07 | No recipients found - mail not sent |
-| M08 | Mail sent to & recipient(s) |
+| M08 | *(unused from 05/10/26 - may be left or deleted)* |
 | M09 | Mail could not be sent |
 | M10 | OK |
 | M11 | No BP with a supplier master found - mail not sent |
 | M12 | ALV column not found |
+| M13 | &1 mail(s) sent, &2 failed |
+| R01 | MDM |
+| R02 | Supplier Manager (004) |
+| R03 | Supplier Contact (005) |
+| R04 | Contact (005) same as manager (004) - not sent twice |
+| R05 | sent |
+| R06 | not sent |
 
-M08: the `&` is replaced by the recipient count at runtime — keep it.
+M13: `&1` and `&2` are replaced by the sent / failed counts at runtime — keep them.
+**New on 05/10/26: M13, R01–R06. M06 reworded.** Without R01–R06 the log column shows `: sent`.
 
 ## Program attributes
 

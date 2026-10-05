@@ -11,13 +11,11 @@
 *&   Daily background job. Finds every supplier business partner created
 *&   on the selected date (BUT000-CRDAT, BU_GROUP in the six supplier
 *&   groupings the FS names), reads the supplier master, the BP address
-*&   and the two e-mail entries of that address. From 05.10.2026 each
-*&   BP gets its OWN mail, carrying only that BP's details, sent as up
-*&   to three separate mails:
-*&     - MDM              (TVARVC ZMM_BP_MAIL_MDM, all rows on one mail)
+*&   and the two e-mail entries of that address, and sends ONE e-mail
+*&   for the whole day listing every new supplier, to
+*&     - MDM              (TVARVC ZMM_BP_MAIL_MDM, one or more rows)
 *&     - Supplier Manager (ADR6 sequence 004 of the BP address)
 *&     - Supplier contact (ADR6 sequence 005 of the BP address)
-*&   004 / 005 not maintained -> that mail is skipped, MDM still gets it.
 *&   Foreground run shows a CL_SALV_TABLE log, one row per BP, with the
 *&   send result in the list header. Background run writes the same list
 *&   to the spool and the send result to the job log.
@@ -28,8 +26,6 @@
 *&
 *& CHANGE HISTORY
 *&   25.09.2026  Arnav Johri  <TR>  Initial development
-*&   05.10.2026  Arnav Johri  <TR>  One mail per BP, separate mails to
-*&                                  MDM / ADR6 004 / ADR6 005
 *&---------------------------------------------------------------------*
 REPORT zmm_bp_create_mail.
 
@@ -499,19 +495,16 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form COLLECT_RECIPIENTS
 *&---------------------------------------------------------------------*
-*& MDM address(es) from TVARVC into GT_RECIP. From 05/10/26 GT_RECIP
-*& holds MDM only: the 004 / 005 addresses are mailed per BP in
-*& SEND_MAIL, each on a mail of its own.
+*& One mail for the whole day to everyone (functional decision
+*& 25/09/26): MDM from TVARVC plus every supplier manager and supplier
+*& contact of every BP in GT_DET, de-duplicated.
 *&---------------------------------------------------------------------*
 FORM collect_recipients.
 
   DATA: lt_mdm  TYPE ty_t_tvarv,
         lv_mdm  TYPE tvarvc-low,
-*BOC By Arnav on 05/10/26
-*        lv_mail TYPE adr6-smtp_addr,
-*        ls_det  TYPE ty_det.
-        lv_mail TYPE adr6-smtp_addr.
-*EOC By Arnav on 05/10/26
+        lv_mail TYPE adr6-smtp_addr,
+        ls_det  TYPE ty_det.
 
   CLEAR: gt_recip, gv_mdm_missing.
 
@@ -533,107 +526,62 @@ FORM collect_recipients.
     gv_mdm_missing = abap_true.
   ENDIF.
 
-*BOC By Arnav on 05/10/26
-* Supplier addresses no longer join one consolidated mail - each BP's
-* 004 / 005 address gets that BP's mail only (SEND_MAIL).
-*  LOOP AT gt_det INTO ls_det.
-*    IF ls_det-mgr_mail IS NOT INITIAL.
-*      APPEND ls_det-mgr_mail TO gt_recip.
-*    ENDIF.
-*    IF ls_det-cont_mail IS NOT INITIAL.
-*      APPEND ls_det-cont_mail TO gt_recip.
-*    ENDIF.
-*  ENDLOOP.
-*EOC By Arnav on 05/10/26
+  LOOP AT gt_det INTO ls_det.
+    IF ls_det-mgr_mail IS NOT INITIAL.
+      APPEND ls_det-mgr_mail TO gt_recip.
+    ENDIF.
+    IF ls_det-cont_mail IS NOT INITIAL.
+      APPEND ls_det-cont_mail TO gt_recip.
+    ENDIF.
+  ENDLOOP.
 
   SORT gt_recip.
   DELETE ADJACENT DUPLICATES FROM gt_recip.
 
 ENDFORM.
 
-*BOC By Arnav on 05/10/26
-* BUILD_BODY now takes ONE supplier: every BP gets a mail of its own,
-* so the body carries that BP's details only. Old form kept below.
-**&---------------------------------------------------------------------*
-**& Form BUILD_BODY
-**&---------------------------------------------------------------------*
-**& HTML body per the FS e-mail draft: greeting, intro, one detail table
-**& per supplier, sign-off, no-reply line. All wording comes from text
-**& symbols so functional can adjust it without a code change. Master
-**& data is HTML-escaped so a '&' or '<' in a name cannot break the
-**& layout.
-**&---------------------------------------------------------------------*
-*FORM build_body CHANGING cv_html TYPE string.
-*
-*  DATA: ls_det TYPE ty_det.
-*
-*  CLEAR cv_html.
-*
-*  cv_html = |<html><body style="font-family:Arial;font-size:10pt">|
-*         && |<p>{ TEXT-t01 }</p>|
-*         && |<p>{ TEXT-t02 } { TEXT-t03 }</p>|.
-*
-*  LOOP AT gt_det INTO ls_det.
-*    cv_html = cv_html
-*           && |<table border="1" cellpadding="4" cellspacing="0">|.
-*    PERFORM add_row USING TEXT-l01 ls_det-name       CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l02 ls_det-street     CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l03 ls_det-str_suppl1 CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l04 ls_det-str_suppl2 CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l05 ls_det-city2      CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l06 ls_det-post_code1 CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l07 ls_det-city1      CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l08 ls_det-region_txt CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l09 ls_det-cntry_txt  CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l10 ls_det-partner    CHANGING cv_html.
-*    PERFORM add_row USING TEXT-l11 ls_det-mgr_mail   CHANGING cv_html.
-*    cv_html = cv_html && |</table><br/>|.
-*  ENDLOOP.
-*
-*  cv_html = cv_html
-*         && |<p>{ TEXT-t04 }<br/>{ TEXT-t05 }</p>|
-*         && |<p>{ TEXT-t06 }</p>|
-*         && |</body></html>|.
-*
-*ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form BUILD_BODY
 *&---------------------------------------------------------------------*
-*& HTML body per the FS e-mail draft for ONE supplier: greeting, intro,
-*& the supplier's detail table, sign-off, no-reply line. All wording
-*& comes from text symbols so functional can adjust it without a code
-*& change. Master data is HTML-escaped in ADD_ROW.
+*& HTML body per the FS e-mail draft: greeting, intro, one detail table
+*& per supplier, sign-off, no-reply line. All wording comes from text
+*& symbols so functional can adjust it without a code change. Master
+*& data is HTML-escaped so a '&' or '<' in a name cannot break the
+*& layout.
 *&---------------------------------------------------------------------*
-FORM build_body USING    is_det  TYPE ty_det
-                CHANGING cv_html TYPE string.
+FORM build_body CHANGING cv_html TYPE string.
+
+  DATA: ls_det TYPE ty_det.
 
   CLEAR cv_html.
 
   cv_html = |<html><body style="font-family:Arial;font-size:10pt">|
          && |<p>{ TEXT-t01 }</p>|
-         && |<p>{ TEXT-t02 } { TEXT-t03 }</p>|
-         && |<table border="1" cellpadding="4" cellspacing="0">|.
+         && |<p>{ TEXT-t02 } { TEXT-t03 }</p>|.
 
-  PERFORM add_row USING TEXT-l01 is_det-name       CHANGING cv_html.
-  PERFORM add_row USING TEXT-l02 is_det-street     CHANGING cv_html.
-  PERFORM add_row USING TEXT-l03 is_det-str_suppl1 CHANGING cv_html.
-  PERFORM add_row USING TEXT-l04 is_det-str_suppl2 CHANGING cv_html.
-  PERFORM add_row USING TEXT-l05 is_det-city2      CHANGING cv_html.
-  PERFORM add_row USING TEXT-l06 is_det-post_code1 CHANGING cv_html.
-  PERFORM add_row USING TEXT-l07 is_det-city1      CHANGING cv_html.
-  PERFORM add_row USING TEXT-l08 is_det-region_txt CHANGING cv_html.
-  PERFORM add_row USING TEXT-l09 is_det-cntry_txt  CHANGING cv_html.
-  PERFORM add_row USING TEXT-l10 is_det-partner    CHANGING cv_html.
-  PERFORM add_row USING TEXT-l11 is_det-mgr_mail   CHANGING cv_html.
+  LOOP AT gt_det INTO ls_det.
+    cv_html = cv_html
+           && |<table border="1" cellpadding="4" cellspacing="0">|.
+    PERFORM add_row USING TEXT-l01 ls_det-name       CHANGING cv_html.
+    PERFORM add_row USING TEXT-l02 ls_det-street     CHANGING cv_html.
+    PERFORM add_row USING TEXT-l03 ls_det-str_suppl1 CHANGING cv_html.
+    PERFORM add_row USING TEXT-l04 ls_det-str_suppl2 CHANGING cv_html.
+    PERFORM add_row USING TEXT-l05 ls_det-city2      CHANGING cv_html.
+    PERFORM add_row USING TEXT-l06 ls_det-post_code1 CHANGING cv_html.
+    PERFORM add_row USING TEXT-l07 ls_det-city1      CHANGING cv_html.
+    PERFORM add_row USING TEXT-l08 ls_det-region_txt CHANGING cv_html.
+    PERFORM add_row USING TEXT-l09 ls_det-cntry_txt  CHANGING cv_html.
+    PERFORM add_row USING TEXT-l10 ls_det-partner    CHANGING cv_html.
+    PERFORM add_row USING TEXT-l11 ls_det-mgr_mail   CHANGING cv_html.
+    cv_html = cv_html && |</table><br/>|.
+  ENDLOOP.
 
   cv_html = cv_html
-         && |</table><br/>|
          && |<p>{ TEXT-t04 }<br/>{ TEXT-t05 }</p>|
          && |<p>{ TEXT-t06 }</p>|
          && |</body></html>|.
 
 ENDFORM.
-*EOC By Arnav on 05/10/26
 
 *&---------------------------------------------------------------------*
 *& Form ADD_ROW
@@ -654,133 +602,31 @@ FORM add_row USING    iv_label TYPE clike
 
 ENDFORM.
 
-*BOC By Arnav on 05/10/26
-* One consolidated mail to everyone replaced by one mail per BP, sent
-* separately to MDM, to ADR6 004 and to ADR6 005 (change requested by
-* functional 05/10/26). The CL_BCS part moved unchanged into SEND_ONE.
-* Old form kept below.
-**&---------------------------------------------------------------------*
-**& Form SEND_MAIL
-**&---------------------------------------------------------------------*
-**& CL_BCS, HTML document, one internet recipient per address in
-**& GT_RECIP. The FS subject is longer than the 50 characters
-**& CREATE_DOCUMENT accepts, so the full text goes through
-**& SET_MESSAGE_SUBJECT. The result lands in GV_SEND_RESULT for the ALV
-**& header and in a status message for the job log. Actual dispatch is
-**& done by the SCOT send job (RSCONN01), as for every CL_BCS mail.
-**&---------------------------------------------------------------------*
-*FORM send_mail.
-*
-*  DATA: lo_send    TYPE REF TO cl_bcs,
-*        lo_doc     TYPE REF TO cl_document_bcs,
-*        lo_sender  TYPE REF TO cl_cam_address_bcs,
-*        lo_recip   TYPE REF TO cl_cam_address_bcs,
-*        lo_cx      TYPE REF TO cx_bcs,
-*        lt_soli    TYPE soli_tab,
-*        lv_html    TYPE string,
-*        lv_subject TYPE string,
-*        lv_subj50  TYPE so_obj_des,
-*        lv_sender  TYPE tvarvc-low,
-*        lv_addr    TYPE adr6-smtp_addr,
-*        lv_sent    TYPE os_boolean,
-*        lv_count   TYPE i.
-*
-*  CLEAR gv_send_result.
-*
-*  IF gt_det IS INITIAL.
-*    " Every BP of the day was skipped (no supplier master) - nothing to mail
-*    gv_send_result = TEXT-m11.
-*    MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'W'.
-*    RETURN.
-*  ENDIF.
-*
-*  IF gt_recip IS INITIAL.
-*    gv_send_result = TEXT-m07.
-*    MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
-*    RETURN.
-*  ENDIF.
-*
-*  PERFORM build_body CHANGING lv_html.
-*
-*  lv_subject = TEXT-s01.
-*  lv_subj50  = lv_subject.
-*
-*  " Optional fixed sender, e.g. noreply@astralltd.com
-*  SELECT SINGLE low
-*    FROM tvarvc
-*    WHERE name = @gc_tvarv_snd
-*    INTO @lv_sender.
-*  CONDENSE lv_sender.
-*
-*  TRY.
-*      lo_send = cl_bcs=>create_persistent( ).
-*
-*      lt_soli = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
-*      lo_doc  = cl_document_bcs=>create_document(
-*                  i_type    = gc_doc_html
-*                  i_text    = lt_soli
-*                  i_subject = lv_subj50 ).
-*      lo_send->set_document( lo_doc ).
-*      lo_send->set_message_subject( ip_subject = lv_subject ).
-*
-*      IF lv_sender IS NOT INITIAL.
-*        lv_addr   = lv_sender.
-*        lo_sender = cl_cam_address_bcs=>create_internet_address(
-*                      i_address_string = lv_addr ).
-*        lo_send->set_sender( i_sender = lo_sender ).
-*      ENDIF.
-*
-*      LOOP AT gt_recip INTO lv_addr.
-*        lo_recip = cl_cam_address_bcs=>create_internet_address(
-*                     i_address_string = lv_addr ).
-*        lo_send->add_recipient( i_recipient = lo_recip ).
-*      ENDLOOP.
-*
-*      lo_send->set_send_immediately( i_send_immediately = abap_true ).
-*      lv_sent = lo_send->send( i_with_error_screen = abap_false ).
-*
-*      IF lv_sent = abap_true.
-*        COMMIT WORK.
-*        lv_count = lines( gt_recip ).
-*        gv_send_result = TEXT-m08.
-*        REPLACE '&' IN gv_send_result WITH |{ lv_count }|.
-*        IF gv_mdm_missing = abap_true.
-*          gv_send_result = |{ gv_send_result } - { TEXT-m06 }|.
-*        ENDIF.
-*        MESSAGE gv_send_result TYPE 'S'.
-*      ELSE.
-*        ROLLBACK WORK.
-*        gv_send_result = TEXT-m09.
-*        MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
-*      ENDIF.
-*
-*    CATCH cx_bcs INTO lo_cx.
-*      ROLLBACK WORK.
-*      gv_send_result = |{ TEXT-m09 }: { lo_cx->get_text( ) }|.
-*      MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
-*  ENDTRY.
-*
-*ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form SEND_MAIL
 *&---------------------------------------------------------------------*
-*& Per BP in GT_DET, up to three separate mails with that BP's details:
-*&   1. MDM          - every TVARVC ZMM_BP_MAIL_MDM address, one mail
-*&   2. ADR6 004     - supplier manager, only if maintained
-*&   3. ADR6 005     - supplier contact, only if maintained and not the
-*&                     same address as 004 (no duplicate to the vendor)
-*& A failed mail does not stop the run: the result of each mail goes on
-*& the BP's log row, and the list header counts sent / failed.
+*& CL_BCS, HTML document, one internet recipient per address in
+*& GT_RECIP. The FS subject is longer than the 50 characters
+*& CREATE_DOCUMENT accepts, so the full text goes through
+*& SET_MESSAGE_SUBJECT. The result lands in GV_SEND_RESULT for the ALV
+*& header and in a status message for the job log. Actual dispatch is
+*& done by the SCOT send job (RSCONN01), as for every CL_BCS mail.
 *&---------------------------------------------------------------------*
 FORM send_mail.
 
-  DATA: ls_det    TYPE ty_det,
-        lt_to     TYPE ty_t_mail,
-        lv_html   TYPE string,
-        lv_sender TYPE tvarvc-low,
-        lv_note   TYPE string,
-        lv_sent   TYPE i,
-        lv_failed TYPE i.
+  DATA: lo_send    TYPE REF TO cl_bcs,
+        lo_doc     TYPE REF TO cl_document_bcs,
+        lo_sender  TYPE REF TO cl_cam_address_bcs,
+        lo_recip   TYPE REF TO cl_cam_address_bcs,
+        lo_cx      TYPE REF TO cx_bcs,
+        lt_soli    TYPE soli_tab,
+        lv_html    TYPE string,
+        lv_subject TYPE string,
+        lv_subj50  TYPE so_obj_des,
+        lv_sender  TYPE tvarvc-low,
+        lv_addr    TYPE adr6-smtp_addr,
+        lv_sent    TYPE os_boolean,
+        lv_count   TYPE i.
 
   CLEAR gv_send_result.
 
@@ -791,141 +637,28 @@ FORM send_mail.
     RETURN.
   ENDIF.
 
-  " Optional fixed sender, e.g. noreply@astralltd.com - read once per run
+  IF gt_recip IS INITIAL.
+    gv_send_result = TEXT-m07.
+    MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
+
+  PERFORM build_body CHANGING lv_html.
+
+  lv_subject = TEXT-s01.
+  lv_subj50  = lv_subject.
+
+  " Optional fixed sender, e.g. noreply@astralltd.com
   SELECT SINGLE low
     FROM tvarvc
     WHERE name = @gc_tvarv_snd
     INTO @lv_sender.
   CONDENSE lv_sender.
 
-  LOOP AT gt_det INTO ls_det.
-
-    PERFORM build_body USING ls_det CHANGING lv_html.
-
-    " Mail 1 - MDM
-    IF gt_recip IS NOT INITIAL.
-      PERFORM send_and_log USING ls_det-partner gt_recip lv_html
-                                 lv_sender TEXT-r01
-                           CHANGING lv_sent lv_failed.
-    ENDIF.
-
-    " Mail 2 - supplier manager, ADR6 004
-    IF ls_det-mgr_mail IS NOT INITIAL.
-      CLEAR lt_to.
-      APPEND ls_det-mgr_mail TO lt_to.
-      PERFORM send_and_log USING ls_det-partner lt_to lv_html
-                                 lv_sender TEXT-r02
-                           CHANGING lv_sent lv_failed.
-    ENDIF.
-
-    " Mail 3 - supplier contact, ADR6 005
-    IF ls_det-cont_mail IS NOT INITIAL.
-      IF to_upper( ls_det-cont_mail ) = to_upper( ls_det-mgr_mail ).
-        lv_note = TEXT-r04.
-        PERFORM add_result USING ls_det-partner lv_note abap_false.
-      ELSE.
-        CLEAR lt_to.
-        APPEND ls_det-cont_mail TO lt_to.
-        PERFORM send_and_log USING ls_det-partner lt_to lv_html
-                                   lv_sender TEXT-r03
-                             CHANGING lv_sent lv_failed.
-      ENDIF.
-    ENDIF.
-
-    " Neither MDM nor 004 / 005 - nothing could be sent for this BP
-    IF gt_recip IS INITIAL
-    AND ls_det-mgr_mail IS INITIAL
-    AND ls_det-cont_mail IS INITIAL.
-      lv_note = TEXT-m07.
-      PERFORM add_result USING ls_det-partner lv_note abap_true.
-      lv_failed = lv_failed + 1.
-    ENDIF.
-
-  ENDLOOP.
-
-  gv_send_result = TEXT-m13.
-  REPLACE '&1' IN gv_send_result WITH |{ lv_sent }|.
-  REPLACE '&2' IN gv_send_result WITH |{ lv_failed }|.
-  IF gv_mdm_missing = abap_true.
-    gv_send_result = |{ gv_send_result } - { TEXT-m06 }|.
-  ENDIF.
-
-  IF lv_failed = 0.
-    MESSAGE gv_send_result TYPE 'S'.
-  ELSE.
-    MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'W'.
-  ENDIF.
-
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form SEND_AND_LOG
-*&---------------------------------------------------------------------*
-*& Send one mail and write "<who>: sent" or "<who>: not sent - <why>"
-*& onto the BP's log row.
-*&---------------------------------------------------------------------*
-FORM send_and_log USING    iv_partner TYPE lfa1-lifnr
-                           it_to      TYPE ty_t_mail
-                           iv_html    TYPE string
-                           iv_sender  TYPE tvarvc-low
-                           iv_who     TYPE clike
-                  CHANGING cv_sent    TYPE i
-                           cv_failed  TYPE i.
-
-  DATA: lv_ok   TYPE abap_bool,
-        lv_err  TYPE string,
-        lv_note TYPE string.
-
-  PERFORM send_one USING it_to iv_html iv_sender CHANGING lv_ok lv_err.
-
-  IF lv_ok = abap_true.
-    cv_sent = cv_sent + 1.
-    lv_note = |{ iv_who }: { TEXT-r05 }|.
-    PERFORM add_result USING iv_partner lv_note abap_false.
-  ELSE.
-    cv_failed = cv_failed + 1.
-    lv_note = |{ iv_who }: { TEXT-r06 } - { lv_err }|.
-    PERFORM add_result USING iv_partner lv_note abap_true.
-  ENDIF.
-
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form SEND_ONE
-*&---------------------------------------------------------------------*
-*& CL_BCS, HTML document, one internet recipient per address in IT_TO.
-*& The FS subject is longer than the 50 characters CREATE_DOCUMENT
-*& accepts, so the full text goes through SET_MESSAGE_SUBJECT. Each mail
-*& is committed on its own, so a failed mail is rolled back without
-*& taking the mails already sent in this run with it. Actual dispatch is
-*& done by the SCOT send job (RSCONN01), as for every CL_BCS mail.
-*&---------------------------------------------------------------------*
-FORM send_one USING    it_to     TYPE ty_t_mail
-                       iv_html   TYPE string
-                       iv_sender TYPE tvarvc-low
-              CHANGING cv_ok     TYPE abap_bool
-                       cv_err    TYPE string.
-
-  DATA: lo_send    TYPE REF TO cl_bcs,
-        lo_doc     TYPE REF TO cl_document_bcs,
-        lo_sender  TYPE REF TO cl_cam_address_bcs,
-        lo_recip   TYPE REF TO cl_cam_address_bcs,
-        lo_cx      TYPE REF TO cx_bcs,
-        lt_soli    TYPE soli_tab,
-        lv_subject TYPE string,
-        lv_subj50  TYPE so_obj_des,
-        lv_addr    TYPE adr6-smtp_addr,
-        lv_sent    TYPE os_boolean.
-
-  CLEAR: cv_ok, cv_err.
-
-  lv_subject = TEXT-s01.
-  lv_subj50  = lv_subject.
-
   TRY.
       lo_send = cl_bcs=>create_persistent( ).
 
-      lt_soli = cl_bcs_convert=>string_to_soli( iv_string = iv_html ).
+      lt_soli = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
       lo_doc  = cl_document_bcs=>create_document(
                   i_type    = gc_doc_html
                   i_text    = lt_soli
@@ -933,14 +666,14 @@ FORM send_one USING    it_to     TYPE ty_t_mail
       lo_send->set_document( lo_doc ).
       lo_send->set_message_subject( ip_subject = lv_subject ).
 
-      IF iv_sender IS NOT INITIAL.
-        lv_addr   = iv_sender.
+      IF lv_sender IS NOT INITIAL.
+        lv_addr   = lv_sender.
         lo_sender = cl_cam_address_bcs=>create_internet_address(
                       i_address_string = lv_addr ).
         lo_send->set_sender( i_sender = lo_sender ).
       ENDIF.
 
-      LOOP AT it_to INTO lv_addr.
+      LOOP AT gt_recip INTO lv_addr.
         lo_recip = cl_cam_address_bcs=>create_internet_address(
                      i_address_string = lv_addr ).
         lo_send->add_recipient( i_recipient = lo_recip ).
@@ -951,51 +684,26 @@ FORM send_one USING    it_to     TYPE ty_t_mail
 
       IF lv_sent = abap_true.
         COMMIT WORK.
-        cv_ok = abap_true.
+        lv_count = lines( gt_recip ).
+        gv_send_result = TEXT-m08.
+        REPLACE '&' IN gv_send_result WITH |{ lv_count }|.
+        IF gv_mdm_missing = abap_true.
+          gv_send_result = |{ gv_send_result } - { TEXT-m06 }|.
+        ENDIF.
+        MESSAGE gv_send_result TYPE 'S'.
       ELSE.
         ROLLBACK WORK.
-        cv_err = TEXT-m09.
+        gv_send_result = TEXT-m09.
+        MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
       ENDIF.
 
     CATCH cx_bcs INTO lo_cx.
       ROLLBACK WORK.
-      cv_err = lo_cx->get_text( ).
+      gv_send_result = |{ TEXT-m09 }: { lo_cx->get_text( ) }|.
+      MESSAGE gv_send_result TYPE 'S' DISPLAY LIKE 'E'.
   ENDTRY.
 
 ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form ADD_RESULT
-*&---------------------------------------------------------------------*
-*& Put the result of one mail on the BP's log row. The first result
-*& replaces the plain "OK"; later ones, and any earlier warning, are
-*& chained with "; ". A failed mail turns the row to error.
-*&---------------------------------------------------------------------*
-FORM add_result USING iv_partner TYPE lfa1-lifnr
-                      iv_text    TYPE string
-                      iv_failed  TYPE abap_bool.
-
-  FIELD-SYMBOLS: <ls_out> TYPE ty_out.
-
-  " GT_OUT partner is BUT000-PARTNER; supplier number = BP number here
-  READ TABLE gt_out ASSIGNING <ls_out>
-       WITH KEY partner = iv_partner.
-  IF sy-subrc <> 0.
-    RETURN.
-  ENDIF.
-
-  IF <ls_out>-status = gc_stat_ok AND <ls_out>-msg = TEXT-m10.
-    <ls_out>-msg = iv_text.
-  ELSE.
-    <ls_out>-msg = |{ <ls_out>-msg }; { iv_text }|.
-  ENDIF.
-
-  IF iv_failed = abap_true.
-    <ls_out>-status = gc_stat_err.
-  ENDIF.
-
-ENDFORM.
-*EOC By Arnav on 05/10/26
 
 *&---------------------------------------------------------------------*
 *& Form DISPLAY_LOG
