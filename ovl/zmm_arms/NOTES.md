@@ -17,3 +17,4 @@ Tables: ZMM_PREP_ROLEREQ (header), ZMM_PREP_ROLEREI (items).
 - Hardcoded values are listed in `HARDCODES.md`.
 - Functional overview (Claude Doc): https://claude.ai/code/artifact/745608d2-f5ad-4d87-937e-f39dada3474c
 - Hardcoded values register (Claude Doc): https://claude.ai/code/artifact/2f8d9310-fb7d-401a-9dd6-ad366facca2c — PDF export: `ZMM_ARMS_Hardcoded_Values_Register.pdf`
+- Role catalogue for Security (Claude Doc): https://claude.ai/code/artifact/2dcf8f4d-d3f8-4def-a921-b3f249e84c0a — PDF: `ZICE_ARMS_Role_Catalogue_for_Security.pdf`
