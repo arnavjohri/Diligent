@@ -534,17 +534,9 @@ CLASS ZCL_ZPRA_DAILY_PROD_DPC_EXT IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF ',' IN lv_val WITH ''.
       CONDENSE lv_val NO-GAPS.
 
-*BOC By Arnav on 06/10/26
-*     IF lv_val IS INITIAL OR lv_val = '0'.
-*       CONTINUE.
-*     ENDIF.
-*--- text compare with '0' missed 0.000 / 0.00 / 00 from CPI, so zero
-*--- rows were still appended. Blank is skipped here, zero after the
-*--- numeric conversion below.
-      IF lv_val IS INITIAL.
+      IF lv_val IS INITIAL OR lv_val = '0'.
         CONTINUE.
       ENDIF.
-*EOC By Arnav on 06/10/26
 
       ls_prd-product     = ls_map-product.
       ls_prd-prd_vl_type = ls_map-vltype.
@@ -555,13 +547,6 @@ CLASS ZCL_ZPRA_DAILY_PROD_DPC_EXT IMPLEMENTATION.
           APPEND |Row { iv_row_no } ({ lv_key }): { ls_map-field } has non-numeric value '{ <lv_raw> }'| TO et_error.
           CONTINUE.
       ENDTRY.
-
-*BOC By Arnav on 06/10/26
-*--- value is zero in any notation -> no row in ZPRA_T_DLY_PRD
-      IF ls_prd-prod_vl_qty1 = 0.
-        CONTINUE.
-      ENDIF.
-*EOC By Arnav on 06/10/26
 
       ls_prd-prod_vl_uom1 = get_prod_uom( iv_asset   = is_item-asset
                                           iv_product = ls_prd-product
