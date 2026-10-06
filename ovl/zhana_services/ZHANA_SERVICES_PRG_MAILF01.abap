@@ -12,7 +12,7 @@
 FORM mail .
 
 ENDFORM.
-*BOC By SAP_ABAP on 05/10/26
+*BOC By SAP_ABAP on 06/10/26
 *&---------------------------------------------------------------------*
 *& Download / Upload of the timesheet table control (screen 9002)
 *&
@@ -21,6 +21,8 @@ ENDFORM.
 *& workbook again; the uploaded rows replace what is in the table
 *& control. Nothing is written to ZSAP_TIMESHEET here - the rows are
 *& saved, and validated, by the existing SAVE path.
+*& Download asks All / AS IS / MICROSOFT (radio buttons) and exports
+*& only the table-control rows with that Scope.
 *&
 *& Column order of the workbook (fixed - UPLOAD_ROWS reads by POSITION,
 *& never by heading, so keep both forms in step):
@@ -56,18 +58,75 @@ FORM download_rows.
         lv_path   TYPE string,
         lv_full   TYPE string,
         lv_action TYPE i,
-        lv_count  TYPE i.
+        lv_count  TYPE i,
+        lt_spopli TYPE STANDARD TABLE OF spopli,
+        ls_spopli TYPE spopli,
+        lv_answer TYPE c LENGTH 1,
+        lv_scope  TYPE string.
+
+* Which rows: radio buttons All / AS IS / MICROSOFT (filter on Scope).
+* The rows are the ones in the table control (LT_DATA) - nothing is
+* read from ZSAP_TIMESHEET, in Create mode nothing is saved yet.
+  ls_spopli-varoption = 'All rows'.
+  APPEND ls_spopli TO lt_spopli.
+  ls_spopli-varoption = 'Scope AS IS only'.
+  APPEND ls_spopli TO lt_spopli.
+  ls_spopli-varoption = 'Scope MICROSOFT only'.
+  APPEND ls_spopli TO lt_spopli.
+
+  CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
+    EXPORTING
+      cursorline         = 1
+      mark_flag          = space
+      mark_max           = 1
+      start_col          = 10
+      start_row          = 5
+      textline1          = 'Which rows do you want to download?'
+      titel              = 'Download Timesheet Rows'
+    IMPORTING
+      answer             = lv_answer
+    TABLES
+      t_spopli           = lt_spopli
+    EXCEPTIONS
+      not_enough_answers = 1
+      too_much_answers   = 2
+      too_much_marks     = 3
+      OTHERS             = 4.
+
+  IF sy-subrc <> 0.
+    MESSAGE 'Download selection could not be shown' TYPE 'S' DISPLAY LIKE 'E'.
+    RETURN.
+  ENDIF.
+
+  CASE lv_answer.
+    WHEN '1'.
+      CLEAR lv_scope.
+    WHEN '2'.
+      lv_scope = 'AS IS'.
+    WHEN '3'.
+      lv_scope = 'MICROSOFT'.
+    WHEN OTHERS.
+      MESSAGE 'Download cancelled' TYPE 'S'.
+      RETURN.
+  ENDCASE.
 
 * Only rows that carry a consultant - the blank line the table control
 * keeps at the bottom is not exported
   LOOP AT lt_data INTO ls_row WHERE consultant_name IS NOT INITIAL.
+    IF lv_scope IS NOT INITIAL AND ls_row-scope <> lv_scope.
+      CONTINUE.
+    ENDIF.
     CLEAR ls_xl.
     MOVE-CORRESPONDING ls_row TO ls_xl.
     APPEND ls_xl TO lt_xl.
   ENDLOOP.
 
   IF lt_xl IS INITIAL.
-    MESSAGE 'Enter at least one row before downloading' TYPE 'S' DISPLAY LIKE 'E'.
+    IF lv_scope IS INITIAL.
+      MESSAGE 'Enter at least one row before downloading' TYPE 'S' DISPLAY LIKE 'E'.
+    ELSE.
+      MESSAGE |No rows with Scope { lv_scope } to download| TYPE 'S' DISPLAY LIKE 'E'.
+    ENDIF.
     RETURN.
   ENDIF.
 
@@ -335,6 +394,13 @@ FORM upload_rows.
         WHEN 6.
           ls_new-activity        = lv_val.
         WHEN 7.
+*         Same two values the Scope dropdown offers
+          lv_val = to_upper( lv_val ).
+          IF lv_val IS NOT INITIAL AND lv_val <> 'AS IS' AND lv_val <> 'MICROSOFT'.
+            MESSAGE |Row { lv_row }: Scope "{ lv_val }" must be AS IS or MICROSOFT. File not uploaded.|
+              TYPE 'S' DISPLAY LIKE 'E'.
+            RETURN.
+          ENDIF.
           ls_new-scope           = lv_val.
         WHEN 8.
           ls_new-stages          = lv_val.
@@ -518,4 +584,4 @@ FORM xl_to_days USING    pv_val  TYPE string
   cv_ok = abap_true.
 
 ENDFORM.
-*EOC By SAP_ABAP on 05/10/26
+*EOC By SAP_ABAP on 06/10/26

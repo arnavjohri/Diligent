@@ -7,7 +7,7 @@
 *       text
 *----------------------------------------------------------------------*
 MODULE status_9009 OUTPUT.
-*BOC By SAP_ABAP on 05/10/26
+*BOC By SAP_ABAP on 06/10/26
 *  SET PF-STATUS '9002'.
 * Screen 9009 shares status 9002 - Download / Upload belong to 9002 only
   DATA gt_excl_9009 TYPE STANDARD TABLE OF sy-ucomm.
@@ -15,7 +15,7 @@ MODULE status_9009 OUTPUT.
   APPEND 'DOWNLOAD' TO gt_excl_9009.
   APPEND 'UPLOAD'   TO gt_excl_9009.
   SET PF-STATUS '9002' EXCLUDING gt_excl_9009.
-*EOC By SAP_ABAP on 05/10/26
+*EOC By SAP_ABAP on 06/10/26
   SET TITLEBAR '9001'.
 ENDMODULE.
 *&---------------------------------------------------------------------*

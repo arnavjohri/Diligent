@@ -7,7 +7,7 @@
 *       text
 *----------------------------------------------------------------------*
 MODULE status_9002 OUTPUT.
-*BOC By SAP_ABAP on 05/10/26
+*BOC By SAP_ABAP on 06/10/26
 *  SET PF-STATUS '9002'.
 * Download / Upload are offered in Create mode only
   DATA gt_excl_9002 TYPE STANDARD TABLE OF sy-ucomm.
@@ -17,7 +17,35 @@ MODULE status_9002 OUTPUT.
     APPEND 'UPLOAD'   TO gt_excl_9002.
   ENDIF.
   SET PF-STATUS '9002' EXCLUDING gt_excl_9002.
-*EOC By SAP_ABAP on 05/10/26
+
+* Set in USER_COMMAND_9002, actioned at the end of that module
+  DATA gv_download TYPE c LENGTH 1.
+
+* Scope column of the table control as a dropdown: AS IS / MICROSOFT
+  DATA: gt_scope_vals TYPE vrm_values,
+        gs_scope_val  TYPE vrm_value.
+
+  CLEAR gt_scope_vals.
+  gs_scope_val-key  = 'AS IS'.
+  gs_scope_val-text = 'AS IS'.
+  APPEND gs_scope_val TO gt_scope_vals.
+  gs_scope_val-key  = 'MICROSOFT'.
+  gs_scope_val-text = 'MICROSOFT'.
+  APPEND gs_scope_val TO gt_scope_vals.
+
+* ASSUMPTION: the table-control column is screen field LS_DATA-SCOPE
+* (the TC wizard work area) with Dropdown = Listbox set in SE51.
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id              = 'LS_DATA-SCOPE'
+      values          = gt_scope_vals
+    EXCEPTIONS
+      id_illegal_name = 1
+      OTHERS          = 2.
+  IF sy-subrc <> 0.
+    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
+  ENDIF.
+*EOC By SAP_ABAP on 06/10/26
   SET TITLEBAR '9001'.
 
   IF change = 'X' AND gv_loaded IS INITIAL..
@@ -937,17 +965,19 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
       MESSAGE 'Document returned to change successfully' TYPE 'S'.
       CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
       LEAVE TO SCREEN 9001.
-*BOC By SAP_ABAP on 05/10/26
+*BOC By SAP_ABAP on 06/10/26
     WHEN 'DOWNLOAD'.
+*     Run after Service Element / Scope are derived below, so the file
+*     and the Scope filter see the same values the screen will show
       IF create = 'X'.
-        PERFORM download_rows.
+        gv_download = 'X'.
       ENDIF.
 
     WHEN 'UPLOAD'.
       IF create = 'X'.
         PERFORM upload_rows.
       ENDIF.
-*EOC By SAP_ABAP on 05/10/26
+*EOC By SAP_ABAP on 06/10/26
   ENDCASE.
 
   IF create = 'X' OR change = 'X'.
@@ -977,6 +1007,13 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
       ENDIF.
     ENDLOOP.
   ENDIF.
+*BOC By SAP_ABAP on 06/10/26
+* Download pressed - rows now carry the derived Service Element / Scope
+  IF gv_download = 'X'.
+    CLEAR gv_download.
+    PERFORM download_rows.
+  ENDIF.
+*EOC By SAP_ABAP on 06/10/26
 ENDMODULE.
 *&---------------------------------------------------------------------*
 *&      Module  DISP  OUTPUT
@@ -1218,14 +1255,14 @@ ENDIF.
 
   IF sap_pm = 'X' OR core_team = 'X' OR ovl_pm = 'X' OR head_it = 'X' OR creator_release = 'X' OR display = 'X'.
 
-*BOC By SAP_ABAP on 05/10/26
+*BOC By SAP_ABAP on 06/10/26
 *    SET PF-STATUS '9002' EXCLUDING 'SAVE'.
     CLEAR gt_excl_9002.
     APPEND 'SAVE'     TO gt_excl_9002.
     APPEND 'DOWNLOAD' TO gt_excl_9002.
     APPEND 'UPLOAD'   TO gt_excl_9002.
     SET PF-STATUS '9002' EXCLUDING gt_excl_9002.
-*EOC By SAP_ABAP on 05/10/26
+*EOC By SAP_ABAP on 06/10/26
 
 * LOOP AT SCREEN.
 *
