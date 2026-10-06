@@ -67,7 +67,11 @@ MODULE user_command_9001 INPUT.
       CALL TRANSACTION 'ZTIMESHEET_REP'.
 
     WHEN 'CON'.
-      CALL TRANSACTION 'ZCON'.
+*BOC By SAP_ABAP on 06/10/26
+*      CALL TRANSACTION 'ZCON'.
+* Consumption report now runs the copy (Consumed till date columns)
+      CALL TRANSACTION 'ZCON1'.
+*EOC By SAP_ABAP on 06/10/26
 
     WHEN 'C_REL'.
       creator_release = 'X'.

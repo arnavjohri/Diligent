@@ -33,3 +33,7 @@
   popup and Upload check now read the same domain fixed values at run time (new FORM
   `GET_SCOPE_VALUES`, `CL_ABAP_ELEMDESCR->GET_DDIC_FIXED_VALUES`) instead of the two literals.
 - Print program `ZSAP_TIMESHEET_FORM_PRG(_CP)` deliberately left on its own AS IS/MICROSOFT list.
+
+## 06/10/26 — Consumption button calls the copied report
+- `USER_COMMAND_9001`, `WHEN 'CON'`: `CALL TRANSACTION 'ZCON'` → `'ZCON1'` (copy of
+  `ZSAP_CONSUMPTION_REPORT` with the Consumed-till-date columns).
