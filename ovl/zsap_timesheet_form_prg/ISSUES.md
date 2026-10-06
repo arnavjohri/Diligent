@@ -29,3 +29,6 @@
   the node). `IS_TIMESHEET` added to the node's Input Parameters. File:
   `ZSAP_TIMESHEET_FORM_INITIALIZATION.abap`. `break abapuser02.` left in place — flagged, must
   go before transport.
+- **Revised 06/10/26:** activation error `Field "IS_TIMESHEET-SCOPE" is unknown` — Scope now
+  passed as new optional form import parameter `IV_SCOPE TYPE ZSAP_TIMESHEET-SCOPE`
+  (program: `iv_scope = p_scope`); the CLEAR gs_timesheet-scope block was dropped.

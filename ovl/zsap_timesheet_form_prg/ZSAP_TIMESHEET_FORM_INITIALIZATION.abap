@@ -7,10 +7,10 @@ break abapuser02.
 *  LOCATION
 *  REMARKS  from zsap_timesheet into TABLE lt_data
 *   where doc_no = doc_no.
-* Lines of the chosen Scope only. IS_TIMESHEET-SCOPE is filled by the
-* print program when the user picked a Scope, blank for all lines.
-* (IS_TIMESHEET must be listed under Input Parameters of this node.)
-IF is_timesheet-scope IS INITIAL.
+* Lines of the chosen Scope only. IV_SCOPE (form interface, optional)
+* is the Scope picked on the print screen, blank = all lines.
+* (IV_SCOPE must be listed under Input Parameters of this node.)
+IF iv_scope IS INITIAL.
   select DATEC
     ACTIVITY
     DAYSC
@@ -26,7 +26,7 @@ ELSE.
     LOCATION
     REMARKS  from zsap_timesheet into TABLE lt_data
      where doc_no = doc_no
-       and scope  = is_timesheet-scope.
+       and scope  = iv_scope.
 ENDIF.
 *EOC By SAP_ABAP on 06/10/26
 "Code Remediation changes S4 2025_1_A Conversion **BEGIN OF CHANGE BY SAP_ABAP 08.06.2026  FOR ATC
