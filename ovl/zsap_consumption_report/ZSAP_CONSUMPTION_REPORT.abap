@@ -28,6 +28,15 @@ TYPES: BEGIN OF ty_output,
          add_cons_till       TYPE p LENGTH 8 DECIMALS 2,
          asis_cons_till_amt  TYPE zdaily_rate_with_gst,
          add_cons_till_amt   TYPE zdaily_rate_with_gst,
+* MICROSOFT - same logic as AS IS / Additional, same daily rate
+* ASSUMPTION: new field ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS (SE11)
+         ms_scope_days       TYPE zservice_element-microsoft_scope_days,
+         ms_consumed_days    TYPE p LENGTH 7 DECIMALS 2,
+         ms_cons_till        TYPE p LENGTH 8 DECIMALS 2,
+         ms_available_days   TYPE p LENGTH 8 DECIMALS 2,
+         ms_consumed_amt     TYPE zdaily_rate_with_gst,
+         ms_cons_till_amt    TYPE zdaily_rate_with_gst,
+         ms_available_amt    TYPE zdaily_rate_with_gst,
 *EOC By SAP_ABAP on 06/10/26
          asis_available_days TYPE p LENGTH 8 DECIMALS 2,
          add_available_days  TYPE p LENGTH 8 DECIMALS 2,
@@ -164,12 +173,17 @@ START-OF-SELECTION.
 *BOC By SAP_ABAP on 06/10/26
   DATA lv_asis_till TYPE p LENGTH 8 DECIMALS 2.
   DATA lv_add_till  TYPE p LENGTH 8 DECIMALS 2.
+  DATA lv_ms        TYPE p LENGTH 7 DECIMALS 2.
+  DATA lv_ms_till   TYPE p LENGTH 8 DECIMALS 2.
 *EOC By SAP_ABAP on 06/10/26
 
   LOOP AT gt_master INTO DATA(ls_master).
 
     CLEAR: gs_output, lv_asis, lv_add.
-    CLEAR: lv_asis_till, lv_add_till.                 "Changes by SAP_ABAP on 06/10/26
+*BOC By SAP_ABAP on 06/10/26
+*    CLEAR: lv_asis_till, lv_add_till.                 "Changes by SAP_ABAP on 06/10/26
+    CLEAR: lv_asis_till, lv_add_till, lv_ms, lv_ms_till.
+*EOC By SAP_ABAP on 06/10/26
 
     gs_output-service_element = ls_master-service_element.
     gs_output-asis_scope_days = ls_master-as_is_scope_day.
@@ -242,6 +256,31 @@ START-OF-SELECTION.
 
     gs_output-add_cons_till_amt =
       lv_add_till * ls_master-daily_rate_gst.
+
+* MICROSOFT - period, till date, available; same daily rate
+    READ TABLE gt_sum INTO gs_sum
+      WITH KEY service_element = ls_master-service_element
+               scope = 'MICROSOFT'.
+    IF sy-subrc = 0.
+      lv_ms = gs_sum-daysc.
+    ENDIF.
+
+    READ TABLE gt_sum_till INTO gs_sum
+      WITH KEY service_element = ls_master-service_element
+               scope = 'MICROSOFT'.
+    IF sy-subrc = 0.
+      lv_ms_till = gs_sum-daysc.
+    ENDIF.
+
+    gs_output-ms_scope_days     = ls_master-microsoft_scope_days.
+    gs_output-ms_consumed_days  = lv_ms.
+    gs_output-ms_cons_till      = lv_ms_till.
+    gs_output-ms_available_days = ls_master-microsoft_scope_days - lv_ms_till.
+
+    gs_output-ms_consumed_amt  = lv_ms * ls_master-daily_rate_gst.
+    gs_output-ms_cons_till_amt = lv_ms_till * ls_master-daily_rate_gst.
+    gs_output-ms_available_amt =
+      gs_output-ms_available_days * ls_master-daily_rate_gst.
 *EOC By SAP_ABAP on 06/10/26
 
     gs_output-asis_available_amt =
@@ -295,6 +334,15 @@ FORM build_fieldcat.
 *EOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_AVAILABLE_AMT' 'AS IS Available Amount'.
   m_field 'ADD_AVAILABLE_AMT'  'Additional Available Amount'.
+*BOC By SAP_ABAP on 06/10/26
+  m_field 'MS_SCOPE_DAYS'      'MICROSOFT Scope days'.
+  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.
+  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.
+  m_field 'MS_AVAILABLE_DAYS'  'MICROSOFT Available days'.
+  m_field 'MS_CONSUMED_AMT'    'MICROSOFT Consumed Amount'.
+  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'.
+  m_field 'MS_AVAILABLE_AMT'   'MICROSOFT Available Amount'.
+*EOC By SAP_ABAP on 06/10/26
 
 ENDFORM.
 

@@ -10,3 +10,10 @@
   first entry; days and amount.
 - **Open:** Scope MICROSOFT not counted anywhere (only AS IS / ADDITIONAL read).
 - **Status:** awaiting activation / test. TR: —
+
+## 06/10/26 — CR: MICROSOFT columns (Option A, same rate, extra columns in ZCON1)
+- New field `ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS` (SE11, manual) + TMG regeneration.
+- Report: 7 columns MICROSOFT Scope / Consumed / Consumed till date / Available days, and
+  Consumed / Consumed till date / Available amount, same DAILY_RATE_GST, same Head IT rule.
+- **Open:** Total days / Total Value in ZSERVICE_ELEMENT — whether MICROSOFT should be added
+  to them depends on how they are filled (TMG event?).
