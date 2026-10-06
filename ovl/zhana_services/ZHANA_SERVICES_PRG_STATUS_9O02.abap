@@ -246,7 +246,8 @@ MODULE user_command_9002 INPUT.
   IF create = 'X' AND doc_no IS INITIAL AND sy-ucomm NE 'BACK' AND sy-ucomm NE 'EXIT' AND sy-ucomm NE 'CANC' .
     LOOP AT lt_data INTO ls_data.
 
-*      IF  ls_data-consultant_name IS INITIAL OR ls_data-service_element IS INITIAL OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INITIAL
+*      IF  ls_data-consultant_name IS INITIAL OR ls_data-service_element IS INITIAL
+*     OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INITIAL
 *        OR ls_data-daysc IS INITIAL OR ls_data-location IS INITIAL
 *     .
 *        MESSAGE 'All fields are required'
@@ -288,12 +289,16 @@ MODULE user_command_9002 INPUT.
 
   CASE sy-ucomm.
     WHEN 'EXIT' OR 'CANC'.
-      CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+      CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+              sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+              approve.
       LEAVE PROGRAM.
 
 
     WHEN 'BACK'.
-      CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+      CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+              sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+              approve.
       CALL SCREEN '9001'.
     WHEN  'SAVE' .
       IF lt_data IS NOT INITIAL.
@@ -302,8 +307,10 @@ MODULE user_command_9002 INPUT.
 
         IF create = 'X' OR change = 'X' .
           LOOP AT lt_data INTO ls_data.
-            IF  ls_data-consultant_name IS INITIAL OR ls_data-service_element IS INITIAL OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INITIAL
-            OR ls_data-daysc IS INITIAL OR ls_data-location IS INITIAL OR ls_data-activity IS INITIAL OR ls_data-scope IS INITIAL
+            IF  ls_data-consultant_name IS INITIAL OR ls_data-service_element IS INITIAL
+              OR ls_data-zmodulec IS INITIAL OR ls_data-datec IS INITIAL
+            OR ls_data-daysc IS INITIAL OR ls_data-location IS INITIAL
+              OR ls_data-activity IS INITIAL OR ls_data-scope IS INITIAL
          .
               MESSAGE 'All fields are required'
                   TYPE 'S' DISPLAY LIKE 'E'.
@@ -444,11 +451,15 @@ MODULE user_command_9002 INPUT.
           " # Final Message Logic
           IF create = 'X'.
             MESSAGE |Doc No { doc_no } generated and data updated successfully| TYPE 'S'.
-            CLEAR : change , create ,display , lt_delete,lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+            CLEAR : change, create, display, lt_delete, lt_data, ls_data, doc_no, gv_loaded,
+                    creator_release, sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet,
+                    lv_role, reject, reason, approve.
             LEAVE TO SCREEN 9001.
           ELSEIF change = 'X'.
             MESSAGE 'Data updated successfully' TYPE 'S'.
-            CLEAR : change , create ,display , lt_data, lt_delete,  ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+            CLEAR : change, create, display, lt_data, lt_delete, ls_data, doc_no, gv_loaded,
+                    creator_release, sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet,
+                    lv_role, reject, reason, approve.
             LEAVE TO SCREEN 9001.
           ENDIF.
         ENDIF.
@@ -523,7 +534,9 @@ MODULE user_command_9002 INPUT.
           MESSAGE lx_error->get_text( ) TYPE 'E'.
       ENDTRY.
 
-      CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+      CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+              sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+              approve.
       LEAVE TO SCREEN 9001.
 
     WHEN 'REJECT'.
@@ -559,7 +572,8 @@ MODULE user_command_9002 INPUT.
         ENDIF.
         IF flag = 'X'.
 
-          SELECT SINGLE * FROM zsap_timesheet INTO @DATA(t_id) WHERE doc_no = @doc_no. "added by mohd mobassir - 23.07.2026
+          SELECT SINGLE * FROM zsap_timesheet INTO @DATA(t_id)
+            WHERE doc_no = @doc_no. "added by mohd mobassir - 23.07.2026
 
           LOOP AT lt_data INTO ls_data.
 
@@ -792,7 +806,9 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
         MESSAGE 'Please enter a reason for rejection.' TYPE 'I'.
       ENDIF.
       IF reason IS NOT INITIAL.
-        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+        CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+                sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+                approve.
         LEAVE TO SCREEN 9001.
       ENDIF.
 
@@ -952,7 +968,9 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
       ENDIF.
 
       IF lv_role IS NOT INITIAL.
-        CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+        CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+                sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+                approve.
         LEAVE TO SCREEN 9001.
       ENDIF.
     WHEN 'RETURN'.
@@ -963,7 +981,9 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
       AND creator_release_r = 'X'.
 
       MESSAGE 'Document returned to change successfully' TYPE 'S'.
-      CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email , namet ,lv_role,reject,reason,approve.
+      CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+              sap_pm, core_team, ovl_pm, head_it, flag, lv_email, namet, lv_role, reject, reason,
+              approve.
       LEAVE TO SCREEN 9001.
 *BOC By SAP_ABAP on 06/10/26
     WHEN 'DOWNLOAD'.
