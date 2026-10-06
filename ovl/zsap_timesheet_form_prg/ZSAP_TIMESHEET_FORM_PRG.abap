@@ -105,13 +105,21 @@ SELECT-OPTIONS: s_docno FOR  zsap_timesheet-doc_no .
 PARAMETERS: p_from TYPE sy-datum,
             p_to   TYPE sy-datum.
 *BOC By SAP_ABAP on 06/10/26
-* Scope dropdown: blank = all. The values are the fixed values of the
-* domain of ZSAP_TIMESHEET-SCOPE (SE11) - no VRM_SET_VALUES, so a value
-* added to the domain appears here without a code change.
-PARAMETERS: p_scope TYPE zsap_timesheet-scope AS LISTBOX VISIBLE LENGTH 20.
+** Scope dropdown: blank = all. The values are the fixed values of the
+** domain of ZSAP_TIMESHEET-SCOPE (SE11) - no VRM_SET_VALUES, so a value
+** added to the domain appears here without a code change.
+*PARAMETERS: p_scope TYPE zsap_timesheet-scope AS LISTBOX VISIBLE LENGTH 20.
 
-*DATA: gt_scope_vals TYPE vrm_values,
-*      gs_scope_val  TYPE vrm_value.
+**DATA: gt_scope_vals TYPE vrm_values,
+**      gs_scope_val  TYPE vrm_value.
+* Two print options only:
+*   A = AS IS and ADDITIONAL lines     M = MICROSOFT lines
+PARAMETERS: p_grp TYPE c LENGTH 1 AS LISTBOX VISIBLE LENGTH 25
+                  OBLIGATORY DEFAULT 'A'.
+
+DATA: gt_scope_vals TYPE vrm_values,
+      gs_scope_val  TYPE vrm_value,
+      gv_form_scope TYPE zsap_timesheet-scope.
 *EOC By SAP_ABAP on 06/10/26
 
 *----------------------*
@@ -146,7 +154,8 @@ DATA: wa_ssfcrescl TYPE ssfcrescl,
 CLEAR :  gt_otf_hr-otfdata[],gt_otf,gt_otf_hr-otfdata.
 
 *BOC By SAP_ABAP on 06/10/26
-* Hardcoded list replaced by the domain fixed values (see P_SCOPE)
+* Earlier list (AS IS / MICROSOFT), then domain values - now the two
+* print options of P_GRP
 *AT SELECTION-SCREEN OUTPUT.
 *  CLEAR gt_scope_vals.
 *  gs_scope_val-key  = 'AS IS'.
@@ -166,6 +175,25 @@ CLEAR :  gt_otf_hr-otfdata[],gt_otf,gt_otf_hr-otfdata.
 *  IF sy-subrc <> 0.
 *    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
 *  ENDIF.
+AT SELECTION-SCREEN OUTPUT.
+  CLEAR gt_scope_vals.
+  gs_scope_val-key  = 'A'.
+  gs_scope_val-text = 'AS IS and ADDITIONAL'.
+  APPEND gs_scope_val TO gt_scope_vals.
+  gs_scope_val-key  = 'M'.
+  gs_scope_val-text = 'MICROSOFT'.
+  APPEND gs_scope_val TO gt_scope_vals.
+
+  CALL FUNCTION 'VRM_SET_VALUES'
+    EXPORTING
+      id              = 'P_GRP'
+      values          = gt_scope_vals
+    EXCEPTIONS
+      id_illegal_name = 1
+      OTHERS          = 2.
+  IF sy-subrc <> 0.
+    MESSAGE 'Print option values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
+  ENDIF.
 *EOC By SAP_ABAP on 06/10/26
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_docno-low.
@@ -240,8 +268,18 @@ START-OF-SELECTION.
 * Scope filter - only documents with rows of the chosen Scope are printed.
 * Done before the DELETE ADJACENT DUPLICATES below, so the row kept per
 * document (passed as IS_TIMESHEET) is one of the chosen Scope.
-  IF p_scope IS NOT INITIAL.
-    DELETE lt_data WHERE scope <> p_scope.
+*  IF p_scope IS NOT INITIAL.
+*    DELETE lt_data WHERE scope <> p_scope.
+*  ENDIF.
+* Keep only the lines of the chosen print option. GV_FORM_SCOPE tells
+* the Smart Form the same thing: 'MICROSOFT' = MICROSOFT lines,
+* 'AS IS' = AS IS and ADDITIONAL lines.
+  IF p_grp = 'M'.
+    DELETE lt_data WHERE scope <> 'MICROSOFT'.
+    gv_form_scope = 'MICROSOFT'.
+  ELSE.
+    DELETE lt_data WHERE scope <> 'AS IS' AND scope <> 'ADDITIONAL'.
+    gv_form_scope = 'AS IS'.
   ENDIF.
 
   IF lt_data IS INITIAL.
@@ -331,7 +369,8 @@ START-OF-SELECTION.
         user_settings      = space   "<<< THIS IS MISSING
         doc_no             = p_docno
         is_timesheet       = gs_timesheet
-        iv_scope           = p_scope    "Changes by SAP_ABAP on 06/10/26
+*        iv_scope           = p_scope    "Changes by SAP_ABAP on 06/10/26
+        iv_scope           = gv_form_scope  "Changes by SAP_ABAP on 06/10/26
       IMPORTING
         job_output_info    = gt_otf
       EXCEPTIONS

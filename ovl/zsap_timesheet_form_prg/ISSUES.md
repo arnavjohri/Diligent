@@ -34,3 +34,10 @@
   (program: `iv_scope = p_scope`); the CLEAR gs_timesheet-scope block was dropped.
 - **06/10/26:** `P_SCOPE` listbox now shows the Scope domain fixed values (VRM block commented
   out), same as the Create screen.
+
+## 06/10/26 — Print: only two options
+- `P_SCOPE` replaced by `P_GRP` (listbox, obligatory): A = AS IS + ADDITIONAL, M = MICROSOFT.
+  Program filters lines by group; passes IV_SCOPE = 'AS IS' (group A) or 'MICROSOFT' (group M).
+- Form initialization: 'MICROSOFT' → scope = MICROSOFT; any other non-blank →
+  scope IN ('AS IS','ADDITIONAL'); blank (old ZSAPT_FORM) → all lines.
+- Manual: selection text P_GRP = "Print Option".

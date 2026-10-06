@@ -18,6 +18,28 @@ IF iv_scope IS INITIAL.
     LOCATION
     REMARKS  from zsap_timesheet into TABLE lt_data
      where doc_no = doc_no.
+*ELSE.
+*  select DATEC
+*    ACTIVITY
+*    DAYSC
+*    STAGES
+*    LOCATION
+*    REMARKS  from zsap_timesheet into TABLE lt_data
+*     where doc_no = doc_no
+*       and scope  = iv_scope.
+*ENDIF.
+* Two print groups: IV_SCOPE = 'MICROSOFT' -> MICROSOFT lines only;
+* any other value (the print program passes 'AS IS') -> AS IS and
+* ADDITIONAL lines.
+ELSEIF iv_scope = 'MICROSOFT'.
+  select DATEC
+    ACTIVITY
+    DAYSC
+    STAGES
+    LOCATION
+    REMARKS  from zsap_timesheet into TABLE lt_data
+     where doc_no = doc_no
+       and scope  = 'MICROSOFT'.
 ELSE.
   select DATEC
     ACTIVITY
@@ -26,7 +48,7 @@ ELSE.
     LOCATION
     REMARKS  from zsap_timesheet into TABLE lt_data
      where doc_no = doc_no
-       and scope  = iv_scope.
+       and scope  IN ('AS IS', 'ADDITIONAL').
 ENDIF.
 *EOC By SAP_ABAP on 06/10/26
 "Code Remediation changes S4 2025_1_A Conversion **BEGIN OF CHANGE BY SAP_ABAP 08.06.2026  FOR ATC
