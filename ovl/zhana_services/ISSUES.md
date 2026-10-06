@@ -19,3 +19,9 @@
   Not yet pasted at that point, so all markers re-dated 06/10/26 as one change.
 - **Manual:** SE51 screen 9002 — Scope column attribute Dropdown = Listbox.
 - **Status:** awaiting activation / test. TR: —
+
+## 06/10/26 — Print button calls the copied print transaction
+- Print program changed in a copy (see `ovl/zsap_timesheet_form_prg/`), new tcode `ZSAPT_FORM1`.
+- `USER_COMMAND_9001` (`_STATUS_9O01`), `WHEN 'FORM'`: `CALL TRANSACTION 'ZSAPT_FORM'` →
+  `'ZSAPT_FORM1'`. Other CALL TRANSACTIONs (table maintenance, report, ZCON) untouched.
+- **Status:** awaiting activation / test. TR: —
