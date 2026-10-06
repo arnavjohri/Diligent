@@ -300,6 +300,15 @@ START-OF-SELECTION.
 
     p_docno = gs_timesheet-doc_no.
 
+*BOC By SAP_ABAP on 06/10/26
+* The form reads the document's lines itself (by DOC_NO). It filters
+* them on IS_TIMESHEET-SCOPE when that is filled, so clear it when the
+* user chose no Scope - otherwise the first row's Scope would filter.
+    IF p_scope IS INITIAL.
+      CLEAR gs_timesheet-scope.
+    ENDIF.
+*EOC By SAP_ABAP on 06/10/26
+
 **    CALL FUNCTION gv_fm_name
 **      EXPORTING
 **        control_parameters = lw_ssfctrlop

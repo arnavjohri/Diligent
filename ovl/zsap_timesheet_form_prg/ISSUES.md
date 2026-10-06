@@ -16,3 +16,11 @@
   deleted (no duplicate doc), so it fired with data present (seen in debugger: LT_DATA 1 row).
 - **Fix:** check commented out; the `lt_data IS INITIAL` check added earlier covers "not found".
 - Running copy is `ZSAP_TIMESHEET_FORM_PRG_CP` (tcode `ZSAPT_FORM1`); repo file holds its source.
+
+## 06/10/26 — Scope = MICROSOFT still printed all 3 lines of doc 00005
+- **Cause:** the program filters correctly (doc 00005 selected via its one MICROSOFT row), but
+  Smart Form `ZSAP_TIMESHEET_FORM` re-reads every line of the document by DOC_NO.
+- **Fix (program side, done):** `gs_timesheet-scope` cleared when `P_SCOPE` is blank, so
+  `IS_TIMESHEET-SCOPE` carries the chosen Scope only — no form-interface change needed.
+- **Fix (form side, pending):** add `AND scope = is_timesheet-scope` (when filled) to the form's
+  SELECT on ZSAP_TIMESHEET. Needs the form's program-lines code.
