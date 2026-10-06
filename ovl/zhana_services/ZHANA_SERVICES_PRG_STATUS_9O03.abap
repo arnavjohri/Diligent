@@ -54,7 +54,8 @@ MODULE user_command_9009 INPUT.
 
 
     WHEN 'BACK'.
-      CLEAR : change , create ,display , lt_data , ls_data,doc_no ,gv_loaded ,creator_release , sap_pm , core_team ,ovl_pm ,head_it,flag, lv_email.
+      CLEAR : change, create, display, lt_data, ls_data, doc_no, gv_loaded, creator_release,
+              sap_pm, core_team, ovl_pm, head_it, flag, lv_email.
       CALL SCREEN '9001'.
 
 
