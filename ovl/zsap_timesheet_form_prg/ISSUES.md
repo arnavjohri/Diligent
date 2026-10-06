@@ -8,6 +8,11 @@
 - **Manual:** selection text `P_SCOPE` = "Scope".
 - **Open:** if `ZSAP_TIMESHEET_FORM` selects its own lines by DOC_NO, the line items are not
   filtered by Scope — needs the form's code.
-- **Not touched (flagged):** date filters exclude the boundary dates (`<= p_from`, `=> p_to`);
-  `IF sy-subrc <> 0` after DELETE ADJACENT DUPLICATES never reports "not found".
+- **Not touched (flagged):** date filters exclude the boundary dates (`<= p_from`, `=> p_to`).
 - **Status:** awaiting activation / test. TR: —
+
+## 06/10/26 — "Document No not found" on every single-row run (copy ZSAP_TIMESHEET_FORM_PRG_CP)
+- **Cause:** `IF sy-subrc <> 0` after `DELETE ADJACENT DUPLICATES` — subrc 4 means nothing was
+  deleted (no duplicate doc), so it fired with data present (seen in debugger: LT_DATA 1 row).
+- **Fix:** check commented out; the `lt_data IS INITIAL` check added earlier covers "not found".
+- Running copy is `ZSAP_TIMESHEET_FORM_PRG_CP` (tcode `ZSAPT_FORM1`); repo file holds its source.

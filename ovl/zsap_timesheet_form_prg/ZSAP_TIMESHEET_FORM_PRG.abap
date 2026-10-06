@@ -250,9 +250,14 @@ START-OF-SELECTION.
   SORT lt_data BY doc_no.
   DELETE ADJACENT DUPLICATES FROM lt_data COMPARING doc_no.
 
-  IF sy-subrc <> 0.
-    MESSAGE 'Document No not found in ZSAP_TIMESHEET' TYPE 'E'.
-  ENDIF.
+*BOC By SAP_ABAP on 06/10/26
+* SY-SUBRC here is from DELETE ADJACENT DUPLICATES: 4 = nothing deleted,
+* i.e. every document has one row - not "not found". The empty check is
+* done above (lt_data IS INITIAL), before the duplicates are removed.
+*  IF sy-subrc <> 0.
+*    MESSAGE 'Document No not found in ZSAP_TIMESHEET' TYPE 'E'.
+*  ENDIF.
+*EOC By SAP_ABAP on 06/10/26
 
 
 *    *  *      *--control parameters
