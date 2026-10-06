@@ -25,3 +25,11 @@
 - `USER_COMMAND_9001` (`_STATUS_9O01`), `WHEN 'FORM'`: `CALL TRANSACTION 'ZSAPT_FORM'` →
   `'ZSAPT_FORM1'`. Other CALL TRANSACTIONs (table maintenance, report, ZCON) untouched.
 - **Status:** awaiting activation / test. TR: —
+
+## 06/10/26 — Scope dropdown on Create must show the domain values, not AS IS / MICROSOFT
+- **Cause:** the VRM_SET_VALUES block added to `STATUS_9002` overrode the listbox, which
+  before the CR showed the fixed values of the Scope domain.
+- **Fix:** VRM block commented out (listbox falls back to the domain). `_MAILF01`: Download
+  popup and Upload check now read the same domain fixed values at run time (new FORM
+  `GET_SCOPE_VALUES`, `CL_ABAP_ELEMDESCR->GET_DDIC_FIXED_VALUES`) instead of the two literals.
+- Print program `ZSAP_TIMESHEET_FORM_PRG(_CP)` deliberately left on its own AS IS/MICROSOFT list.

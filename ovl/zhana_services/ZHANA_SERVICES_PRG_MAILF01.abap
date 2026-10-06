@@ -62,17 +62,33 @@ FORM download_rows.
         lt_spopli TYPE STANDARD TABLE OF spopli,
         ls_spopli TYPE spopli,
         lv_answer TYPE c LENGTH 1,
-        lv_scope  TYPE string.
+        lv_scope  TYPE string,
+        lt_fixval TYPE ddfixvalues,
+        ls_fixval TYPE ddfixvalue,
+        lv_ix     TYPE i.
 
-* Which rows: radio buttons All / AS IS / MICROSOFT (filter on Scope).
+** Which rows: radio buttons All / AS IS / MICROSOFT (filter on Scope).
+** The rows are the ones in the table control (LT_DATA) - nothing is
+** read from ZSAP_TIMESHEET, in Create mode nothing is saved yet.
+*  ls_spopli-varoption = 'All rows'.
+*  APPEND ls_spopli TO lt_spopli.
+*  ls_spopli-varoption = 'Scope AS IS only'.
+*  APPEND ls_spopli TO lt_spopli.
+*  ls_spopli-varoption = 'Scope MICROSOFT only'.
+*  APPEND ls_spopli TO lt_spopli.
+* Which rows: radio buttons All + one per Scope value. The Scope values
+* are the fixed values of the ZSAP_TIMESHEET-SCOPE domain - the same list
+* the Scope dropdown on screen 9002 shows.
 * The rows are the ones in the table control (LT_DATA) - nothing is
 * read from ZSAP_TIMESHEET, in Create mode nothing is saved yet.
+  PERFORM get_scope_values CHANGING lt_fixval.
+
   ls_spopli-varoption = 'All rows'.
   APPEND ls_spopli TO lt_spopli.
-  ls_spopli-varoption = 'Scope AS IS only'.
-  APPEND ls_spopli TO lt_spopli.
-  ls_spopli-varoption = 'Scope MICROSOFT only'.
-  APPEND ls_spopli TO lt_spopli.
+  LOOP AT lt_fixval INTO ls_fixval.
+    ls_spopli-varoption = |Scope { ls_fixval-low } only|.
+    APPEND ls_spopli TO lt_spopli.
+  ENDLOOP.
 
   CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
     EXPORTING
@@ -98,17 +114,35 @@ FORM download_rows.
     RETURN.
   ENDIF.
 
-  CASE lv_answer.
-    WHEN '1'.
-      CLEAR lv_scope.
-    WHEN '2'.
-      lv_scope = 'AS IS'.
-    WHEN '3'.
-      lv_scope = 'MICROSOFT'.
-    WHEN OTHERS.
+*  CASE lv_answer.
+*    WHEN '1'.
+*      CLEAR lv_scope.
+*    WHEN '2'.
+*      lv_scope = 'AS IS'.
+*    WHEN '3'.
+*      lv_scope = 'MICROSOFT'.
+*    WHEN OTHERS.
+*      MESSAGE 'Download cancelled' TYPE 'S'.
+*      RETURN.
+*  ENDCASE.
+* ANSWER is the line number picked ('A' = cancelled). Line 1 is All,
+* line n+1 is the n-th Scope value.
+  IF lv_answer CN '123456789'.
+    MESSAGE 'Download cancelled' TYPE 'S'.
+    RETURN.
+  ENDIF.
+  lv_ix = lv_answer.
+  IF lv_ix = 1.
+    CLEAR lv_scope.
+  ELSE.
+    lv_ix = lv_ix - 1.
+    READ TABLE lt_fixval INTO ls_fixval INDEX lv_ix.
+    IF sy-subrc <> 0.
       MESSAGE 'Download cancelled' TYPE 'S'.
       RETURN.
-  ENDCASE.
+    ENDIF.
+    lv_scope = ls_fixval-low.
+  ENDIF.
 
 * Only rows that carry a consultant - the blank line the table control
 * keeps at the bottom is not exported
@@ -264,7 +298,8 @@ FORM upload_rows.
         lv_ix     TYPE i,
         lv_val    TYPE string,
         lv_ok     TYPE abap_bool,
-        lv_count  TYPE i.
+        lv_count  TYPE i,
+        lt_fixval TYPE ddfixvalues.
 
   FIELD-SYMBOLS: <lt_tab>  TYPE STANDARD TABLE,
                  <ls_line> TYPE any,
@@ -394,12 +429,25 @@ FORM upload_rows.
         WHEN 6.
           ls_new-activity        = lv_val.
         WHEN 7.
-*         Same two values the Scope dropdown offers
+**         Same two values the Scope dropdown offers
+*          lv_val = to_upper( lv_val ).
+*          IF lv_val IS NOT INITIAL AND lv_val <> 'AS IS' AND lv_val <> 'MICROSOFT'.
+*            MESSAGE |Row { lv_row }: Scope "{ lv_val }" must be AS IS or MICROSOFT. File not uploaded.|
+*              TYPE 'S' DISPLAY LIKE 'E'.
+*            RETURN.
+*          ENDIF.
+*         Same values the Scope dropdown offers (domain fixed values)
           lv_val = to_upper( lv_val ).
-          IF lv_val IS NOT INITIAL AND lv_val <> 'AS IS' AND lv_val <> 'MICROSOFT'.
-            MESSAGE |Row { lv_row }: Scope "{ lv_val }" must be AS IS or MICROSOFT. File not uploaded.|
-              TYPE 'S' DISPLAY LIKE 'E'.
-            RETURN.
+          IF lv_val IS NOT INITIAL.
+            IF lt_fixval IS INITIAL.
+              PERFORM get_scope_values CHANGING lt_fixval.
+            ENDIF.
+            READ TABLE lt_fixval TRANSPORTING NO FIELDS WITH KEY low = lv_val.
+            IF sy-subrc <> 0.
+              MESSAGE |Row { lv_row }: Scope "{ lv_val }" is not a valid Scope. File not uploaded.|
+                TYPE 'S' DISPLAY LIKE 'E'.
+              RETURN.
+            ENDIF.
           ENDIF.
           ls_new-scope           = lv_val.
         WHEN 8.
@@ -582,6 +630,43 @@ FORM xl_to_days USING    pv_val  TYPE string
   ENDTRY.
 
   cv_ok = abap_true.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Scope values = fixed values of the domain behind ZSAP_TIMESHEET-SCOPE
+*& (SE11). Read at run time, so a value added to the domain is offered
+*& in the Download popup and accepted by Upload without a code change.
+*&---------------------------------------------------------------------*
+FORM get_scope_values CHANGING ct_fixval TYPE ddfixvalues.
+
+  DATA: lv_scope TYPE zsap_timesheet-scope,
+        lo_elem  TYPE REF TO cl_abap_elemdescr.
+
+  FIELD-SYMBOLS <ls_fix> TYPE ddfixvalue.
+
+  CLEAR ct_fixval.
+
+  lo_elem ?= cl_abap_typedescr=>describe_by_data( lv_scope ).
+  lo_elem->get_ddic_fixed_values(
+    RECEIVING
+      p_fixed_values = ct_fixval
+    EXCEPTIONS
+      not_found      = 1
+      no_ddic_type   = 2
+      OTHERS         = 3 ).
+
+  IF sy-subrc <> 0 OR ct_fixval IS INITIAL.
+    MESSAGE 'No fixed values found in the Scope domain (SE11)' TYPE 'S' DISPLAY LIKE 'E'.
+    CLEAR ct_fixval.
+    RETURN.
+  ENDIF.
+
+* Single values only - a domain interval cannot be offered as a choice
+  DELETE ct_fixval WHERE option <> 'EQ' AND option IS NOT INITIAL.
+  LOOP AT ct_fixval ASSIGNING <ls_fix>.
+    <ls_fix>-low = to_upper( <ls_fix>-low ).
+  ENDLOOP.
 
 ENDFORM.
 *EOC By SAP_ABAP on 06/10/26

@@ -21,30 +21,32 @@ MODULE status_9002 OUTPUT.
 * Set in USER_COMMAND_9002, actioned at the end of that module
   DATA gv_download TYPE c LENGTH 1.
 
-* Scope column of the table control as a dropdown: AS IS / MICROSOFT
-  DATA: gt_scope_vals TYPE vrm_values,
-        gs_scope_val  TYPE vrm_value.
+** Scope column of the table control as a dropdown: AS IS / MICROSOFT
+*  DATA: gt_scope_vals TYPE vrm_values,
+*        gs_scope_val  TYPE vrm_value.
 
-  CLEAR gt_scope_vals.
-  gs_scope_val-key  = 'AS IS'.
-  gs_scope_val-text = 'AS IS'.
-  APPEND gs_scope_val TO gt_scope_vals.
-  gs_scope_val-key  = 'MICROSOFT'.
-  gs_scope_val-text = 'MICROSOFT'.
-  APPEND gs_scope_val TO gt_scope_vals.
+*  CLEAR gt_scope_vals.
+*  gs_scope_val-key  = 'AS IS'.
+*  gs_scope_val-text = 'AS IS'.
+*  APPEND gs_scope_val TO gt_scope_vals.
+*  gs_scope_val-key  = 'MICROSOFT'.
+*  gs_scope_val-text = 'MICROSOFT'.
+*  APPEND gs_scope_val TO gt_scope_vals.
 
-* ASSUMPTION: the table-control column is screen field LS_DATA-SCOPE
-* (the TC wizard work area) with Dropdown = Listbox set in SE51.
-  CALL FUNCTION 'VRM_SET_VALUES'
-    EXPORTING
-      id              = 'LS_DATA-SCOPE'
-      values          = gt_scope_vals
-    EXCEPTIONS
-      id_illegal_name = 1
-      OTHERS          = 2.
-  IF sy-subrc <> 0.
-    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
-  ENDIF.
+** ASSUMPTION: the table-control column is screen field LS_DATA-SCOPE
+** (the TC wizard work area) with Dropdown = Listbox set in SE51.
+*  CALL FUNCTION 'VRM_SET_VALUES'
+*    EXPORTING
+*      id              = 'LS_DATA-SCOPE'
+*      values          = gt_scope_vals
+*    EXCEPTIONS
+*      id_illegal_name = 1
+*      OTHERS          = 2.
+*  IF sy-subrc <> 0.
+*    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
+*  ENDIF.
+* Scope dropdown: no VRM values set here, so the listbox shows the
+* fixed values of the Scope domain (SE11), as it did before this change.
 *EOC By SAP_ABAP on 06/10/26
   SET TITLEBAR '9001'.
 
