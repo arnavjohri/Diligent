@@ -24,3 +24,8 @@
   `IS_TIMESHEET-SCOPE` carries the chosen Scope only — no form-interface change needed.
 - **Fix (form side, pending):** add `AND scope = is_timesheet-scope` (when filled) to the form's
   SELECT on ZSAP_TIMESHEET. Needs the form's program-lines code.
+- **Form side (06/10/26):** Smart Form Global Definitions → Initialization: line SELECT now
+  filters `scope = is_timesheet-scope` when filled (IF/ELSE, old non-strict style kept to match
+  the node). `IS_TIMESHEET` added to the node's Input Parameters. File:
+  `ZSAP_TIMESHEET_FORM_INITIALIZATION.abap`. `break abapuser02.` left in place — flagged, must
+  go before transport.
