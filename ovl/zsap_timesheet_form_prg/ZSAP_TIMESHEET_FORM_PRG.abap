@@ -105,11 +105,13 @@ SELECT-OPTIONS: s_docno FOR  zsap_timesheet-doc_no .
 PARAMETERS: p_from TYPE sy-datum,
             p_to   TYPE sy-datum.
 *BOC By SAP_ABAP on 06/10/26
-* Scope dropdown: blank = all, AS IS, MICROSOFT
+* Scope dropdown: blank = all. The values are the fixed values of the
+* domain of ZSAP_TIMESHEET-SCOPE (SE11) - no VRM_SET_VALUES, so a value
+* added to the domain appears here without a code change.
 PARAMETERS: p_scope TYPE zsap_timesheet-scope AS LISTBOX VISIBLE LENGTH 20.
 
-DATA: gt_scope_vals TYPE vrm_values,
-      gs_scope_val  TYPE vrm_value.
+*DATA: gt_scope_vals TYPE vrm_values,
+*      gs_scope_val  TYPE vrm_value.
 *EOC By SAP_ABAP on 06/10/26
 
 *----------------------*
@@ -144,25 +146,26 @@ DATA: wa_ssfcrescl TYPE ssfcrescl,
 CLEAR :  gt_otf_hr-otfdata[],gt_otf,gt_otf_hr-otfdata.
 
 *BOC By SAP_ABAP on 06/10/26
-AT SELECTION-SCREEN OUTPUT.
-  CLEAR gt_scope_vals.
-  gs_scope_val-key  = 'AS IS'.
-  gs_scope_val-text = 'AS IS'.
-  APPEND gs_scope_val TO gt_scope_vals.
-  gs_scope_val-key  = 'MICROSOFT'.
-  gs_scope_val-text = 'MICROSOFT'.
-  APPEND gs_scope_val TO gt_scope_vals.
+* Hardcoded list replaced by the domain fixed values (see P_SCOPE)
+*AT SELECTION-SCREEN OUTPUT.
+*  CLEAR gt_scope_vals.
+*  gs_scope_val-key  = 'AS IS'.
+*  gs_scope_val-text = 'AS IS'.
+*  APPEND gs_scope_val TO gt_scope_vals.
+*  gs_scope_val-key  = 'MICROSOFT'.
+*  gs_scope_val-text = 'MICROSOFT'.
+*  APPEND gs_scope_val TO gt_scope_vals.
 
-  CALL FUNCTION 'VRM_SET_VALUES'
-    EXPORTING
-      id              = 'P_SCOPE'
-      values          = gt_scope_vals
-    EXCEPTIONS
-      id_illegal_name = 1
-      OTHERS          = 2.
-  IF sy-subrc <> 0.
-    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
-  ENDIF.
+*  CALL FUNCTION 'VRM_SET_VALUES'
+*    EXPORTING
+*      id              = 'P_SCOPE'
+*      values          = gt_scope_vals
+*    EXCEPTIONS
+*      id_illegal_name = 1
+*      OTHERS          = 2.
+*  IF sy-subrc <> 0.
+*    MESSAGE 'Scope dropdown values could not be set' TYPE 'S' DISPLAY LIKE 'E'.
+*  ENDIF.
 *EOC By SAP_ABAP on 06/10/26
 
 AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_docno-low.

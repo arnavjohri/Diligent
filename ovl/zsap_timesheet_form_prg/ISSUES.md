@@ -32,3 +32,5 @@
 - **Revised 06/10/26:** activation error `Field "IS_TIMESHEET-SCOPE" is unknown` — Scope now
   passed as new optional form import parameter `IV_SCOPE TYPE ZSAP_TIMESHEET-SCOPE`
   (program: `iv_scope = p_scope`); the CLEAR gs_timesheet-scope block was dropped.
+- **06/10/26:** `P_SCOPE` listbox now shows the Scope domain fixed values (VRM block commented
+  out), same as the Create screen.
