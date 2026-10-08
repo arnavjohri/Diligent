@@ -21,5 +21,12 @@
   a follow-up correction to Note 3106821 for the current S4CORE SP, else an OSS
   incident on JVA. Interim (functional decision): post without JV coding on the
   vendor lines.
+- **SAP KBA 0828606 (checked 08/10/26):** same message, same `VALID_BTYPE` vendor
+  branch, but scenario is GJPNA partner netting; fix there is customer posting keys
+  in GJ49 rule PNET, which moves the line into the `i_kunnr` branch. Not applicable
+  to a manual FBV0 employee advance (the account must stay a vendor). It does show
+  SAP treats vendor lines on such ventures as a setup issue, not a code defect, so
+  an incident must stress the corporate-venture `sy-subrc = 0` path. Open question
+  for functional: why the SGL-8 vendor line (recon 100408) carries venture CP0001 at all.
 - **TR:** —
 - **Status:** handed to functional lead 08/10/26; awaiting SAP correction or incident.
