@@ -3156,8 +3156,14 @@ FORM bdc_insert.
   PERFORM bdc_dynpro      USING 'SAPMF40K' '0101'.
   PERFORM bdc_field       USING 'BDC_OKCODE' 'BUCH'.
   PERFORM bdc_field       USING 'BDC_CURSOR' 'FEBMKA-BUKRS'.
-  PERFORM bdc_dynpro      USING 'SAPMF40K' '0101'.
+*BOC By Arnav on 09/10/26
+* With processing type 4, BUCH posts at once and FF67 shows the posting log
+* list (SAPMSSY0 0120), not 0101 again - leave the transaction from the list
+* PERFORM bdc_dynpro      USING 'SAPMF40K' '0101'.
+* PERFORM bdc_field       USING 'BDC_OKCODE' '/N'.
+  PERFORM bdc_dynpro      USING 'SAPMSSY0' '0120'.
   PERFORM bdc_field       USING 'BDC_OKCODE' '/N'.
+*EOC By Arnav on 09/10/26
   CALL TRANSACTION 'FF67' USING bdcdata MODE lv_mode UPDATE 'S'
                                         MESSAGES INTO bdcmsg.
   IF sy-subrc = 0.
