@@ -3029,7 +3029,11 @@ FORM generate_header_data.
 
   PERFORM bdc_dynpro      USING 'SAPMF40K' '0101'.
   PERFORM bdc_field       USING 'BDC_OKCODE' '/00'.
-  PERFORM bdc_field       USING 'BDC_CURSOR' 'FEBMKA-MNAM1'.
+*BOC By Arnav on 09/10/26
+* FEBMKA-MNAM1 does not exist on 0101 with processing type 4
+* PERFORM bdc_field       USING 'BDC_CURSOR' 'FEBMKA-MNAM1'.
+  PERFORM bdc_field       USING 'BDC_CURSOR' 'FEBMKA-BUKRS'.
+*EOC By Arnav on 09/10/26
   PERFORM bdc_field       USING  'FEBMKA-BUKRS' bukrs.
   PERFORM bdc_field       USING 'FEBMKA-HBKID' hbkid.
   PERFORM bdc_field       USING 'FEBMKA-HKTID' hktid.
@@ -3043,8 +3047,11 @@ FORM generate_header_data.
   PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
   WRITE postdt TO sy-tvar0.
   PERFORM bdc_field       USING 'FEBMKA-BUDTM' sy-tvar0.
-  PERFORM bdc_field       USING 'FEBMKA-NM1VB' 'X'.
-  PERFORM bdc_field       USING 'FEBMKA-MNAM1' session.
+*BOC By Arnav on 09/10/26
+* With processing type 4 the batch-input session fields are not on 0101
+* PERFORM bdc_field       USING 'FEBMKA-NM1VB' 'X'.
+* PERFORM bdc_field       USING 'FEBMKA-MNAM1' session.
+*EOC By Arnav on 09/10/26
 
 ENDFORM.                               " GENERATE_HEADER_DATA
 
