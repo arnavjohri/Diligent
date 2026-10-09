@@ -5,7 +5,7 @@
 
 ## Shipping method
 Paste-only. Corrected include: `ovl/zfi_cnb_brs/ZFIBRSTOP.abap` (loose file at folder root).
-Main program unchanged so far; extracted source is in `original/ZFI_CNB_BRS.abap`.
+Corrected main program: `ovl/zfi_cnb_brs/ZFI_CNB_BRS.abap` (issue 2, WVAR_ART).
 
 ## Source provenance
 `original/ZFI_CNB_BRS.se38-list-2026-10-09.txt` is an SE38 print listing (page headers, line
