@@ -3234,6 +3234,12 @@ ENDFORM.                               " CALCULATE_OPBAL
 FORM format_message .
 
   LOOP AT bdcmsg.
+*BOC By Arnav on 09/10/26
+* Hide FF67 warnings (e.g. beginning balance vs prior ending balance,
+* values entered are ignored) from the upload log, as requested.
+* Errors and success messages are still listed.
+    CHECK bdcmsg-msgtyp <> 'W'.
+*EOC By Arnav on 09/10/26
     CLEAR msgline.
     CALL FUNCTION 'FORMAT_MESSAGE'
       EXPORTING
