@@ -3041,10 +3041,21 @@ FORM generate_header_data.
 * ---- Convert Statement Date into SAP Date Format
   WRITE azdat TO sy-tvar0.
   PERFORM bdc_field       USING 'FEBMKA-AZDAT' sy-tvar0.
-  tempbal = 0.
+*BOC By Arnav on 09/10/26
+* Opening balance from the selection screen (OPBL) instead of 0. Closing
+* balance = opening + net of the matched items posted, so the statement
+* stays balanced in FF67 (TEMPBAL1 = net of matched items, CALCULATE_OPBAL).
+*  tempbal = 0.
+*  PERFORM bdc_field       USING 'FEBMKA-SSALD' tempbal.
+*  tempbal = tempbal1.
+*  PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
+  DATA lv_esald LIKE bseg-wrbtr.
+  tempbal = opbl.
   PERFORM bdc_field       USING 'FEBMKA-SSALD' tempbal.
-  tempbal = tempbal1.
+  lv_esald = opbl + tempbal1.
+  tempbal = lv_esald.
   PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
+*EOC By Arnav on 09/10/26
   WRITE postdt TO sy-tvar0.
   PERFORM bdc_field       USING 'FEBMKA-BUDTM' sy-tvar0.
 *BOC By Arnav on 09/10/26
