@@ -3845,11 +3845,31 @@ FORM bdc_insert.
   PERFORM bdc_field       USING 'BDC_OKCODE' '/N'.
   CALL TRANSACTION 'FF67' USING bdcdata MODE 'N' UPDATE 'S'
                                         MESSAGES INTO bdcmsg.
-  IF sy-subrc = 0.
-    WRITE :/ 'The matched items has been uploaded to BDC Session ',session.
+*BOC By Arnav on 10/10/26
+* If FF67 reports the statement as posted, the run is treated as correct:
+* only that message is shown and no error log file is saved. Otherwise the
+* log is shown and offered for download as before.
+* ASSUMPTION: FORMAT_MESSAGE runs with LANG 'E', so the posted message reads
+* 'Statement/list posted' (message class/number not confirmed).
+* IF sy-subrc = 0.
+*   WRITE :/ 'The matched items has been uploaded to BDC Session ',session.
+* ENDIF.
+* PERFORM format_message .
+* PERFORM display_call_transaction_log.
+  DATA lv_posted TYPE c LENGTH 1.
+  PERFORM format_message.
+  CLEAR lv_posted.
+  LOOP AT itabmsg WHERE text CS 'Statement/list posted'.
+    lv_posted = 'X'.
+    EXIT.
+  ENDLOOP.
+  IF lv_posted = 'X'.
+    SKIP 2.
+    WRITE:/ itabmsg-text.
+  ELSE.
+    PERFORM display_call_transaction_log.
   ENDIF.
-  PERFORM format_message .
-  PERFORM display_call_transaction_log.
+*EOC By Arnav on 10/10/26
 ENDFORM.                               " BDC_INSERT
 *&---------------------------------------------------------------------*
 *&      Form  CALCULATE_OPBAL
@@ -3876,6 +3896,14 @@ ENDFORM.                               " CALCULATE_OPBAL
 FORM format_message .
 
   LOOP AT bdcmsg.
+*BOC By Arnav on 10/10/26
+* Warnings are not shown in the upload log or written to the log file:
+* type W, plus FV 058 (opening vs prior closing balance) and FV 093
+* ('Warning: Values entered are ignored', may come with another type).
+    CHECK bdcmsg-msgtyp <> 'W'.
+    CHECK NOT ( bdcmsg-msgid = 'FV' AND
+              ( bdcmsg-msgnr = '058' OR bdcmsg-msgnr = '093' ) ).
+*EOC By Arnav on 10/10/26
     CLEAR msgline.
     CALL FUNCTION 'FORMAT_MESSAGE'
       EXPORTING
