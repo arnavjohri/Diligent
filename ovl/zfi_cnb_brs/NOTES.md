@@ -26,3 +26,15 @@ where a comment wrapped at a word boundary (e.g. `" FiscalYear`). That only affe
 - `AZNUM` (FEBMKA-AZNUM) comes out as **18 digits** on OCP. The header is now ~59–60 chars.
   Every field holding it must be ≥ 60 characters.
 - Old `.txt` files made before a header-width change fail the check once. Re-run Validation.
+
+## ZFI_CNB_BRS1 (10/10/26)
+Single-source copy of the **ONGC** version (`original/ZFI_CNB_BRS.ongc-ocd-list-2026-10-10.txt`),
+with ZFIBRSTOP merged in. Create it by SE38 copy of ZFI_CNB_BRS (text elements + GUI status
+`ZPFSTATUS`, **not** the include), then replace the source. Uses `SET PF-STATUS 'ZPFSTATUS'`.
+
+## Listing reconstruction gotcha
+The SE38 print wraps at 72 code characters and trims the trailing blanks of the first segment.
+Rebuilding by plain concatenation loses spaces (e.g. `SEPARATED` / `BY space` -> `SEPARATEDBY`).
+Pad the first segment to 72 before appending the continuation, and decode as UTF-8 (en-dashes
+are 3 bytes). The 09/10/26 `original/*.abap` rebuilds used plain concatenation: only comments
+and spacing inside literals are affected there, no statements.
