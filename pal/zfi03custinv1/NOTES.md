@@ -57,13 +57,33 @@ Cheapest first; each one discriminates between the remaining failure modes.
    `ZDJ_ENCRYPTPDF status E exit n: …`).
 5. **ST22** only if something still dumps.
 
-## Open decision (functional)
+## The two switches in `f_send_email` (functional to confirm)
 
-`lc_plainok` in `f_send_email`, default `abap_false`: a read-back that is a valid PDF but
-carries no `/Encrypt` is treated as a failure and not sent. Set it to `abap_true` if the
-business prefers an unencrypted invoice over no invoice when `ZDJ_ENCRYPTPDF` does not
-apply. Recommendation: keep `abap_false` — the password convention is the reason this
-round trip exists, and AR already resends by hand today.
+- **`lc_encrypt`, default `abap_false`** — the round trip is skipped; the mail carries
+  `gv_form_output-pdf` with its exact size, the same bytes Save-as-PDF downloads. Chosen
+  because the mail body tells the customer **no password** (every such line is commented
+  out in all six variants; the block was lifted from a payslip program — the commented
+  text still says "your payslip is protected by a unique password"). An encrypted PDF
+  would therefore be unopenable for the customer anyway. This is the only setting that
+  resolves INC01967 with certainty and without any server-side dependency.
+- **`lc_plainok`, default `abap_false`** — only matters with `lc_encrypt = abap_true`:
+  whether a valid but unencrypted read-back may still be sent.
+
+If the business does want password-protected invoices: `lc_encrypt = abap_true`, fix
+whatever the log then reports (see "What to check"), add a password line to the body
+texts, and give the server file a unique name (see ISSUES.md, open items).
+
+## Debugging in PRD without sending a mail (code as it stands in PRD)
+
+SE38 `ZFI03CUSTINV1`, one document, `rb_email`; `/h`, F8. Breakpoints → *Breakpoint at* →
+function modules `SXPG_COMMAND_EXECUTE`, `C13Z_RAWDATA_READ`, `SCMS_BINARY_TO_XSTRING`;
+method `CL_BCS` → `SEND`. At each stop F7 back to the caller and read: `l_file` (then
+**CG3Y** it from a second session, binary, open on the PC — the decisive test),
+`sy-subrc`, **`t_result`** (the OS command's own output), `l_orln`, `l_lines`,
+`ld_buffer` length vs `gv_size` (hex `25 50 44 46` … `25 25 45 4F 46`), lines of
+`i_tline`. At `CL_BCS->SEND` do not step: `/n` in the debugger command field ends the
+program before `send`; `COMMIT WORK` is the next statement, so BCS persists nothing.
+Check SOST afterwards. Debug on DS4 instead if it reproduces there.
 
 ## Gotchas
 

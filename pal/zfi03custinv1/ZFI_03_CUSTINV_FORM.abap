@@ -3752,12 +3752,19 @@ FORM f_send_email.
 
   DATA(l_filename) = gv_pdfname.
   DATA(l_password) = gv_password.
-*BOC By Arnav on 10/10/26 - INC01967 mailed PDF unreadable
-* The mail path does not attach gv_form_output-pdf. It writes it to the application
-* server, runs ZDJ_ENCRYPTPDF and attaches whatever C13Z_RAWDATA_READ brings back.
-* No step of that round trip was checked, so an empty / truncated / unencrypted
-* read-back went out as INVOICE_xxx.PDF with log status Successful. The download
-* path never takes this detour, which is why Save-as-PDF opens and the mail does not.
+*BOC By Arnav on 10/10/26
+* INC01967 - mailed PDF unreadable. The mail path does not attach gv_form_output-pdf.
+* It writes it to the application server, runs ZDJ_ENCRYPTPDF and attaches whatever
+* C13Z_RAWDATA_READ brings back. No step of that round trip was checked, so an empty /
+* truncated / unencrypted read-back went out as INVOICE_xxx.PDF with log status
+* Successful. The download path never takes this detour, which is why Save-as-PDF opens
+* and the mail does not.
+* ASSUMPTION: the mail body carries no password instruction (every such line is
+* commented out in all six variants), so the customer could not open an encrypted PDF
+* anyway. The round trip is therefore switched OFF and the in-memory PDF is attached as
+* is - byte-identical to Save-as-PDF. lc_encrypt = abap_true re-enables the encryption
+* path, which is now checked step by step.
+  CONSTANTS: lc_encrypt TYPE abap_bool VALUE abap_false.
   CONSTANTS: lc_xpdf    TYPE xstring VALUE '25504446',          "%PDF
              lc_xeof    TYPE xstring VALUE '2525454F46',        "%%EOF
              lc_xenc    TYPE xstring VALUE '2F456E6372797074',  "/Encrypt
@@ -3814,6 +3821,9 @@ FORM f_send_email.
 *  REFRESH : li_content_txt.
 *
 *BOC By Arnav on 10/10/26
+  IF lc_encrypt = abap_true.
+*EOC By Arnav on 10/10/26
+*BOC By Arnav on 10/10/26
 *  PERFORM f_encrypt USING i_tline
 **  PERFORM f_encrypt USING i_tline1
 **  PERFORM f_encrypt USING content_hex
@@ -3833,6 +3843,9 @@ FORM f_send_email.
 *EOC By Arnav on 10/10/26
 
 
+*BOC By Arnav on 10/10/26
+  IF lv_encerr IS INITIAL.   "no read-back when f_encrypt already failed
+*EOC By Arnav on 10/10/26
   sy-cprog = 'RC1TCG3Y'.
   CALL FUNCTION 'C13Z_RAWDATA_READ'
     EXPORTING
@@ -3875,6 +3888,7 @@ FORM f_send_email.
   IF sy-subrc <> 0 AND lv_encerr IS INITIAL.
     lv_encerr = |SCMS_BINARY_TO_XSTRING rc { sy-subrc }|.
   ENDIF.
+  ENDIF.   "lv_encerr initial before the read-back
 * Validate what came back before it replaces the good in-memory PDF in i_tline
   lv_xlen = xstrlen( ld_buffer ).
   IF lv_encerr IS INITIAL.
@@ -3917,6 +3931,11 @@ FORM f_send_email.
     RECEIVING
       "      et_solix   = content_hex.
       et_solix   = i_tline.
+*BOC By Arnav on 10/10/26
+  ELSE.
+    lv_attsize = gv_size.   "in-memory PDF as is, exact size from SCMS_XSTRING_TO_BINARY
+  ENDIF.
+*EOC By Arnav on 10/10/26
 
 *********************************************************************************
 
@@ -4364,7 +4383,9 @@ FORM f_encrypt USING fp_tline
 *BOC By Arnav on 10/10/26
   DATA: l_exitcode TYPE i,
         ls_result  TYPE btcxpm,
-        lx_file    TYPE REF TO cx_sy_file_access_error.
+        lx_file    TYPE REF TO cx_sy_file_access_error,
+        lv_parm    TYPE string,
+        lv_parmax  TYPE i.
   CLEAR: cv_errtxt, cv_cmdtxt.
 *EOC By Arnav on 10/10/26
 
@@ -4449,6 +4470,7 @@ FORM f_encrypt USING fp_tline
 *BOC By Arnav on 10/10/26
 *    CATCH cx_sy_file_authority.
     CATCH cx_sy_file_access_error INTO lx_file.
+      CLOSE DATASET l_file.   "no handle left open for the next document
       cv_errtxt = |file error on { l_file }: { lx_file->get_text( ) }|.
       RETURN.
 *EOC By Arnav on 10/10/26
@@ -4513,9 +4535,18 @@ FORM f_encrypt USING fp_tline
   "  CONCATENATE '-j' '-P' fp_password l_file_zip l_file INTO l_dir_input SEPARATED BY space.
 *BOC By Arnav on 10/10/26
 * ASSUMPTION: the first quoted argument is l_file_zip, empty since the ZIP step was
-* retired. Left untouched - the ZDJ_ENCRYPTPDF command text (SM69) is not visible here.
+* retired. Left as is - the ZDJ_ENCRYPTPDF command text (SM69) is not visible here.
+* SXPGCOLIST-PARAMETERS is a fixed-length field: a long customer name would be cut off
+* silently and the command would miss the file, so the length is checked first.
+*  l_dir_input = |-j -P { fp_password } "{ l_file_zip }" "{ l_file }"|.
+  lv_parm = |-j -P { fp_password } "{ l_file_zip }" "{ l_file }"|.
+  DESCRIBE FIELD l_dir_input LENGTH lv_parmax IN CHARACTER MODE.
+  IF strlen( lv_parm ) > lv_parmax.
+    cv_errtxt = |{ c_extcom } parameter string exceeds { lv_parmax } chars|.
+    RETURN.
+  ENDIF.
+  l_dir_input = lv_parm.
 *EOC By Arnav on 10/10/26
-  l_dir_input = |-j -P { fp_password } "{ l_file_zip }" "{ l_file }"|.
 
 
   CALL FUNCTION 'SXPG_COMMAND_EXECUTE'
@@ -4550,7 +4581,7 @@ FORM f_encrypt USING fp_tline
 * Recorded for the log only - the caller judges the bytes it reads back.
   IF sy-subrc <> 0.
     cv_cmdtxt = |{ c_extcom } not executed, SXPG_COMMAND_EXECUTE rc { sy-subrc }|.
-  ELSEIF status = 'E'.
+  ELSEIF status = 'E' OR l_exitcode <> 0.
     READ TABLE t_result INTO ls_result INDEX 1.
     cv_cmdtxt = |{ c_extcom } status E exit { l_exitcode }: { ls_result-message }|.
   ENDIF.
