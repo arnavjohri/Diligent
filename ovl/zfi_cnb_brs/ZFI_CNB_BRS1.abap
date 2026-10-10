@@ -3784,11 +3784,36 @@ FORM generate_bdc_data.
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
   PERFORM bdc_field       USING 'FEBMKA-KWBTR(01)' tran_amt1." Amt
 
+*BOC By Arnav on 10/10/26
+* INTAB-DOCNO (bank book document) is filled only when Validation matched
+* the line. Now that unmatched lines are uploaded too, it is often blank and
+* FF67 gets no cheque/document number. Fall back to the reference from the
+* bank file: RT# (R/C/D + number), cheque no., then the narration.
+* ASSUMPTION: the FF67 exit reads FEBMKK-CHECT_KF to find the document.
+* IF intab-tcode(3) = 'RCT' OR intab-tcode(3) = 'OTD'.
+*   PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-docno.
+* ELSEIF intab-tcode(3) = 'CHK'.
+*   PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-chkno.
+* ENDIF.
+  DATA lv_chect TYPE febmkk-chect_kf.
+  CLEAR lv_chect.
   IF intab-tcode(3) = 'RCT' OR intab-tcode(3) = 'OTD'.
-    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-docno.
+    lv_chect = intab-docno.
+    IF lv_chect IS INITIAL.
+      lv_chect = intab-rt#.
+    ENDIF.
   ELSEIF intab-tcode(3) = 'CHK'.
-    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-chkno.
+    lv_chect = intab-chkno.
   ENDIF.
+  IF lv_chect IS INITIAL AND intab-tcode(3) <> 'BCH'
+     AND intab-tcode(3) <> 'INT' AND intab-tcode(3) <> 'INC'.
+    lv_chect = intab-narration.
+  ENDIF.
+  CONDENSE lv_chect.
+  IF lv_chect IS NOT INITIAL.
+    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' lv_chect.
+  ENDIF.
+*EOC By Arnav on 10/10/26
   PERFORM bdc_field       USING 'FEBMKK-ZUONR(01)' intab-narration.
   IF intab-tcode(3) = 'BCH' OR intab-tcode(3) = 'INT'
                                         OR intab-tcode(3) = 'INC'.
