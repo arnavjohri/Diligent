@@ -398,7 +398,13 @@ INITIALIZATION.
 
 
 AT SELECTION-SCREEN OUTPUT.
-  SET PF-STATUS 'ZPFSTATUS'. " added by cab_dns
+*BOC By Arnav on 10/10/26
+* ZPFSTATUS belongs to ZFI_CNB_BRS and stays active on the output list,
+* where its function codes are not handled -> 'Choose a valid function'
+* on Back/Exit. Its only extra (Process Guide button) is disabled anyway.
+* Use the standard selection-screen and list status instead.
+*  SET PF-STATUS 'ZPFSTATUS'. " added by cab_dns
+*EOC By Arnav on 10/10/26
 
 AT SELECTION-SCREEN ON EXIT-COMMAND.
 
