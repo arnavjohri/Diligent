@@ -60,7 +60,17 @@ METHOD update_amount.
              gp      TYPE bseg-dmbe2,
              loc_all TYPE abap_bool,
              gp_all  TYPE abap_bool,
+             xl_cnt  TYPE i,          "Changes by Arnav on 12/10/26
            END OF lty_sum.
+
+* 12/10/26: Excel lines with the G/L in BSEG format, for 1:1 pairing
+    TYPES: BEGIN OF lty_xl,
+             gl   TYPE bseg-saknr,
+             doc  TYPE bseg-wrbtr,
+             loc  TYPE bseg-dmbtr,
+             gp   TYPE bseg-dmbe2,
+             used TYPE abap_bool,
+           END OF lty_xl.
 
     DATA: lv_obj      TYPE awkey,
           lv_gl       TYPE bseg-saknr,
@@ -74,7 +84,9 @@ METHOD update_amount.
           lv_left_gp  TYPE bseg-dmbe2,
           lv_set_gp   TYPE abap_bool,
           lv_bal_loc  TYPE bseg-dmbtr,
-          lv_bal_gp   TYPE bseg-dmbe2.
+          lv_bal_gp   TYPE bseg-dmbe2,
+          lt_xl       TYPE STANDARD TABLE OF lty_xl, "Changes by Arnav on 12/10/26
+          lv_found    TYPE abap_bool.                "Changes by Arnav on 12/10/26
 
     DATA(ls_bseg) = VALUE #( t_bseg[ 1 ] OPTIONAL ).
     IF ls_bseg IS INITIAL.
@@ -118,7 +130,12 @@ METHOD update_amount.
                INTO TABLE lt_sum ASSIGNING <ls_sum>.
       ENDIF.
 
-      <ls_sum>-doc = <ls_sum>-doc + ls_post-amt_doc_curr.
+      <ls_sum>-doc    = <ls_sum>-doc + ls_post-amt_doc_curr.
+      <ls_sum>-xl_cnt = <ls_sum>-xl_cnt + 1.                "Changes by Arnav on 12/10/26
+      APPEND VALUE #( gl  = lv_gl                           "Changes by Arnav on 12/10/26
+                      doc = ls_post-amt_doc_curr
+                      loc = ls_post-amt_loc_curr
+                      gp  = ls_post-amt_gp_curr ) TO lt_xl.
       IF ls_post-amt_loc_curr IS INITIAL.
         <ls_sum>-loc_all = abap_false.     "a line without local amount
       ELSE.
@@ -163,8 +180,40 @@ METHOD update_amount.
         RETURN.
       ENDIF.
 
-*     Share by document amount; the last line item takes the rounding
-*     remainder, so the G/L total equals the Excel total to the cent.
+* 12/10/26: when the G/L has as many line items as Excel lines, nothing was
+* merged by summarisation. Then each line item is paired with the Excel line
+* carrying the same document amount and takes the Excel local / group amount
+* exactly as entered. The proportional spread below changed per-line local
+* amounts when the entered amounts were not in proportion to the document
+* amounts. Spread is kept only for the merged case (fewer line items).
+      IF lv_lines = <ls_sum>-xl_cnt.
+        LOOP AT lt_new ASSIGNING FIELD-SYMBOL(<fs_pair>)
+             WHERE saknr = <ls_sum>-gl OR hkont = <ls_sum>-gl.
+          lv_found = abap_false.
+          LOOP AT lt_xl ASSIGNING FIELD-SYMBOL(<fs_xl>)
+               WHERE gl   = <ls_sum>-gl
+                 AND doc  = <fs_pair>-wrbtr
+                 AND used = abap_false.
+            <fs_xl>-used = abap_true.
+            lv_found     = abap_true.
+            IF <ls_sum>-loc_all = abap_true.
+              <fs_pair>-dmbtr = <fs_xl>-loc.
+            ENDIF.
+            IF lv_set_gp = abap_true.
+              <fs_pair>-dmbe2 = <fs_xl>-gp.
+            ENDIF.
+            EXIT.
+          ENDLOOP.
+          IF lv_found = abap_false.
+            RETURN.           "no free Excel line with this document amount
+          ENDIF.
+        ENDLOOP.
+        CONTINUE.             "this G/L done, no spread
+      ENDIF.
+
+*     Merged lines: share the Excel total by document amount; the last line
+*     item takes the rounding remainder, so the G/L total equals the Excel
+*     total to the cent.
       lv_left_loc = <ls_sum>-loc.
       lv_left_gp  = <ls_sum>-gp.
       lv_count    = 0.

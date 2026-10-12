@@ -29,6 +29,14 @@ document.
 - `save_modified` maps `amt_gp_curr = amtloccurr` into `ZINV_POST_GL` — group amount is
   stored as the local amount. Fix pending (behaviour pool, object 2).
 - Debit/credit indicator is not stored in `ZINV_POST_GL`; amounts are unsigned.
+- Posting via the Verify Journal Entries app runs in the approver's dialog session as
+  transaction FBVB (FB03 header 12/10/26: Created By = approver, TCode FBVB), so
+  `POST_DOCUMENT` runs in that user's update task. Session breakpoints never fire there:
+  external breakpoint for that user on `COMMIT WORK`, then Update Debugging, then F8.
+- `UPDATE_AMOUNT` has no app-dependent logic. Its only inputs are `T_BSEG` and
+  `ZINV_POST_GL`; a different result between apps means a different line-item set
+  (summarisation) or different upload rows. Spread (proportional) only runs when a G/L
+  has fewer line items than Excel lines; otherwise amounts are copied as entered (12/10/26).
 
 ## Shipping: PASTE ONLY
 
