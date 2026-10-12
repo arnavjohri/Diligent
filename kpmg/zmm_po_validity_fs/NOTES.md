@@ -35,3 +35,17 @@ in `original/`).
 - The customer metafields 9000013x / 90000121 / 90000148 (required) belong to someone else's
   custom-field work and were not touched.
 - `ME23N` (display) is still forced to display by the transaction key; the BAdI cannot open it.
+
+## 12/10/26 — BAdI approach withdrawn
+
+Debugger on `FIELDSELECTION_HEADER` showed `CH_FIELDSELECTION` holds **only customer
+metafields** (90000121–90000141). Standard header metafields 37/38 (KDATB/KDATE) are never
+passed in, so this method cannot show or hide Validity Start/End. The delivered ELSEIF is dead
+code; the method should be reverted to the original. Keep this file as the record of why.
+
+Standard-field status = most restrictive of the merged keys: transaction `ME21N`, activity
+`AKTH`, doc type `NBF`, release key. T161 shows SBP → NBF, so the hide sits in one of the
+others. Fix in OMF4 by setting the Validity period group to Optional on the offending key.
+
+If per-doc-type hiding is wanted dynamically later: `FIELDSELECTION_HEADER_REFKEYS` swaps the
+field selection keys per document; `FIELDSELECTION_HEADER` is for customer fields only.
