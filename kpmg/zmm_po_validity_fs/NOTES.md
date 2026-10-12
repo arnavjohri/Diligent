@@ -30,9 +30,8 @@ in `original/`).
 
 ## Gotchas
 
-- `mmmfd_validity_start` / `mmmfd_validity_end` are **unverified** constant names. Check type
-  group `MMMFD` (SE80) first; if absent, use the numeric metafield for KDATB / KDATE from that
-  type group instead.
+- Metafields confirmed from type group `MMMFD`: `mmmfd_valid_from` (037, EKKO-KDATB) and `mmmfd_valid_to` (038, EKKO-KDATE).
+  **Not** `mmmfd_valid_startdate` / `mmmfd_valid_enddate` (851/852) — those are item-level lean-service dates.
 - The customer metafields 9000013x / 90000121 / 90000148 (required) belong to someone else's
   custom-field work and were not touched.
 - `ME23N` (display) is still forced to display by the transaction key; the BAdI cannot open it.

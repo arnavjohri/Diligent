@@ -6,9 +6,9 @@ METHOD IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER.
 * ZPO_VALIDITY_DOCTYPE (selection option, e.g. I EQ SBP). Every other
 * document type gets them hidden. Field status in the merged result is
 * the most restrictive one, so hiding here wins over NBF customizing.
-* ASSUMPTION: metafield constants MMMFD_VALIDITY_START / MMMFD_VALIDITY_END
-* exist in type group MMMFD on this release - confirm in SE80 before
-* activation.
+* Metafields MMMFD_VALID_FROM (037, EKKO-KDATB) and MMMFD_VALID_TO (038,
+* EKKO-KDATE) confirmed in type group MMMFD on 12/10/26. Not the item-level
+* MMMFD_VALID_STARTDATE / _ENDDATE (851/852), which are lean-service dates.
   CONSTANTS: lc_validity_var TYPE rvari_vnam VALUE 'ZPO_VALIDITY_DOCTYPE',
              lc_selopt       TYPE rsscr_kind VALUE 'S'.
 
@@ -34,8 +34,8 @@ METHOD IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER.
        <FS>-METAFIELD = 90000121.
       <FS>-FIELDSTATUS = '+'.
 *BOC By Arnav on 12/10/26
-    ELSEIF <FS>-METAFIELD = mmmfd_validity_start OR
-           <FS>-METAFIELD = mmmfd_validity_end.
+    ELSEIF <FS>-METAFIELD = mmmfd_valid_from OR
+           <FS>-METAFIELD = mmmfd_valid_to.
       <FS>-FIELDSTATUS = lv_validity.
 *EOC By Arnav on 12/10/26
     ELSE.
