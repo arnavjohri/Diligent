@@ -28,9 +28,10 @@ activate `ZFI03CUSTINV1`. Only this include changed; TOP and SEL are untouched.
 ## The mail path, and why it is the only one that can corrupt
 
 `rb_pdf` downloads `gv_form_output-pdf` as is. `rb_email` does not attach it: `f_encrypt`
-writes it to `<ZTMP_DIR>/<name> .PDF` on the application server (yes, with a blank before
-`.PDF` — the stray `'''` is replaced by a space; consistent for write and read, so left
-alone), runs SM69 command `ZDJ_ENCRYPTPDF` with `-j -P <ccode+DDMMMYY> "" "<file>"`,
+writes it to `<ZTMP_DIR>/<name>.PDF` on the application server (the stray `'''` is removed
+by `REPLACE … WITH space`, which deletes rather than inserts — confirmed in the PRD
+debugger, `…_08-OCT-2026.PDF`; `ZTMP_DIR` on PS4 is under `/usr/sap/PS4/ABAP_INTERFA…`),
+runs SM69 command `ZDJ_ENCRYPTPDF` with `-j -P <ccode+DDMMMYY> "" "<file>"`,
 waits 2 s, reads the file back (`C13Z_RAWDATA_READ` under `sy-cprog = 'RC1TCG3Y'`) and
 attaches the read-back. After the 10/10/26 fix every step is checked and the read-back
 is validated before it can replace the in-memory PDF; on failure nothing is sent and the
