@@ -27,6 +27,17 @@ without `S_DATASET` on the `ZTMP_DIR` path for `OPEN DATASET` and `C13Z_RAWDATA_
 `operating system could not open file`, job user's authorisations. Either way
 `lc_encrypt = abap_false` removes the dependency.
 
+**Confirmed user-dependent, 12/10/26:** AR reports the mail is fine when sent by one user
+ID and broken when another user ID sends it. That is the signature of the round trip failing
+on an authorisation of the *executing* user (no message, log says Successful). User-dependent
+checks in the mail path, in order: `F_BKPF_BUK` (ACTVT 01, selection screen — visible
+message s016), `S_DATASET` write for `OPEN DATASET` in `f_encrypt` (swallowed), `S_LOG_COM`
+for `ZDJ_ENCRYPTPDF` (ignored, harmless), `S_DATASET` read under program `RC1TCG3Y` for
+`C13Z_RAWDATA_READ` (swallowed → empty attachment), `S_OC_SEND` for the external send
+(visible as a WRITE line from `CATCH cx_root`). Exact missing values: STAUTHTRACE on the
+failing user while they run one document. With `lc_encrypt = abap_false` the file-system
+and OS-command authorisations are no longer needed by business users at all.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
