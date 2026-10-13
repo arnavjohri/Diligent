@@ -38,6 +38,15 @@ for `ZDJ_ENCRYPTPDF` (ignored, harmless), `S_DATASET` read under program `RC1TCG
 failing user while they run one document. With `lc_encrypt = abap_false` the file-system
 and OS-command authorisations are no longer needed by business users at all.
 
+**Role evidence, 13/10/26** (SUIM roles with `S_DATASET` vs. role lists of the working user and
+three failing users): all four users share `ZPAL_GENERAL_ROLE` (has `S_DATASET`, evidently not
+for this path/program); failing user 3 also has `ZFI_GL_MANAGER_PAL` (has `S_DATASET`) and
+still fails. The only `S_DATASET`-carrying roles the working user has and no failing user has
+are **`ZFI_AR_COLLECTIONS_PAL`** and **`ZFI_AR_COLLECTIONS_PALEX`** — the file authorisation
+that makes the encryption round trip work lives there. Confirm in PFCG → Authorizations →
+`S_DATASET` (expect `PROGRAM` ZFI03CUSTINV1 / RC1TCG3Y or `*`, `ACTVT` 33 + 34, `FILENAME`
+on the `ZTMP_DIR` path). Decision: no role change recommended — ship `lc_encrypt = abap_false`.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
