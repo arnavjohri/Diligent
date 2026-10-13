@@ -54,6 +54,17 @@ answer is a role assignment: `ZFI_AR_COLLECTIONS_PAL` (PR01 users) / `ZFI_AR_COL
 The corrected include (`lc_encrypt = abap_false`) goes DS4 → QS4 → PS4 by transport as the
 permanent fix, after which the file authorisations are no longer needed.
 
+**Confirmed 13/10/26 — `SUSR_USER_AUTH_FOR_OBJ_GET`, object `S_DATASET`, PRD:**
+working user holds four authorisations: `T-D454017600` (ACTVT 06/33/34/A6/A7, FILENAME `*`,
+PROGRAM `*`), `T-D454031300` (ACTVT 06/33/34, FILENAME `*`, PROGRAM `SAPLSX03`),
+`T-D454032600` and `T-D454032700` (ACTVT `*`, FILENAME `*`, PROGRAM `*`). Failing user holds
+only `T-D454031300` — PROGRAM `SAPLSX03`, i.e. file access solely for the SAPoffice function
+group. Therefore `OPEN DATASET` under program `ZFI03CUSTINV1` and `C13Z_RAWDATA_READ` under
+`RC1TCG3Y` are refused for that user, the read-back is empty and a 0-byte PDF is mailed.
+Root cause of INC01967 is closed: missing `S_DATASET` for the round trip, hidden by the
+unchecked return codes. Which role carries the `PROGRAM *` authorisations: SE16 `AGR_1251`,
+OBJECT `S_DATASET`, FIELD `PROGRAM`, LOW `*`, AGR_NAME in the working user's roles.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
