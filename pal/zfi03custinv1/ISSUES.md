@@ -75,6 +75,11 @@ role content, not a design. Recommendation to Security: add the narrow `S_DATASE
 `ZFIBSDMCM` into that role's menu; alternative accepted by business: assign
 `ZFI_AR_COLLECTIONS_PAL`. Permanent: transport of the corrected include.
 
+**Decision 13/10/26 (Arnav):** ask Security to assign `ZFI_AR_COLLECTIONS_PAL` (/`_PALEX`) to the
+affected senders first — identical to the working user — and retest with one document to an
+internal bill-to, checking the SOST attachment size before releasing the rest. Narrow-role
+alternative stays documented above; transport of the corrected include remains the permanent fix.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
