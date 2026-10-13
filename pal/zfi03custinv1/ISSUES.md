@@ -47,6 +47,13 @@ that makes the encryption round trip work lives there. Confirm in PFCG → Autho
 `S_DATASET` (expect `PROGRAM` ZFI03CUSTINV1 / RC1TCG3Y or `*`, `ACTVT` 33 + 34, `FILENAME`
 on the `ZTMP_DIR` path). Decision: no role change recommended — ship `lc_encrypt = abap_false`.
 
+**Resolution path agreed 13/10/26:** PRD cannot be changed from Arnav's ID, so the ticket
+answer is a role assignment: `ZFI_AR_COLLECTIONS_PAL` (PR01 users) / `ZFI_AR_COLLECTIONS_PALEX`
+(2P01 users) to the affected senders, after a PFCG display check of its `S_DATASET` /
+`S_LOG_COM` values; Security may instead copy those values into `ZFI_AR_ACCOUNTANT_PAL`.
+The corrected include (`lc_encrypt = abap_false`) goes DS4 → QS4 → PS4 by transport as the
+permanent fix, after which the file authorisations are no longer needed.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
