@@ -87,9 +87,22 @@ FILENAME `<ZTMP_DIR>/*` (+ optional `S_LOG_COM ZDJ_ENCRYPTPDF`). Permanent fix s
 transport of `ZFI_03_CUSTINV_FORM` with `lc_encrypt = abap_false` (DS4 → QS4 → PS4), after
 which the file authorisation can be withdrawn from business users.
 
+**SU53 evidence, QS4, 13/10/26 (user 408723, transaction `ZFIBSDMCM`) — corrects the PROGRAM value:**
+failed checks in order: `S_BDS_DS` CLASSNAME `DEVC_STXD_BITMAP` / CLASSTYPE `OT` (form graphics, RC 4);
+`S_DATASET` ACTVT `34`, FILENAME `/usr/s…`, PROGRAM `ZFI03CUSTINV1` (the write, RC 4); `S_LOG_COM`
+COMMAND `ZDJ_ENCRYPTPDF` / OPSYSTEM `Linux` (RC 12, object absent from user master, six calls);
+`S_DATASET` ACTVT `33`, PROGRAM **`SAPLC13Z`** (the read-back, RC 4). So the kernel checks the
+program that contains the `OPEN DATASET` — the function group `SAPLC13Z` — **not** `RC1TCG3Y`;
+the `sy-cprog = 'RC1TCG3Y'` assignment in the code serves some other check inside C13Z, not
+`S_DATASET`. Every earlier mention of `RC1TCG3Y` as an `S_DATASET` PROGRAM value above is
+superseded by `SAPLC13Z`. Final narrow authorisation set for this transaction:
+`S_DATASET` (34 / `ZFI03CUSTINV1`), `S_DATASET` (33 / `SAPLC13Z`), both on `<ZTMP_DIR>/*`;
+`S_LOG_COM` (`ZDJ_ENCRYPTPDF`, `Linux`, host); `S_BDS_DS` (`DEVC_STXD_BITMAP`, `OT`, 03) so the
+form logo renders. Assigning the two Collections roles resolved it; permanent fix by transport.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
-- `sy-cprog = 'RC1TCG3Y'` around `C13Z_RAWDATA_READ` makes the dataset authority check run as an EHS program (bypasses `S_DATASET` for this report). Only relevant while `lc_encrypt = abap_true`.
+- `sy-cprog = 'RC1TCG3Y'` around `C13Z_RAWDATA_READ`: SU53 shows the `S_DATASET` check runs under `SAPLC13Z` regardless, so the assignment satisfies some other caller check inside C13Z. Faking `sy-cprog` is still a smell; only relevant while `lc_encrypt = abap_true`.
 - With `lc_encrypt = abap_true` the server file name is `INVOICE_<billto>_<docdate> .PDF` — fixed per customer and day, so two runs at once (job + AR rerun, PAL + PALEX) can overwrite each other's file. A unique suffix (`sy-uzeit` / GUID) would close it.
 - Supporting GOS attachments (`SO_DOCUMENT_READ_API1` loop) are added without `i_attachment_size` (padded) and unvalidated.
