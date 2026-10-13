@@ -2,7 +2,7 @@
 
 ## What it is
 
-Report `ZFI03CUSTINV1`, PAL FI-AR: prints / previews / saves / e-mails customer
+Report `ZFI03CUSTINV1` (transaction **`ZFIBSDMCM`**), PAL FI-AR: prints / previews / saves / e-mails customer
 invoices, credit memos and debit memos (Adobe Forms, `FP_JOB_OPEN` → generated form FM →
 `gv_form_output`). Four radio buttons: `rb_view`, `rb_print`, `rb_pdf` (GUI download of
 `gv_form_output-pdf`), `rb_email` (`f_send_email`, one mail per document, e-mail log ALV
