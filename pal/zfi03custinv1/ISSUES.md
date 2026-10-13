@@ -80,6 +80,13 @@ affected senders first — identical to the working user — and retest with one
 internal bill-to, checking the SOST attachment size before releasing the rest. Narrow-role
 alternative stays documented above; transport of the corrected include remains the permanent fix.
 
+**Interim resolution confirmed 13/10/26:** role `ZFI_AR_COLLECTIONS_PAL` assigned to the affected
+sender(s); mail now carries a readable PDF. INC01967 symptom closed by authorisation. Missing
+object communicated to Security: `S_DATASET` ACTVT 33/34, PROGRAM `ZFI03CUSTINV1` + `RC1TCG3Y`,
+FILENAME `<ZTMP_DIR>/*` (+ optional `S_LOG_COM ZDJ_ENCRYPTPDF`). Permanent fix still pending:
+transport of `ZFI_03_CUSTINV_FORM` with `lc_encrypt = abap_false` (DS4 → QS4 → PS4), after
+which the file authorisation can be withdrawn from business users.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
