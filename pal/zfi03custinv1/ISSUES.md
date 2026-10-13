@@ -65,6 +65,16 @@ Root cause of INC01967 is closed: missing `S_DATASET` for the round trip, hidden
 unchecked return codes. Which role carries the `PROGRAM *` authorisations: SE16 `AGR_1251`,
 OBJECT `S_DATASET`, FIELD `PROGRAM`, LOW `*`, AGR_NAME in the working user's roles.
 
+**Role-menu check 13/10/26:** SUIM roles-by-transaction for `ZFIBSDMCM` returns only
+`ZSAP_ALL_DISPLAY` — no business role carries the transaction in its menu; AR users start it
+through wildcard `S_TCODE`. The `S_DATASET PROGRAM *` that makes the mail work for one user
+sits in the Collections role(s) for other reasons, so the "working" case is an accident of
+role content, not a design. Recommendation to Security: add the narrow `S_DATASET`
+(ACTVT 33/34, PROGRAM `ZFI03CUSTINV1` + `RC1TCG3Y`, FILENAME `<ZTMP_DIR>/*`) and
+`S_LOG_COM ZDJ_ENCRYPTPDF` to `ZFI_AR_ACCOUNTANT_PAL` (shared by all failing users), and put
+`ZFIBSDMCM` into that role's menu; alternative accepted by business: assign
+`ZFI_AR_COLLECTIONS_PAL`. Permanent: transport of the corrected include.
+
 Open, found while fixing (not changed — separate issues):
 
 - `f_send_email`, "FAILED EMAIL" block: `IF sy-subrc NE 0` tests the **CC** loop, so any customer without a CC address gets an extra *Failed / No customer email address maintained* row even after a good send.
