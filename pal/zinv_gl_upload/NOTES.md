@@ -38,6 +38,29 @@ document.
   (summarisation) or different upload rows. Spread (proportional) only runs when a G/L
   has fewer line items than Excel lines; otherwise amounts are copied as entered (12/10/26).
 
+## UPDATE_AMOUNT (14/10/26 version)
+
+- One method body, no signature change (`T_BSEG` CHANGING as since 30/09). Enhancement
+  `ZFI_ENHGL_POST_DOCUMENT` unchanged.
+- Reads `ZINV_POST_GL` with `SELECT *` and accesses the key fields **dynamically** by name
+  (`ASSIGN COMPONENT`): `COSTCENTER`, `WBSELEMENT`, `PROFITCENT`, `GLASSIGNMENT`,
+  `GLITMTXT`, `DEB_CRE`. These are the names of the Excel line type in
+  `ZCL_INV_UTILITY->validate_inv_data_gl` (`lty_gl_det`), which the table is believed to
+  mirror (`glaccount`, `amt_*` are confirmed). A name that does not exist in the table is
+  simply not used, no dump, no activation error. **Check SE11 ZINV_POST_GL once**: the SLG1
+  line "keys ..." shows which fields were actually found and usable, "D/C known X" whether
+  `DEB_CRE` exists. If a field is named differently, change the literal in `lt_map`.
+- Matching: per G/L, Excel lines are placed onto line items so that document amounts add up
+  exactly and key fields agree (Excel blank = wildcard, since SAP derives profit centre,
+  assignment etc.). Level 1 uses all usable fields, level 2 cost centre + WBS only, level 3
+  amounts only; a lower level is tried only when nothing fits. One fit -> written; several
+  fits with different sums -> ambiguous, untouched; 200,000 search steps -> untouched.
+- Log: SLG1, Object blank, External ID `PR01 4800000140 2026`. Message type S = restored,
+  E = not restored (with the G/L and the reason), I = nothing to restore (currency setup).
+- Cannot be fixed here, by design: document currency = local currency (local is always the
+  document amount), document amounts changed after the upload (no fit), files before the
+  29/09 behaviour-pool fix (group stored = local, group left to SAP).
+
 ## Shipping: PASTE ONLY
 
 Method body inside an enhancement of a standard class.
