@@ -27,5 +27,12 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
 - Without a start condition the linkage fires for every parked FI document in the client.
 - Object names are chosen by Claude with a Z prefix; Arnav creates them in the system.
 - `FIPP.CREATED` is NOT raised by SAP on park unless OBWA posting-release customising exists.
-  This build raises it itself from BTE `00002218` (object 2). Without object 2, FB70 park
-  starts nothing, and SWEL shows no event line at all.
+  Proven 14/10/26 by debugger trace: no customer BAdI runs after the park save; BTE
+  `00002218` is the only post-save hook and a registered Z module on it fires.
+- Object 2 is two modules, both paste-only in FG `ZFI_CM_APPR`:
+  `Z_FI_CM_APPR_PARK_EVENT` (BTE, inside the park LUW, no commit) calls
+  `Z_FI_CM_APPR_START_WF` IN BACKGROUND TASK, which runs after the park commit and reuses
+  `zcl_gl_workflow->start_workflow` (standard journal entry verification, `WS02800046`).
+  Whether that standard scenario accepts an FB70 customer credit memo is still to be tested.
+- Never put a WAIT in the BTE to "let the data post": the BTE runs before the commit, so the
+  wait proves nothing. The background task ordering is the guarantee.
