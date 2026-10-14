@@ -19,6 +19,17 @@ pasted into SE24. Tables are built by hand in SE11 from the build sheet.
 
 Nothing here is SE80-downloaded original code; there is no `original/` folder.
 
+## Where it stands (14/10/26)
+
+- `Z_FI_CM_APPR_PARK_EVENT` and `Z_FI_CM_APPR_START_WF` active in DEV, FG `ZFI_CM_APPR`.
+- FIBF: P/S entry `00002218` -> `Z_FI_CM_APPR_PARK_EVENT`, product `ZFI` (existing, active).
+  No separate `ZFICMAPR` product was created.
+- Not yet tested end to end: FI to supply a DEV customer, G/L account, tax code and confirm
+  document type `DG`. Test checklist: park in FB70 -> `SM58` empty for the user ->
+  `VBKPF-XWFFR` = X -> document in approver inbox. Negative test with type `DR`: nothing.
+- Open decision after the test: does the standard verification scenario accept a customer
+  credit memo? If yes, objects 4-7 of `docs/00_DESIGN.md` are not needed.
+
 ## Gotchas
 
 - FB70 *Hold* is not *Park*. Held documents raise no `FIPP` event.
