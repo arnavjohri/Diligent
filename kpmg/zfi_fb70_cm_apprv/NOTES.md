@@ -42,8 +42,8 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
   `00002218` is the only post-save hook and a registered Z module on it fires.
 - Object 2 is two modules, both paste-only in FG `ZFI_CM_APPR`:
   `Z_FI_CM_APPR_PARK_EVENT` (BTE, inside the park LUW, no commit) calls
-  `Z_FI_CM_APPR_START_WF` IN BACKGROUND TASK, which runs after the park commit and reuses
+  `Z_FI_CM_APPR_START_WF` STARTING NEW TASK, which waits 5 seconds and reuses
   `zcl_gl_workflow->start_workflow` (standard journal entry verification, `WS02800046`).
   Whether that standard scenario accepts an FB70 customer credit memo is still to be tested.
-- Never put a WAIT in the BTE to "let the data post": the BTE runs before the commit, so the
-  wait proves nothing. The background task ordering is the guarantee.
+- Team pattern (decided 14/10/26): the BTE calls the RFC module STARTING NEW TASK and the RFC
+  module starts with WAIT UP TO 5 SECONDS, same as Z_JV_MASSGL_WF in the mass GL program.

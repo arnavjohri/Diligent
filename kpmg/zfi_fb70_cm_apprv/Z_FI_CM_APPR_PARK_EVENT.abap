@@ -17,9 +17,10 @@ FUNCTION z_fi_cm_appr_park_event.
 * Description     : BTE 00002218 (PRELIMINARY POSTING: When document is
 *                   saved). Fires inside the FB70 park transaction before
 *                   its COMMIT WORK. Filters for a customer credit memo on
-*                   first park and registers Z_FI_CM_APPR_START_WF as a
-*                   background task, which runs only after the parking
-*                   transaction has committed and VBKPF exists.
+*                   first park and calls Z_FI_CM_APPR_START_WF
+*                   asynchronously (STARTING NEW TASK), same pattern as
+*                   Z_JV_MASSGL_WF in the mass GL program. The called
+*                   module waits 5 seconds for the park to commit.
 *                   No database write and no COMMIT WORK here.
 * Registration    : FIBF -> Settings -> P/S Modules -> of a customer,
 *                   event 00002218, product ZFICMAPR (active).
@@ -82,13 +83,12 @@ FUNCTION z_fi_cm_appr_park_event.
     RETURN.
   ENDIF.
 
-*--- 7. Hand over to the RFC module. IN BACKGROUND TASK = executed only
-*      after the parking transaction's COMMIT WORK, in its own LUW, so
-*      VBKPF is on the database and the workflow start may COMMIT.
-*      If the user cancels the park, this call is discarded with it.
-*      Failures are visible in SM58.
+*--- 7. Hand over to the RFC module in a new task (asynchronous RFC,
+*      own session, own LUW). The called module waits 5 seconds so the
+*      park transaction has committed before it reads VBKPF.
   CALL FUNCTION 'Z_FI_CM_APPR_START_WF'
-    IN BACKGROUND TASK
+    STARTING NEW TASK 'ZCMAPR'
+    DESTINATION 'NONE'
     EXPORTING
       iv_bukrs = ls_new-bukrs
       iv_belnr = ls_new-belnr
