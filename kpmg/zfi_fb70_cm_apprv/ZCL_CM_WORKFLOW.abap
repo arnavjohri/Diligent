@@ -1,6 +1,5 @@
 *----------------------------------------------------------------------*
-* Class       : ZCL_CM_WORKFLOW   (SE24, form-based)
-* Method      : START_WORKFLOW
+* Class       : ZCL_CM_WORKFLOW
 * Author      : Arnav Johri
 * Date        : 15.10.2026
 * Description : Copy of ZCL_GL_WORKFLOW->START_WORKFLOW for a customer
@@ -12,24 +11,40 @@
 *                 with an empty VBSET would delete the tax lines;
 *               - the status SELECT at the end removed: it runs before
 *                 the caller's COMMIT WORK and would always give 'E'.
-*
-* Method signature (Parameters tab):
-*   IT_VBKPF     Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBKPF
-*   IT_VBSEG     Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBSEG
-*   IT_VBSEC     Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBSEC   optional
-*   IT_YVBKPF    Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBKPF   optional
-*   IT_YVBSEG    Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBSEG   optional
-*   IT_YVBSEC    Importing  TYPE  ZCL_CM_WORKFLOW=>TT_VBSEC   optional
-*   IV_SUBMITTER Importing  TYPE  SYUNAME                     optional
-*   EV_STATUS    Exporting  TYPE  CHAR1
-* Types tab (public):
-*   TT_VBKPF  TYPE STANDARD TABLE OF FVBKPF WITH DEFAULT KEY
-*   TT_VBSEG  TYPE STANDARD TABLE OF FVBSEG WITH DEFAULT KEY
-*   TT_VBSEC  TYPE STANDARD TABLE OF FVBSEC WITH DEFAULT KEY
-* Attributes tab (public, constant):
-*   GC_STATUS_OK   TYPE CHAR1  VALUE 'S'
-*   GC_STATUS_ERR  TYPE CHAR1  VALUE 'E'
+* Create via  : ADT or SE24 source-based, paste whole file.
 *----------------------------------------------------------------------*
+CLASS zcl_cm_workflow DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    TYPES: tt_vbkpf TYPE STANDARD TABLE OF fvbkpf WITH DEFAULT KEY,
+           tt_vbseg TYPE STANDARD TABLE OF fvbseg WITH DEFAULT KEY,
+           tt_vbsec TYPE STANDARD TABLE OF fvbsec WITH DEFAULT KEY.
+
+    CONSTANTS: gc_status_ok  TYPE char1 VALUE 'S',
+               gc_status_err TYPE char1 VALUE 'E'.
+
+    METHODS start_workflow
+      IMPORTING
+        it_vbkpf     TYPE tt_vbkpf
+        it_vbseg     TYPE tt_vbseg
+        it_vbsec     TYPE tt_vbsec OPTIONAL
+        it_yvbkpf    TYPE tt_vbkpf OPTIONAL
+        it_yvbseg    TYPE tt_vbseg OPTIONAL
+        it_yvbsec    TYPE tt_vbsec OPTIONAL
+        iv_submitter TYPE syuname OPTIONAL
+      EXPORTING
+        ev_status    TYPE char1.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+ENDCLASS.
+
+
+CLASS zcl_cm_workflow IMPLEMENTATION.
+
   METHOD start_workflow.
 ** Data Declarations
     DATA: lv_objtype          TYPE sibftypeid,
@@ -226,3 +241,5 @@
               it_accountgroup ,
               it_companycode.
   ENDMETHOD.
+
+ENDCLASS.
