@@ -10,14 +10,13 @@
 *                 over by BTE 00002218 (header, segments, one-time data)
 *                 instead of reading it by key; the Y (old state) tables
 *                 are received but not evaluated in this version;
+*               - no PRELIMINARY_POSTING_DOC_READ / _WRITE: the release
+*                 flag XWFFR is set on the parked header with a single
+*                 field update, FB70 has already filled BZALT itself;
 *               - no status read after the raise: the event is delivered
 *                 only after the caller's COMMIT WORK, so the caller
 *                 (Z_FI_CM_APPR_START_WF) commits or rolls back on
 *                 EV_STATUS.
-*               The release flag XWFFR still goes through
-*               PRELIMINARY_POSTING_DOC_READ / _WRITE on the database
-*               copy: DOC_WRITE rewrites all four tables and the BTE
-*               does not hand over VBSET (tax lines).
 * Create via  : SE24 (source-based) or ADT, paste whole file.
 *----------------------------------------------------------------------*
 CLASS zcl_cm_workflow DEFINITION
@@ -114,9 +113,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-*--- 2. Release flag on the database copy (same two calls as
-*      ZCL_GL_WORKFLOW). The document must already be committed;
-*      Z_FI_CM_APPR_START_WF guarantees that before calling here.
+*--- 2. Release flag on the parked header. The document must already be
+*      committed; Z_FI_CM_APPR_START_WF guarantees that before calling.
     IF set_release_flag( ls_vbkpf ) = abap_false.
       RETURN.
     ENDIF.
@@ -242,61 +240,23 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
 
   METHOD set_release_flag.
-    DATA: lt_vbkpf TYPE STANDARD TABLE OF fvbkpf,
-          lt_vbseg TYPE STANDARD TABLE OF fvbseg,
-          lt_vbsec TYPE STANDARD TABLE OF fvbsec,
-          lt_vbset TYPE STANDARD TABLE OF fvbset.
-
-    FIELD-SYMBOLS: <ls_vbkpf> TYPE fvbkpf,
-                   <ls_vbseg> TYPE fvbseg.
-
+*   ZCL_GL_WORKFLOW sets XWFFR through PRELIMINARY_POSTING_DOC_READ and
+*   _WRITE and fills BZALT on the way, because the GL upload parks via
+*   BAPI. FB70 fills BZALT itself, so only the flag is needed here and
+*   it is set directly, without reading the document back.
+*   XWFFR is the only field changed; the row was written by FB70 and
+*   committed before this runs. Committed or rolled back by the caller
+*   together with the event.
+* ASSUMPTION: FB70 is single company code, so BUKRS identifies the row
+*             (VBKPF key is AUSBK/BELNR/GJAHR, equal to BUKRS here).
     rv_ok = abap_false.
 
-    CALL FUNCTION 'PRELIMINARY_POSTING_DOC_READ'
-      EXPORTING
-        belnr                   = is_vbkpf-belnr
-        bukrs                   = is_vbkpf-bukrs
-        gjahr                   = is_vbkpf-gjahr
-      TABLES
-        t_vbkpf                 = lt_vbkpf
-        t_vbsec                 = lt_vbsec
-        t_vbseg                 = lt_vbseg
-        t_vbset                 = lt_vbset
-      EXCEPTIONS
-        document_line_not_found = 1
-        document_not_found      = 2
-        input_incomplete        = 3
-        OTHERS                  = 4.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    READ TABLE lt_vbkpf ASSIGNING <ls_vbkpf> INDEX 1.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-    <ls_vbkpf>-xwffr = abap_true.
-
-*   BZALT must be filled for the verification app, as in ZCL_GL_WORKFLOW
-    LOOP AT lt_vbseg ASSIGNING <ls_vbseg>.
-      IF <ls_vbseg>-bzalt IS INITIAL.
-        <ls_vbseg>-bzalt = <ls_vbseg>-buzei.
-      ENDIF.
-    ENDLOOP.
-
-    CALL FUNCTION 'PRELIMINARY_POSTING_DOC_WRITE'
-      TABLES
-        t_vbkpf              = lt_vbkpf
-        t_vbsec              = lt_vbsec
-        t_vbseg              = lt_vbseg
-        t_vbset              = lt_vbset
-      EXCEPTIONS
-        abnormal_termination = 1
-        insert_error         = 2
-        update_error         = 3
-        read_error           = 4
-        OTHERS               = 5.
-    IF sy-subrc = 0.
+    UPDATE vbkpf
+      SET xwffr = @abap_true
+      WHERE bukrs = @is_vbkpf-bukrs
+        AND belnr = @is_vbkpf-belnr
+        AND gjahr = @is_vbkpf-gjahr.
+    IF sy-subrc = 0 AND sy-dbcnt = 1.
       rv_ok = abap_true.
     ENDIF.
 
