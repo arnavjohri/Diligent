@@ -3687,11 +3687,25 @@ FORM generate_header_data.
   tempbal = CONV #( tempbal1 ).
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
 *BOC By Arnav on 10/10/26
-* Closing balance = opening (OPBL) + net of the uploaded lines, otherwise
-* FF67 rejects the statement with FV 072 (items <> closing - opening).
-  DATA lv_esald LIKE bseg-wrbtr.
+* 10/10/26: Closing balance = opening (OPBL) + net of the uploaded lines.
+* 15/10/26: the computed closing did not match the bank statement. The
+* closing balance now comes from the selection screen (CLBL), exactly as
+* entered, like the opening balance (OPBL). The computed figure is printed
+* next to it, so a difference (missing lines or a sign problem in the
+* bank file) is visible before FF67 checks it with FV 072.
+  DATA: lv_esald LIKE bseg-wrbtr,
+        lv_diff  LIKE bseg-wrbtr.
+*  lv_esald = opbl + tempbal1.
+*  tempbal = CONV #( lv_esald ).
   lv_esald = opbl + tempbal1.
-  tempbal = CONV #( lv_esald ).
+  tempbal = CONV #( clbl ).
+  WRITE:/ 'Opening balance (selection screen) :', opbl,
+        / 'Closing balance (selection screen) :', clbl,
+        / 'Opening + uploaded lines           :', lv_esald.
+  IF lv_esald <> clbl.
+    lv_diff = clbl - lv_esald.
+    WRITE:/ 'Difference                         :', lv_diff.
+  ENDIF.
 *EOC By Arnav on 10/10/26
   PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
   WRITE postdt TO sy-tvar0.
