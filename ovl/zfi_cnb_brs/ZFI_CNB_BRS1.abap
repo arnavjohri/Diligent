@@ -3680,7 +3680,18 @@ FORM generate_header_data.
 * ---- Convert Statement Date into SAP Date Format
   WRITE azdat TO sy-tvar0.
   PERFORM bdc_field       USING 'FEBMKA-AZDAT' sy-tvar0.
-  tempbal = opbl.
+*BOC By Arnav on 15/10/26
+* Bank file / selection screen use the bank-side sign: a credit balance is
+* negative (Validation: CLBL - OPBL = debits - credits). FF67 items are
+* sent company-side (credit/receipt +, debit/payment -), so FF67 needs the
+* balances with the opposite sign, otherwise FV 072. Statement 449 check:
+* bank 10,199,887.66 Cr -> 2,798,775.10 Cr, credits - debits = -7,401,112.56
+* FF67: +10,199,887.66 - 7,401,112.56 = +2,798,775.10.
+*  tempbal = opbl.
+  DATA lv_ssald LIKE bseg-wrbtr.
+  lv_ssald = 0 - opbl.
+  tempbal = CONV #( lv_ssald ).
+*EOC By Arnav on 15/10/26
   PERFORM bdc_field       USING 'FEBMKA-SSALD' tempbal.
 ***S/4 Start of Change - SAP_ABAP5 — TR RP1K951283   – 2022/05/27
 *  tempbal = tempbal1.
@@ -3688,23 +3699,25 @@ FORM generate_header_data.
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
 *BOC By Arnav on 10/10/26
 * 10/10/26: Closing balance = opening (OPBL) + net of the uploaded lines.
-* 15/10/26: the computed closing did not match the bank statement. The
-* closing balance now comes from the selection screen (CLBL), exactly as
-* entered, like the opening balance (OPBL). The computed figure is printed
-* next to it, so a difference (missing lines or a sign problem in the
-* bank file) is visible before FF67 checks it with FV 072.
+* 15/10/26: closing balance = CLBL from the selection screen with the
+* sign flipped like the opening (see SSALD). Opening + uploaded lines is
+* printed next to it; a difference means lines are missing (FF67: FV 072).
   DATA: lv_esald LIKE bseg-wrbtr,
         lv_diff  LIKE bseg-wrbtr.
 *  lv_esald = opbl + tempbal1.
 *  tempbal = CONV #( lv_esald ).
-  lv_esald = opbl + tempbal1.
-  tempbal = CONV #( clbl ).
-  WRITE:/ 'Opening balance (selection screen) :', opbl,
-        / 'Closing balance (selection screen) :', clbl,
-        / 'Opening + uploaded lines           :', lv_esald.
-  IF lv_esald <> clbl.
-    lv_diff = clbl - lv_esald.
-    WRITE:/ 'Difference                         :', lv_diff.
+*  lv_esald = opbl + tempbal1.
+*  tempbal = CONV #( clbl ).
+* 15/10/26: balances go to FF67 with the sign flipped (see SSALD above).
+  lv_esald = lv_ssald + tempbal1.
+  lv_diff = 0 - clbl.
+  tempbal = CONV #( lv_diff ).
+  WRITE:/ 'Opening balance to FF67          :', lv_ssald,
+        / 'Closing balance to FF67          :', lv_diff,
+        / 'Opening + uploaded lines         :', lv_esald.
+  IF lv_esald <> lv_diff.
+    lv_diff = lv_diff - lv_esald.
+    WRITE:/ 'Difference (FF67 will give FV072):', lv_diff.
   ENDIF.
 *EOC By Arnav on 10/10/26
   PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
