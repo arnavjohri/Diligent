@@ -79,9 +79,6 @@
       WHERE ausbk = @<fs_vbkpf>-ausbk
         AND belnr = @<fs_vbkpf>-belnr
         AND gjahr = @<fs_vbkpf>-gjahr.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
 
     IF lt_vbseg IS NOT INITIAL.
       SELECT saknr , ktoks FROM ska1 FOR ALL ENTRIES IN @lt_vbseg
