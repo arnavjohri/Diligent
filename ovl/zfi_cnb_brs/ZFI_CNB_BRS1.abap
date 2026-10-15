@@ -3698,17 +3698,15 @@ FORM generate_header_data.
   tempbal = CONV #( tempbal1 ).
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
 *BOC By Arnav on 10/10/26
-* 10/10/26: Closing balance = opening (OPBL) + net of the uploaded lines.
-* 15/10/26: closing balance = CLBL from the selection screen with the
-* sign flipped like the opening (see SSALD). Opening + uploaded lines is
-* printed next to it; a difference means lines are missing (FF67: FV 072).
+* Closing balance = opening (OPBL) + net of the uploaded lines, otherwise
+* FF67 rejects the statement with FV 072 (items <> closing - opening).
+* 15/10/26: closing = CLBL with the sign flipped like the opening (see
+* SSALD above). Opening + uploaded lines is printed next to it; a
+* difference means lines are missing and FF67 will give FV 072.
   DATA: lv_esald LIKE bseg-wrbtr,
         lv_diff  LIKE bseg-wrbtr.
 *  lv_esald = opbl + tempbal1.
 *  tempbal = CONV #( lv_esald ).
-*  lv_esald = opbl + tempbal1.
-*  tempbal = CONV #( clbl ).
-* 15/10/26: balances go to FF67 with the sign flipped (see SSALD above).
   lv_esald = lv_ssald + tempbal1.
   lv_diff = 0 - clbl.
   tempbal = CONV #( lv_diff ).
