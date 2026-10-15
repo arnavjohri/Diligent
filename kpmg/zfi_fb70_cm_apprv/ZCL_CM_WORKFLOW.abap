@@ -2,21 +2,16 @@
 * Class       : ZCL_CM_WORKFLOW
 * Author      : Arnav Johri
 * Date        : 15.10.2026
-* Description : Starts the journal entry verification workflow
-*               (scenario WS02800046, class CL_FDC_ACCDOC_VER, event
-*               SUBMITTED) for a customer credit memo parked in FB70.
-*               Credit memo counterpart of ZCL_GL_WORKFLOW. Differences:
-*               - takes the parked document as the X and Y tables handed
-*                 over by BTE 00002218 (header, segments, one-time data)
-*                 instead of reading it by key; the Y (old state) tables
-*                 are received but not evaluated in this version;
-*               - no PRELIMINARY_POSTING_DOC_READ / _WRITE: the release
-*                 flag XWFFR is set on the parked header with a single
-*                 field update, FB70 has already filled BZALT itself;
-*               - no status read after the raise: the event is delivered
-*                 only after the caller's COMMIT WORK, so the caller
-*                 (Z_FI_CM_APPR_START_WF) commits or rolls back on
-*                 EV_STATUS.
+* Description : Credit memo copy of ZCL_GL_WORKFLOW->START_WORKFLOW.
+*               Raises CL_FDC_ACCDOC_VER.SUBMITTED (scenario WS02800046)
+*               for a customer credit memo parked in FB70.
+*               Same sequence as the GL class; differences only:
+*               - document comes in as the BTE 00002218 tables instead
+*                 of PRELIMINARY_POSTING_DOC_READ;
+*               - XWFFR set by UPDATE instead of DOC_WRITE (no VBSET
+*                 available, BZALT already filled by FB70);
+*               - no status select after the raise (runs before the
+*                 caller's COMMIT WORK); caller commits on EV_STATUS = S.
 * Create via  : SE24 (source-based) or ADT, paste whole file.
 *----------------------------------------------------------------------*
 CLASS zcl_cm_workflow DEFINITION
@@ -32,13 +27,6 @@ CLASS zcl_cm_workflow DEFINITION
     CONSTANTS: gc_status_ok  TYPE char1 VALUE 'S',
                gc_status_err TYPE char1 VALUE 'E'.
 
-    "! Raise CL_FDC_ACCDOC_VER.SUBMITTED for the parked credit memo.
-    "! IT_VBKPF/IT_VBSEG/IT_VBSEC: X tables (new state) from BTE 00002218.
-    "! IT_YVBKPF/IT_YVBSEG/IT_YVBSEC: Y tables (old state), empty on first
-    "!   park; received for completeness, not evaluated in this version.
-    "! IV_SUBMITTER: FB70 user; SY-UNAME when initial.
-    "! EV_STATUS: S = event raised, caller must COMMIT WORK.
-    "!            E = nothing raised, caller must ROLLBACK WORK.
     METHODS start_workflow
       IMPORTING
         it_vbkpf     TYPE tt_vbkpf
@@ -52,226 +40,194 @@ CLASS zcl_cm_workflow DEFINITION
         ev_status    TYPE char1.
 
   PROTECTED SECTION.
-
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_saknr,
-             saknr TYPE saknr,
-           END OF ty_saknr,
-           tt_saknr TYPE STANDARD TABLE OF ty_saknr WITH DEFAULT KEY,
-           BEGIN OF ty_acc_grp,
-             saknr TYPE saknr,
-             ktoks TYPE ktoks,
-           END OF ty_acc_grp,
-           tt_acc_grp TYPE STANDARD TABLE OF ty_acc_grp WITH DEFAULT KEY.
-
-    CONSTANTS: gc_objtype TYPE sibftypeid VALUE 'CL_FDC_ACCDOC_VER',
-               gc_event   TYPE sibfevent  VALUE 'SUBMITTED',
-               gc_debit   TYPE shkzg      VALUE 'S',
-               gc_us      TYPE c LENGTH 2 VALUE 'US'.
-
-    METHODS set_release_flag
-      IMPORTING
-        is_vbkpf     TYPE fvbkpf
-      RETURNING
-        VALUE(rv_ok) TYPE abap_bool.
-
-    METHODS set_element
-      IMPORTING
-        io_container TYPE REF TO if_swf_ifs_parameter_container
-        iv_name      TYPE swfdname
-        iv_value     TYPE any.
-
 ENDCLASS.
 
 
 CLASS zcl_cm_workflow IMPLEMENTATION.
 
   METHOD start_workflow.
-    DATA: ls_vbkpf      TYPE fvbkpf,
-          ls_vbseg      TYPE fvbseg,
-          lv_amt_coc    TYPE vbsegs-dmbtr,
-          lv_amt_glb    TYPE vbsegs-dmbe2,
-          lv_amt_third  TYPE vbsegs-dmbe3,
-          lv_amt_func   TYPE vbsegs-wrbtr,
-          lt_costcenter TYPE kostl_t,
-          lt_accgroup   TYPE ktoks_t,
-          lt_bukrs      TYPE fdc_bukrs_t,
-          lt_saknr      TYPE tt_saknr,
-          ls_saknr      TYPE ty_saknr,
-          lt_acc_grp    TYPE tt_acc_grp,
-          ls_acc_grp    TYPE ty_acc_grp,
-          ls_lpor       TYPE sibflpor,
-          lv_submitter  TYPE string,
-          lo_doc        TYPE REF TO cl_fdc_accdoc_ver,
-          lo_container  TYPE REF TO if_swf_ifs_parameter_container.
+** Data Declarations
+    DATA: lv_objtype          TYPE sibftypeid,
+          lv_event            TYPE sibfevent,
+          lr_event_parameters TYPE REF TO if_swf_ifs_parameter_container,
+          ls_lpor             TYPE sibflpor,
+          ls_vbkpf            TYPE fvbkpf,
+          lv_amt_coc          TYPE vbsegs-dmbtr,
+          lv_amt_glb          TYPE vbsegs-dmbe2,
+          lv_amt_third        TYPE vbsegs-dmbe3,
+          lv_amt_func         TYPE vbsegs-wrbtr,
+          lv_submitter        TYPE string,
+          it_costcenter       TYPE kostl_t,
+          it_accountgroup     TYPE ktoks_t,
+          it_companycode      TYPE fdc_bukrs_t.
 
     ev_status = gc_status_err.
 
-*--- 1. Header: the X table carries exactly one parked document
+* Setting values of Event Name
+    lv_objtype = 'CL_FDC_ACCDOC_VER'. " Class Name
+    lv_event   = 'SUBMITTED'.         " Event Name
+
+* Parked document header as handed over by BTE 00002218
     READ TABLE it_vbkpf INTO ls_vbkpf INDEX 1.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
-*--- 2. Release flag on the parked header. The document must already be
-*      committed; Z_FI_CM_APPR_START_WF guarantees that before calling.
-    IF set_release_flag( ls_vbkpf ) = abap_false.
+* Workflow release flag (GL class: DOC_READ + DOC_WRITE)
+* ASSUMPTION: single company code, BUKRS identifies the VBKPF row
+    UPDATE vbkpf
+      SET xwffr = @abap_true
+      WHERE bukrs = @ls_vbkpf-bukrs
+        AND belnr = @ls_vbkpf-belnr
+        AND gjahr = @ls_vbkpf-gjahr.
+    IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
-*--- 3. Amounts for the workflow conditions: sum of the debit lines,
-*      the same rule as ZCL_GL_WORKFLOW so the configured thresholds
-*      mean the same thing for both flows.
-* ASSUMPTION: thresholds are compared net of tax. For a credit memo the
-*             debit lines are the revenue lines; tax sits in VBSET and
-*             the customer line is the credit. If FI wants the gross
-*             customer amount, sum the credit lines (SHKZG = 'H') here.
+* Account groups of the G/L lines
+    IF it_vbseg IS NOT INITIAL.
+      SELECT saknr, ktoks
+        FROM ska1
+        FOR ALL ENTRIES IN @it_vbseg
+        WHERE saknr = @it_vbseg-saknr
+        INTO TABLE @DATA(lt_acc_grp).
+    ENDIF.
+
+    LOOP AT it_vbseg INTO DATA(ls_item).
+      IF ls_item-kostl IS NOT INITIAL.
+        APPEND ls_item-kostl TO it_costcenter.
+      ENDIF.
+
+      READ TABLE lt_acc_grp INTO DATA(ls_acc_grp) WITH KEY saknr = ls_item-saknr.
+      IF sy-subrc = 0 AND ls_acc_grp-ktoks IS NOT INITIAL.
+        APPEND ls_acc_grp-ktoks TO it_accountgroup.
+      ENDIF.
+    ENDLOOP.
+
+    APPEND ls_vbkpf-bukrs TO it_companycode.
+
+* Amounts: sum of debit lines, as in the GL class
+* ASSUMPTION: thresholds compared net of tax (debit = revenue lines).
+*             For gross use the credit lines, SHKZG = 'H'.
     CLEAR: lv_amt_coc, lv_amt_glb, lv_amt_third, lv_amt_func.
-    LOOP AT it_vbseg INTO ls_vbseg WHERE shkzg = gc_debit.
+    LOOP AT it_vbseg INTO DATA(ls_vbseg) WHERE shkzg = 'S'.
       lv_amt_coc   = lv_amt_coc   + ls_vbseg-dmbtr.
       lv_amt_glb   = lv_amt_glb   + ls_vbseg-dmbe2.
       lv_amt_third = lv_amt_third + ls_vbseg-dmbe3.
       lv_amt_func  = lv_amt_func  + ls_vbseg-wrbtr.
     ENDLOOP.
 
-*--- 4. Cost centres and account groups of the lines, company code
-    CLEAR: lt_costcenter, lt_accgroup, lt_bukrs, lt_saknr.
-    LOOP AT it_vbseg INTO ls_vbseg.
-      IF ls_vbseg-kostl IS NOT INITIAL.
-        APPEND ls_vbseg-kostl TO lt_costcenter.
-      ENDIF.
-      IF ls_vbseg-saknr IS NOT INITIAL.
-        ls_saknr-saknr = ls_vbseg-saknr.
-        APPEND ls_saknr TO lt_saknr.
-      ENDIF.
-    ENDLOOP.
+    DATA(lr_wf_cm) = NEW cl_fdc_accdoc_ver(
+                       iv_accdocnumber           = ls_vbkpf-belnr
+                       iv_sourcecompanycode      = ls_vbkpf-bukrs
+                       iv_fiscalyear             = ls_vbkpf-gjahr
+                       iv_amountincocdcrcy       = lv_amt_coc
+                       iv_accountingdocumenttype = ls_vbkpf-blart
+                       iv_amountinglobcrcy       = lv_amt_glb
+                       iv_amountinthirdcrcy      = lv_amt_third
+                       iv_amountinfunccrcy       = lv_amt_func
+                       it_costcenter             = it_costcenter
+                       it_accountgroup           = it_accountgroup
+                       it_companycode            = it_companycode ).
 
-    SORT lt_saknr BY saknr.
-    DELETE ADJACENT DUPLICATES FROM lt_saknr COMPARING saknr.
+    ls_lpor-instid = lr_wf_cm->ms_por-instid. "Get the key
 
-    IF lt_saknr IS NOT INITIAL.
-*     Account group by G/L account, all charts of accounts, as in
-*     ZCL_GL_WORKFLOW. The customer line has no SAKNR and is skipped.
-      SELECT saknr, ktoks
-        FROM ska1
-        FOR ALL ENTRIES IN @lt_saknr
-        WHERE saknr = @lt_saknr-saknr
-        INTO TABLE @lt_acc_grp.
-      LOOP AT lt_acc_grp INTO ls_acc_grp WHERE ktoks IS NOT INITIAL.
-        APPEND ls_acc_grp-ktoks TO lt_accgroup.
-      ENDLOOP.
-    ENDIF.
-
-    APPEND ls_vbkpf-bukrs TO lt_bukrs.
-
-*--- 5. Application object of the standard scenario
-* ASSUMPTION: FB70 is single company code, so VBKPF-BUKRS is also the
-*             source company code of the parked document key.
-    CREATE OBJECT lo_doc
+    CALL METHOD cl_swf_evt_event=>get_event_container
       EXPORTING
-        iv_accdocnumber           = ls_vbkpf-belnr
-        iv_sourcecompanycode      = ls_vbkpf-bukrs
-        iv_fiscalyear             = ls_vbkpf-gjahr
-        iv_accountingdocumenttype = ls_vbkpf-blart
-        iv_amountincocdcrcy       = lv_amt_coc
-        iv_amountinglobcrcy       = lv_amt_glb
-        iv_amountinthirdcrcy      = lv_amt_third
-        iv_amountinfunccrcy       = lv_amt_func
-        it_costcenter             = lt_costcenter
-        it_accountgroup           = lt_accgroup
-        it_companycode            = lt_bukrs.
-
-    ls_lpor-instid = lo_doc->ms_por-instid.
-
-*--- 6. Event container, element names as in ZCL_GL_WORKFLOW
-    lo_container = cl_swf_evt_event=>get_event_container(
-                     im_objcateg = cl_swf_evt_event=>mc_objcateg_cl
-                     im_objtype  = gc_objtype
-                     im_event    = gc_event ).
+        im_objcateg  = cl_swf_evt_event=>mc_objcateg_cl
+        im_objtype   = lv_objtype
+        im_event     = lv_event
+      RECEIVING
+        re_reference = lr_event_parameters.
 
     IF iv_submitter IS NOT INITIAL.
-      lv_submitter = gc_us && iv_submitter.
+      lv_submitter = 'US' && iv_submitter.
     ELSE.
-      lv_submitter = gc_us && sy-uname.
+      lv_submitter = 'US' && sy-uname.
     ENDIF.
 
-    set_element( io_container = lo_container
-                 iv_name      = 'AccountingDocumentType'
-                 iv_value     = lo_doc->blart ).
-    set_element( io_container = lo_container
-                 iv_name      = 'AmountInCompanyCodeCurrency'
-                 iv_value     = lo_doc->dmbtr ).
-    set_element( io_container = lo_container
-                 iv_name      = 'AmountInGlobalCurrency'
-                 iv_value     = lo_doc->dmbe2 ).
-    set_element( io_container = lo_container
-                 iv_name      = 'AmountInThirdCurrency'
-                 iv_value     = lo_doc->dmbe3 ).
-    set_element( io_container = lo_container
-                 iv_name      = 'AmountInFunctionalCurrency'
-                 iv_value     = lo_doc->fcsl ).
-    set_element( io_container = lo_container
-                 iv_name      = 'CostCenter_T'
-                 iv_value     = lo_doc->mt_costcenter ).
-    set_element( io_container = lo_container
-                 iv_name      = 'AccountGroup_T'
-                 iv_value     = lo_doc->mt_accountgroup ).
-    set_element( io_container = lo_container
-                 iv_name      = 'CompanyCode_T'
-                 iv_value     = lo_doc->mt_companycode ).
-    set_element( io_container = lo_container
-                 iv_name      = 'Submitter'
-                 iv_value     = lv_submitter ).
-
-*--- 7. Raise. Delivered on the caller's COMMIT WORK.
     TRY.
-        cl_swf_evt_event=>raise(
-          im_objcateg        = cl_swf_evt_event=>mc_objcateg_cl
-          im_objtype         = gc_objtype
-          im_event           = gc_event
-          im_objkey          = ls_lpor-instid
-          im_event_container = lo_container ).
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AccountingDocumentType'
+            value = lr_wf_cm->blart.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AmountInCompanyCodeCurrency'
+            value = lr_wf_cm->dmbtr.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AmountInGlobalCurrency'
+            value = lr_wf_cm->dmbe2.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AmountInThirdCurrency'
+            value = lr_wf_cm->dmbe3.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AmountInFunctionalCurrency'
+            value = lr_wf_cm->fcsl.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'CostCenter_T'
+            value = lr_wf_cm->mt_costcenter.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'AccountGroup_T'
+            value = lr_wf_cm->mt_accountgroup.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'CompanyCode_T'
+            value = lr_wf_cm->mt_companycode.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+    TRY.
+        CALL METHOD lr_event_parameters->set
+          EXPORTING
+            name  = 'Submitter'
+            value = lv_submitter.
+      CATCH cx_root.                                     "#EC CATCH_ALL
+    ENDTRY.
+
+* Raise the event passing the prepared event container.
+* Delivered on the caller's COMMIT WORK (Z_FI_CM_APPR_START_WF).
+    TRY.
+        CALL METHOD cl_swf_evt_event=>raise
+          EXPORTING
+            im_objcateg        = cl_swf_evt_event=>mc_objcateg_cl
+            im_objtype         = lv_objtype
+            im_event           = lv_event
+            im_objkey          = ls_lpor-instid
+            im_event_container = lr_event_parameters.
         ev_status = gc_status_ok.
-      CATCH cx_swf_evt_invalid_objtype cx_swf_evt_invalid_event.
+      CATCH cx_swf_evt_invalid_objtype.
+        ev_status = gc_status_err.
+      CATCH cx_swf_evt_invalid_event.
         ev_status = gc_status_err.
     ENDTRY.
 
-  ENDMETHOD.
-
-
-  METHOD set_release_flag.
-*   ZCL_GL_WORKFLOW sets XWFFR through PRELIMINARY_POSTING_DOC_READ and
-*   _WRITE and fills BZALT on the way, because the GL upload parks via
-*   BAPI. FB70 fills BZALT itself, so only the flag is needed here and
-*   it is set directly, without reading the document back.
-*   XWFFR is the only field changed; the row was written by FB70 and
-*   committed before this runs. Committed or rolled back by the caller
-*   together with the event.
-* ASSUMPTION: FB70 is single company code, so BUKRS identifies the row
-*             (VBKPF key is AUSBK/BELNR/GJAHR, equal to BUKRS here).
-    rv_ok = abap_false.
-
-    UPDATE vbkpf
-      SET xwffr = @abap_true
-      WHERE bukrs = @is_vbkpf-bukrs
-        AND belnr = @is_vbkpf-belnr
-        AND gjahr = @is_vbkpf-gjahr.
-    IF sy-subrc = 0 AND sy-dbcnt = 1.
-      rv_ok = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD set_element.
-*   An element missing from the event container is skipped, the same
-*   behaviour as the per-element TRY blocks in ZCL_GL_WORKFLOW.
-    TRY.
-        io_container->set( name  = iv_name
-                           value = iv_value ).
-      CATCH cx_root.                                     "#EC CATCH_ALL
-        RETURN.
-    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.

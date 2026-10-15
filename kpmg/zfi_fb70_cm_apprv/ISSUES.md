@@ -11,3 +11,4 @@
 | 15/10/26 | Client mismatch found: FIBF entry made in client 200, FB70 tested in 400 (not modifiable) - 00002218 never dispatched in 400. Move via SCC1 or test in 200 | customising client | | | |
 | 15/10/26 | Team decision: own class ZCL_CM_WORKFLOW (credit memo copy of ZCL_GL_WORKFLOW) fed from the BTE X tables; 2a passes T_XVBKPF/T_XVBSEG/T_XVBSEC to 2b, 2b calls the new class and commits/rolls back on EV_STATUS | design change | `ZCL_CM_WORKFLOW.abap`, `Z_FI_CM_APPR_START_WF.abap`, `Z_FI_CM_APPR_PARK_EVENT.abap` | | |
 | 15/10/26 | ZCL_CM_WORKFLOW: no PRELIMINARY_POSTING_DOC_READ/_WRITE at all per Arnav; XWFFR set by single-field UPDATE on VBKPF, BZALT left to FB70; all data from the BTE tables | design change | `ZCL_CM_WORKFLOW.abap` | | |
+| 15/10/26 | ZCL_CM_WORKFLOW flattened to one method mirroring ZCL_GL_WORKFLOW line for line (private helpers and extra checks removed) | review feedback | `ZCL_CM_WORKFLOW.abap` | | |
