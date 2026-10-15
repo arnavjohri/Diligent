@@ -11,6 +11,9 @@ FUNCTION z_fi_cm_appr_start_wf.
 *"      T_XVBKPF STRUCTURE  FVBKPF
 *"      T_XVBSEG STRUCTURE  FVBSEG
 *"      T_XVBSEC STRUCTURE  FVBSEC
+*"      T_YVBKPF STRUCTURE  FVBKPF
+*"      T_YVBSEG STRUCTURE  FVBSEG
+*"      T_YVBSEC STRUCTURE  FVBSEC
 *"----------------------------------------------------------------------
 *----------------------------------------------------------------------*
 * Function module : Z_FI_CM_APPR_START_WF
@@ -21,8 +24,8 @@ FUNCTION z_fi_cm_appr_start_wf.
 *                   it is called STARTING NEW TASK). Import parameters
 *                   pass by value. No exceptions, no export parameters.
 * Description     : Called asynchronously by Z_FI_CM_APPR_PARK_EVENT
-*                   (BTE 00002218) while FB70 is still saving, with the
-*                   parked document's X tables. Waits 5 seconds for the
+*                   (BTE 00002218) while FB70 is still saving, with all
+*                   six BTE tables (X = new, Y = old state). Waits 5 s for the
 *                   park to commit, confirms the document is on the
 *                   database, then starts the journal entry
 *                   verification workflow through
@@ -78,6 +81,9 @@ FUNCTION z_fi_cm_appr_start_wf.
       it_vbkpf     = t_xvbkpf[]
       it_vbseg     = t_xvbseg[]
       it_vbsec     = t_xvbsec[]
+      it_yvbkpf    = t_yvbkpf[]
+      it_yvbseg    = t_yvbseg[]
+      it_yvbsec    = t_yvbsec[]
       iv_submitter = iv_usnam
     IMPORTING
       ev_status    = lv_status ).

@@ -84,9 +84,9 @@ FUNCTION z_fi_cm_appr_park_event.
   ENDIF.
 
 *--- 7. Hand over to the RFC module in a new task (asynchronous RFC,
-*      own session, own LUW), together with the parked document as the
-*      X tables, so the workflow is built from what FB70 saved and not
-*      re-read by key. The called module waits 5 seconds so the park
+*      own session, own LUW), together with all six BTE tables (X = new,
+*      Y = old state), so the workflow is built from what FB70 saved
+*      and not re-read by key. The called module waits 5 seconds so the park
 *      transaction has committed before it touches VBKPF.
   CALL FUNCTION 'Z_FI_CM_APPR_START_WF'
     STARTING NEW TASK 'ZCMAPR'
@@ -100,6 +100,9 @@ FUNCTION z_fi_cm_appr_park_event.
     TABLES
       t_xvbkpf = t_xvbkpf
       t_xvbseg = t_xvbseg
-      t_xvbsec = t_xvbsec.
+      t_xvbsec = t_xvbsec
+      t_yvbkpf = t_yvbkpf
+      t_yvbseg = t_yvbseg
+      t_yvbsec = t_yvbsec.
 
 ENDFUNCTION.

@@ -6,9 +6,10 @@
 *               (scenario WS02800046, class CL_FDC_ACCDOC_VER, event
 *               SUBMITTED) for a customer credit memo parked in FB70.
 *               Credit memo counterpart of ZCL_GL_WORKFLOW. Differences:
-*               - takes the parked document as the X tables handed over
-*                 by BTE 00002218 (header, segments, one-time data)
-*                 instead of reading it by key;
+*               - takes the parked document as the X and Y tables handed
+*                 over by BTE 00002218 (header, segments, one-time data)
+*                 instead of reading it by key; the Y (old state) tables
+*                 are received but not evaluated in this version;
 *               - no status read after the raise: the event is delivered
 *                 only after the caller's COMMIT WORK, so the caller
 *                 (Z_FI_CM_APPR_START_WF) commits or rolls back on
@@ -33,7 +34,9 @@ CLASS zcl_cm_workflow DEFINITION
                gc_status_err TYPE char1 VALUE 'E'.
 
     "! Raise CL_FDC_ACCDOC_VER.SUBMITTED for the parked credit memo.
-    "! IT_VBKPF/IT_VBSEG/IT_VBSEC: X tables from BTE 00002218.
+    "! IT_VBKPF/IT_VBSEG/IT_VBSEC: X tables (new state) from BTE 00002218.
+    "! IT_YVBKPF/IT_YVBSEG/IT_YVBSEC: Y tables (old state), empty on first
+    "!   park; received for completeness, not evaluated in this version.
     "! IV_SUBMITTER: FB70 user; SY-UNAME when initial.
     "! EV_STATUS: S = event raised, caller must COMMIT WORK.
     "!            E = nothing raised, caller must ROLLBACK WORK.
@@ -42,6 +45,9 @@ CLASS zcl_cm_workflow DEFINITION
         it_vbkpf     TYPE tt_vbkpf
         it_vbseg     TYPE tt_vbseg
         it_vbsec     TYPE tt_vbsec OPTIONAL
+        it_yvbkpf    TYPE tt_vbkpf OPTIONAL
+        it_yvbseg    TYPE tt_vbseg OPTIONAL
+        it_yvbsec    TYPE tt_vbsec OPTIONAL
         iv_submitter TYPE syuname OPTIONAL
       EXPORTING
         ev_status    TYPE char1.
