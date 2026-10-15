@@ -74,11 +74,11 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-* Workflow release flag (GL class: DOC_READ + DOC_WRITE)
-* ASSUMPTION: single company code, BUKRS identifies the VBKPF row
+* Workflow release flag (GL class: DOC_READ + DOC_WRITE). Write only,
+* by the VBKPF key AUSBK / BELNR / GJAHR taken from the BTE header.
     UPDATE vbkpf
       SET xwffr = @abap_true
-      WHERE bukrs = @ls_vbkpf-bukrs
+      WHERE ausbk = @ls_vbkpf-ausbk
         AND belnr = @ls_vbkpf-belnr
         AND gjahr = @ls_vbkpf-gjahr.
     IF sy-subrc <> 0.
