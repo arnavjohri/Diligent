@@ -23,7 +23,7 @@ FUNCTION z_fi_cm_appr_park_event.
 *                   module waits 5 seconds for the park to commit.
 *                   No database write and no COMMIT WORK here.
 * Registration    : FIBF -> Settings -> P/S Modules -> of a customer,
-*                   event 00002218, product ZFICMAPR (active).
+*                   event 00002218, product ZFI (existing, active).
 * Interface       : copied from SAMPLE_INTERFACE_00002218. Keep every
 *                   parameter the copy brings, even if unused here.
 *----------------------------------------------------------------------*
