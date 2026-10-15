@@ -613,8 +613,14 @@ START-OF-SELECTION.
 
 * ----- Upload Program ----- *
   IF bdcsess = 'X'.
-    IMPORT diff_flag FROM MEMORY ID diff_flag_id.
+*BOC By Arnav on 10/10/26
+* Upload no longer depends on validation results: Report 15 balance
+* check does not block it any more (steps 1 and 2 are information only).
+*   IMPORT diff_flag FROM MEMORY ID diff_flag_id.
+*   IF diff_flag = 'X'.
+    CLEAR diff_flag.
     IF diff_flag = 'X'.
+*EOC By Arnav on 10/10/26
       SKIP 2.
       FORMAT COLOR 4 INTENSIFIED OFF.
       WRITE:/15 icon_breakpoint AS ICON,20
@@ -3562,32 +3568,78 @@ ENDFORM.                               " MATCHED_BNK_BOOK
 *&      Form  UPLOAD_PROGRAM
 *&---------------------------------------------------------------------*
 FORM upload_bdc_program.
-* -The unmatched records are downloaded to File system as Prev month err
-  PERFORM dumping_bnkstmt_err.
+*BOC By Arnav on 10/10/26
+* Upload ALL bank statement lines to FF67 without validation filters.
+* Matching/clearing is done afterwards by the posting exit. Lines that are
+* not posted here must not go to the previous-month error file, otherwise
+* they would be uploaded twice.
+** -The unmatched records are downloaded to File system as Prev month err
+* PERFORM dumping_bnkstmt_err.
+* line = 0.
+* LOOP AT intab FROM 2 WHERE errrec = '0'.
+*   line = line + 1.
+* ENDLOOP.
+* IF line > 0.
+** --- Calculate Closing Bal.------*
+*   PERFORM calculate_opbal.
+*
+*   PERFORM  generate_header_data.
+** ----- Generate BDCTAB only for matched records ----*
+*   LOOP AT intab FROM 2 WHERE errrec = '0' AND tcode <> 'TRAN'.
+*     PERFORM generate_bdc_data.
+*   ENDLOOP.
+** --- BDC Call transaction and the BDC Lod to be downloed to file system
+*   PERFORM bdc_insert.
+* ELSE.
+*   WRITE:/ 'There is no matching record to be uploaded...'.
+**begin of <RD1K960036>
+**WRITE:/'The Unmatched Records have been downloaded to
+**c:\brs\prevmonth.txt'.
+*   WRITE:/'The Unmatched Records have been downloaded to'
+*   &'c:\brs\prevmonth.txt'.
+**end of <RD1K960036>
+* ENDIF.
+  DATA lv_skip TYPE i.
+* Transaction code suffix (A, B, ...) for lines without a derived code.
+* TEMPCHAR is set only in the Validation run (DERIVE_OTHER_FIELDS); in a
+* separate Upload run take it from a line Validation already classified.
+  IF tempchar IS INITIAL.
+    LOOP AT intab FROM 2 WHERE tcode IS NOT INITIAL AND tcode <> 'TRAN'.
+      tempchar = intab-tcode+3(1).
+      EXIT.
+    ENDLOOP.
+  ENDIF.
+  IF tempchar IS INITIAL.
+    WRITE:/ 'Transaction code suffix could not be determined.',
+            'Run Validation for this statement first.'.
+    EXIT.
+  ENDIF.
+* Only a non-numeric amount is skipped (it would dump); it is listed.
   line = 0.
-  LOOP AT intab FROM 2 WHERE errrec = '0'.
-    line = line + 1.
+  LOOP AT intab FROM 2.
+    IF intab-tran_amt CO '0123456789 ' AND intab-tran_amt IS NOT INITIAL.
+      line = line + 1.
+    ELSE.
+      lv_skip = lv_skip + 1.
+      WRITE:/ 'Line not uploaded - invalid amount: Sl.No', intab-slno,
+              intab-tran_amt.
+    ENDIF.
   ENDLOOP.
+  IF lv_skip > 0.
+    WRITE:/ lv_skip, 'line(s) not uploaded because of an invalid amount.'.
+  ENDIF.
   IF line > 0.
-* --- Calculate Closing Bal.------*
     PERFORM calculate_opbal.
-
-    PERFORM  generate_header_data.
-* ----- Generate BDCTAB only for matched records ----*
-    LOOP AT intab FROM 2 WHERE errrec = '0' AND tcode <> 'TRAN'.
+    PERFORM generate_header_data.
+    LOOP AT intab FROM 2.
+      CHECK intab-tran_amt CO '0123456789 ' AND intab-tran_amt IS NOT INITIAL.
       PERFORM generate_bdc_data.
     ENDLOOP.
-* --- BDC Call transaction and the BDC Lod to be downloed to file system
     PERFORM bdc_insert.
   ELSE.
-    WRITE:/ 'There is no matching record to be uploaded...'.
-*begin of <RD1K960036>
-*WRITE:/'The Unmatched Records have been downloaded to
-*c:\brs\prevmonth.txt'.
-    WRITE:/'The Unmatched Records have been downloaded to'
-    &'c:\brs\prevmonth.txt'.
-*end of <RD1K960036>
+    WRITE:/ 'There is no record to be uploaded...'.
   ENDIF.
+*EOC By Arnav on 10/10/26
 ENDFORM.                               " UPLOAD_PROGRAM
 
 *&---------------------------------------------------------------------*
@@ -3632,8 +3684,9 @@ FORM generate_header_data.
 * Bank file / selection screen use the bank-side sign: a credit balance is
 * negative (Validation: CLBL - OPBL = debits - credits). FF67 items are
 * sent company-side (credit/receipt +, debit/payment -), so FF67 needs the
-* balances with the opposite sign. Statement 449 check: bank 10,199,887.66
-* Cr -> 2,798,775.10 Cr; FF67 opening is +10,199,887.66.
+* balances with the opposite sign, otherwise FV 072. Statement 449 check:
+* bank 10,199,887.66 Cr -> 2,798,775.10 Cr, credits - debits = -7,401,112.56
+* FF67: +10,199,887.66 - 7,401,112.56 = +2,798,775.10.
 *  tempbal = opbl.
   DATA lv_ssald LIKE bseg-wrbtr.
   lv_ssald = 0 - opbl.
@@ -3644,23 +3697,27 @@ FORM generate_header_data.
 *  tempbal = tempbal1.
   tempbal = CONV #( tempbal1 ).
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
-*BOC By Arnav on 15/10/26
-* Only matched lines are uploaded (TEMPBAL1 = their net, CALCULATE_OPBAL),
-* so FF67 closing = FF67 opening + those lines; otherwise FV 072. The
-* unmatched remainder (bank closing - FF67 closing) is printed for info and
-* goes to the previous-month error file as before.
+*BOC By Arnav on 10/10/26
+* Closing balance = opening (OPBL) + net of the uploaded lines, otherwise
+* FF67 rejects the statement with FV 072 (items <> closing - opening).
+* 15/10/26: closing = CLBL with the sign flipped like the opening (see
+* SSALD above). Opening + uploaded lines is printed next to it; a
+* difference means lines are missing and FF67 will give FV 072.
   DATA: lv_esald LIKE bseg-wrbtr,
-        lv_bank  LIKE bseg-wrbtr,
         lv_diff  LIKE bseg-wrbtr.
+*  lv_esald = opbl + tempbal1.
+*  tempbal = CONV #( lv_esald ).
   lv_esald = lv_ssald + tempbal1.
-  tempbal = CONV #( lv_esald ).
-  lv_bank = 0 - clbl.
-  lv_diff = lv_bank - lv_esald.
+  lv_diff = 0 - clbl.
+  tempbal = CONV #( lv_diff ).
   WRITE:/ 'Opening balance to FF67          :', lv_ssald,
-        / 'Closing balance to FF67          :', lv_esald,
-        / 'Bank closing balance             :', lv_bank,
-        / 'Not uploaded (unmatched lines)   :', lv_diff.
-*EOC By Arnav on 15/10/26
+        / 'Closing balance to FF67          :', lv_diff,
+        / 'Opening + uploaded lines         :', lv_esald.
+  IF lv_esald <> lv_diff.
+    lv_diff = lv_diff - lv_esald.
+    WRITE:/ 'Difference (FF67 will give FV072):', lv_diff.
+  ENDIF.
+*EOC By Arnav on 10/10/26
   PERFORM bdc_field       USING 'FEBMKA-ESALD' tempbal.
   WRITE postdt TO sy-tvar0.
   PERFORM bdc_field       USING 'FEBMKA-BUDTM' sy-tvar0.
@@ -3710,7 +3767,21 @@ FORM generate_bdc_data.
   PERFORM bdc_field       USING 'BDC_OKCODE' 'ZINS'.
   PERFORM bdc_field       USING 'BDC_CURSOR' 'FEBMKA-VGMAN(01)'."Transac
 
+*BOC By Arnav on 10/10/26
+* Lines Validation could not classify, and transfers (TRAN), get a
+* receipt or outgoing code by debit/credit so every line can be uploaded.
+* ASSUMPTION: RCT<x>/OTD<x> exist in the BANK account variant (T028G) and
+* post such lines to the clearing account for the exit to clear.
+  IF intab-tcode IS INITIAL OR intab-tcode = 'TRAN'.
+    IF intab-dr_cr = 'D'.
+      CONCATENATE 'OTD' tempchar INTO intab-tcode.
+    ELSE.
+      CONCATENATE 'RCT' tempchar INTO intab-tcode.
+    ENDIF.
+  ENDIF.
+* PERFORM bdc_field       USING  'FEBMKA-VGMAN(01)' intab-tcode.
   PERFORM bdc_field       USING  'FEBMKA-VGMAN(01)' intab-tcode.
+*EOC By Arnav on 10/10/26
 
 * -- Convert The Date into SAP Date Format ---*
   IF intab-valdt(2) = '99'.
@@ -3738,11 +3809,36 @@ FORM generate_bdc_data.
 ***S/4 End of Change - SAP_ABAP5— TR RP1K951283  – 2022/05/27
   PERFORM bdc_field       USING 'FEBMKA-KWBTR(01)' tran_amt1." Amt
 
+*BOC By Arnav on 10/10/26
+* INTAB-DOCNO (bank book document) is filled only when Validation matched
+* the line. Now that unmatched lines are uploaded too, it is often blank and
+* FF67 gets no cheque/document number. Fall back to the reference from the
+* bank file: RT# (R/C/D + number), cheque no., then the narration.
+* ASSUMPTION: the FF67 exit reads FEBMKK-CHECT_KF to find the document.
+* IF intab-tcode(3) = 'RCT' OR intab-tcode(3) = 'OTD'.
+*   PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-docno.
+* ELSEIF intab-tcode(3) = 'CHK'.
+*   PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-chkno.
+* ENDIF.
+  DATA lv_chect TYPE febmkk-chect_kf.
+  CLEAR lv_chect.
   IF intab-tcode(3) = 'RCT' OR intab-tcode(3) = 'OTD'.
-    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-docno.
+    lv_chect = intab-docno.
+    IF lv_chect IS INITIAL.
+      lv_chect = intab-rt#.
+    ENDIF.
   ELSEIF intab-tcode(3) = 'CHK'.
-    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' intab-chkno.
+    lv_chect = intab-chkno.
   ENDIF.
+  IF lv_chect IS INITIAL AND intab-tcode(3) <> 'BCH'
+     AND intab-tcode(3) <> 'INT' AND intab-tcode(3) <> 'INC'.
+    lv_chect = intab-narration.
+  ENDIF.
+  CONDENSE lv_chect.
+  IF lv_chect IS NOT INITIAL.
+    PERFORM bdc_field       USING 'FEBMKK-CHECT_KF(01)' lv_chect.
+  ENDIF.
+*EOC By Arnav on 10/10/26
   PERFORM bdc_field       USING 'FEBMKK-ZUONR(01)' intab-narration.
   IF intab-tcode(3) = 'BCH' OR intab-tcode(3) = 'INT'
                                         OR intab-tcode(3) = 'INC'.
@@ -3834,7 +3930,12 @@ ENDFORM.                               " BDC_INSERT
 *&---------------------------------------------------------------------*
 FORM calculate_opbal.
   tempbal1 = 0.
-  LOOP AT intab FROM 2 WHERE errrec = '0' AND tcode <> 'TRAN'.
+*BOC By Arnav on 10/10/26
+* Net of ALL uploaded lines (same lines as UPLOAD_BDC_PROGRAM sends)
+* LOOP AT intab FROM 2 WHERE errrec = '0' AND tcode <> 'TRAN'.
+  LOOP AT intab FROM 2.
+    CHECK intab-tran_amt CO '0123456789 ' AND intab-tran_amt IS NOT INITIAL.
+*EOC By Arnav on 10/10/26
     IF intab-dr_cr = 'D'.
       tempbal1 = tempbal1 - intab-tran_amt / 100.
     ELSEIF intab-dr_cr = 'C'.
