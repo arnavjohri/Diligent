@@ -13,7 +13,7 @@ FUNCTION z_fi_cm_appr_park_event.
 * Function module : Z_FI_CM_APPR_PARK_EVENT
 * Function group  : ZFI_CM_APPR
 * Author          : Arnav Johri
-* Date            : 14.10.2026
+* Date            : 14.10.2026, changed 15.10.2026 (X tables passed on)
 * Description     : BTE 00002218 (PRELIMINARY POSTING: When document is
 *                   saved). Fires inside the FB70 park transaction before
 *                   its COMMIT WORK. Filters for a customer credit memo on
@@ -84,8 +84,10 @@ FUNCTION z_fi_cm_appr_park_event.
   ENDIF.
 
 *--- 7. Hand over to the RFC module in a new task (asynchronous RFC,
-*      own session, own LUW). The called module waits 5 seconds so the
-*      park transaction has committed before it reads VBKPF.
+*      own session, own LUW), together with the parked document as the
+*      X tables, so the workflow is built from what FB70 saved and not
+*      re-read by key. The called module waits 5 seconds so the park
+*      transaction has committed before it touches VBKPF.
   CALL FUNCTION 'Z_FI_CM_APPR_START_WF'
     STARTING NEW TASK 'ZCMAPR'
     DESTINATION 'NONE'
@@ -94,6 +96,10 @@ FUNCTION z_fi_cm_appr_park_event.
       iv_belnr = ls_new-belnr
       iv_gjahr = ls_new-gjahr
       iv_blart = ls_new-blart
-      iv_usnam = sy-uname.
+      iv_usnam = sy-uname
+    TABLES
+      t_xvbkpf = t_xvbkpf
+      t_xvbseg = t_xvbseg
+      t_xvbsec = t_xvbsec.
 
 ENDFUNCTION.

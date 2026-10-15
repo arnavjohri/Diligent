@@ -23,7 +23,9 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
 
 - `Z_FI_CM_APPR_PARK_EVENT` and `Z_FI_CM_APPR_START_WF` active in DEV, FG `ZFI_CM_APPR`.
 - FIBF: P/S entry `00002218` -> `Z_FI_CM_APPR_PARK_EVENT`, product `ZFI` (existing, active).
-  No separate `ZFICMAPR` product was created.
+  No separate `ZFICMAPR` product was created. **Entry is in client 200 only.** Client 400 is
+  not modifiable; move the customising request with `SCC1` or test in 200. FIBF, the workflow
+  configuration (Fiori app) and the test must all be in the same client.
 - Not yet tested end to end: FI to supply a DEV customer, G/L account, tax code and confirm
   document type `DG`. Test checklist: park in FB70 -> `SM58` empty for the user ->
   `VBKPF-XWFFR` = X -> document in approver inbox. Negative test with type `DR`: nothing.
@@ -42,8 +44,9 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
   `00002218` is the only post-save hook and a registered Z module on it fires.
 - Object 2 is two modules, both paste-only in FG `ZFI_CM_APPR`:
   `Z_FI_CM_APPR_PARK_EVENT` (BTE, inside the park LUW, no commit) calls
-  `Z_FI_CM_APPR_START_WF` STARTING NEW TASK, which waits 5 seconds and reuses
-  `zcl_gl_workflow->start_workflow` (standard journal entry verification, `WS02800046`).
+  `Z_FI_CM_APPR_START_WF` STARTING NEW TASK with the X tables, which waits 5 seconds and
+  calls `ZCL_CM_WORKFLOW->START_WORKFLOW` (credit memo copy of `ZCL_GL_WORKFLOW`, fed from
+  the X tables; standard journal entry verification, `WS02800046`). Class is paste-only too.
   Whether that standard scenario accepts an FB70 customer credit memo is still to be tested.
 - Team pattern (decided 14/10/26): the BTE calls the RFC module STARTING NEW TASK and the RFC
   module starts with WAIT UP TO 5 SECONDS, same as Z_JV_MASSGL_WF in the mass GL program.

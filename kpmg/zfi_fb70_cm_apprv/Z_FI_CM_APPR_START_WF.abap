@@ -7,22 +7,28 @@ FUNCTION z_fi_cm_appr_start_wf.
 *"     VALUE(IV_GJAHR) TYPE  GJAHR
 *"     VALUE(IV_BLART) TYPE  BLART
 *"     VALUE(IV_USNAM) TYPE  SYUNAME
+*"  TABLES
+*"      T_XVBKPF STRUCTURE  FVBKPF
+*"      T_XVBSEG STRUCTURE  FVBSEG
+*"      T_XVBSEC STRUCTURE  FVBSEC
 *"----------------------------------------------------------------------
 *----------------------------------------------------------------------*
 * Function module : Z_FI_CM_APPR_START_WF
 * Function group  : ZFI_CM_APPR
 * Author          : Arnav Johri
-* Date            : 14.10.2026
+* Date            : 14.10.2026, changed 15.10.2026 (X tables, Z class)
 * Attributes      : Processing type = Remote-Enabled Module (mandatory,
-*                   it is called STARTING NEW TASK). All parameters
+*                   it is called STARTING NEW TASK). Import parameters
 *                   pass by value. No exceptions, no export parameters.
 * Description     : Called asynchronously by Z_FI_CM_APPR_PARK_EVENT
-*                   (BTE 00002218) while FB70 is still saving. Waits 5
-*                   seconds for the park to commit, reads the parked
-*                   document, then starts the journal entry
-*                   verification workflow through the existing
-*                   ZCL_GL_WORKFLOW->START_WORKFLOW, exactly as the GL
-*                   upload app does, and commits.
+*                   (BTE 00002218) while FB70 is still saving, with the
+*                   parked document's X tables. Waits 5 seconds for the
+*                   park to commit, confirms the document is on the
+*                   database, then starts the journal entry
+*                   verification workflow through
+*                   ZCL_CM_WORKFLOW->START_WORKFLOW (credit memo copy
+*                   of ZCL_GL_WORKFLOW, fed from the X tables) and
+*                   commits. Rolls back if no event was raised.
 *                   Pattern as agreed with the team (Z_JV_MASSGL_WF).
 * Error path      : a document not found after the wait, or already in
 *                   workflow, is skipped. An asynchronous task has no
@@ -31,8 +37,8 @@ FUNCTION z_fi_cm_appr_start_wf.
 *----------------------------------------------------------------------*
 
   DATA: lv_xwffr    TYPE xwffr,
-        lv_status   TYPE c LENGTH 1,
-        lo_workflow TYPE REF TO zcl_gl_workflow.
+        lv_status   TYPE char1,
+        lo_workflow TYPE REF TO zcl_cm_workflow.
 
   CLEAR: lv_xwffr, lv_status.
 
@@ -57,22 +63,29 @@ FUNCTION z_fi_cm_appr_start_wf.
     RETURN.
   ENDIF.
 
-*--- 4. Start the verification workflow. START_WORKFLOW sets XWFFR on
-*      the parked document, rewrites it and raises
-*      CL_FDC_ACCDOC_VER.SUBMITTED. Both are committed together below.
-*      Its returned STATUS is read before the commit, so it is not
-*      evaluated here.
+*--- 4. Start the verification workflow from the X tables.
+*      START_WORKFLOW sets XWFFR on the parked document and raises
+*      CL_FDC_ACCDOC_VER.SUBMITTED. Both are committed together below,
+*      or both discarded when no event was raised.
+  IF t_xvbkpf[] IS INITIAL.
+    RETURN.
+  ENDIF.
+
   CREATE OBJECT lo_workflow.
 
   lo_workflow->start_workflow(
     EXPORTING
-      journal_entry       = iv_belnr
-      source_company_code = iv_bukrs
-      fiscal_year         = iv_gjahr
-      multiple_wf         = abap_false
+      it_vbkpf     = t_xvbkpf[]
+      it_vbseg     = t_xvbseg[]
+      it_vbsec     = t_xvbsec[]
+      iv_submitter = iv_usnam
     IMPORTING
-      status              = lv_status ).
+      ev_status    = lv_status ).
 
-  COMMIT WORK AND WAIT.
+  IF lv_status = zcl_cm_workflow=>gc_status_ok.
+    COMMIT WORK AND WAIT.
+  ELSE.
+    ROLLBACK WORK.
+  ENDIF.
 
 ENDFUNCTION.
