@@ -3870,7 +3870,36 @@ FORM bdc_insert.
   PERFORM bdc_field       USING 'BDC_OKCODE' '/N'.
   CALL TRANSACTION 'FF67' USING bdcdata MODE 'N' UPDATE 'S'
                                         MESSAGES INTO bdcmsg.
-*BOC By Arnav on 10/10/26
+*BOC By Arnav on 15/10/26
+* On the first FF67 call of a logon session FF67 opens straight on the
+* Specifications popup (SAPMF40K 0110); on later calls it starts on 0101.
+* A BDC cannot branch, so if the run stopped at 0110 as its very first
+* message (nothing saved), drop the leading 0101 block and call FF67 again
+* starting on 0110. The second 0101 block already carries all header fields.
+  DATA: lv_subrc TYPE sy-subrc,
+        lv_lines TYPE i,
+        lv_tabix TYPE sy-tabix.
+  lv_subrc = sy-subrc.
+  DESCRIBE TABLE bdcmsg LINES lv_lines.
+  IF lv_subrc <> 0 AND lv_lines = 1.
+* ASSUMPTION: 00/344 = 'No batch input data found for dynpro &1 &2'
+    READ TABLE bdcmsg WITH KEY msgid = '00' msgnr = '344'
+                               msgv1 = 'SAPMF40K' msgv2 = '0110'
+                      TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      READ TABLE bdcdata WITH KEY program = 'SAPMF40K' dynpro = '0110'
+                                  dynbegin = 'X' TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0 AND sy-tabix > 1.
+        lv_tabix = sy-tabix - 1.
+        DELETE bdcdata FROM 1 TO lv_tabix.
+        REFRESH bdcmsg.
+        CALL TRANSACTION 'FF67' USING bdcdata MODE 'N' UPDATE 'S'
+                                              MESSAGES INTO bdcmsg.
+      ENDIF.
+    ENDIF.
+  ENDIF.
+*EOC By Arnav on 15/10/26
+*BOC By Arnav on 15/10/26
 * If FF67 reports the statement as posted, the run is treated as correct:
 * only that message is shown and no error log file is saved. Otherwise the
 * log is shown and offered for download as before.
@@ -3894,7 +3923,7 @@ FORM bdc_insert.
   ELSE.
     PERFORM display_call_transaction_log.
   ENDIF.
-*EOC By Arnav on 10/10/26
+*EOC By Arnav on 15/10/26
 ENDFORM.                               " BDC_INSERT
 *&---------------------------------------------------------------------*
 *&      Form  CALCULATE_OPBAL
@@ -3921,14 +3950,14 @@ ENDFORM.                               " CALCULATE_OPBAL
 FORM format_message .
 
   LOOP AT bdcmsg.
-*BOC By Arnav on 10/10/26
+*BOC By Arnav on 15/10/26
 * Warnings are not shown in the upload log or written to the log file:
 * type W, plus FV 058 (opening vs prior closing balance) and FV 093
 * ('Warning: Values entered are ignored', may come with another type).
     CHECK bdcmsg-msgtyp <> 'W'.
     CHECK NOT ( bdcmsg-msgid = 'FV' AND
               ( bdcmsg-msgnr = '058' OR bdcmsg-msgnr = '093' ) ).
-*EOC By Arnav on 10/10/26
+*EOC By Arnav on 15/10/26
     CLEAR msgline.
     CALL FUNCTION 'FORMAT_MESSAGE'
       EXPORTING
