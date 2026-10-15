@@ -30,8 +30,7 @@ FUNCTION z_fi_cm_appr_start_wf.
 *                   verification workflow through
 *                   ZCL_CM_WORKFLOW->START_WORKFLOW (credit memo copy
 *                   of ZCL_GL_WORKFLOW, fed from the BTE tables) and
-*                   commits. Rolls back if no event was raised.
-*                   No read of VBKPF here; the BTE tables are the data.
+*                   commits. No read of VBKPF; the BTE tables are the data.
 *                   Pattern as agreed with the team (Z_JV_MASSGL_WF).
 * Error path      : an asynchronous task has no caller to report to; a
 *                   log table (object 3) is the place for failures once
@@ -41,19 +40,10 @@ FUNCTION z_fi_cm_appr_start_wf.
   DATA: lv_status   TYPE char1,
         lo_workflow TYPE REF TO zcl_cm_workflow.
 
-  CLEAR lv_status.
-
-*--- 1. Let the FB70 park transaction commit (team pattern)
+* Let the FB70 park transaction commit (team pattern)
   WAIT UP TO 5 SECONDS.
 
-*--- 2. Start the verification workflow from the BTE tables.
-*      START_WORKFLOW sets XWFFR on the parked document and raises
-*      CL_FDC_ACCDOC_VER.SUBMITTED. Both are committed together below,
-*      or both discarded when no event was raised.
-  IF t_xvbkpf[] IS INITIAL.
-    RETURN.
-  ENDIF.
-
+* Start the verification workflow from the BTE tables
   CREATE OBJECT lo_workflow.
 
   lo_workflow->start_workflow(
@@ -68,10 +58,8 @@ FUNCTION z_fi_cm_appr_start_wf.
     IMPORTING
       ev_status    = lv_status ).
 
-  IF lv_status = zcl_cm_workflow=>gc_status_ok.
-    COMMIT WORK AND WAIT.
-  ELSE.
-    ROLLBACK WORK.
-  ENDIF.
+* Own RFC session: nothing commits unless we do. The commit delivers the
+* event raised in START_WORKFLOW and writes the XWFFR flag.
+  COMMIT WORK AND WAIT.
 
 ENDFUNCTION.
