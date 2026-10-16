@@ -25,7 +25,8 @@ the ZZ1 column and fails activation in QA if the field is not there yet.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
 Text symbols: `B01` Selection, `B02` Processing options.
-Selection texts: P_BUKRS Company Code · P_GJAHR Fiscal Year · S_RLDNR Ledger ·
+Selection texts: P_BUKRS Company Code · P_GJAHR Fiscal Year · S_RLDNR Ledger · S_BELNR Document Number ·
+P_MAX Max lines (0 = no limit) ·
 P_PACK Lines per commit (max 10000) · P_TEST Test run (no update).
 
 ## Assumptions (grep `ASSUMPTION`)
@@ -35,6 +36,7 @@ P_PACK Lines per commit (max 10000) · P_TEST Test run (no update).
 
 ## Run order
 1. Test run per company code / year → note counts.
+   First update: Max lines = 1 (+ a known document in Document Number) → check in SE16H.
 2. Update run (background, F9, for large volumes).
 3. Re-run test: count should be 0.
 4. GR re-releases the periods → check ACDOCU.
