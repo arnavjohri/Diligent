@@ -412,7 +412,13 @@ MODULE user_command_9002 INPUT.
             wa_final-doc_no = doc_no.
             wa_final-consultant_name = ls_data-consultant_name.
             wa_final-service_element = ls_data-service_element.
-            IF ls_data-service_element NE 'EXECUTION SERVICES'.
+*BOC By SAP_ABAP on 16/10/26
+*            IF ls_data-service_element NE 'EXECUTION SERVICES'.
+* MICROSOFT is allowed for every Service Element (it is consumed out of
+* the AS IS scope) - only other Scopes are forced to AS IS
+            IF ls_data-service_element NE 'EXECUTION SERVICES'
+               AND ls_data-scope NE 'MICROSOFT'.
+*EOC By SAP_ABAP on 16/10/26
               ls_data-scope = 'AS IS'.
             ENDIF.
             wa_final-zconsultant_id = sy-uname.
@@ -1019,7 +1025,13 @@ if lt_recipients IS NOT INITIAL. "added by mohd mobassir-23.07.2026
 **          WHERE consultant_name = ls_data-consultant_name.
         ls_data-service_element = ser_ele-service_element.
 *        ls_data-zmodulec = ser_ele-zmodulec.
-        IF ls_data-service_element NE 'EXECUTION SERVICES'.
+*BOC By SAP_ABAP on 16/10/26
+*        IF ls_data-service_element NE 'EXECUTION SERVICES'.
+* MICROSOFT is allowed for every Service Element (it is consumed out of
+* the AS IS scope) - only other Scopes are forced to AS IS
+        IF ls_data-service_element NE 'EXECUTION SERVICES'
+           AND ls_data-scope NE 'MICROSOFT'.
+*EOC By SAP_ABAP on 16/10/26
           ls_data-scope = 'AS IS'.
         ELSE.
 *          ls_data-scope = 'ADDITIONAL'.

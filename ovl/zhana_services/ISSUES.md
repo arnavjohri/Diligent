@@ -37,3 +37,9 @@
 ## 06/10/26 — Consumption button calls the copied report
 - `USER_COMMAND_9001`, `WHEN 'CON'`: `CALL TRANSACTION 'ZCON'` → `'ZCON1'` (copy of
   `ZSAP_CONSUMPTION_REPORT` with the Consumed-till-date columns).
+
+## 16/10/26 — MICROSOFT allowed for every Service Element
+- Scope was forced to AS IS for every Service Element except EXECUTION SERVICES (SAVE loop and
+  the derivation loop at the end of USER_COMMAND_9002), so PROJECT MANAGEMENT could not keep
+  MICROSOFT. Both now skip the forcing when Scope = MICROSOFT. ADDITIONAL is still forced to
+  AS IS outside EXECUTION SERVICES (unchanged).
