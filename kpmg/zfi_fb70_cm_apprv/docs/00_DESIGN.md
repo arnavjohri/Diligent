@@ -5,6 +5,17 @@ Trigger corrected 05/10/26: SAP does not raise `FIPP.CREATED` on park without re
 customising; object 2 (BTE 00002218) raises it.
 Client folder is a placeholder (`kpmg/`) until Arnav names the project; move with `git mv`.
 
+## Status 16/10/26 — trigger built and proven; GL verification scenario ruled out
+
+Trigger (BTE `00002218` → `Z_FI_CM_APPR_PARK_EVENT` → `Z_FI_CM_APPR_START_WF` STARTING NEW
+TASK → `ZCL_CM_WORKFLOW`) is built, active in DEV and proven by workflow log. Reusing the
+standard GL verification scenario `WS02800046` (as the JV upload app does) was tested end to
+end and fails at SAP's posting step with `FDC_POSTING_001 092` "Parked document is no GL
+posting"; the scenario also filters its inbox views on the Fiori app transaction codes.
+Decision pending: Accounts Receivable verification scenario if the release has one, else the
+custom `FIPP` workflow below. Either way the trigger objects stay; only the event raised in
+`ZCL_CM_WORKFLOW` changes.
+
 ## Requirement (as stated)
 
 - A customer credit memo parked through FB70 (the FB70/FB75 Enjoy screen) must be approved

@@ -29,8 +29,18 @@ Nothing here is SE80-downloaded original code; there is no `original/` folder.
 - Not yet tested end to end: FI to supply a DEV customer, G/L account, tax code and confirm
   document type `DG`. Test checklist: park in FB70 -> `SM58` empty for the user ->
   `VBKPF-XWFFR` = X -> document in approver inbox. Negative test with type `DR`: nothing.
-- Open decision after the test: does the standard verification scenario accept a customer
-  credit memo? If yes, objects 4-7 of `docs/00_DESIGN.md` are not needed.
+- **Answered 16/10/26: the GL verification scenario does NOT accept a customer credit memo.**
+  Its views filter on `BKPF-TCODE` in (`FBDC_P001`, `FBDC_P050`, `FBDC_P051`); with those
+  rewritten for the test the approval step ran, but the scenario's own posting step refused
+  the document with `FDC_POSTING_001 092` "Parked document is no GL posting". Routes left:
+  an Accounts Receivable verification scenario if this release has one (same trigger,
+  different event), or the custom `FIPP` workflow in `docs/00_DESIGN.md` (same trigger,
+  class raises `FIPP.CREATED`, posting via `FIPP.POST`).
+- Debugging lesson: with a breakpoint in the BTE the FB70 dialog never commits, so the
+  asynchronous task finds no VBKPF row after its 5-second wait. Debug the task only, with an
+  external breakpoint in `Z_FI_CM_APPR_START_WF`, never the dialog.
+- `ZCL_AGENT_GL_WF_RULE` carried a `DO. ENDDO.` at the top during the test (debug hook).
+  Must not stay: it hangs a work process on every verification work item in the client.
 
 ## Gotchas
 
