@@ -11,7 +11,7 @@
 *&   New postings get ZZ1_VNAME from substitution rule SET_VNAME.
 *&   This report fills the line items posted before that rule existed:
 *&   for one company code and fiscal year it copies ACDOCA-VNAME into
-*&   ACDOCA-ZZ1_VNAME wherever ZZ1_VNAME is still empty.
+*&   ACDOCA-ZZ1_VNAME_COB wherever it is still empty.
 *&   - Works in packages of at most 10,000 lines, COMMIT after each.
 *&   - A line that already has a ZZ1_VNAME value is never changed, so
 *&     the report can be re-run safely after an interruption.
@@ -24,11 +24,8 @@
 REPORT zfi_acdoca_vname_upd LINE-SIZE 132.
 
 *----------------------------------------------------------------------*
-* ASSUMPTION: the custom field is the ACDOCA column ZZ1_VNAME (DB name,
-*   checked in SE11). The substitution rule shows it as ZZ1_VNAME_COB,
-*   which is its CDS name, not the column. If activation reports
-*   "ZZ1_VNAME is unknown", replace ZZ1_VNAME with the column name
-*   shown in SE11 -> ACDOCA (all occurrences in this report).
+* Custom field ZZ1_VNAME is stored in ACDOCA as column ZZ1_VNAME_COB
+*   (confirmed by activation on DEV, 16/10/26).
 *----------------------------------------------------------------------*
 
 TYPES: BEGIN OF ty_line,
@@ -133,12 +130,12 @@ ENDFORM.
 
 *&---------------------------------------------------------------------*
 *& Form CHECK_FIELD_LENGTHS
-*&   Stop before any update if ZZ1_VNAME is shorter than VNAME - the
+*&   Stop before any update if ZZ1_VNAME_COB is shorter than VNAME - the
 *&   copied values would be cut off without any error.
 *&---------------------------------------------------------------------*
 FORM check_field_lengths.
   DATA: lv_src     TYPE acdoca-vname,
-        lv_tgt     TYPE acdoca-zz1_vname,
+        lv_tgt     TYPE acdoca-zz1_vname_cob,
         lv_len_src TYPE i,
         lv_len_tgt TYPE i.
 
@@ -147,7 +144,7 @@ FORM check_field_lengths.
 
   IF lv_len_tgt < lv_len_src.
     gv_stopped = abap_true.
-    gv_reason = |ZZ1_VNAME has { lv_len_tgt } characters, VNAME has { lv_len_src }|.
+    gv_reason = |ZZ1_VNAME_COB has { lv_len_tgt } characters, VNAME has { lv_len_src }|.
     MESSAGE |Nothing updated: { gv_reason } - values would be cut off| TYPE 'S'
       DISPLAY LIKE 'E'.
   ENDIF.
@@ -166,7 +163,7 @@ FORM count_open_lines CHANGING cv_count TYPE int8.
       AND gjahr  = @p_gjahr
       AND rldnr IN @s_rldnr
       AND vname <> @space
-      AND ( zz1_vname = @space OR zz1_vname IS NULL )
+      AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
     INTO @cv_count.
 ENDFORM.
 
@@ -180,7 +177,7 @@ FORM show_test_counts.
       AND gjahr  = @p_gjahr
       AND rldnr IN @s_rldnr
       AND vname <> @space
-      AND ( zz1_vname = @space OR zz1_vname IS NULL )
+      AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
     GROUP BY rldnr
     ORDER BY rldnr
     INTO TABLE @gt_ledger.
@@ -225,7 +222,7 @@ FORM update_in_packages.
         AND gjahr  = @p_gjahr
         AND rldnr IN @s_rldnr
         AND vname <> @space
-        AND ( zz1_vname = @space OR zz1_vname IS NULL )
+        AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
       INTO TABLE @gt_lines
       UP TO @p_pack ROWS.
     IF gt_lines IS INITIAL.
@@ -235,13 +232,13 @@ FORM update_in_packages.
     lv_done_pkg = 0.
     LOOP AT gt_lines ASSIGNING <ls_line>.
 *     Full primary key + the same guard: never overwrites a value
-      UPDATE acdoca SET zz1_vname = @<ls_line>-vname
+      UPDATE acdoca SET zz1_vname_cob = @<ls_line>-vname
         WHERE rldnr  = @<ls_line>-rldnr
           AND rbukrs = @<ls_line>-rbukrs
           AND gjahr  = @<ls_line>-gjahr
           AND belnr  = @<ls_line>-belnr
           AND docln  = @<ls_line>-docln
-          AND ( zz1_vname = @space OR zz1_vname IS NULL ).
+          AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL ).
       IF sy-subrc = 0.
         lv_done_pkg = lv_done_pkg + sy-dbcnt.
       ENDIF.

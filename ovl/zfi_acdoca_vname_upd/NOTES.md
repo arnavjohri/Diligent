@@ -29,7 +29,7 @@ Selection texts: P_BUKRS Company Code · P_GJAHR Fiscal Year · S_RLDNR Ledger �
 P_PACK Lines per commit (max 10000) · P_TEST Test run (no update).
 
 ## Assumptions (grep `ASSUMPTION`)
-- ACDOCA column is `ZZ1_VNAME` (CDS name in the rule is `ZZ1_VNAME_COB`).
+- ACDOCA column is `ZZ1_VNAME_COB` (confirmed by activation on DEV, 16/10/26).
 - Blank ledger = all ledgers.
 - Old rows may hold NULL in the appended column — covered by `IS NULL`.
 
