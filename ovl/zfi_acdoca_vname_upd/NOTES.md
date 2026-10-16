@@ -20,7 +20,8 @@ the ZZ1 column and fails activation in QA if the field is not there yet.
   intentional.
 - Stops if a package updates nothing, or if packages exceed (start count / N) + 2.
 - Stops before any update if ZZ1_VNAME is shorter than VNAME.
-- Auth: F_BKPF_BUK, activity 03 (test) / 02 (update).
+- No authority check in the code (decided 16/10/26). Restrict who can run it outside the code
+  if needed (SE38 authorization group / role).
 - ACDOCU is **not** updated — GR consultant re-runs the data release afterwards.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
