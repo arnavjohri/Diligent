@@ -28,16 +28,24 @@ TYPES: BEGIN OF ty_output,
          add_cons_till       TYPE p LENGTH 8 DECIMALS 2,
          asis_cons_till_amt  TYPE zdaily_rate_with_gst,
          add_cons_till_amt   TYPE zdaily_rate_with_gst,
-* MICROSOFT - same logic as AS IS / Additional, same daily rate
-* ASSUMPTION: new field ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS (SE11)
-         ms_scope_days       TYPE zservice_element-microsoft_scope_days,
+** MICROSOFT - same logic as AS IS / Additional, same daily rate
+** ASSUMPTION: new field ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS (SE11)
+*         ms_scope_days       TYPE zservice_element-microsoft_scope_days,
+*         ms_consumed_days    TYPE p LENGTH 7 DECIMALS 2,
+*         ms_cons_till        TYPE p LENGTH 8 DECIMALS 2,
+*         ms_available_days   TYPE p LENGTH 8 DECIMALS 2,
+*         ms_consumed_amt     TYPE zdaily_rate_with_gst,
+*         ms_cons_till_amt    TYPE zdaily_rate_with_gst,
+*         ms_available_amt    TYPE zdaily_rate_with_gst,
+*EOC By SAP_ABAP on 06/10/26
+*BOC By SAP_ABAP on 16/10/26
+* MICROSOFT has no scope of its own - its days are consumed out of the
+* AS IS scope. Only consumed days / amounts are shown for it.
          ms_consumed_days    TYPE p LENGTH 7 DECIMALS 2,
          ms_cons_till        TYPE p LENGTH 8 DECIMALS 2,
-         ms_available_days   TYPE p LENGTH 8 DECIMALS 2,
          ms_consumed_amt     TYPE zdaily_rate_with_gst,
          ms_cons_till_amt    TYPE zdaily_rate_with_gst,
-         ms_available_amt    TYPE zdaily_rate_with_gst,
-*EOC By SAP_ABAP on 06/10/26
+*EOC By SAP_ABAP on 16/10/26
          asis_available_days TYPE p LENGTH 8 DECIMALS 2,
          add_available_days  TYPE p LENGTH 8 DECIMALS 2,
          asis_consumed_amt   TYPE zdaily_rate_with_gst,
@@ -236,8 +244,29 @@ START-OF-SELECTION.
 *    gs_output-add_available_days =
 *      ls_master-additional_scope_days - lv_add.
 * Available Days - scope less everything consumed till date
+*    gs_output-asis_available_days =
+*      ls_master-as_is_scope_day - lv_asis_till.
+* MICROSOFT days (period and till date) - consumed out of AS IS scope
+    READ TABLE gt_sum INTO gs_sum
+      WITH KEY service_element = ls_master-service_element
+               scope = 'MICROSOFT'.
+    IF sy-subrc = 0.
+      lv_ms = gs_sum-daysc.
+    ENDIF.
+
+    READ TABLE gt_sum_till INTO gs_sum
+      WITH KEY service_element = ls_master-service_element
+               scope = 'MICROSOFT'.
+    IF sy-subrc = 0.
+      lv_ms_till = gs_sum-daysc.
+    ENDIF.
+
+    gs_output-ms_consumed_days = lv_ms.
+    gs_output-ms_cons_till     = lv_ms_till.
+
+* AS IS Available = AS IS scope - AS IS till date - MICROSOFT till date
     gs_output-asis_available_days =
-      ls_master-as_is_scope_day - lv_asis_till.
+      ls_master-as_is_scope_day - lv_asis_till - lv_ms_till.
 
     gs_output-add_available_days =
       ls_master-additional_scope_days - lv_add_till.
@@ -257,30 +286,33 @@ START-OF-SELECTION.
     gs_output-add_cons_till_amt =
       lv_add_till * ls_master-daily_rate_gst.
 
-* MICROSOFT - period, till date, available; same daily rate
-    READ TABLE gt_sum INTO gs_sum
-      WITH KEY service_element = ls_master-service_element
-               scope = 'MICROSOFT'.
-    IF sy-subrc = 0.
-      lv_ms = gs_sum-daysc.
-    ENDIF.
+** MICROSOFT - period, till date, available; same daily rate
+*    READ TABLE gt_sum INTO gs_sum
+*      WITH KEY service_element = ls_master-service_element
+*               scope = 'MICROSOFT'.
+*    IF sy-subrc = 0.
+*      lv_ms = gs_sum-daysc.
+*    ENDIF.
 
-    READ TABLE gt_sum_till INTO gs_sum
-      WITH KEY service_element = ls_master-service_element
-               scope = 'MICROSOFT'.
-    IF sy-subrc = 0.
-      lv_ms_till = gs_sum-daysc.
-    ENDIF.
+*    READ TABLE gt_sum_till INTO gs_sum
+*      WITH KEY service_element = ls_master-service_element
+*               scope = 'MICROSOFT'.
+*    IF sy-subrc = 0.
+*      lv_ms_till = gs_sum-daysc.
+*    ENDIF.
 
-    gs_output-ms_scope_days     = ls_master-microsoft_scope_days.
-    gs_output-ms_consumed_days  = lv_ms.
-    gs_output-ms_cons_till      = lv_ms_till.
-    gs_output-ms_available_days = ls_master-microsoft_scope_days - lv_ms_till.
+*    gs_output-ms_scope_days     = ls_master-microsoft_scope_days.
+*    gs_output-ms_consumed_days  = lv_ms.
+*    gs_output-ms_cons_till      = lv_ms_till.
+*    gs_output-ms_available_days = ls_master-microsoft_scope_days - lv_ms_till.
 
+*    gs_output-ms_consumed_amt  = lv_ms * ls_master-daily_rate_gst.
+*    gs_output-ms_cons_till_amt = lv_ms_till * ls_master-daily_rate_gst.
+*    gs_output-ms_available_amt =
+*      gs_output-ms_available_days * ls_master-daily_rate_gst.
+* MICROSOFT amounts - same daily rate (days are read above)
     gs_output-ms_consumed_amt  = lv_ms * ls_master-daily_rate_gst.
     gs_output-ms_cons_till_amt = lv_ms_till * ls_master-daily_rate_gst.
-    gs_output-ms_available_amt =
-      gs_output-ms_available_days * ls_master-daily_rate_gst.
 *EOC By SAP_ABAP on 06/10/26
 
     gs_output-asis_available_amt =
@@ -319,29 +351,34 @@ FORM build_fieldcat.
   m_field 'ASIS_SCOPE_DAYS' 'AS IS Scope days'.
   m_field 'ADD_SCOPE_DAYS'  'Additional Scope days'.
   m_field 'ASIS_CONSUMED_DAYS' 'AS IS Consumed days'.
+  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.       "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONSUMED_DAYS'  'Additional Consumed days'.
 *BOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_CONS_TILL'     'AS IS Consumed till date'.
+  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.  "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONS_TILL'      'Additional Consumed till date'.
 *EOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_AVAILABLE_DAYS' 'AS IS Available days'.
   m_field 'ADD_AVAILABLE_DAYS'  'Additional Available days'.
   m_field 'ASIS_CONSUMED_AMT' 'AS IS Consumed Amount'.
+  m_field 'MS_CONSUMED_AMT'   'MICROSOFT Consumed Amount'.      "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONSUMED_AMT'  'Additional Consumed Amount'.
 *BOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_CONS_TILL_AMT' 'AS IS Consumed Amt till date'.
+  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'. "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONS_TILL_AMT'  'Additional Consumed Amt till date'.
 *EOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_AVAILABLE_AMT' 'AS IS Available Amount'.
   m_field 'ADD_AVAILABLE_AMT'  'Additional Available Amount'.
 *BOC By SAP_ABAP on 06/10/26
-  m_field 'MS_SCOPE_DAYS'      'MICROSOFT Scope days'.
-  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.
-  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.
-  m_field 'MS_AVAILABLE_DAYS'  'MICROSOFT Available days'.
-  m_field 'MS_CONSUMED_AMT'    'MICROSOFT Consumed Amount'.
-  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'.
-  m_field 'MS_AVAILABLE_AMT'   'MICROSOFT Available Amount'.
+* MICROSOFT columns moved next to the AS IS columns (16/10/26)
+*  m_field 'MS_SCOPE_DAYS'      'MICROSOFT Scope days'.
+*  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.
+*  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.
+*  m_field 'MS_AVAILABLE_DAYS'  'MICROSOFT Available days'.
+*  m_field 'MS_CONSUMED_AMT'    'MICROSOFT Consumed Amount'.
+*  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'.
+*  m_field 'MS_AVAILABLE_AMT'   'MICROSOFT Available Amount'.
 *EOC By SAP_ABAP on 06/10/26
 
 ENDFORM.

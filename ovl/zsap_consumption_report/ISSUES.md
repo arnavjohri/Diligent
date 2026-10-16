@@ -17,3 +17,9 @@
   Consumed / Consumed till date / Available amount, same DAILY_RATE_GST, same Head IT rule.
 - **Open:** Total days / Total Value in ZSERVICE_ELEMENT — whether MICROSOFT should be added
   to them depends on how they are filled (TMG event?).
+
+## 16/10/26 — MICROSOFT consumed out of AS IS scope (supersedes the 06/10 MICROSOFT columns)
+- No MICROSOFT scope of its own: **AS IS Available = AS IS scope − AS IS till date − MICROSOFT
+  till date**. MICROSOFT Scope / Available columns removed (commented).
+- MICROSOFT Consumed days / till date / amounts kept, placed next to the matching AS IS column.
+- `ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS` no longer referenced — the SE11 field is not needed.
