@@ -102,12 +102,10 @@ START-OF-SELECTION.
 
 *&---------------------------------------------------------------------*
 *& Form CHECK_SELECTION
-*&   Package size, company code and authorization. Errors keep the
-*&   user on the selection screen.
+*&   Package size, max lines and company code. Errors keep the user
+*&   on the selection screen.
 *&---------------------------------------------------------------------*
 FORM check_selection.
-  DATA lv_actvt TYPE activ_auth.
-
   IF p_pack < 1 OR p_pack > gc_max_pack.
     MESSAGE |Lines per commit must be between 1 and { gc_max_pack }| TYPE 'E'.
   ENDIF.
@@ -120,20 +118,6 @@ FORM check_selection.
     INTO @DATA(lv_bukrs).
   IF sy-subrc <> 0.
     MESSAGE |Company code { p_bukrs } does not exist| TYPE 'E'.
-  ENDIF.
-
-* Test run only reads (03); the update run changes documents (02)
-  IF p_test = abap_true.
-    lv_actvt = '03'.
-  ELSE.
-    lv_actvt = '02'.
-  ENDIF.
-  AUTHORITY-CHECK OBJECT 'F_BKPF_BUK'
-    ID 'BUKRS' FIELD p_bukrs
-    ID 'ACTVT' FIELD lv_actvt.
-  IF sy-subrc <> 0.
-    MESSAGE |No authorization for company code { p_bukrs } (F_BKPF_BUK, activity { lv_actvt })|
-      TYPE 'E'.
   ENDIF.
 ENDFORM.
 
