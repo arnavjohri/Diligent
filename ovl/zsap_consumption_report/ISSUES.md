@@ -23,3 +23,8 @@
   till date**. MICROSOFT Scope / Available columns removed (commented).
 - MICROSOFT Consumed days / till date / amounts kept, placed next to the matching AS IS column.
 - `ZSERVICE_ELEMENT-MICROSOFT_SCOPE_DAYS` no longer referenced — the SE11 field is not needed.
+
+## 16/10/26 — column order: Additional before MICROSOFT
+- Ask: in each group show AS IS → Additional → MICROSOFT.
+- Fix: BUILD_FIELDCAT only — MS_CONSUMED_DAYS, MS_CONS_TILL, MS_CONSUMED_AMT, MS_CONS_TILL_AMT moved
+  below their ADD_* line. No logic change. TR: pending (PRD move with consumption-report changes).

@@ -351,22 +351,22 @@ FORM build_fieldcat.
   m_field 'ASIS_SCOPE_DAYS' 'AS IS Scope days'.
   m_field 'ADD_SCOPE_DAYS'  'Additional Scope days'.
   m_field 'ASIS_CONSUMED_DAYS' 'AS IS Consumed days'.
-  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.       "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONSUMED_DAYS'  'Additional Consumed days'.
+  m_field 'MS_CONSUMED_DAYS'   'MICROSOFT Consumed days'.       "Changes by SAP_ABAP on 16/10/26
 *BOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_CONS_TILL'     'AS IS Consumed till date'.
-  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.  "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONS_TILL'      'Additional Consumed till date'.
+  m_field 'MS_CONS_TILL'       'MICROSOFT Consumed till date'.  "Changes by SAP_ABAP on 16/10/26
 *EOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_AVAILABLE_DAYS' 'AS IS Available days'.
   m_field 'ADD_AVAILABLE_DAYS'  'Additional Available days'.
   m_field 'ASIS_CONSUMED_AMT' 'AS IS Consumed Amount'.
-  m_field 'MS_CONSUMED_AMT'   'MICROSOFT Consumed Amount'.      "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONSUMED_AMT'  'Additional Consumed Amount'.
+  m_field 'MS_CONSUMED_AMT'   'MICROSOFT Consumed Amount'.      "Changes by SAP_ABAP on 16/10/26
 *BOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_CONS_TILL_AMT' 'AS IS Consumed Amt till date'.
-  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'. "Changes by SAP_ABAP on 16/10/26
   m_field 'ADD_CONS_TILL_AMT'  'Additional Consumed Amt till date'.
+  m_field 'MS_CONS_TILL_AMT'   'MICROSOFT Consumed Amt till date'. "Changes by SAP_ABAP on 16/10/26
 *EOC By SAP_ABAP on 06/10/26
   m_field 'ASIS_AVAILABLE_AMT' 'AS IS Available Amount'.
   m_field 'ADD_AVAILABLE_AMT'  'Additional Available Amount'.
