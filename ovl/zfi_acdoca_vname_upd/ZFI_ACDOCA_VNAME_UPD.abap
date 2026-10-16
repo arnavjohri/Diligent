@@ -16,6 +16,8 @@
 *&   - A line that already has a ZZ1_VNAME value is never changed, so
 *&     the report can be re-run safely after an interruption.
 *&   - Test run (default) only counts; nothing is written.
+*&   - Optional document number filter and Max lines limit, e.g.
+*&     Max lines = 1 to test on a single line first.
 *&   - ACDOCU is not touched: GR re-runs the release for the periods.
 *&
 *& CHANGE HISTORY
@@ -44,6 +46,7 @@ TYPES: BEGIN OF ty_line,
 CONSTANTS gc_max_pack TYPE i VALUE 10000.
 
 DATA: gv_rldnr   TYPE acdoca-rldnr,
+      gv_belnr   TYPE acdoca-belnr,
       gt_lines   TYPE STANDARD TABLE OF ty_line WITH DEFAULT KEY,
       gt_ledger  TYPE STANDARD TABLE OF ty_ledger WITH DEFAULT KEY,
       gv_total   TYPE int8,
@@ -60,11 +63,14 @@ SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE TEXT-b01.
 PARAMETERS: p_bukrs TYPE bukrs OBLIGATORY,
             p_gjahr TYPE gjahr OBLIGATORY.
 * ASSUMPTION: no ledger entered = all ledgers of the company code
-SELECT-OPTIONS s_rldnr FOR gv_rldnr.
+SELECT-OPTIONS: s_rldnr FOR gv_rldnr,
+                s_belnr FOR gv_belnr.
 SELECTION-SCREEN END OF BLOCK b1.
 
 SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-b02.
 PARAMETERS: p_pack TYPE i DEFAULT 5000 OBLIGATORY,
+* Max lines to update in this run, 0 = no limit (use 1 for a first test)
+            p_max  TYPE i DEFAULT 0,
             p_test AS CHECKBOX DEFAULT 'X'.
 SELECTION-SCREEN END OF BLOCK b2.
 
@@ -104,6 +110,9 @@ FORM check_selection.
 
   IF p_pack < 1 OR p_pack > gc_max_pack.
     MESSAGE |Lines per commit must be between 1 and { gc_max_pack }| TYPE 'E'.
+  ENDIF.
+  IF p_max < 0.
+    MESSAGE 'Max lines must be 0 (no limit) or more' TYPE 'E'.
   ENDIF.
 
   SELECT SINGLE bukrs FROM t001
@@ -162,6 +171,7 @@ FORM count_open_lines CHANGING cv_count TYPE int8.
     WHERE rbukrs = @p_bukrs
       AND gjahr  = @p_gjahr
       AND rldnr IN @s_rldnr
+      AND belnr IN @s_belnr
       AND vname <> @space
       AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
     INTO @cv_count.
@@ -176,6 +186,7 @@ FORM show_test_counts.
     WHERE rbukrs = @p_bukrs
       AND gjahr  = @p_gjahr
       AND rldnr IN @s_rldnr
+      AND belnr IN @s_belnr
       AND vname <> @space
       AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
     GROUP BY rldnr
@@ -194,6 +205,9 @@ FORM show_test_counts.
   ENDLOOP.
   ULINE /1(40).
   WRITE: / 'Total', 12 gv_total.
+  IF p_max > 0.
+    WRITE: / 'Update run will stop after', p_max, 'line(s) (Max lines).'.
+  ENDIF.
   SKIP.
   WRITE: / 'Untick "Test run" and execute again to update.'.
 ENDFORM.
@@ -205,10 +219,12 @@ ENDFORM.
 *&   every SELECT returns the next lines - no cursor kept open across
 *&   commits. Stops if a package updates nothing (prevents an endless
 *&   loop) or if more packages run than the start count allows.
+*&   With Max lines > 0 the run ends once that many lines are updated.
 *&---------------------------------------------------------------------*
 FORM update_in_packages.
   DATA: lv_done_pkg TYPE int8,
         lv_max_pkg  TYPE int8,
+        lv_pack     TYPE i,
         lv_pct      TYPE i,
         lv_text     TYPE c LENGTH 70.
   FIELD-SYMBOLS <ls_line> TYPE ty_line.
@@ -216,15 +232,27 @@ FORM update_in_packages.
   lv_max_pkg = gv_total DIV p_pack + 2.
 
   DO.
+*   Package size, cut down to what is left of the Max lines limit
+    lv_pack = p_pack.
+    IF p_max > 0.
+      IF gv_updated >= p_max.
+        EXIT.
+      ENDIF.
+      IF p_max - gv_updated < lv_pack.
+        lv_pack = p_max - gv_updated.
+      ENDIF.
+    ENDIF.
+
     CLEAR gt_lines.
     SELECT rldnr, rbukrs, gjahr, belnr, docln, vname FROM acdoca
       WHERE rbukrs = @p_bukrs
         AND gjahr  = @p_gjahr
         AND rldnr IN @s_rldnr
+        AND belnr IN @s_belnr
         AND vname <> @space
         AND ( zz1_vname_cob = @space OR zz1_vname_cob IS NULL )
       INTO TABLE @gt_lines
-      UP TO @p_pack ROWS.
+      UP TO @lv_pack ROWS.
     IF gt_lines IS INITIAL.
       EXIT.
     ENDIF.
@@ -284,6 +312,12 @@ FORM show_result.
   ELSE.
     WRITE: / 'Ledgers                    : as selected'.
   ENDIF.
+  IF s_belnr[] IS NOT INITIAL.
+    WRITE: / 'Documents                  : as selected'.
+  ENDIF.
+  IF p_max > 0.
+    WRITE: / 'Max lines for this run     :', p_max.
+  ENDIF.
   SKIP.
   WRITE: / 'Lines to fill at start     :', gv_total,
          / 'Lines updated              :', gv_updated,
@@ -294,6 +328,9 @@ FORM show_result.
   IF gv_stopped = abap_true.
     WRITE: / 'Run stopped early:', gv_reason.
     MESSAGE |Stopped after { gv_updated } lines: { gv_reason }| TYPE 'S' DISPLAY LIKE 'E'.
+  ELSEIF p_max > 0 AND gv_left > 0.
+    WRITE: / 'Max lines limit', p_max, 'reached - remaining lines left as they are.'.
+    MESSAGE |Limit reached: { gv_updated } lines updated, { gv_left } still empty| TYPE 'S'.
   ELSEIF gv_left > 0.
     WRITE: / 'Some lines are still empty (new postings during the run?) - run again.'.
     MESSAGE |{ gv_updated } lines updated, { gv_left } still empty - run again| TYPE 'S'
