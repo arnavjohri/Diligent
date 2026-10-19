@@ -14,11 +14,14 @@ names the Adhesive tables.
 
 ## Status
 
-**19/10/26 PM — BUILT on Arnav's call, not yet imported, not yet tested.** Sheet1 of the FS
-taken as the authority; queries M1–M7 still unanswered, built on the assumptions in
-`00_TECHNICAL_OBJECTS.md` §5. `src/` holds the seven new objects, `ZPP_FORECAST_PAINTS.zip`
-is built from it (11 files), `docs/TS_ZFORECAST_Paints.md` (+ `.docx`) is the TS. Next: import
-in DEV, SE41 / SE93 / SM30 manual steps, functional test.
+**19/10/26 PM — IMPORTED in DEV from `ZPP_FORECAST_PAINTS.zip` via ZABAPGIT_STANDALONE,
+Arnav's report "everything is imported".** First hand-written abapGit ZIP that has pulled on
+this landscape (the Adhesive DDIC/class XML shapes plus the 03/09 PROGDIR order). Not yet
+functionally tested. Sheet1 of the FS taken as the authority; queries M1–M7 still unanswered,
+built on the assumptions in `00_TECHNICAL_OBJECTS.md` §5. `src/` holds the seven objects,
+`docs/TS_ZFORECAST_Paints.md` (+ `.docx`) is the TS, `KT_TCODES.md` is the Paints-only
+handover. Still manual: SE41 `PF_STATUS` copy, SE93 ZFCST_PAINTS / ZFCST_PAINTS_UPL, SM30
+`ZPPV_FCST_CFG` rows for the Paints plants.
 
 **19/10/26 AM** — FS read, Assumptions and Queries issued (v2):
 `docs/ZFORECAST_Paints_Assumptions_and_Queries.md` (+ `.docx`) carries the reuse decision

@@ -56,3 +56,14 @@ Not syntax-checked on a system — nothing here can be. First activation will te
 
 Files: `src/*`, `ZPP_FORECAST_PAINTS.zip`, `00_TECHNICAL_OBJECTS.md`,
 `docs/TS_ZFORECAST_Paints.md` / `.docx`. TR: none.
+
+## 19/10/26 PM — ZIP imported in DEV
+
+Arnav: "everything is imported" — `ZPP_FORECAST_PAINTS.zip` pulled through ZABAPGIT_STANDALONE
+into package ZPP_FORECAST_PAINTS without an XML_FORMAT_ERROR. This is the first hand-written
+abapGit ZIP to import on this landscape; the shapes that worked are the ones in `src/`
+(DOMA, DTEL, TABL, CLAS, PROG with PROGDIR `NAME, VARCL, SUBC, FIXPT, UCCHECK`, DEVC).
+Activation errors, if any, not yet reported. Remaining manual steps: SE41 copy of `PF_STATUS`
+from ZPP_FORECAST, SE93 ZFCST_PAINTS and ZFCST_PAINTS_UPL, SM30 `ZPPV_FCST_CFG` rows for the
+Paints plants (VKORG 4000). Functional test pending. `KT_TCODES.md` written for handover.
+TR: none.

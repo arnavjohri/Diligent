@@ -419,6 +419,7 @@ maintenance views/TMG, SNRO number ranges, SU21 auth objects, SCDO change docume
 | Path | Ships as |
 |---|---|
 | `kpmg/zpp_forecast_v2/` | ZIP — screen-free **by design**; adding `CALL SCREEN` or `cl_gui_custom_container` reverts it to paste-only |
+| `kpmg/zpp_forecast_paints/` | ZIP — **imported in DEV on 19/10/26**, the first hand-written abapGit ZIP that pulled on this landscape. Its `src/` XML shapes (DOMA, DTEL, TABL, CLAS, PROG with PROGDIR `NAME, VARCL, SUBC, FIXPT, UCCHECK`, DEVC) are the proven ones to copy |
 | `kpmg/abapgit_pilot/`, `kpmg/zmm_po_budget/` (DDIC + message class) | ZIP |
 | `ovl/ztest_t001/` | pilot — **never actually imported successfully** |
 | `kpmg/zfi_tds_cl34/` | complete ZIP that **failed four imports**; shipped by paste |
