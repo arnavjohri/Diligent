@@ -33,3 +33,26 @@ and Quarter both mandatory), old Q9 is now Q10.
 
 Files: `docs/ZFORECAST_Paints_Assumptions_and_Queries.md` / `.docx`, `NOTES.md`.
 TR: none.
+
+## 19/10/26 PM — built: seven new objects, ZIP, TS (Sheet1 as the authority)
+
+Arnav's call: take Sheet1 as correct, build, hand to functional for testing, ship as a ZIP
+for `ZABAPGIT_STANDALONE`. Built without answers to M1–M7; every assumption is in the code as
+`ASSUMPTION` and in `00_TECHNICAL_OBJECTS.md` §5.
+
+| Object | Lines | What |
+|---|---|---|
+| `ZDO_BRAND`, `ZDE_BRAND`, `ZPPT_BRAND` | XML | brand per plant and material, CHAR 40 |
+| `ZCL_PP_FCST_PNT` | 696 | `TY_ALV` = engine row + Paints columns; `ENRICH` reads T001W, ZPPT_BRAND, MARA, MARM, MVKE, ZPPT_FCST_CFG, A923/KONP (annual); tonnage on gross weight ÷ 1000, KL, crores per month |
+| `ZPP_FORECAST_PAINTS` | 1566 | copy of ZPP_FORECAST's screen, handler and display; Sheet1 column lists per mode, Adhesive working columns hidden but offered by Change Layout; engine rows widened row by row; SAVE through the engine |
+| `ZPP_FORECAST_PAINTS_UPL` | 1243 | category upload accepting MTS, MTO, DIS, TIN (and DIS ART, TINTING); brand upload; file handling copied from ZPP_FORECAST_UPLOAD |
+
+Changed in the existing Adhesive objects: **nothing**. Optional SE11 step on `ZDO_MTS_MTO`
+(fixed values DIS, TIN) left out of the ZIP on purpose.
+
+Static checks passed: no line over 120, every block balanced, every PERFORM matches its
+FORM's parameter count, every method declared is implemented, XML well-formed, LF, no BOM.
+Not syntax-checked on a system — nothing here can be. First activation will tell.
+
+Files: `src/*`, `ZPP_FORECAST_PAINTS.zip`, `00_TECHNICAL_OBJECTS.md`,
+`docs/TS_ZFORECAST_Paints.md` / `.docx`. TR: none.

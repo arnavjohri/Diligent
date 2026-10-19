@@ -14,11 +14,17 @@ names the Adhesive tables.
 
 ## Status
 
-**19/10/26 — FS read, Assumptions and Queries issued (v2), no code.**
+**19/10/26 PM — BUILT on Arnav's call, not yet imported, not yet tested.** Sheet1 of the FS
+taken as the authority; queries M1–M7 still unanswered, built on the assumptions in
+`00_TECHNICAL_OBJECTS.md` §5. `src/` holds the seven new objects, `ZPP_FORECAST_PAINTS.zip`
+is built from it (11 files), `docs/TS_ZFORECAST_Paints.md` (+ `.docx`) is the TS. Next: import
+in DEV, SE41 / SE93 / SM30 manual steps, functional test.
+
+**19/10/26 AM** — FS read, Assumptions and Queries issued (v2):
 `docs/ZFORECAST_Paints_Assumptions_and_Queries.md` (+ `.docx`) carries the reuse decision
 per Adhesive object (§0.1), seven mandatory queries (M1–M7), assumptions (P01–P26),
 further queries (Q1–Q10), the proposed object list (§4) and 28 defects found in the FS
-(§8). Waiting on answers and on approval of the object list.
+(§8).
 
 ## Standing rule: no Adhesive program or class is edited for Paints
 
@@ -63,16 +69,27 @@ of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
 - Pack size: `MARM` has several alternative units per material; the rule for which one
   is query M5. Do not build it on a guess.
 
-## Shipping
+## Shipping: abapGit ZIP, own package
 
-Paste, one object at a time, as Adhesive has shipped since 15/09/26. `src/` and
-`.abapgit.xml` will be added when the first object is written so the folder stays
-ZIP-capable; the ZIP path has not been proven on this landscape since the 03/09 PROGDIR fix.
+`ZPP_FORECAST_PAINTS.zip` — `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`)
+at the root, `src/` with package.devc, 1 domain, 1 data element, 1 table, 1 class, 2 reports.
+Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package `ZPP_FORECAST_PAINTS` (new) →
+Import ZIP → Pull. **Nothing Adhesive is in it**, so the pull cannot touch the running
+Adhesive objects. The XML shapes are the Adhesive ones (DDIC and class imported in August,
+PROGDIR order fixed 03/09); this ZIP itself has not been imported anywhere yet — if it
+short-dumps, the paste order is in `00_TECHNICAL_OBJECTS.md` §2. Re-zip from `src/` after
+any change:
+
+    cd kpmg/zpp_forecast_paints && rm -f ZPP_FORECAST_PAINTS.zip && zip -X ZPP_FORECAST_PAINTS.zip .abapgit.xml src/*
+
+The `ZDO_MTS_MTO` fixed values (DIS, TIN) are deliberately **not** in the ZIP — they are an
+optional SE11 step, so no Adhesive DDIC object is overwritten by a pull.
 
 ## Layout
 
     fs/        the FS as received, plus its text extract — never edited
-    docs/      Assumptions and Queries (md + docx); TS when written
+    docs/      Assumptions and Queries, TS (md + docx)
     original/  SE80 downloads of the shared objects, filed with save-original.sh
-    src/       corrected / new objects, once there are any
+    src/       the seven new objects, abapGit layout
+    00_TECHNICAL_OBJECTS.md   inventory, manual steps, column layouts, assumptions
     ISSUES.md  running log
