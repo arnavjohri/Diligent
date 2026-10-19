@@ -82,6 +82,35 @@ element name as exposed by the view underneath, and carries the `@UI.*` annotati
 top level. Field shown read-only is CDS only; input-ready in a RAP app needs the behavior
 definition extended as well (not in this TR).
 
+## On file (19/10/26)
+
+- `original/ZC_PURCHASEORDERTP_EXT.ddls.asddls` — the final EKKO extension as supplied: classic
+  `extend view C_PurchaseOrderTP with ZC_PurchaseOrderTP_EXT`, SQL append `ZCPURORDTP`, alias of
+  the base view `PurchaseOrderTP`, 84 elements, all straight pass-throughs of `zz*` / `z*` fields
+  the base view already carries (so the chain below it is complete for these 84).
+- `original/ZSTR_HEADER_SE11_p1..p5_2026-10-19.png` — structure `ZSTR_HEADER` (*Structure For
+  Header Part of PO*, 83 components). Transcribed and reconciled in `ZSTR_HEADER_vs_view.md`.
+
+Reconciliation: structure = 4 standard (`EBELN MATKL PLIFZ WEBAZ`) + 79 custom; **all 79 are in
+the view**. The view has 5 more, straight from the EKKO append: `ZZUSR`, `ZZFLAG_KOL`,
+`ZZFLAG_MUM`, `ZZFLAG_CHEN`, `ZZFLAG_DEL`. Nothing is missing from the extension.
+
+What is missing is the **screen**: only 12 of the 84 elements carry `@UI.identification`
+(positions 120–220); the other 72 reach the OData `$metadata` but no section of the object page,
+which is why "all the custom fields" are not visible. Position 170 is used twice
+(`ZZPORT_CON`, `ZZULT_CON`) — legal, but their order is then undefined. The 24 address fields
+(`ZULT* ZINV* ZINS* ZPAY*`) inherit their labels from `AD_NAME1` / `AD_STREET` / … and would show
+as four identical "Name 1 / Street / Street 2 / City / …" blocks unless `@EndUserText.label` is
+set per element in the extension.
+
+Smallest fix, in this one object: `@UI.identification` on every element, positions continuing
+from 230 in structure order, 170 → 175 for `ZZULT_CON`, explicit labels on the 24 address fields.
+`@UI.lineItem` as well if they must be columns of the list, not only on the object page.
+A separate section per group (Tender / Award / Contacts / Addresses) needs `@UI.facet`, an
+entity-level annotation an `extend view` cannot add — that would need a DDLX on
+`C_PurchaseOrderTP`, which only works if the view carries `@Metadata.allowExtensions: true`
+(not confirmed; `C_FixedAssetWorklist` did not — see `ovl/f1592_asset_worklist/`).
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
@@ -89,8 +118,8 @@ definition extended as well (not in this TR).
   `ZR_PROG_DOWNLOAD` covers programs, FGs and classes, not DDLS — copy each source from
   ADT (open the DDL source, Ctrl+A, Ctrl+C) into `incoming/`, or supply the DDL source
   table rows (`DDDDLSRC`, field `SOURCE`, one row per object).
-- **Which custom fields** each extension exposes (`ZZ1_…` / `ZZ…` names) and where they live
-  (EKKO / EKPO appends, or Custom Fields app with the PO / PR / contract business contexts).
+- **Which custom fields** the other 25 extensions expose (PO header is now known: 84 `zz*`/`z*`
+  fields of the EKKO append, classic CI append, not Custom Fields app).
 - **The consumer**: service definition / binding, or the standard app whose tile shows the
   fields (Manage Purchase Orders / Requisitions / Contracts, or a custom List Report).
 - **Transport status**: released or not, and which systems it has reached.
