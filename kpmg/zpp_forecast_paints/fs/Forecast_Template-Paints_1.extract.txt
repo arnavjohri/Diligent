@@ -1,0 +1,1001 @@
+# Text extract of Forecast_Template-Paints_1.xlsx (received 19/10/26)
+# Generated with openpyxl; rN = row, cN = column. Long cells repeated in full at the end.
+
+SHEETS: ['Sheet1', 'RADIO BUTTON 1 ANNUAL', 'Radio Button 2 Quauter', 'Month', 'Consolidated']
+
+==================== Sheet1 dims=A2:AX110 max_row=110 max_col=50 ====================
+r2: c1=1 | c2=ZFORECAST Report
+r4: c1=1.1 | c2=Annual Forecating
+r6: c1=Selection Screen
+r7: c1=Plant | c2=Mandatory | c3=From | c5=To
+r8: c1=Material | c3=From | c5=To
+r9: c1=Financial Year | c2=Mandatory | c3=From | c5=To
+r10: c1=Check Box | c2=Tonnage Wise
+r13: c1=A | c2=system will consider the last year direct sales to the customer
+r14: c1=B | c2=Product wise product category and Its percertage will be maintained by User.
+r15: c1=C | c2=Total Forecast Qty=Last year Sales Qty of that month * Product category %
+r16: c1=D | c2=Provision to Skip the few material from Forecast
+r17: c1=E | c2=Forecast number generation
+r18: c1=F | c2=Table Maintainace for MTS and MTO
+r19: c1=G | c2=Plant maintance if new material is replace old code
+r20: c1=H | c2=In annual forecast, final qty will be Last year april 25 sales Qty*Growth factor
+r22: c1=Annual Forecast
+r24: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=Q1_
+26-27_
+APR 26_
+FORECAST 
+QTY (EA) | c15=Q1_
+26-27_
+MAY 26_
+FORECAST 
+QTY (EA) | c16=Q1_
+26-27_
+JUN 26_
+FORECAST 
+QTY (EA) | c17=Q2_
+26-27_
+JUL 26_
+FORECAST 
+QTY (EA) | c18=Q2_
+26-27_
+AUG 26_
+FORECAST 
+QTY (EA) | c19=Q2_
+26-27_
+SEP 26_
+FORECAST 
+QTY (EA) | c20=Q3_
+26-27_
+OCT 26_
+FORECAST 
+QTY (EA) | c21=Q3_
+26-27_
+NOV 26_
+FORECAST 
+QTY (EA) | c22=Q3_
+26-27_
+DEC 26_
+FORECAST 
+QTY (EA) | c23=Q4_
+26-27_
+JAN 27_
+FORECAST 
+QTY (EA) | c24=Q4_
+26-27_
+FEB 26_
+FORECAST 
+QTY (EA) | c25=Q4_
+26-27_
+MAR 26_
+FORECAST 
+QTY (EA) | c26=Q1_
+26-27_
+APR 26_
+FORECAST 
+Volume in KL | c27=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Volume in KL | c28=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Volume in KL | c29=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Volume in KL | c30=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Volume in KL | c31=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Volume in KL | c32=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Volume in KL | c33=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Volume in KL | c34=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Volume in KL | c35=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Volume in KL | c36=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Volume in KL | c37=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Volume in KL | c38=Q1_
+26-27_
+APR 26_
+FORECAST 
+Value in Crores | c39=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Value in Crores | c40=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Value in Crores | c41=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Value in Crores | c42=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Value in Crores | c43=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Value in Crores | c44=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Value in Crores | c45=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Value in Crores | c46=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Value in Crores | c47=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Value in Crores | c48=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Value in Crores | c49=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c50=26-27_
+MAR 26_
+FORECAST 
+Value in Crores
+r29: c1=1.2 | c2=Quarterly Forecasting
+r31: c1=Selection Screen
+r32: c1=Plant | c2=Mandatory | c3=From | c5=To
+r33: c1=Material | c3=From | c5=To
+r34: c1=Financial Year | c3=From | c5=To
+r35: c1=Quarter | c2=Mandatory
+r36: c1=Date | c2=Mandatory | c3=From | c5=To
+r37: c1=Check Box | c2=Tonnage Wise
+r39: c1=A | c2=if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June  | c4=Financial Year will be mandatory in case of Quarter entry
+r40: c1=B | c2=Product wise product category and Its percertage will be maintained by User.
+r41: c1=C | c2=Forecast Qty=whichever is maximum of from last year and current year* Product category %
+r42: c1=D | c2=Provision to Skip the few material from Forecast
+r43: c1=E | c2=Forecast number generation
+r44: c1=F | c2=Table Maintainace for MTS and MTO
+r45: c1=G | c2=Provision to Upload the Sales forecast
+r46: c1=H | c2=Final forecast qty is whichever is maximum out of sales forecast qty and Forecast Qty
+r47: c1=I | c2=Provision to upload the additional or substraction of forecast
+r48: c1=J | c2=Last 3 years sales data upload in the custom table
+r50: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=Aug'26 | c30=Sep'26 | c31=Pack Size | c32=Final july 26 in KL
+r55: c1=Upload Program format for sales forecast
+r57: c1=Plant | c2=Material | c3=Quarter | c4=Financial Year | c5=Sales Forecast Qty
+r58: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory
+r60: c1=Upload Program format for addition or subtraction of Forecast
+r62: c1=Plant | c2=Material | c3=Quarter | c4=Financial Year | c5=Sales Forecast Qty | c6=Reason
+r63: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory | c6=Mandatory
+r66: c1=1.3 | c2=Monthly Forecasting
+r68: c1=Selection Screen
+r69: c1=Plant | c2=Mandatory | c3=From | c5=To
+r70: c1=Material | c3=From | c5=To
+r71: c1=Financial Year | c3=From | c5=To
+r72: c1=Month | c2=Mandatory
+r73: c1=Date | c2=Mandatory | c3=From | c5=To
+r74: c1=Check Box | c2=Tonnage Wise
+r76: c1=A | c2=if we enter the month July 26, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and Ju | c4=Financial Year will be mandatory in case of Quarter entry
+r77: c1=B | c2=Product wise product category and Its percertage will be maintained by User.
+r78: c1=C | c2=Requirement Qty=whichever is maximum of from last year and current year/3* Product category %
+r79: c1=D | c2=Provision to Skip the few material from Forecast
+r80: c1=E | c2=Forecast number generation
+r81: c1=F | c2=Table Maintainace for MTS and MTO
+r82: c1=G | c2=Provision to Upload the Sales forecast
+r83: c1=H | c2=Final forecast qty is whichever is maximum out of sales forecast qty and Forecast Qty
+r84: c1=I | c2=Provision to upload the additional or substraction of forecast
+r85: c1=J | c2=Last 3 years sales data upload in the custom table
+r87: c1=July'26 Forecast
+r88: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=Pack Size | c30=Final july 26 in KL
+r90: c1=WRICEF Identity
+r92: c1=1 | c2=Yearly data, monthly data and Quarterly data
+r93: c1=2 | c2=Upload program for last year sales data
+r94: c1=3 | c2=Upload program for sales forecast
+r95: c1=4 | c2=Upload program for Changes in final forecast Qty
+r98: c1=Final Report
+r99: c1=Selection screen
+r101: c1=Plant | c2=Mandatory
+r102: c1=Material
+r103: c1=Financial Year
+r104: c1=Month | c2=Mandatory
+r105: c1=Quarter | c2=Mandatory
+r106: c1=Forecast Number
+r108: c1=Material | c2=Plant | c3=Material descr | c4=Material Group | c5=Material Group1 | c6=Material Group 2 | c7=Material Group 5 | c8=Annual forecast | c9=Quarter forecast | c10=Additional forecast | c11=Total Quarter forecast | c12=Monthly Forecast | c13=Additional forecast | c14=Total Monthly forecast | c16=Forecast Number
+
+==================== RADIO BUTTON 1 ANNUAL dims=A1:BK141 max_row=141 max_col=63 ====================
+r1: c8=1 | c9=XYZ | c10=2025-2026
+r2: c1=1 | c2=ZFORECAST Report | c8=2 | c9=XYZ
+r3: c8=3 | c9=XYZ
+r4: c1=1.1 | c2=Annual Forecating | c8=4 | c9=XYZ
+r5: c8=5 | c9=XYZ
+r6: c1=Selection Screen | c8=6 | c9=XYZ
+r7: c1=Plant | c2=Mandatory | c3=From | c5=To
+r8: c1=Material | c3=From | c5=To
+r9: c1=Financial Year | c2=Mandatory | c3=From | c5=To | c6=2026 | c7=2027
+r10: c1=Check Box | c2=Tonnage Wise with Gross Weight
+r11: c1=checkbox | c2=Legacy data | c3=Authorization through tvarvc.
+r12: c5=April | c6=2025 | c8=100 | c9=EA | c10=10 | c11=1000 | c12=2026-04-26 00:00:00
+r13: c1=A | c2=system will consider the last year direct sales to the customer | c5=may | c6=2025
+r14: c1=B | c2=Product wise product category and Its percertage will be maintained by User. | c3=TMG | c4=upload | c8=Plant | c9=Material | c10=material group | c11=%
+r15: c1=C | c2=Total Forecast Qty=Last year Sales Qty of that month * Product category %
+r16: c1=D | c2=Provision to Skip the few material from Forecast | c3=TMG | c4=upload
+r17: c1=E | c2=Forecast number generation
+r18: c1=F | c2=Table Maintainace for MTS and MTO | c3=TMG | c4=upload
+r21: c1=Annual Forecast
+r23: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=Q1_
+26-27_
+APR 26_
+FORECAST 
+QTY (EA) | c15=Q1_
+26-27_
+MAY 26_
+FORECAST 
+QTY (EA) | c16=Q1_
+26-27_
+JUN 26_
+FORECAST 
+QTY (EA) | c17=Q2_
+26-27_
+JUL 26_
+FORECAST 
+QTY (EA) | c18=Q2_
+26-27_
+AUG 26_
+FORECAST 
+QTY (EA) | c19=Q2_
+26-27_
+SEP 26_
+FORECAST 
+QTY (EA) | c20=Q3_
+26-27_
+OCT 26_
+FORECAST 
+QTY (EA) | c21=Q3_
+26-27_
+NOV 26_
+FORECAST 
+QTY (EA) | c22=Q3_
+26-27_
+DEC 26_
+FORECAST 
+QTY (EA) | c23=Q4_
+26-27_
+JAN 27_
+FORECAST 
+QTY (EA) | c24=Q4_
+26-27_
+FEB 26_
+FORECAST 
+QTY (EA) | c25=Q4_
+26-27_
+MAR 26_
+FORECAST 
+QTY (EA) | c26=Q1_
+26-27_
+APR 26_
+FORECAST 
+Volume in KL | c27=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Volume in KL | c28=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Volume in KL | c29=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Volume in KL | c30=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Volume in KL | c31=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Volume in KL | c32=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Volume in KL | c33=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Volume in KL | c34=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Volume in KL | c35=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Volume in KL | c36=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Volume in KL | c37=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Volume in KL | c38=Q1_
+26-27_
+APR 26_
+FORECAST 
+Value in Crores | c39=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Value in Crores | c40=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Value in Crores | c41=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Value in Crores | c42=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Value in Crores | c43=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Value in Crores | c44=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Value in Crores | c45=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Value in Crores | c46=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Value in Crores | c47=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Value in Crores | c48=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Value in Crores | c49=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c50=26-27_
+MAR 26_
+FORECAST 
+Value in Crores
+r27: c11=69840 | c12=50040 | c13=48600 | c14=52200 | c15=38880 | c16=22320 | c17=20520 | c18=38520 | c19=38160 | c20=44640 | c21=55080 | c22=46440 | c23=525240 | c24=C | c25=1.2 | c26=630288 | c27=83808 | c28=136188 | c29=58320 | c30=62640 | c31=46656 | c32=26784 | c33=24624 | c34=46224 | c35=45792 | c36=53568 | c37=66096 | c38=55728
+r28: c11=1440 | c12=1800 | c13=4680 | c14=8640 | c15=1440 | c16=1440 | c17=3600 | c18=2880 | c19=720 | c20=1800 | c21=720 | c22=2520 | c23=31680 | c24=D | c25=1.1 | c26=34848 | c27=1584 | c28=136188 | c29=5148 | c30=9504 | c31=1584 | c32=1584 | c33=3960 | c34=3168 | c35=792 | c36=1980 | c37=792 | c38=2772
+r29: c11=3240 | c12=7200 | c13=9000 | c14=4680 | c15=4680 | c16=2160 | c17=1800 | c18=3600 | c19=3600 | c20=3600 | c21=5760 | c22=2160 | c23=51480 | c24=E | c25=1 | c26=51480 | c27=3240.0000000000005 | c28=136188 | c29=9000 | c30=4680 | c31=4680 | c32=2160 | c33=1800.0000000000002 | c34=3600.0000000000005 | c35=3600.0000000000005 | c36=3600.0000000000005 | c37=5760 | c38=2160
+r31: c1=custom table maitainance
+r32: c1=1 | c2=ZPP_PROD_CATEGORY
+r34: c1=Field
+r35: c1=Plant
+r36: c1=Material
+r37: c1=Category
+r38: c1=Load Factor
+r39: c1=MTS/MTO
+r43: c1=1.1 | c2=Upload Format
+r44: c1=Plant | c2=Material | c3=Category | c4=Load Factor | c5=MTS/MTO
+r46: c1=Validation | c2=If the Plant AND MATERIAL IS EXIST IN THE TABLE, THEN OVERWRITE THE ENTRY OR ELSE NEW ENTRY
+r47: c2=Pass plant and material to marc-werks and plant and check entry is exist. If not, error message:- Material is not created in the Plant
+r50: c1=2 | c2=ZPP_MATERIAL_TRACKING
+r52: c1=Field
+r53: c1=Plant
+r54: c1=New Material Code
+r55: c1=old Material code1
+r56: c1=old Material code2
+r58: c1=2.1 | c2=Upload Format
+r59: c1=Plant | c2=New Material code | c3=Old Material 1 | c4=Old Material 2
+r61: c1=Validation | c2=If the Plant AND MATERIAL IS EXIST IN THE TABLE, THEN OVERWRITE THE ENTRY OR ELSE NEW ENTRY
+r62: c2=Pass plant and material to marc-werks and plant and check entry is exist. If not, error message:- Material is not created in the Plant
+r64: c1=3 | c2=ZPP_MATERIAL_EXCLUDE
+r66: c1=Plant
+r67: c1=Material
+r69: c1=3.1 | c2=Upload Format
+r70: c1=Plant | c2=Material code | c3=BRAND | c4=ZPPT_BRAND
+r73: c1=ALV Display
+r75: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=Price/DPL | c13=QTY / CARTON | c14=Q1_
+26-27_
+APR 26_
+FORECAST 
+QTY (EA) | c15=Q1_
+26-27_
+MAY 26_
+FORECAST 
+QTY (EA) | c16=Q1_
+26-27_
+JUN 26_
+FORECAST 
+QTY (EA) | c17=Q2_
+26-27_
+JUL 26_
+FORECAST 
+QTY (EA) | c18=Q2_
+26-27_
+AUG 26_
+FORECAST 
+QTY (EA) | c19=Q2_
+26-27_
+SEP 26_
+FORECAST 
+QTY (EA) | c20=Q3_
+26-27_
+OCT 26_
+FORECAST 
+QTY (EA) | c21=Q3_
+26-27_
+NOV 26_
+FORECAST 
+QTY (EA) | c22=Q3_
+26-27_
+DEC 26_
+FORECAST 
+QTY (EA) | c23=Q4_
+26-27_
+JAN 27_
+FORECAST 
+QTY (EA) | c24=Q4_
+26-27_
+FEB 26_
+FORECAST 
+QTY (EA) | c25=Q4_
+26-27_
+MAR 26_
+FORECAST 
+QTY (EA) | c26=Q1_
+26-27_
+APR 26_
+FORECAST 
+Volume in KL | c27=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Volume in KL | c28=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Volume in KL | c29=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Volume in KL | c30=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Volume in KL | c31=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Volume in KL | c32=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Volume in KL | c33=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Volume in KL | c34=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Volume in KL | c35=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Volume in KL | c36=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Volume in KL | c37=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Volume in KL | c38=Q1_
+26-27_
+APR 26_
+FORECAST 
+Value in Crores | c39=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Value in Crores | c40=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Value in Crores | c41=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Value in Crores | c42=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Value in Crores | c43=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Value in Crores | c44=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Value in Crores | c45=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Value in Crores | c46=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Value in Crores | c47=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Value in Crores | c48=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Value in Crores | c49=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c50=26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c51=Gross Weight | c52=April 26 Tonnage | c53=May 26 Tonnage | c54=June 26 Ton | c55=july 26 ton | c56=Aug 26 Ton | c57=Sep 26 Ton | c58=Oct 26 Ton | c59=Nov 26 Ton | c60=Dec 26 Ton | c61=Jan 27 Ton | c62=Feb 27 Ton | c63=Mar 27 Ton
+r79: c11=1440 | c12=1800 | c13=4680 | c14=8640 | c15=1440 | c16=1440 | c17=3600 | c18=2880 | c19=720 | c20=1800 | c21=720 | c22=2520 | c23=31680 | c24=D | c25=1.1 | c26=34848 | c27=1584 | c28=136188 | c29=5148 | c30=9504 | c31=1584 | c32=1584 | c33=3960 | c34=3168 | c35=792 | c36=1980 | c37=792 | c38=2772
+r80: c11=3240 | c12=7200 | c13=9000 | c14=4680 | c15=4680 | c16=2160 | c17=1800 | c18=3600 | c19=3600 | c20=3600 | c21=5760 | c22=2160 | c23=51480 | c24=E | c25=1 | c26=51480 | c27=3240.0000000000005 | c28=136188 | c29=9000 | c30=4680 | c31=4680 | c32=2160 | c33=1800.0000000000002 | c34=3600.0000000000005 | c35=3600.0000000000005 | c36=3600.0000000000005 | c37=5760 | c38=2160
+r83: c1=Logic
+r84: c1=Mfg Plant name | c2=Pass Plant to T001W-WERKS and Take NAME1.
+r85: c1=BRAND | c2=Pass selection screen plant and ALV material to ZPP_BRAND-WERKS and MATNR and show BRAND.
+r86: c1=UOM | c2=Pass VBRP-MATNR to MARA-mATNR and take MARA-MEINS
+r87: c1=MATERIAL GROUP | c2=For VBRP-MATNR show MATKL. | c4=VBRP | c5=VBELN | c6=0010 | c7=X1
+r88: c1=PACK 
+SIZE | c2=Pass ALV MATNR to MARM-MATNR where MARA-MEINH is not equal to ALV UOM and take MARM-UMREN. If the MEINH is equal to ML or GM, then divide the value with 1000. | c6=0020 | c7=X2
+r89: c1=Gross Weight | c2=Pass ALV MATNR to MARA-MATNR and take MARA-BRGEW
+r90: c1=DPL | c2=Pass material to A923-MATNR and take KNUMH by doing a decending on DATAB. pass KNUMH to KONP-KNUMH and take KBETR | c5=VBELN | c6=0010 | c7=X1
+r91: c1=QTY / CARTON | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR1 is not equal to blank and VKORG=4000 and take AUMNG. | c6=0020 | c7=X2
+r92: c1=Q1_
+26-27_
+APR 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r93: c1=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r94: c1=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r95: c1=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r96: c1=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r97: c1=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r98: c1=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r99: c1=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r100: c1=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r101: c1=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r102: c1=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r103: c1=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Volume in KL | c2=Forecast Qty  of April 25* pack size/1000
+r104: c1=Q1_
+26-27_
+APR 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r105: c1=Q1_
+26-27_
+MAY 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r106: c1=Q1_
+26-27_
+JUN 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r107: c1=Q2_
+26-27_
+JUL 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r108: c1=Q2_
+26-27_
+AUG 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r109: c1=Q2_
+26-27_
+SEP 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r110: c1=Q3_
+26-27_
+OCT 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r111: c1=Q3_
+26-27_
+NOV 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r112: c1=Q3_
+26-27_
+DEC 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r113: c1=Q4_
+26-27_
+JAN 27_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r114: c1=Q4_
+26-27_
+FEB 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r115: c1=Q4_
+26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r116: c1=26-27_
+MAR 26_
+FORECAST 
+Value in Crores | c2=DPL*forecast Qty of April 25/10000000
+r118: c1=if user select the check box of tonnage, then show the value in tonnage.
+r120: c1=for tonnage | c2=Forecast Qty*Gross Weight/1000
+r123: c1=Quarter
+r125: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL/Price | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=July26 additional | c30=July 26 final forecast | c31=Aug'26 | c32=Aug 26 additional | c33=Aug 26 final forecast | c34=Sep'26 | c35=Sep 26 additional | c36=Sep 26 final forecast | c37=july 26 tonnage | c38=Aug 26 Tonnage | c39=Sep 26 tonnage | c40=MTS/MTO | c41=Gross Weight | c42=July'26 KL | c43=Aug'26 KL | c44=Sep'26 KL | c45=July'26 IN cr | c46=Aug'26 in CR | c47=Sep'26 in CR
+r126: c14=3000 | c15=2500 | c16=4500 | c17=10000 | c18=3500 | c19=5000 | c20=4500 | c21=13000 | c22=13000 | c23=A | c24=1.3 | c25=16900 | c26=12000 | c27=16900 | c28=21970 | c29=#DIV/0! | c30=#DIV/0!
+r127: c14=1200 | c15=650 | c16=700 | c17=2550 | c18=800 | c19=450 | c20=600 | c21=1850 | c22=2550 | c23=B | c24=1.3 | c25=3315 | c26=4000 | c27=4000 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r128: c14=450 | c15=350 | c16=250 | c17=1050 | c18=530 | c19=420 | c20=560 | c21=1510 | c22=1510 | c23=C | c24=1.2 | c25=1812 | c26=2500 | c27=2500 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r129: c14=210 | c15=340 | c16=540 | c17=1090 | c18=220 | c19=350 | c20=490 | c21=1060 | c22=1090 | c23=D | c24=1.1 | c25=1199 | c26=1000 | c27=1199 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r130: c14=180 | c15=0 | c16=190 | c17=370 | c18=120 | c19=110 | c20=190 | c21=420 | c22=420 | c23=E | c24=1 | c25=420 | c26=200 | c27=420 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r133: c1=Month
+r135: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL/Price | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=July26 additional | c30=July 26 final forecast | c31=july 26 tonnage | c32=MTS/MTO | c33=Gross Weight | c34=July'26 KL
+r136: c14=3000 | c15=2500 | c16=4500 | c17=10000 | c18=3500 | c19=5000 | c20=4500 | c21=13000 | c22=13000 | c23=A | c24=1.3 | c25=16900 | c26=12000 | c27=16900 | c28=21970 | c29=#DIV/0! | c30=#DIV/0!
+r137: c14=1200 | c15=650 | c16=700 | c17=2550 | c18=800 | c19=450 | c20=600 | c21=1850 | c22=2550 | c23=B | c24=1.3 | c25=3315 | c26=4000 | c27=4000 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r138: c14=450 | c15=350 | c16=250 | c17=1050 | c18=530 | c19=420 | c20=560 | c21=1510 | c22=1510 | c23=C | c24=1.2 | c25=1812 | c26=2500 | c27=2500 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r139: c14=210 | c15=340 | c16=540 | c17=1090 | c18=220 | c19=350 | c20=490 | c21=1060 | c22=1090 | c23=D | c24=1.1 | c25=1199 | c26=1000 | c27=1199 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r140: c14=180 | c15=0 | c16=190 | c17=370 | c18=120 | c19=110 | c20=190 | c21=420 | c22=420 | c23=E | c24=1 | c25=420 | c26=200 | c27=420 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+
+==================== Radio Button 2 Quauter dims=A1:AX115 max_row=115 max_col=50 ====================
+r1: c1=1.2 | c2=Quarterly Forecasting
+r3: c1=Selection Screen
+r4: c1=Plant | c2=Mandatory | c3=From | c5=To
+r5: c1=Material | c3=From | c5=To
+r6: c3=From | c5=To
+r7: c1=Quarter | c2=Mandatory | c6=JULY | c7=SEP
+r8: c1=Year
+r9: c1=Date | c2=Mandatory | c3=From | c5=To
+r10: c1=Check Box | c2=Tonnage Wise
+r11: c1=checkbox | c2=Legacy data | c3=Authorization through tvarvc.
+r13: c1=A | c2=if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June  | c3=year is  mandatory when Quarter is not initial
+r15: c2=eighter quarter or date, one field must be mandatory.
+r17: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=Aug'26 | c30=Sep'26 | c31=july 26 tonnage | c32=Aug 26 Tonnage | c33=Sep 26 tonnage | c34=MTS/MTO | c35=Gross Weight | c36=July'26 KL | c37=Aug'26 KL | c38=Sep'26 KL | c39=July'26 IN cr | c40=Aug'26 in CR | c41=Sep'26 in CR
+r18: c14=3000 | c15=2500 | c16=4500 | c17=10000 | c18=3500 | c19=5000 | c20=4500 | c21=13000 | c22=13000 | c23=A | c24=1.3 | c25=16900 | c26=12000 | c27=16900 | c28=21970 | c29=#DIV/0! | c30=#DIV/0!
+r19: c14=1200 | c15=650 | c16=700 | c17=2550 | c18=800 | c19=450 | c20=600 | c21=1850 | c22=2550 | c23=B | c24=1.3 | c25=3315 | c26=4000 | c27=4000 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r20: c14=450 | c15=350 | c16=250 | c17=1050 | c18=530 | c19=420 | c20=560 | c21=1510 | c22=1510 | c23=C | c24=1.2 | c25=1812 | c26=2500 | c27=2500 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r21: c14=210 | c15=340 | c16=540 | c17=1090 | c18=220 | c19=350 | c20=490 | c21=1060 | c22=1090 | c23=D | c24=1.1 | c25=1199 | c26=1000 | c27=1199 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r22: c14=180 | c15=0 | c16=190 | c17=370 | c18=120 | c19=110 | c20=190 | c21=420 | c22=420 | c23=E | c24=1 | c25=420 | c26=200 | c27=420 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r25: c1=Plant | c2=selection screen plant
+r26: c1=Material | c2=Pass selection screen QUATER as FKDAT to VBRK-FKDAT and take all VBELN where VBRK-FKSTO is not equal to X and VBTYP is not equal to U and take all VBRK-VBELN an | c4=Q1 | c5=APRIL to June | c7=01.04.2026 | c8=30.06.2026
+r27: c1=Description | c2=Pass VBRP-MATNR to MAKT-MATNR and show MAKT-MAKTX. | c4=Q2 | c5=JULY TO SEP | c7=01.07.2026 | c8=30.09.2026
+r28: c1=Material Group | c2=For VBRP-MATNR show MATKL. | c4=Q3 | c5=OCT to Dec | c7=01.10.2026 | c8=31.12.2026
+r29: c1=Net weight | c2=For VBRP-MATNR show NTGEW. | c4=Q4 | c5=JAN TO MAR | c7=01.01.2027 | c8=31.03.2027
+r30: c1=Material Group 1 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR1 is not equal to blank and VKORG=1100 and take MVGR1. pass MVKE-MVGR1 to TVM1T-MVGR1 and take BEZEI
+r31: c1=Material Group 2 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR2 is not equal to blank and VKORG=1100 and take MVGR2. pass MVKE-MVGR2 to TVM2T-MVGR2 and take BEZEI
+r32: c1=Material Group 3 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR3 is not equal to blank and VKORG=1100 and take MVGR3. pass MVKE-MVGR3 to TVM3T-MVGR3 and take BEZEI
+r33: c1=Material Group 4 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR4 is not equal to blank and VKORG=1100 and take MVGR4. pass MVKE-MVGR4 to TVM4T-MVG41 and take BEZEI
+r34: c1=Material Group 5 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR5 is not equal to blank and VKORG=1100 and take MVGR5. pass MVKE-MVGR5 to TVM5T-MVGR5 and take BEZEI
+r35: c1=July'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise | c3=also Pass MATDOC-MATNR and WERKS to ZPP_MATERIAL_TRACKING-NEW_MATNR and WERKS and take ZPP_MATERIAL_TRACKING- OLD_MATERIAL1 and OLD_MATERIAL2. Pass this two old | c5=if user has selected the checkbox of legacy data then pass plant, material and year to ZPP_SALES_HISTORY-MATNR and WERKS and take a month wise value.
+r36: c1=Aug'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r37: c1=Sep'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r38: c1=Total LY Quarter Sales Qty | c2=sum of aug 2025 to sep 25
+r39: c1=April'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r40: c1=May'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r41: c1=Jun'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r42: c1=L3 Month Total Sales Qty | c2=sum of April 26 to June 26.
+r43: c1=Max. Qty (E , I ) | c2=Maximum from Total LY sales qty and L3 month total sales qty
+r44: c1=Product Cat. | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take Category
+r45: c1=Growth Based on Category | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take Load Factor
+r46: c1=MTS/MTO | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take MTS/MTO
+r47: c1=Forecast (Max * Growth %) | c2=PRODUCT CATEGORY * MAX QTY
+r48: c1=Business Forecast (Jul'26 To Sep'26) | c2=From ZPP_ADH_FORE_QUATER
+r49: c1=Final Forecast Qty | c2=Compare forecast and business forecast
+r50: c1=July'26 | c2=(july 25/total quarter sales of last year) * final forecast qty
+r51: c1=Aug'26 | c2=(aug 25/total quarter sales of last year) * final forecast qty
+r52: c1=Sep'26 | c2=(sep 25/total quarter sales of last year) * final forecast qty
+r53: c1=July 26 TONNAGE | c2=Net weight * july 26
+r54: c1=Aug 26 TONNAE | c2=Net weight * Aug 26
+r55: c1=Sep 26 TONNAGE | c2=Net Weight * Sep 26
+r58: c1=Validation
+r59: c1=1 | c2=provide to save the data only when the quarter condition is matched.
+r60: c1=2 | c2=Instert the data with same forecast number by passing the fiscal year to ZPP_ADH_FORECAST_YEAR-FISCAL YEAR and take FORECAST number
+r62: c1=upon save, please insert the data in ZPP_ADH_FORE_QUATER
+r64: c1=FORECAST NUMBER | c2=From ALV
+r65: c1=Plant | c2=From ALV
+r66: c1=Material | c2=From ALV
+r67: c1=Description | c2=From ALV
+r68: c1=Material Group | c2=From ALV
+r69: c1=Net weight | c2=From ALV
+r70: c1=Material Group 1 | c2=From ALV
+r71: c1=Material Group 2 | c2=From ALV
+r72: c1=Material Group 3 | c2=From ALV
+r73: c1=Material Group 4 | c2=From ALV
+r74: c1=Material Group 5 | c2=From ALV
+r75: c1=QUARTER | c2=From ALV
+r76: c1=YEAR | c2=From ALV
+r77: c1=M4_LAST | c2=From ALV
+r78: c1=M5_LAST | c2=From ALV
+r79: c1=M6_LAST | c2=From ALV
+r80: c1=Total LY Quarter Sales Qty | c2=From ALV
+r81: c1=M1_CURRENT | c2=From ALV
+r82: c1=M2_CURRENT | c2=From ALV
+r83: c1=M3_CURRENT | c2=From ALV
+r84: c1=L3 Month Total Sales Qty | c2=From ALV
+r85: c1=MAX QTY | c2=From ALV
+r86: c1=Product Cat. | c2=From ALV
+r87: c1=Growth Based on Category | c2=From ALV
+r88: c1=MTS/MTO | c2=From ALV
+r89: c1=Forecast (Max * Growth %) | c2=From ALV
+r90: c1=Business Forecast M4 TO M6
+r91: c1=Business Forecast M4 TO M6 additional
+r92: c1=Final Forecast Qty | c2=From ALV
+r93: c1=M4_FORECAST | c2=From ALV
+r94: c1=M5_FORECAST | c2=From ALV
+r95: c1=M6_FORECAST | c2=From ALV
+r96: c1=M4_TONNAGE | c2=From ALV
+r97: c1=M5_TONNAGE | c2=From ALV
+r98: c1=M6_TONNAGE | c2=From ALV
+r99: c1=MTS/MTO | c2=From ALV
+r100: c1=reason for change
+r102: c1=Upload Program format
+r104: c1=Material | c2=PLANT | c3=QUARTER | c4=YEAR | c5=SALES FORECAST
+r106: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory
+r109: c1=Upload program format for change
+r111: c1=Material | c2=PLANT | c3=QUARTER | c4=YEAR | c5=SALES FORECAST | c6=Reason for change
+r113: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory | c6=Mandatory
+r115: c1=Check material, plant, quarter, year, month is exist in the above mentioned table
+
+==================== Month dims=A1:AX115 max_row=115 max_col=50 ====================
+r1: c1=1.3 | c2=Monthly Forecasting
+r3: c1=Selection Screen
+r4: c1=Plant | c2=Mandatory | c3=From | c5=To
+r5: c1=Material | c3=From | c5=To
+r6: c3=From | c5=To
+r7: c1=Quarter | c2=Mandatory | c6=JULY | c7=SEP
+r8: c1=Year
+r9: c1=Date | c2=Mandatory | c3=From | c5=To
+r10: c1=Check Box | c2=Tonnage Wise
+r11: c1=checkbox | c2=Legacy data | c3=Authorization through tvarvc.
+r13: c1=A | c2=if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June  | c3=year is  mandatory when Quarter is not initial
+r15: c2=eighter quarter or date, one field must be mandatory.
+r17: c1=MFG. 
+PLANT CODE | c2=MFG. 
+PLANT NAME | c3=BRAND | c4=MAT. CODE | c5=MAT. DESC | c6=MTS / MTO 
+/ DIS ART / TINTING | c7=MATERIAL GROUP 1 | c8=MATERIAL GROUP 2 | c9=MATERIAL GROUP 5 | c10=MATERIAL GROUP | c11=PACK 
+SIZE | c12=DPL | c13=QTY / CARTON | c14=July'25 | c15=Aug'25 | c16=Sep'25 | c17=Total LY Quarter Sales Qty | c18=April'26 | c19=May'26 | c20=Jun'26 | c21=L3 Month Total Sales Qty | c22=Max. Qty (E , I ) | c23=Product Cat. | c24=Growth Based on Category | c25=Forecast (Max * Growth %) | c26=Business Forecast (Jul'26 To Sep'26) | c27=Final Forecast Qty | c28=July'26 | c29=Aug'26 | c30=Sep'26 | c31=july 26 tonnage | c32=Aug 26 Tonnage | c33=Sep 26 tonnage | c34=MTS/MTO | c35=Gross Weight | c36=July'26 KL | c37=Aug'26 KL | c38=Sep'26 KL | c39=July'26 IN cr | c40=Aug'26 in CR | c41=Sep'26 in CR
+r18: c14=3000 | c15=2500 | c16=4500 | c17=10000 | c18=3500 | c19=5000 | c20=4500 | c21=13000 | c22=13000 | c23=A | c24=1.3 | c25=16900 | c26=12000 | c27=16900 | c28=21970 | c29=#DIV/0! | c30=#DIV/0!
+r19: c14=1200 | c15=650 | c16=700 | c17=2550 | c18=800 | c19=450 | c20=600 | c21=1850 | c22=2550 | c23=B | c24=1.3 | c25=3315 | c26=4000 | c27=4000 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r20: c14=450 | c15=350 | c16=250 | c17=1050 | c18=530 | c19=420 | c20=560 | c21=1510 | c22=1510 | c23=C | c24=1.2 | c25=1812 | c26=2500 | c27=2500 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r21: c14=210 | c15=340 | c16=540 | c17=1090 | c18=220 | c19=350 | c20=490 | c21=1060 | c22=1090 | c23=D | c24=1.1 | c25=1199 | c26=1000 | c27=1199 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r22: c14=180 | c15=0 | c16=190 | c17=370 | c18=120 | c19=110 | c20=190 | c21=420 | c22=420 | c23=E | c24=1 | c25=420 | c26=200 | c27=420 | c28=#DIV/0! | c29=#DIV/0! | c30=#DIV/0!
+r25: c1=Plant | c2=selection screen plant
+r26: c1=Material | c2=Pass selection screen QUATER as FKDAT to VBRK-FKDAT and take all VBELN where VBRK-FKSTO is not equal to X and VBTYP is not equal to U and take all VBRK-VBELN an | c4=Q1 | c5=APRIL to June | c7=01.04.2026 | c8=30.06.2026
+r27: c1=Description | c2=Pass VBRP-MATNR to MAKT-MATNR and show MAKT-MAKTX. | c4=Q2 | c5=JULY TO SEP | c7=01.07.2026 | c8=30.09.2026
+r28: c1=Material Group | c2=For VBRP-MATNR show MATKL. | c4=Q3 | c5=OCT to Dec | c7=01.10.2026 | c8=31.12.2026
+r29: c1=Net weight | c2=For VBRP-MATNR show NTGEW. | c4=Q4 | c5=JAN TO MAR | c7=01.01.2027 | c8=31.03.2027
+r30: c1=Material Group 1 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR1 is not equal to blank and VKORG=1100 and take MVGR1. pass MVKE-MVGR1 to TVM1T-MVGR1 and take BEZEI
+r31: c1=Material Group 2 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR2 is not equal to blank and VKORG=1100 and take MVGR2. pass MVKE-MVGR2 to TVM2T-MVGR2 and take BEZEI
+r32: c1=Material Group 3 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR3 is not equal to blank and VKORG=1100 and take MVGR3. pass MVKE-MVGR3 to TVM3T-MVGR3 and take BEZEI
+r33: c1=Material Group 4 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR4 is not equal to blank and VKORG=1100 and take MVGR4. pass MVKE-MVGR4 to TVM4T-MVG41 and take BEZEI
+r34: c1=Material Group 5 | c2=Pass VBRP-MATNR to MVKE-MATNR for MVGR5 is not equal to blank and VKORG=1100 and take MVGR5. pass MVKE-MVGR5 to TVM5T-MVGR5 and take BEZEI
+r35: c1=July'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise | c3=also Pass MATDOC-MATNR and WERKS to ZPP_MATERIAL_TRACKING-NEW_MATNR and WERKS and take ZPP_MATERIAL_TRACKING- OLD_MATERIAL1 and OLD_MATERIAL2. Pass this two old | c5=if user has selected the checkbox of legacy data then pass plant, material and year to ZPP_SALES_HISTORY-MATNR and WERKS and take a month wise value.
+r36: c1=Aug'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r37: c1=Sep'25 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r38: c1=Total LY Quarter Sales Qty | c2=sum of aug 2025 to sep 25
+r39: c1=April'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r40: c1=May'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r41: c1=Jun'26 | c2=For VBRP-WERKS, MATNR, and VBRK-FKDAT(01.07.2025 to 31.07.2025)  Do the sum of VBRP-FKIMG MATNR wise
+r42: c1=L3 Month Total Sales Qty | c2=sum of April 26 to June 26.
+r43: c1=Max. Qty (E , I ) | c2=Maximum from Total LY sales qty and L3 month total sales qty
+r44: c1=Product Cat. | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take Category
+r45: c1=Growth Based on Category | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take Load Factor
+r46: c1=MTS/MTO | c2=pass VBRP-MATNR and werks to ZPP_MATERIAL_CATEGORY-MATNR and WERKS and take MTS/MTO
+r47: c1=Forecast (Max * Growth %) | c2=PRODUCT CATEGORY * MAX QTY
+r48: c1=Business Forecast (Jul'26 To Sep'26) | c2=From ZPP_ADH_FORE_QUATER
+r49: c1=Final Forecast Qty | c2=Compare forecast and business forecast
+r50: c1=July'26 | c2=(july 25/total quarter sales of last year) * final forecast qty
+r51: c1=Aug'26 | c2=(aug 25/total quarter sales of last year) * final forecast qty
+r52: c1=Sep'26 | c2=(sep 25/total quarter sales of last year) * final forecast qty
+r53: c1=July 26 TONNAGE | c2=Net weight * july 26
+r54: c1=Aug 26 TONNAE | c2=Net weight * Aug 26
+r55: c1=Sep 26 TONNAGE | c2=Net Weight * Sep 26
+r58: c1=Validation
+r59: c1=1 | c2=provide to save the data only when the quarter condition is matched.
+r60: c1=2 | c2=Instert the data with same forecast number by passing the fiscal year to ZPP_ADH_FORECAST_YEAR-FISCAL YEAR and take FORECAST number
+r62: c1=upon save, please insert the data in ZPP_ADH_FORE_QUATER
+r64: c1=FORECAST NUMBER | c2=From ALV
+r65: c1=Plant | c2=From ALV
+r66: c1=Material | c2=From ALV
+r67: c1=Description | c2=From ALV
+r68: c1=Material Group | c2=From ALV
+r69: c1=Net weight | c2=From ALV
+r70: c1=Material Group 1 | c2=From ALV
+r71: c1=Material Group 2 | c2=From ALV
+r72: c1=Material Group 3 | c2=From ALV
+r73: c1=Material Group 4 | c2=From ALV
+r74: c1=Material Group 5 | c2=From ALV
+r75: c1=QUARTER | c2=From ALV
+r76: c1=YEAR | c2=From ALV
+r77: c1=M4_LAST | c2=From ALV
+r78: c1=M5_LAST | c2=From ALV
+r79: c1=M6_LAST | c2=From ALV
+r80: c1=Total LY Quarter Sales Qty | c2=From ALV
+r81: c1=M1_CURRENT | c2=From ALV
+r82: c1=M2_CURRENT | c2=From ALV
+r83: c1=M3_CURRENT | c2=From ALV
+r84: c1=L3 Month Total Sales Qty | c2=From ALV
+r85: c1=MAX QTY | c2=From ALV
+r86: c1=Product Cat. | c2=From ALV
+r87: c1=Growth Based on Category | c2=From ALV
+r88: c1=MTS/MTO | c2=From ALV
+r89: c1=Forecast (Max * Growth %) | c2=From ALV
+r90: c1=Business Forecast M4 TO M6
+r91: c1=Business Forecast M4 TO M6 additional
+r92: c1=Final Forecast Qty | c2=From ALV
+r93: c1=M4_FORECAST | c2=From ALV
+r94: c1=M5_FORECAST | c2=From ALV
+r95: c1=M6_FORECAST | c2=From ALV
+r96: c1=M4_TONNAGE | c2=From ALV
+r97: c1=M5_TONNAGE | c2=From ALV
+r98: c1=M6_TONNAGE | c2=From ALV
+r99: c1=MTS/MTO | c2=From ALV
+r100: c1=reason for change
+r102: c1=Upload Program format
+r104: c1=Material | c2=PLANT | c3=QUARTER | c4=YEAR | c5=SALES FORECAST
+r106: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory
+r109: c1=Upload program format for change
+r111: c1=Material | c2=PLANT | c3=QUARTER | c4=YEAR | c5=SALES FORECAST | c6=Reason for change
+r113: c1=Mandatory | c2=Mandatory | c3=Mandatory | c4=Mandatory | c5=Mandatory | c6=Mandatory
+r115: c1=Check material, plant, quarter, year, month is exist in the above mentioned table
+
+==================== Consolidated dims=A1:AQ12 max_row=12 max_col=43 ====================
+r1: c1=Selection screen
+r3: c1=Plant
+r4: c1=financial year
+r5: c1=Material
+r7: c1=Material Group
+r10: c1=Plant | c2=Material | c3=Material Group | c4=Material group 1 | c5=Material group 2 | c6=Material group 5 | c7=Month | c8=Annual Forecast | c9=Quarter Forecast | c10=Quarter additional Forecast | c11=Final Quarter Forecast | c12=Monthly Forecast | c13=Additonal Monthly Forecast | c14=Final Monthly Forecast
+
+########## LONG CELLS IN FULL ##########
+== long cells (>150 chars), full text ==
+[Sheet1!B39] if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June 26.
+
+if we enter the date, then system should calcuate the sales from last year 3 months forward and current year last 3 months
+
+[Sheet1!B76] if we enter the month July 26, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June 26.
+
+if we enter the date, then system should calcuate the sales from last year 3 months forward and current year last 3 months
+
+[RADIO BUTTON 1 ANNUAL!B88] Pass ALV MATNR to MARM-MATNR where MARA-MEINH is not equal to ALV UOM and take MARM-UMREN. If the MEINH is equal to ML or GM, then divide the value with 1000.
+
+[Radio Button 2 Quauter!B13] if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June 26.
+
+if we enter the date, then system should calcuate the sales from last year 3 months forward and current year last 3 months
+
+[Radio Button 2 Quauter!B26] Pass selection screen QUATER as FKDAT to VBRK-FKDAT and take all VBELN where VBRK-FKSTO is not equal to X and VBTYP is not equal to U and take all VBRK-VBELN and FKDAT. Pass all VBRK-VBELN and selection screen Plant to VBRP-VBELN and  WERKS where VBRP-shkzg is not equal to blank and take VBRP-MATNR .
+
+[Radio Button 2 Quauter!C35] also Pass MATDOC-MATNR and WERKS to ZPP_MATERIAL_TRACKING-NEW_MATNR and WERKS and take ZPP_MATERIAL_TRACKING- OLD_MATERIAL1 and OLD_MATERIAL2. Pass this two old material to MATDOC-MATNR,WERKS and BUDAT is from ALV and do the sum of MATDOC-MENGE.
+
+[Month!B13] if we enter the Quarter Q2, then system should calculate the sales of last jul25, aug 25 and sep 25, and last 3 months of sales from April 26, may 26, and June 26.
+
+if we enter the date, then system should calcuate the sales from last year 3 months forward and current year last 3 months
+
+[Month!B26] Pass selection screen QUATER as FKDAT to VBRK-FKDAT and take all VBELN where VBRK-FKSTO is not equal to X and VBTYP is not equal to U and take all VBRK-VBELN and FKDAT. Pass all VBRK-VBELN and selection screen Plant to VBRP-VBELN and  WERKS where VBRP-shkzg is not equal to blank and take VBRP-MATNR .
+
+[Month!C35] also Pass MATDOC-MATNR and WERKS to ZPP_MATERIAL_TRACKING-NEW_MATNR and WERKS and take ZPP_MATERIAL_TRACKING- OLD_MATERIAL1 and OLD_MATERIAL2. Pass this two old material to MATDOC-MATNR,WERKS and BUDAT is from ALV and do the sum of MATDOC-MENGE.
+
+== comments ==
