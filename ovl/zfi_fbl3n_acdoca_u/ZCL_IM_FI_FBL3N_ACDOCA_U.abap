@@ -66,13 +66,11 @@
              prctr   TYPE acdoca-prctr,
              aufnr   TYPE acdoca-aufnr,
              rbusa   TYPE acdoca-rbusa,
-             segment TYPE acdoca-segment,
              bschl   TYPE acdoca-bschl,
              mwskz   TYPE acdoca-mwskz,
              bstat   TYPE acdoca-bstat,
              xblnr   TYPE bkpf-xblnr,
              bktxt   TYPE bkpf-bktxt,
-             cpudt   TYPE bkpf-cpudt,
              usnam   TYPE bkpf-usnam,
              monat   TYPE bkpf-monat,
            END OF ty_acdoca.
@@ -179,9 +177,9 @@
     SELECT a~rbukrs, a~belnr, a~gjahr, a~docln, a~racct,
            a~budat, a~bldat, a~blart, a~poper, a~drcrk,
            a~hsl, a~wsl, a~rhcur, a~rwcur, a~sgtxt, a~zuonr,
-           a~rcntr, a~prctr, a~aufnr, a~rbusa, a~segment,
+           a~rcntr, a~prctr, a~aufnr, a~rbusa,
            a~bschl, a~mwskz, a~bstat,
-           b~xblnr, b~bktxt, b~cpudt, b~usnam, b~monat
+           b~xblnr, b~bktxt, b~usnam, b~monat
       FROM acdoca AS a
       LEFT OUTER JOIN bkpf AS b
         ON  b~bukrs = a~rbukrs
@@ -238,8 +236,8 @@
 *   999 lines would collide - not expected for CO postings).
 * ASSUMPTION: sign convention is the same on both sides - debit
 *   positive, credit negative in HSL/WSL and in DMSHB/WRSHB.
-* ASSUMPTION: RFPOSXEXT carries HWAER and SEGMENT on this release.
-*   If activation reports either as unknown, delete that one line.
+* NOTE: RFPOSXEXT on this release has no DMBTR/WRBTR (DMSHB/WRSHB only),
+*   no CPUDT, no SEGMENT; header text and user are U_BKTXT / U_USNAM.
     LOOP AT lt_acdoca INTO ls_acdoca.
       CLEAR ls_key.
       ls_key-bukrs = ls_acdoca-rbukrs.
@@ -272,23 +270,19 @@
         ls_item-monat = ls_acdoca-poper+1(2).
       ENDIF.
       ls_item-xblnr   = ls_acdoca-xblnr.
-      ls_item-bktxt   = ls_acdoca-bktxt.
-      ls_item-cpudt   = ls_acdoca-cpudt.
-      ls_item-usnam   = ls_acdoca-usnam.
+      ls_item-u_bktxt = ls_acdoca-bktxt.
+      ls_item-u_usnam = ls_acdoca-usnam.
       ls_item-shkzg   = ls_acdoca-drcrk.
       ls_item-waers   = ls_acdoca-rwcur.
       ls_item-hwaer   = ls_acdoca-rhcur.
       ls_item-dmshb   = ls_acdoca-hsl.
       ls_item-wrshb   = ls_acdoca-wsl.
-      ls_item-dmbtr   = abs( ls_acdoca-hsl ).
-      ls_item-wrbtr   = abs( ls_acdoca-wsl ).
       ls_item-sgtxt   = ls_acdoca-sgtxt.
       ls_item-zuonr   = ls_acdoca-zuonr.
       ls_item-kostl   = ls_acdoca-rcntr.
       ls_item-prctr   = ls_acdoca-prctr.
       ls_item-aufnr   = ls_acdoca-aufnr.
       ls_item-gsber   = ls_acdoca-rbusa.
-      ls_item-segment = ls_acdoca-segment.
       ls_item-bschl   = ls_acdoca-bschl.
       ls_item-mwskz   = ls_acdoca-mwskz.
       ls_item-bstat   = ls_acdoca-bstat.

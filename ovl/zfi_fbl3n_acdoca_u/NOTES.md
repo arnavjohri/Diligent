@@ -52,16 +52,16 @@ If a name differs, change the literal in the `ASSIGN` for that field only.
 
 - Leading ledger from `T881-XLEADING = 'X'` (ACDOCA has one line per ledger;
   FBL3N is the entry view, so one ledger only). Not found → message, nothing added.
-- `SELECT` from `ACDOCA` `LEFT OUTER JOIN BKPF` (XBLNR, BKTXT, CPUDT, USNAM, MONAT).
+- `SELECT` from `ACDOCA` `LEFT OUTER JOIN BKPF` (XBLNR, BKTXT, USNAM, MONAT).
   A line without a BKPF header is still listed; period then comes from `POPER`.
 - `F_BKPF_BUK` activity 03 per company code, as LDB `SDF` does for the standard
   items. Unauthorised company codes are dropped silently (same as standard).
 - Dedup on BUKRS/BELNR/GJAHR/BUZEI against what FBL3N already selected.
 - `BUZEI` = last three digits of `DOCLN` (no BSEG item exists). `KOART = 'S'`,
-  `KONTO = HKONT = RACCT`, `SHKZG = DRCRK`, `DMBTR/WRBTR = abs(HSL/WSL)`,
+  `KONTO = HKONT = RACCT`, `SHKZG = DRCRK`,
   `DMSHB/WRSHB = HSL/WSL` (debit +, credit −, same convention both sides),
-  `WAERS = RWCUR`, `HWAER = RHCUR`, `KOSTL = RCNTR`, `GSBER = RBUSA`, plus
-  BLART, BUDAT, BLDAT, SGTXT, ZUONR, PRCTR, AUFNR, SEGMENT, BSCHL, MWSKZ, BSTAT.
+  `WAERS = RWCUR`, `HWAER = RHCUR`, `KOSTL = RCNTR`, `GSBER = RBUSA`, `U_BKTXT`, `U_USNAM`, plus
+  BLART, BUDAT, BLDAT, XBLNR, SGTXT, ZUONR, PRCTR, AUFNR, BSCHL, MWSKZ, BSTAT.
 
 ## Not done, deliberately
 
@@ -73,8 +73,8 @@ If a name differs, change the literal in the `ASSIGN` for that field only.
 
 ## Open points / risks (grep `ASSUMPTION` in the source)
 
-- `RFPOSXEXT-HWAER` and `-SEGMENT` assumed present on this release. If activation
-  says *unknown component*, delete that one line.
+- Confirmed by the first activation (19/10/26): `RFPOSXEXT` here has **no** `DMBTR`, `WRBTR`,
+  `CPUDT` or `SEGMENT`; header text and user are `U_BKTXT` / `U_USNAM`. `HWAER` exists.
 - Whether `CHANGE_ITEMS` is called at all when the standard selection finds **zero**
   items is not confirmed. Test first on an account that also has normal items;
   then on one with only status-U lines. If the second case shows nothing, the
