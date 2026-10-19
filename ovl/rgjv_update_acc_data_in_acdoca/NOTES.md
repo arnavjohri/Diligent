@@ -179,3 +179,22 @@ Checklist, in order:
 
 Diagnose: Analysis Only + "Display All Items Processed" on the one document; the
 per-line message names the case. Empty list = never selected from JVSO1 (3 or 11).
+
+## 7. Debug result 19/10/26 — where "cannot be fixed" is raised for the 50<>13 doc
+
+Not `line_missing`. The ACDOCA offset line (BSEG 003) IS found by reference; the
+amounts differ. Raising statement: `COMPARE_FIELD_VALUES` line 149
+(`cs_log-corr_type = gc_corr_type-correction_not_possible`) under
+`cs_log-issues &&= gc_issue_type-wrong_amount` (line 144), taken because
+`iv_jvdoctype = fi_doc`. Line 63 is the twin for `wrong_amount_sign`.
+`DETERMINE_CORRECTION_TYPE` (line 607 caller) only carries the 6 forward —
+debugger showed `IV_CORR_TYPE = 6` on entry.
+
+Breakpoint: `COMPARE_FIELD_VALUES`, the `IF` above `wrong_amount` (line 139).
+Inspect IS_JVSO-HSL/RCNTR/RJVNAM/TABIX_AGGR vs IS_ACDOCA-BUZEI/HSL/RCNTR/VNAME.
+Expected: BUZEI 003, HSL 20,695,950.00, RCNTR blank vs JV group 95,115.00 with CC.
+
+Conclusion: one ACDOCA offset line vs many JV split lines per venture/cost object.
+No selection-screen option changes this for an FI document. Functional decision:
+reverse + repost with JVA active, or accept and handle expense lines only
+(`ZFI_ACDOCA_VNAME_UPD` covers those where VNAME is present).
