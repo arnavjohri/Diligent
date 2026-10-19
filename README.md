@@ -112,6 +112,7 @@ ovl/                             OVL / ONGC Videsh
   ocv-to-ovl-transfer/           Colombia OCV → OVL document transfer
   zf01_exchange_rate/            Exchange rate OData V2 interface (CPI → TCURR)
   mm-fiori/                      MM programs assessed for Fiori tiles
+  zmm_purchdoc_cds_ext/          PO / PR / contract CDS extensions for custom fields (TR OCQK901357)
   ztest_t001/                    abapGit round-trip test (importable repo)
   _engagement/                   Transport lists, scope notes
 
