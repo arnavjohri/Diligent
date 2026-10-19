@@ -95,6 +95,18 @@ CLASS zcl_pp_fcst_pnt DEFINITION
       CHANGING  ct_alv  TYPE tt_alv
                 ct_msg  TYPE bapiret2_t.
 
+    "! Write the rows carrying MARK = X and a forecast number into the Paints
+    "! tables ZPPT_PNT_FCST_YR / _QT / _MN - the engine's row plus the Paints
+    "! columns. Called by ZPP_FORECAST_PAINTS right after ZCL_PP_FCST=>SAVE,
+    "! which has already drawn the number and written the shared tables that
+    "! the engine, the uploads and the final report read. MARK is cleared on
+    "! every row processed; a row the database refuses gets LIGHT 1 and a
+    "! message. Commits its own work.
+    METHODS save_paints
+      IMPORTING iv_mode TYPE char1
+      CHANGING  ct_alv  TYPE tt_alv
+                ct_msg  TYPE bapiret2_t.
+
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_plant,
@@ -402,6 +414,109 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
       ENDCASE.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD save_paints.
+
+    DATA: lv_saved TYPE i,
+          lv_fail  TYPE i,
+          lv_rc    TYPE sy-subrc,
+          ls_yr    TYPE zppt_pnt_fcst_yr,
+          ls_qt    TYPE zppt_pnt_fcst_qt,
+          ls_mn    TYPE zppt_pnt_fcst_mn,
+          ls_msg   TYPE bapiret2.
+
+    FIELD-SYMBOLS <ls> TYPE ty_alv.
+
+    LOOP AT ct_alv ASSIGNING <ls> WHERE mark = abap_true.
+
+      CLEAR <ls>-mark.
+      CHECK <ls>-fcst_no IS NOT INITIAL.
+
+      lv_rc = 4.
+
+      CASE iv_mode.
+
+        WHEN zcl_pp_fcst=>gc_mode-annual.
+          CLEAR ls_yr.
+          ls_yr = CORRESPONDING zppt_pnt_fcst_yr( <ls> ).
+*         Created-by and created-on of an existing row are kept; only
+*         changed-by and changed-on move
+          SELECT SINGLE ernam, erdat FROM zppt_pnt_fcst_yr
+            INTO ( @ls_yr-ernam, @ls_yr-erdat )
+            WHERE werks = @<ls>-werks
+              AND matnr = @<ls>-matnr
+              AND fyear = @<ls>-fyear.
+          IF ls_yr-ernam IS INITIAL.
+            ls_yr-ernam = sy-uname.
+            ls_yr-erdat = sy-datum.
+          ENDIF.
+          ls_yr-aenam = sy-uname.
+          ls_yr-aedat = sy-datum.
+          MODIFY zppt_pnt_fcst_yr FROM @ls_yr.
+          lv_rc = sy-subrc.
+
+        WHEN zcl_pp_fcst=>gc_mode-quarterly.
+          CLEAR ls_qt.
+          ls_qt = CORRESPONDING zppt_pnt_fcst_qt( <ls> ).
+          SELECT SINGLE ernam, erdat FROM zppt_pnt_fcst_qt
+            INTO ( @ls_qt-ernam, @ls_qt-erdat )
+            WHERE werks   = @<ls>-werks
+              AND matnr   = @<ls>-matnr
+              AND gjahr   = @<ls>-gjahr
+              AND quarter = @<ls>-quarter.
+          IF ls_qt-ernam IS INITIAL.
+            ls_qt-ernam = sy-uname.
+            ls_qt-erdat = sy-datum.
+          ENDIF.
+          ls_qt-aenam = sy-uname.
+          ls_qt-aedat = sy-datum.
+          MODIFY zppt_pnt_fcst_qt FROM @ls_qt.
+          lv_rc = sy-subrc.
+
+        WHEN zcl_pp_fcst=>gc_mode-monthly.
+          CLEAR ls_mn.
+          ls_mn = CORRESPONDING zppt_pnt_fcst_mn( <ls> ).
+          SELECT SINGLE ernam, erdat FROM zppt_pnt_fcst_mn
+            INTO ( @ls_mn-ernam, @ls_mn-erdat )
+            WHERE werks  = @<ls>-werks
+              AND matnr  = @<ls>-matnr
+              AND gjahr  = @<ls>-gjahr
+              AND period = @<ls>-period.
+          IF ls_mn-ernam IS INITIAL.
+            ls_mn-ernam = sy-uname.
+            ls_mn-erdat = sy-datum.
+          ENDIF.
+          ls_mn-aenam = sy-uname.
+          ls_mn-aedat = sy-datum.
+          MODIFY zppt_pnt_fcst_mn FROM @ls_mn.
+          lv_rc = sy-subrc.
+
+      ENDCASE.
+
+      IF lv_rc = 0.
+        lv_saved = lv_saved + 1.
+      ELSE.
+        lv_fail = lv_fail + 1.
+        <ls>-light   = '1'.
+        <ls>-message = |Saved under forecast { <ls>-fcst_no }, Paints table not updated|.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lv_saved > 0.
+      COMMIT WORK AND WAIT.
+    ENDIF.
+
+    IF lv_fail > 0.
+      CLEAR ls_msg.
+      ls_msg-type    = 'E'.
+      ls_msg-id      = gc_msgid.
+      ls_msg-message = |{ lv_fail } row(s) not written to the Paints forecast table|.
+      APPEND ls_msg TO ct_msg.
+    ENDIF.
 
   ENDMETHOD.
 

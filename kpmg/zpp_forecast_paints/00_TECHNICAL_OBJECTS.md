@@ -18,16 +18,34 @@ they are. Everything Paints-specific is a new object in its own package.
 |---|---|---|
 | Package | `ZPP_FORECAST_PAINTS` | ZFORECAST Paints - forecasting |
 | Domain | `ZDO_BRAND` | CHAR 40 (**assumption**, query M2 unanswered) |
+| Domain | `ZDO_FCST_KL` | DEC 13,3 — pack size, qty per carton, volume in KL |
+| Domain | `ZDO_FCST_CR` | DEC 13,4 — value in crores |
 | Data element | `ZDE_BRAND` | Brand |
+| Data element | `ZDE_PACK_SIZE`, `ZDE_QTY_CARTON`, `ZDE_FCST_KL` | on `ZDO_FCST_KL` |
+| Data element | `ZDE_FCST_CR` | on `ZDO_FCST_CR` |
 | Table | `ZPPT_BRAND` | Key MANDT, WERKS, MATNR · BRAND · ERNAM, ERDAT, AENAM, AEDAT. Delivery class A, APPL0, size 0 |
-| Class | `ZCL_PP_FCST_PNT` | Paints columns on top of `ZCL_PP_FCST=>TY_ALV`: plant name, brand, pack size, DPL for annual, qty per carton, gross weight, tonnage on gross weight, KL and crores per month |
+| Table | `ZPPT_PNT_FCST_YR` | **Paints annual forecast.** `ZPPT_FCST_YR` field for field (key WERKS, MATNR, FYEAR) plus NAME1, BRAND, PACK_SIZE, PACK_UNIT, QTY_CARTON, BRGEW, WAERS, PRICE, M01_KL…M12_KL, M01_CR…M12_CR. 92 fields |
+| Table | `ZPPT_PNT_FCST_QT` | **Paints quarterly forecast.** `ZPPT_FCST_QT` field for field (key WERKS, MATNR, GJAHR, QUARTER) plus NAME1, BRAND, PACK_SIZE, PACK_UNIT, QTY_CARTON, BRGEW, M4_KL…M6_KL, M4_CR…M6_CR. 68 fields |
+| Table | `ZPPT_PNT_FCST_MN` | **Paints monthly forecast.** `ZPPT_FCST_MN` field for field (key WERKS, MATNR, GJAHR, PERIOD) plus NAME1, BRAND, PACK_SIZE, PACK_UNIT, QTY_CARTON, BRGEW, WAERS, PRICE, M4_KL, M4_CR. 50 fields |
+| Class | `ZCL_PP_FCST_PNT` | Paints columns on top of `ZCL_PP_FCST=>TY_ALV`: plant name, brand, pack size, DPL for annual, qty per carton, gross weight, tonnage on gross weight, KL and crores per month (`ENRICH`); and the write of the saved rows into the three Paints tables (`SAVE_PAINTS`) |
 | Report | `ZPP_FORECAST_PAINTS` | Generation, 3 radio modes, Sheet1 layouts — tcode `ZFCST_PAINTS` |
 | Report | `ZPP_FORECAST_PAINTS_UPL` | All nine Paints uploads — tcode `ZFCST_PAINTS_UPL`. The Adhesive upload copied whole, plus a ninth type Brand and a category indicator accepting MTS, MTO, DIS, TIN. A Paints user never needs ZFCST_UPL |
+
+### Where a Paints forecast is saved — two writes, by design
+
+`ZCL_PP_FCST=>SAVE` (unchanged) draws the forecast number and writes the shared
+`ZPPT_FCST_YR` / `_QT` / `_MN` exactly as for Adhesive. `ZCL_PP_FCST_PNT=>SAVE_PAINTS` then
+writes the same rows, with the Paints columns, into `ZPPT_PNT_FCST_YR` / `_QT` / `_MN`. The
+shared write cannot be dropped without changing the engine: the engine reads the business
+forecast, the additional quantities, MSL and the stored price back from the shared tables
+at generation time, the change upload requires the shared row to exist, the forecast number
+is shared across the three tables through them, and ZFCST_RPT reads them. The Paints tables
+are the Paints output with every column the list shows; nothing reads them yet.
 
 ### Shared with Adhesive — used as they are, **not in the ZIP**
 
 `ZPPT_PROD_CAT`, `ZPPT_MAT_TRACK`, `ZPPT_MAT_EXCL`, `ZPPT_SLS_HIST`, `ZPPT_FCST_CFG`,
-`ZPPT_FCST_YR`, `ZPPT_FCST_QT`, `ZPPT_FCST_MN`; number range `ZPPFCST`; auth object `ZPP_FCST`;
+`ZPPT_FCST_YR`, `ZPPT_FCST_QT`, `ZPPT_FCST_MN` (still written, see above); number range `ZPPFCST`; auth object `ZPP_FCST`;
 message class `ZPP_FCST` (001–026, nothing added); `ZCL_PP_FCST`; `ZCL_PP_FCST_UTIL`;
 `ZPP_FORECAST_REPORT` (ZFCST_RPT) as the Paints final report. `ZPP_FORECAST_UPLOAD`
 (ZFCST_UPL) is not needed by Paints users since 19/10/26 PM — the Paints upload carries all
@@ -37,7 +55,7 @@ its types — but writes the same tables, so a Paints row loaded through it is e
 
 | # | Transaction | What | Values |
 |---|---|---|---|
-| 1 | SE41 | GUI status `PF_STATUS` of `ZPP_FORECAST_PAINTS` | Copy status `PF_STATUS` from program `ZPP_FORECAST` to `ZPP_FORECAST_PAINTS`, same name. It already carries SALV_STANDARD plus ZSAVE, ZSELALL, ZDESEL, ZEXCEL. Until it exists the list shows the standard toolbar without the four buttons and says so |
+| 1 | SE41 | GUI status `PF_STATUS` of `ZPP_FORECAST_PAINTS` | Copy status `PF_STATUS` from program `ZPP_FORECAST` to `ZPP_FORECAST_PAINTS`, same name; or copy `SALV_STANDARD` from `SAPLSALV_METADATA_STATUS` and add ZSAVE, ZSELALL, ZDESEL, ZEXCEL to the application toolbar. Step by step in `MANUAL_STEPS.md`. Until it exists the list shows the standard toolbar without the four buttons and says so |
 | 2 | SE93 | `ZFCST_PAINTS` | Report transaction, program `ZPP_FORECAST_PAINTS`, screen 1000 |
 | 3 | SE93 | `ZFCST_PAINTS_UPL` | Report transaction, program `ZPP_FORECAST_PAINTS_UPL`, screen 1000 |
 | 4 | SM30 `ZPPV_FCST_CFG` | One row per **Paints plant** | `VKORG` = the Paints sales organisation (FS says 4000), `TVARV_LEGACY` as for Adhesive. Without a row the run logs message 018 and uses 4000 |
@@ -54,10 +72,13 @@ ZABAPGIT_STANDALONE → New Offline → package ZPP_FORECAST_PAINTS (create it i
 or SE80 first, superpackage as the Adhesive one) → Import ZIP ZPP_FORECAST_PAINTS.zip → Pull
 ```
 
-11 files: `.abapgit.xml`, `package.devc.xml`, `zdo_brand.doma.xml`, `zde_brand.dtel.xml`,
-`zppt_brand.tabl.xml`, `zcl_pp_fcst_pnt.clas.abap` + `.xml`, `zpp_forecast_paints.prog.abap`
-+ `.xml`, `zpp_forecast_paints_upl.prog.abap` + `.xml`. abapGit orders the activation itself
-(domain → data element → table → class → programs).
+20 files: `.abapgit.xml`, `package.devc.xml`, 3 domains, 5 data elements, 4 tables
+(`zppt_brand`, `zppt_pnt_fcst_yr`, `zppt_pnt_fcst_qt`, `zppt_pnt_fcst_mn`),
+`zcl_pp_fcst_pnt.clas.abap` + `.xml`, `zpp_forecast_paints.prog.abap` + `.xml`,
+`zpp_forecast_paints_upl.prog.abap` + `.xml`. abapGit orders the activation itself
+(domain → data element → table → class → programs). The three forecast tables are generated
+from the Adhesive ones by `tools/mktables.py`, so their XML shape and element order are the
+ones that imported.
 
 The XML shapes are copied from the Adhesive `src/` files of the same types, with `PROGDIR`
 in the order `NAME, VARCL, SUBC, FIXPT, UCCHECK` and `TPOOL` items as `ID, KEY, ENTRY,

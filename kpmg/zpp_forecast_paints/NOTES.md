@@ -45,6 +45,12 @@ of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
 - **One DDIC touch:** `ZDO_MTS_MTO` gains fixed values `DIS`, `TIN`, length unchanged. No
   conversion, no code. The zero-touch alternative (a Paints-only indicator in the brand
   table) is recorded and rejected in §0.1.
+- **New, since 19/10/26 PM:** the three Paints forecast tables `ZPPT_PNT_FCST_YR` / `_QT` /
+  `_MN` (Adhesive shape plus the Paints columns; domains `ZDO_FCST_KL`, `ZDO_FCST_CR`, data
+  elements `ZDE_PACK_SIZE`, `ZDE_QTY_CARTON`, `ZDE_FCST_KL`, `ZDE_FCST_CR`), written by
+  `ZCL_PP_FCST_PNT=>SAVE_PAINTS` right after the engine's SAVE. **The shared tables are still
+  written** — the engine reads them back, the change upload needs them, ZFCST_RPT reads them.
+  Nothing reads the Paints tables yet. `MANUAL_STEPS.md` has the SE41 / SE93 / SM30 detail.
 - **New:** `ZPPT_BRAND` (+ `ZDO_BRAND`, `ZDE_BRAND`, SM30 view `ZPPV_BRAND`),
   `ZCL_PP_FCST_PNT` (enrichment: Paints columns on top of `ZCL_PP_FCST=>TY_ALV`, own
   A923 price read for annual, tonnage on gross weight ÷ 1000, KL and crores),

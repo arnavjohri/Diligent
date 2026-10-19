@@ -189,7 +189,9 @@ CLASS lcl_handler IMPLEMENTATION.
     DATA(lt_msg) = go_fcst->save( EXPORTING iv_mode = g_mode
                                   CHANGING  ct_alv  = lt_eng ).
 
-*   The number and the per row outcome come back row for row
+*   The number and the per row outcome come back row for row. MARK is
+*   cleared on every row here; the engine clears it only on the rows it
+*   saved, and a row it refused must not reach the Paints table either.
     LOOP AT lt_eng INTO ls_eng.
       lv_ix = sy-tabix.
       READ TABLE gt_alv ASSIGNING <ls> INDEX lv_ix.
@@ -198,8 +200,22 @@ CLASS lcl_handler IMPLEMENTATION.
         <ls>-light   = ls_eng-light.
         <ls>-status  = ls_eng-status.
         <ls>-message = ls_eng-message.
+        <ls>-mark    = abap_false.
       ENDIF.
     ENDLOOP.
+
+*   The rows the engine saved (green light) go, with the Paints columns,
+*   into ZPPT_PNT_FCST_YR / _QT / _MN as well
+    LOOP AT lt_rows INTO lv_row.
+      READ TABLE gt_alv ASSIGNING <ls> INDEX lv_row.
+      IF sy-subrc = 0 AND <ls>-light = '3'.
+        <ls>-mark = abap_true.
+      ENDIF.
+    ENDLOOP.
+
+    go_pnt->save_paints( EXPORTING iv_mode = g_mode
+                         CHANGING  ct_alv  = gt_alv
+                                   ct_msg  = lt_msg ).
 
     show_result( ).
     go_alv->refresh( ).

@@ -35,6 +35,12 @@ ZFCST_UPL (the Adhesive upload) is not needed for Paints; it writes the same tab
 Paints row loaded through it by mistake is still valid, except that its category upload
 refuses DIS and TIN.
 
-Paints-only: `ZPPT_BRAND`. Shared with Adhesive: `ZPPT_PROD_CAT`, `ZPPT_MAT_TRACK`,
+Paints-only: `ZPPT_BRAND` (brand per plant and material) and the three Paints forecast
+tables `ZPPT_PNT_FCST_YR`, `ZPPT_PNT_FCST_QT`, `ZPPT_PNT_FCST_MN` — the saved annual,
+quarterly and monthly forecasts with every Paints column (brand, pack size, DPL, qty per
+carton, gross weight, KL and crores per month). Each Save writes them and, in the Adhesive
+shape, the shared `ZPPT_FCST_YR` / `_QT` / `_MN` as well, because the engine, the change
+upload and the final report read the shared ones.
+Shared with Adhesive: `ZPPT_PROD_CAT`, `ZPPT_MAT_TRACK`,
 `ZPPT_MAT_EXCL`, `ZPPT_SLS_HIST`, `ZPPT_FCST_CFG`, `ZPPT_FCST_YR`, `ZPPT_FCST_QT`, `ZPPT_FCST_MN`.
 Package `ZPP_FORECAST_PAINTS` holds the Paints objects; the shared ones are in `ZPP_FORECAST`.

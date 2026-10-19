@@ -29,9 +29,10 @@ is built as new objects that call the Adhesive engine and share its tables.
 | Object | Type | New / changed | Package | TR |
 |-----------------------------|--------------|------------|------------------------|----------|
 | `ZPP_FORECAST_PAINTS` | Package | New | — | |
-| `ZDO_BRAND` | Domain | New | `ZPP_FORECAST_PAINTS` | |
-| `ZDE_BRAND` | Data element | New | `ZPP_FORECAST_PAINTS` | |
+| `ZDO_BRAND`, `ZDO_FCST_KL` (DEC 13,3), `ZDO_FCST_CR` (DEC 13,4) | Domains | New | `ZPP_FORECAST_PAINTS` | |
+| `ZDE_BRAND`, `ZDE_PACK_SIZE`, `ZDE_QTY_CARTON`, `ZDE_FCST_KL`, `ZDE_FCST_CR` | Data elements | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPPT_BRAND` | Table | New | `ZPP_FORECAST_PAINTS` | |
+| `ZPPT_PNT_FCST_YR`, `ZPPT_PNT_FCST_QT`, `ZPPT_PNT_FCST_MN` | Tables | New — Paints annual, quarterly, monthly forecast | `ZPP_FORECAST_PAINTS` | |
 | `ZCL_PP_FCST_PNT` | Class | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPP_FORECAST_PAINTS` | Report | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPP_FORECAST_PAINTS_UPL` | Report | New | `ZPP_FORECAST_PAINTS` | |
@@ -81,6 +82,24 @@ row's plant), `PRICE` (annual). Per forecast month, on the quantity the engine p
 `Mnn_TON` overwrites the engine's net-weight tonnage. Because the Paints program hands the rows
 back to `ZCL_PP_FCST=>SAVE` after enrichment, the quarterly save stores the gross-weight tonnage
 in `ZPPT_FCST_QT-M4_TON…M6_TON` for Paints rows.
+
+### 4.2a The Paints forecast tables and `SAVE_PAINTS`
+
+`ZPPT_PNT_FCST_YR` (key WERKS, MATNR, FYEAR), `ZPPT_PNT_FCST_QT` (key WERKS, MATNR, GJAHR,
+QUARTER) and `ZPPT_PNT_FCST_MN` (key WERKS, MATNR, GJAHR, PERIOD) are the Adhesive tables
+field for field plus `NAME1`, `BRAND`, `PACK_SIZE`, `PACK_UNIT`, `QTY_CARTON`, `BRGEW` (ref
+`GEWEI`), the per-month `Mnn_KL` / `Mnn_CR` (annual twelve each, quarterly M4–M6, monthly
+M4), and on annual and monthly `WAERS` + `PRICE` (ref `WAERS`), which the Adhesive tables
+do not carry. Delivery class A, APPL0, size 0.
+
+`ZCL_PP_FCST_PNT=>SAVE_PAINTS( iv_mode, ct_alv, ct_msg )` runs after `ZCL_PP_FCST=>SAVE`: for
+every row with `MARK` and a forecast number it builds the table row with `CORRESPONDING`,
+keeps an existing row's created-by and created-on, sets changed-by and changed-on, and
+`MODIFY`s the table of the mode; one `COMMIT WORK` at the end. A refused row gets light 1 and
+the message "Saved under forecast n, Paints table not updated". The shared tables are still
+written by the engine first: it reads the business forecast, additional quantities, MSL and
+price back from them at generation, the change upload requires the shared row, the forecast
+number is shared through them, and ZFCST_RPT reads them. Nothing reads the Paints tables yet.
 
 ### 4.3 `ZPP_FORECAST_PAINTS_UPL` — all nine Paints uploads
 
