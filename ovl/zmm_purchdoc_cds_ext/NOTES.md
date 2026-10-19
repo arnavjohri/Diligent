@@ -54,6 +54,34 @@ own views is unknown until the source is seen.
 
 PO = purchase order, PR = purchase requisition, PC = purchase contract.
 
+## Chains per document (read off the TR by naming convention — confirm the order in ADT)
+
+A view exposes only what its data source carries, so a new custom field is added at **every**
+level, bottom (the view that selects from the table) to top (the consumption view the app's
+OData service exposes), and activated in that order. Extending only the top view fails with
+"element … not found in data source". Bottom-up order below is **presumed** from the names;
+confirm it by opening each top view in ADT and following `as projection on` / `select from`
+downwards until the table appears.
+
+| Document | Table | Bottom → top (standard view behind each `Z…_EXT`) | Final extension |
+|---|---|---|---|
+| PO header | EKKO | `I_PurchaseOrder` → `R_PurchasingDocument` → `R_PurchaseOrder` → `I_PurchaseOrderTP` → `C_PurchaseOrderTP` | `ZC_PURCHASEORDERTP_EXT` |
+| PO item | EKPO | `I_PurchaseOrderItem` → `R_PurchasingDocumentItem` → `R_PurchaseOrderItem` → `I_PurchaseOrderItemTP` → `C_PurchaseOrderItemTP` | `ZC_PURCHASEORDERITEMTP_EXT` |
+| PR item | EBAN | `I_PurchaseReqnItemBasic` → `I_PurchaseRequisitionItem` → `P_PurchaseReqnItem` → `T_PurchaseReqnItem` → `R_PurchaseReqnItem` → `C_PurchaseReqnItem` | `ZC_PURCHASEREQNITEM_EXT` |
+| Contract header | EKKO | `I_PurchaseContractWD` / `I_PurchaseContractVersion` → `R_PurchaseContract` → `C_ContractMaintain` | `ZC_CONTRACTMAINTAIN_EXT` |
+| Contract item | EKPO | `I_PurchaseContractItem` → `I_PurchaseContractItemWD` → `R_PurchaseContractItem` → `C_ContractMaintainItem` | `ZC_CONTRACTMAINTAINITEM_EXT` |
+
+`ZI_PURCHASEORDER`, `ZI_PURCHASEORDERITEM`, `ZR_PURCHASINGDOCUMENT`, `ZR_PURCHASINGDOCUMENTITEM`
+have no `_EXT` suffix: which standard view each extends, and whether the `_EXT` twin on
+`R_PurchasingDocument(Item)` is a second extension or a replacement, is only visible in the
+source. PR header (`EBAN` has none; `C_PurchaseRequisition…`) is not in the TR.
+
+Syntax differs by level: a classic `extend view` references the field through the base view's
+alias (`<alias>.zzfield`); an `extend view entity` on a projection (`C_…TP`, `R_…`) lists the
+element name as exposed by the view underneath, and carries the `@UI.*` annotations on the
+top level. Field shown read-only is CDS only; input-ready in a RAP app needs the behavior
+definition extended as well (not in this TR).
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
