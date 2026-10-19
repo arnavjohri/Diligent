@@ -111,6 +111,29 @@ entity-level annotation an `extend view` cannot add — that would need a DDLX o
 `C_PurchaseOrderTP`, which only works if the view carries `@Metadata.allowExtensions: true`
 (not confirmed; `C_FixedAssetWorklist` did not — see `ovl/f1592_asset_worklist/`).
 
+## Fiori value help for ZZNAT_PROC (Tender Process) — 19/10/26
+
+GUI F4 is `MODULE pop_up` (PROCESS ON VALUE-REQUEST): `ZNAT_PROC` where `STATUS = 'active'`,
+code + description, sorted by `SERIAL_NO`, shown with `F4IF_INT_TABLE_VALUE_REQUEST`. The Fiori
+equivalent is OData-only, no UI5:
+
+1. `ZI_NAT_PROC_VH.ddls.asddls` (this folder) — value help view, same rows, key + text.
+   `@ObjectModel.resultSet.sizeCategory: #XS` makes Fiori render a dropdown instead of a
+   dialog; drop the line if a dialog is wanted.
+2. In `ZC_PURCHASEORDERTP_EXT`, on `zznat_proc`:
+   `@Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_NAT_PROC_VH', element: 'zznat_proc' } }]`
+   — to be added **after** the 230–260 change is activated, as the next change to that object.
+3. The service must expose `ZI_NAT_PROC_VH` as an entity set. SADL-based services do that on
+   their own; a RAP service definition does not — check `$metadata` for the entity set and the
+   `Common.ValueList` annotation on `zznat_proc`. If missing and the app runs on an SAP service
+   definition, the route is a service definition extension (`extend service … with { expose … }`),
+   release-dependent, to be confirmed on the system.
+
+Caveats: the F4 only matters where the field is input-ready in the app (CDS alone is display).
+The GUI's `SERIAL_NO` order is not a value-help contract in Fiori — `serial_no` is exposed as a
+column so users can sort on it. `@Semantics.text` is used here on a classic `define view`, where
+it is allowed; it is the view-entity form that fails on this release (MEMORY §4.1).
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
