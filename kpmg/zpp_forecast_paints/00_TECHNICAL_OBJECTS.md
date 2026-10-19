@@ -114,6 +114,7 @@ SE38 `ZPP_FORECAST_PAINTS` (type 1, selection texts from the `.prog.xml` TPOOL) 
 | Upload: brand (Plant, Material, Brand) | `ZPP_FORECAST_PAINTS_UPL` type BRD |
 | Upload: tracking, exclusion, last-year history, sales forecast Q/M, forecast change Q/M | `ZPP_FORECAST_PAINTS_UPL` types TRK, EXC, HIST, BUSQ, BUSM, CHGQ, CHGM — the Adhesive routines copied unchanged, same tables |
 | Final Report / Consolidated | ZFCST_RPT, shared, unchanged |
+| Save (annual, quarterly, monthly) with the Paints columns | `ZCL_PP_FCST=>SAVE` into the shared tables, then `ZCL_PP_FCST_PNT=>SAVE_PAINTS` into `ZPPT_PNT_FCST_YR` / `_QT` / `_MN`, same number, same key |
 
 The quantity behind KL, crores and tonnage is the one the engine prices: the month's final
 (forecast + additional) in quarterly, the month's total (final + additional + MSL) in monthly,
