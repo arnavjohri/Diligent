@@ -35,6 +35,48 @@
     </item>
     <item>
      <ID>S</ID>
+     <KEY>P_TRK</KEY>
+     <ENTRY>Material Tracking</ENTRY>
+     <LENGTH>17</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_EXC</KEY>
+     <ENTRY>Material Exclusion</ENTRY>
+     <LENGTH>18</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_HIST</KEY>
+     <ENTRY>Legacy Sales History</ENTRY>
+     <LENGTH>20</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_BUSQ</KEY>
+     <ENTRY>Business Forecast Quarterly</ENTRY>
+     <LENGTH>27</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_BUSM</KEY>
+     <ENTRY>Business Forecast Monthly</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_CHGQ</KEY>
+     <ENTRY>Forecast Change Quarterly</ENTRY>
+     <LENGTH>25</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_CHGM</KEY>
+     <ENTRY>Forecast Change Monthly</ENTRY>
+     <LENGTH>23</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
      <KEY>P_BRD</KEY>
      <ENTRY>Brand</ENTRY>
      <LENGTH>5</LENGTH>

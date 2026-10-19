@@ -22,15 +22,16 @@ they are. Everything Paints-specific is a new object in its own package.
 | Table | `ZPPT_BRAND` | Key MANDT, WERKS, MATNR · BRAND · ERNAM, ERDAT, AENAM, AEDAT. Delivery class A, APPL0, size 0 |
 | Class | `ZCL_PP_FCST_PNT` | Paints columns on top of `ZCL_PP_FCST=>TY_ALV`: plant name, brand, pack size, DPL for annual, qty per carton, gross weight, tonnage on gross weight, KL and crores per month |
 | Report | `ZPP_FORECAST_PAINTS` | Generation, 3 radio modes, Sheet1 layouts — tcode `ZFCST_PAINTS` |
-| Report | `ZPP_FORECAST_PAINTS_UPL` | Product category (4 indicator values) and brand uploads — tcode `ZFCST_PAINTS_UPL` |
+| Report | `ZPP_FORECAST_PAINTS_UPL` | All nine Paints uploads — tcode `ZFCST_PAINTS_UPL`. The Adhesive upload copied whole, plus a ninth type Brand and a category indicator accepting MTS, MTO, DIS, TIN. A Paints user never needs ZFCST_UPL |
 
 ### Shared with Adhesive — used as they are, **not in the ZIP**
 
 `ZPPT_PROD_CAT`, `ZPPT_MAT_TRACK`, `ZPPT_MAT_EXCL`, `ZPPT_SLS_HIST`, `ZPPT_FCST_CFG`,
 `ZPPT_FCST_YR`, `ZPPT_FCST_QT`, `ZPPT_FCST_MN`; number range `ZPPFCST`; auth object `ZPP_FCST`;
 message class `ZPP_FCST` (001–026, nothing added); `ZCL_PP_FCST`; `ZCL_PP_FCST_UTIL`;
-`ZPP_FORECAST_UPLOAD` (ZFCST_UPL) for tracking, exclusion, legacy history, business forecast
-Q/M and forecast change Q/M; `ZPP_FORECAST_REPORT` (ZFCST_RPT) as the Paints final report.
+`ZPP_FORECAST_REPORT` (ZFCST_RPT) as the Paints final report. `ZPP_FORECAST_UPLOAD`
+(ZFCST_UPL) is not needed by Paints users since 19/10/26 PM — the Paints upload carries all
+its types — but writes the same tables, so a Paints row loaded through it is equally valid.
 
 ### Manual, after the import — abapGit never carries these
 
@@ -88,9 +89,9 @@ SE38 `ZPP_FORECAST_PAINTS` (type 1, selection texts from the `.prog.xml` TPOOL) 
 | Volume in KL per month | quantity × pack size ÷ 1000 — `Mnn_KL`, `M4/5/6_KL` |
 | Value in Crores per month | DPL × quantity ÷ 1,00,00,000 — `Mnn_CR`, `M4/5/6_CR` |
 | Tonnage Wise (gross weight) | quantity × `MARA-BRGEW` ÷ 1000 written into the engine's `Mnn_TON` / `M4–6_TON` before display and save; `BRGEW` column shown with it |
-| Upload: category | `ZPP_FORECAST_PAINTS_UPL` type CAT |
+| Upload: category | `ZPP_FORECAST_PAINTS_UPL` type CAT (four indicator values) |
 | Upload: brand (Plant, Material, Brand) | `ZPP_FORECAST_PAINTS_UPL` type BRD |
-| Upload: tracking, exclusion, last-year history, sales forecast, forecast change | ZFCST_UPL, shared, unchanged |
+| Upload: tracking, exclusion, last-year history, sales forecast Q/M, forecast change Q/M | `ZPP_FORECAST_PAINTS_UPL` types TRK, EXC, HIST, BUSQ, BUSM, CHGQ, CHGM — the Adhesive routines copied unchanged, same tables |
 | Final Report / Consolidated | ZFCST_RPT, shared, unchanged |
 
 The quantity behind KL, crores and tonnage is the one the engine prices: the month's final
@@ -140,8 +141,10 @@ Headings follow Sheet1's wording and the financial calendar: `Q2 Jul-26 Forecast
 
 ## 6. Known duplication, by design
 
-The A923 price read (`READ_PRICES`, ~40 lines) and the upload file handling
-(`UPLOAD_FILE … DROP_HEADER`, `DOWNLOAD_TEMPLATE`, `FIELD_LABEL`, `DISPLAY_LOG`, ~600 lines)
-exist in the Adhesive objects and again here. A fix to either on the Adhesive side has to be
-repeated in `ZCL_PP_FCST_PNT` / `ZPP_FORECAST_PAINTS_UPL`. This is the price of leaving the
-Adhesive code untouched.
+The A923 price read (`READ_PRICES`, ~40 lines) exists in `ZCL_PP_FCST` and again in
+`ZCL_PP_FCST_PNT`. `ZPP_FORECAST_PAINTS_UPL` is `ZPP_FORECAST_UPLOAD` whole (2,474 lines of
+the 23/09/26 repo copy) plus the brand type and the indicator check, so **every fix to the
+Adhesive upload has to be repeated in the Paints upload**; the two differ only in the header,
+the ninth radio button, `FORM CHECK_INDICATOR` / `FORM DO_BRAND` and the `BRD` template
+branch, so a diff between them shows exactly that. This is the price of leaving the Adhesive
+code untouched.

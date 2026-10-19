@@ -82,12 +82,15 @@ row's plant), `PRICE` (annual). Per forecast month, on the quantity the engine p
 back to `ZCL_PP_FCST=>SAVE` after enrichment, the quarterly save stores the gross-weight tonnage
 in `ZPPT_FCST_QT-M4_TON…M6_TON` for Paints rows.
 
-### 4.3 `ZPP_FORECAST_PAINTS_UPL` — category and brand uploads
+### 4.3 `ZPP_FORECAST_PAINTS_UPL` — all nine Paints uploads
 
-Two radio buttons, each with its own Download Template button, plus file, header-row and
-test-run fields; file handling (Excel through `CL_FDT_XL_SPREADSHEET`, CSV, tab text, header
-detection, per-row result list with traffic light, commit of good rows only) copied from
-`ZPP_FORECAST_UPLOAD`.
+`ZPP_FORECAST_UPLOAD` copied whole (repo copy activated 23/09/26: eight radio buttons, each
+with its own Download Template button, Excel through `CL_FDT_XL_SPREADSHEET`, CSV, tab text,
+header detection, per-row result list with traffic light, commit of good rows only) with
+three additions: a ninth radio button Brand, `FORM DO_BRAND`, and `FORM CHECK_INDICATOR`
+replacing the MTS/MTO-only check in `FORM DO_CATEGORY`. Tracking, exclusion, legacy history,
+business forecast and forecast change are the Adhesive routines unchanged and write the same
+tables. A Paints user never needs ZFCST_UPL.
 
 | Type | Template | Columns | Checks | Writes |
 |------------|----------------------|----------------------------|------------------------|--------------|

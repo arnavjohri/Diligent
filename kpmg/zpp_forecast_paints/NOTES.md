@@ -49,8 +49,10 @@ of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
   `ZCL_PP_FCST_PNT` (enrichment: Paints columns on top of `ZCL_PP_FCST=>TY_ALV`, own
   A923 price read for annual, tonnage on gross weight ÷ 1000, KL and crores),
   `ZPP_FORECAST_PAINTS` (tcode `ZFCST_PAINTS`, SE41 status `PF_STATUS`),
-  `ZPP_FORECAST_PAINTS_UPL` (tcode `ZFCST_PAINTS_UPL`: category with four indicator
-  values, and brand — the two uploads the shared program cannot take).
+  `ZPP_FORECAST_PAINTS_UPL` (tcode `ZFCST_PAINTS_UPL`: since 19/10/26 PM the whole Adhesive
+  upload copied — all eight types — plus Brand as the ninth and the four-value indicator
+  check, so Paints users have one upload tcode. Generated from the Adhesive source by
+  anchored edits; `diff` the two to see exactly the delta).
 - **Not built:** a Paints copy of the engine or the report.
 - **Known duplication:** the A923 price read (~30 lines) and the upload file handling
   (~400 lines) exist twice. A fix on the Adhesive side has to be repeated here.

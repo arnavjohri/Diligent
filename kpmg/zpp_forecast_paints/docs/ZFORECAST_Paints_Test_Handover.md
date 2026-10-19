@@ -1,7 +1,9 @@
 # ZFORECAST Paints — what to run and what to check
 
 Astral / UDAY (KPMG), Paints division. Functional test handover, 19.10.2026, Arnav Johri.
-Development system. Run in the order below; each step feeds the next.
+Development system. Run in the order below; each step feeds the next. Only three
+transactions are involved: `ZFCST_PAINTS_UPL` for every upload, `ZFCST_PAINTS` for the
+forecasts, `ZFCST_RPT` for the final report.
 
 ## 1. Before the first run (one-time setup)
 
@@ -17,16 +19,16 @@ Development system. Run in the order below; each step feeds the next.
 |-----|------------------|----------------------------------------------|------------------------------------|
 | 1 | `ZFCST_PAINTS_UPL` → Product Category (Paints) | Download Template, fill plant, material, category, load factor, indicator (MTS, MTO, DIS or TIN). Run with Test Run ticked, then unticked | `ZPPT_PROD_CAT`: one row per plant and material, PROD_CAT, LOAD_FCT, MTS_MTO as uploaded |
 | 2 | `ZFCST_PAINTS_UPL` → Brand | Download Template, fill plant, material, brand. Test run, then real run | `ZPPT_BRAND`: BRAND as uploaded |
-| 3 | `ZFCST_UPL` → Material Tracking | New code and its old codes, per plant | `ZPPT_MAT_TRACK` |
-| 4 | `ZFCST_UPL` → Material Exclusion | Materials to leave out | `ZPPT_MAT_EXCL` |
-| 5 | `ZFCST_UPL` → Legacy Sales History | Only if last year's sales are not in SAP: twelve months per plant, material, year (year = the April the financial year starts in) | `ZPPT_SLS_HIST`: M01 = April … M12 = March |
-| 6 | `ZFCST_PAINTS` → Annual, Tonnage Wise ticked | Plant, material, financial year 2026-2027. Execute | On screen only, see section 3. Select rows → Save | `ZPPT_FCST_YR`: one row per plant, material, year with FCST_NO, M01_FCST…M12_FCST |
-| 7 | `ZFCST_UPL` → Business Forecast Quarterly | Plant, material, quarter, year, quantity | `ZPPT_FCST_QT`: BUS_FCST |
+| 3 | `ZFCST_PAINTS_UPL` → Material Tracking | New code and its old codes, per plant | `ZPPT_MAT_TRACK` |
+| 4 | `ZFCST_PAINTS_UPL` → Material Exclusion | Materials to leave out | `ZPPT_MAT_EXCL` |
+| 5 | `ZFCST_PAINTS_UPL` → Legacy Sales History | Only if last year's sales are not in SAP: twelve months per plant, material, year (year = the April the financial year starts in) | `ZPPT_SLS_HIST`: M01 = April … M12 = March |
+| 6 | `ZFCST_PAINTS` → Annual, Tonnage Wise ticked | Plant, material, financial year 2026-2027. Execute, check section 3. Select rows → Save | `ZPPT_FCST_YR`: one row per plant, material, year with FCST_NO, M01_FCST…M12_FCST |
+| 7 | `ZFCST_PAINTS_UPL` → Business Forecast Quarterly | Plant, material, quarter, year, quantity | `ZPPT_FCST_QT`: BUS_FCST |
 | 8 | `ZFCST_PAINTS` → Quarter Based, quarter 2, Tonnage Wise ticked | Execute, check section 3, Save | `ZPPT_FCST_QT`: FCST_NO, FINAL_QTY, M4_FCST…M6_FCST, M4_TON…M6_TON (gross weight ÷ 1000), PRICE |
-| 9 | `ZFCST_UPL` → Forecast Change Quarterly | Plant, material, quarter, **month 1, 2 or 3 within the quarter**, year, quantity (negative allowed), reason | `ZPPT_FCST_QT`: BUS_FCST_ADD1 / 2 / 3 and REASON; then re-run step 8 and see the "additional" and "final forecast" columns |
-| 10 | `ZFCST_UPL` → Business Forecast Monthly | Plant, material, period (1 = April … 12 = March), year, quantity; leave the MSL column blank | `ZPPT_FCST_MN`: BUS_FCST |
+| 9 | `ZFCST_PAINTS_UPL` → Forecast Change Quarterly | Plant, material, quarter, **month 1, 2 or 3 within the quarter**, year, quantity (negative allowed), reason | `ZPPT_FCST_QT`: BUS_FCST_ADD1 / 2 / 3 and REASON; then re-run step 8 and see the "additional" and "final forecast" columns |
+| 10 | `ZFCST_PAINTS_UPL` → Business Forecast Monthly | Plant, material, period (1 = April … 12 = March), year, quantity; leave the MSL column blank | `ZPPT_FCST_MN`: BUS_FCST |
 | 11 | `ZFCST_PAINTS` → Month Based, period 4, Tonnage Wise ticked | Execute, check section 3, Save | `ZPPT_FCST_MN`: FCST_NO, FINAL_QTY, BUS_FCST_ADD, M4_FCST, M4_TON |
-| 12 | `ZFCST_UPL` → Forecast Change Monthly | Plant, material, period, year, quantity, reason | `ZPPT_FCST_MN`: BUS_FCST_ADD, REASON; re-run step 11 |
+| 12 | `ZFCST_PAINTS_UPL` → Forecast Change Monthly | Plant, material, period, year, quantity, reason | `ZPPT_FCST_MN`: BUS_FCST_ADD, REASON; re-run step 11 |
 | 13 | `ZFCST_RPT` | Plant, financial year | Annual, quarter, additional, total quarter, monthly, additional, total month per material, with the same forecast number as steps 6, 8, 11 |
 | 14 | `SLG1`, object `ZPP_FCST`, subobject `GENERATE` | After any ZFCST_PAINTS run that looks wrong | The run's messages: no category, load factor defaulted to 1.000, old code shown under its successor, configuration missing for plant |
 
