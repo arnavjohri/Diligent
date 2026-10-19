@@ -1,0 +1,966 @@
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA attrib Page      1
+--------------------------------------------------------------------------------
+
+
+
+Created on....20.12.2021    Last changed on/by........ 27.05.2022 SAP
+Author........SAP
+--------------------------------------------------------------------------------
+
+Title.........Report to update the accounting data in the ACDOCA table with JVA
+
+Type..................1     Reporting
+Status................P     Production
+Application...........F     Financial accou
+Class.................
+Logical database......
+  from Application....      Financial accou
+Selection screen......
+Authorization group...
+Package...............GJVA_MIG
+
+  Start by Variants
+  Deactivate editor lock
+X Fixed point arithmetic active
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      2
+--------------------------------------------------------------------------------
+
+    1  *&---------------------------------------------------------------------*
+    2  *& Report RGJV_UPDATE_ACC_DATA_IN_ACDOCA
+    3  *&---------------------------------------------------------------------*
+    4  *& This report update the ACDOCA table with internal JV documents
+    5  *&---------------------------------------------------------------------*
+    6  report rgjv_update_acc_data_in_acdoca line-size 200.
+    7
+    8  tables: jvso1.
+    9
+   10  selection-screen begin of block selection_parameters with frame title te
+       xt-sel.
+   11    select-options: s_bukrs  for  jvso1-rbukrs   memory id buk,
+   12                    s_ryear  for  jvso1-ryear    memory id fyr,
+   13                    s_poper  for  jvso1-poper    memory id per,
+   14                    s_belnr  for  jvso1-reffidoc memory id doc,
+   15                    s_refnr  for  jvso1-refdocnr memory id ref.
+   16    selection-screen begin of block document_types with frame title text-d
+       ct.
+   17      parameters: p_fidocs as checkbox memory id fid default abap_true,
+   18                  p_codocs as checkbox memory id cod default ' '.
+   19      selection-screen begin of block prodper_handling with frame title te
+       xt-pph.
+   20        parameters: p_ppper as checkbox default abap_true.
+   21        parameters: p_ppday as checkbox.
+   22      selection-screen end of block prodper_handling.
+   23      parameters: p_exclbl  as checkbox memory id exb default abap_true.
+   24    selection-screen end of block document_types.
+   25
+   26    parameters: p_alllds radiobutton group ledg default 'X',
+   27                p_jvledg radiobutton group ledg.
+   28    selection-screen skip.
+   29
+   30  * Hidden parameter needed for showing/hiding additional selection parame
+       ters
+   31    parameters: p_ado(1) type c no-display.   "Close Block
+   32
+   33  * Further selection parameters (hidden by default)
+   34    selection-screen:
+   35    pushbutton /1(35) pushadoo  "Button to open the add. selection paramet
+       ers
+   36      user-command ucomm_openado  modif id ado,               "#EC NEEDED
+   37    pushbutton /1(35) pushadoc  "Button to close the add. selection parame
+       ters
+   38      user-command ucomm_closeado modif id adc.               "#EC NEEDED
+   39
+   40    select-options: s_budat  for  jvso1-budat    modif id adc,
+   41                    s_bldat  for  jvso1-bldat    modif id adc,
+   42                    s_racct  for  jvso1-racct    modif id adc,
+   43                    s_rjvnam for  jvso1-rjvnam   modif id adc,
+   44                    s_regrou for  jvso1-regrou   modif id adc,
+   45                    s_rrecin for  jvso1-rrecin   modif id adc,
+   46                    s_bilid  for  jvso1-bilid    modif id adc,
+   47                    s_prodp  for  jvso1-prodper  modif id adc,
+   48                    s_rcntr  for  jvso1-rcntr    modif id adc,
+   49                    s_rordnr for  jvso1-rordnr   modif id adc,
+   50                    s_rprojk for  jvso1-rprojk   modif id adc,
+   51                    s_nplnr  for  jvso1-nplnr    modif id adc,
+   52                    s_aufpl  for  jvso1-aufpl    modif id adc,
+   53                    s_aplzl  for  jvso1-aplzl    modif id adc.
+   54
+   55  selection-screen end of block selection_parameters.
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      3
+--------------------------------------------------------------------------------
+
+   56
+   57  selection-screen begin of block accounting_entities with frame title tex
+       t-acc.
+   58    parameters: p_vname as checkbox memory id vnm default abap_true,
+   59                p_egrup as checkbox memory id eqg default abap_true,
+   60                p_vptnr as checkbox memory id vpt default abap_true,
+   61                p_recid as checkbox memory id rec default abap_true,
+   62                p_bilid as checkbox memory id bil default abap_true,
+   63                p_prodp as checkbox memory id prp default abap_true,
+   64                p_cobs  as checkbox memory id vpt default abap_true,
+   65                p_coco  as checkbox memory id vpt default abap_false.
+   66
+   67  * Hidden parameter needed for showing/hiding the update options
+   68    parameters: p_upo(1) type c no-display.   "Close Block
+   69
+   70  * Update options (hidden by default)
+   71    selection-screen:
+   72    pushbutton /1(35) pushupoo  "Button to open the update options
+   73      user-command ucomm_openupo  modif id upo,               "#EC NEEDED
+   74    pushbutton /1(35) pushupoc  "Button to close the update options
+   75      user-command ucomm_closeupo modif id upc.               "#EC NEEDED
+   76
+   77    selection-screen begin of block venture_upd_options with frame title t
+       ext-vuo.
+   78      parameters: p_vnupd radiobutton group vent modif id upc default 'X',
+   79                  p_vnrep radiobutton group vent modif id upc.
+   80    selection-screen end of block venture_upd_options.
+   81
+   82    selection-screen begin of block egrup_upd_options with frame title tex
+       t-euo.
+   83      parameters: p_egupd radiobutton group eqgp modif id upc default 'X',
+   84                  p_egrep radiobutton group eqgp modif id upc.
+   85    selection-screen end of block egrup_upd_options.
+   86
+   87    selection-screen begin of block partner_upd_options with frame title t
+       ext-vpo.
+   88      parameters: p_vpupd radiobutton group vptn modif id upc default 'X',
+   89                  p_vprep radiobutton group vptn modif id upc.
+   90    selection-screen end of block partner_upd_options.
+   91
+   92    selection-screen begin of block recid_upd_options with frame title tex
+       t-ruo.
+   93      parameters: p_riupd radiobutton group rind modif id upc default 'X',
+   94                  p_rirep radiobutton group rind modif id upc.
+   95    selection-screen end of block recid_upd_options.
+   96
+   97    selection-screen begin of block bilid_upd_options with frame title tex
+       t-buo.
+   98      parameters: p_biupd radiobutton group bind modif id upc default 'X',
+   99                  p_birep radiobutton group bind modif id upc.
+  100    selection-screen end of block bilid_upd_options.
+  101
+  102    selection-screen begin of block prodper_upd_options with frame title t
+       ext-puo.
+  103      parameters: p_ppupd radiobutton group prop modif id upc default 'X',
+  104                  p_pprep radiobutton group prop modif id upc.
+  105    selection-screen end of block prodper_upd_options.
+  106
+  107    selection-screen begin of block co_bs_upd_options with frame title tex
+       t-cbo.
+  108      parameters: p_bsupd radiobutton group cobs modif id upc default 'X',
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      4
+--------------------------------------------------------------------------------
+
+  109                  p_bsrep radiobutton group cobs modif id upc.
+  110    selection-screen end of block co_bs_upd_options.
+  111
+  112    selection-screen begin of block co_co_upd_options with frame title tex
+       t-cco.
+  113      parameters: p_coupd radiobutton group coco modif id upc,
+  114                  p_corep radiobutton group coco modif id upc default 'X'.
+  115    selection-screen end of block co_co_upd_options.
+  116
+  117  selection-screen end of block accounting_entities.
+  118
+  119  selection-screen begin of block posting_date_options with frame title te
+       xt-psd.
+  120    parameters: p_oripd radiobutton group pdt default 'X',
+  121                p_newpd radiobutton group pdt,
+  122                p_budat type budat.
+  123  selection-screen end of block posting_date_options.
+  124
+  125  selection-screen begin of block processing_options with frame title text
+       -pro.
+  126    parameters: p_analys radiobutton group runt,
+  127                p_test   radiobutton group runt default 'X',
+  128                p_update radiobutton group runt.
+  129    selection-screen skip.
+  130    parameters: p_balov as checkbox default abap_true,
+  131                p_heur  as checkbox default abap_true.
+  132    selection-screen skip.
+  133    selection-screen begin of block bulk_proc_options with frame title tex
+       t-blk.
+  134      parameters: p_bldoch type numc7 memory id nd1 default 500000,
+  135                  p_bldlpr type numc4 memory id nd2 default 500.
+  136    selection-screen end of block bulk_proc_options.
+  137    selection-screen begin of block parallel_options with frame title text
+       -prl.
+  138      parameters: p_parall as checkbox default abap_true,
+  139                  p_rfcgrp type spta_rfcgr memory id spta_rfcgr default 'p
+       arallel_generators',
+  140                  p_mxtsks type numc2      memory id mxt        default 20
+       ,
+  141                  p_doctsk type numc7      memory id dct        default 10
+       00000,
+  142                  p_sptask as checkbox     memory id spt.
+  143    selection-screen end of block parallel_options.
+  144    selection-screen begin of block log_upd_options with frame title text-
+       luo.
+  145      parameters: p_luptsk as checkbox     memory id par default abap_true
+       ,
+  146                  p_lbulk  type numc4      memory id lbl default 1000,
+  147                  p_lgltms radiobutton group tmst default 'X',
+  148                  p_luptms radiobutton group tmst.
+  149    selection-screen end of block log_upd_options.
+  150  selection-screen end of block processing_options.
+  151
+  152  selection-screen begin of block output_options with frame title text-opo
+       .
+  153    parameters: p_shwall radiobutton group disp,
+  154                p_upderr radiobutton group disp default 'X',
+  155                p_erronl radiobutton group disp.
+  156    selection-screen skip.
+  157    parameters: p_spfor as checkbox memory id spf,
+  158                p_nodet as checkbox memory id ndt,
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      5
+--------------------------------------------------------------------------------
+
+  159                p_se16n as checkbox memory id s16.
+  160  selection-screen end of block output_options.
+  161
+  162
+  163  data: go_correct_acdoca   type ref to if_jva_mig_correct_acdoca,
+  164        gv_cursor_field(20) type c value 'P_BUKRS',
+  165        gv_sscr_ucomm       type sy-ucomm.
+  166
+  167
+  168  *----------------------------------------------------------------------*
+  169  *       INITIALIZATION
+  170  *----------------------------------------------------------------------*
+  171  initialization.
+  172
+  173    perform modify_screen.
+  174
+  175
+  176  *----------------------------------------------------------------------*
+  177  *       AT SELECTION SCREEN ON [several fields]
+  178  *----------------------------------------------------------------------*
+  179  at selection-screen on p_bldoch.
+  180    if p_bldoch < 100 or
+  181       p_bldoch > 9999999.
+  182      p_bldoch = 500000.
+  183    endif.
+  184
+  185  at selection-screen on p_bldlpr.
+  186    if p_bldlpr < 1 or
+  187       p_bldlpr > 9999.
+  188      p_bldlpr = 500.
+  189    endif.
+  190
+  191  at selection-screen on p_mxtsks.
+  192    if p_mxtsks < 2 or
+  193       p_mxtsks > 99.
+  194      p_mxtsks = 20.
+  195    endif.
+  196
+  197  at selection-screen on p_doctsk.
+  198    if p_doctsk < 100 or
+  199       p_doctsk > 9999999.
+  200      p_doctsk = 1000000.
+  201    endif.
+  202
+  203
+  204  *----------------------------------------------------------------------*
+  205  *       AT SELECTION-SCREEN OUTPUT
+  206  *----------------------------------------------------------------------*
+  207  at selection-screen output.
+  208
+  209    perform prepare_sel_screen_frame.
+  210
+  211
+  212  *----------------------------------------------------------------------*
+  213  *       AT SELECTION-SCREEN
+  214  *----------------------------------------------------------------------*
+  215  at selection-screen.
+  216
+  217    perform process_sel_screen_actions.
+  218
+  219
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      6
+--------------------------------------------------------------------------------
+
+  220  *&---------------------------------------------------------------------*
+  221  *&      AT LINE-SELECTION
+  222  *&---------------------------------------------------------------------*
+  223  at line-selection.
+  224
+  225    if sy-lsind = 1 and
+  226       sy-lisel is not initial.
+  227      cl_jva_mig_alv_output=>get_instance( )->display_spool_classic( sy-li
+       sel ).
+  228    endif.
+  229
+  230
+  231  *----------------------------------------------------------------------*
+  232  *       END-OF-SELECTION
+  233  *----------------------------------------------------------------------*
+  234  end-of-selection.
+  235
+  236    perform run_process.
+  237
+  238
+  239  *&---------------------------------------------------------------------*
+  240  *&   FORM run_process
+  241  *&---------------------------------------------------------------------*
+  242  form run_process.
+  243
+  244    data: ls_progpars type cl_jva_mig_correct_acdoca=>if_jva_mig_correct_a
+       cdoca~gty_program_parameters.
+  245
+  246    ls_progpars = value #( r_bukrs                        = s_bukrs[]
+  247                           r_ryear                        = s_ryear[]
+  248                           r_poper                        = s_poper[]
+  249                           r_belnr                        = s_belnr[]
+  250                           r_refnr                        = s_refnr[]
+  251
+  252                           r_budat                        = s_budat[]
+  253                           r_bldat                        = s_bldat[]
+  254                           r_racct                        = s_racct[]
+  255                           r_rjvnam                       = s_rjvnam[]
+  256                           r_regrou                       = s_regrou[]
+  257                           r_rrecin                       = s_rrecin[]
+  258                           r_bilid                        = s_bilid[]
+  259                           r_prodper                      = s_prodp[]
+  260                           r_rcntr                        = s_rcntr[]
+  261                           r_rordnr                       = s_rordnr[]
+  262                           r_rprojk                       = s_rprojk[]
+  263                           r_nplnr                        = s_nplnr[]
+  264                           r_aufpl                        = s_aufpl[]
+  265                           r_aplzl                        = s_aplzl[]
+  266
+  267                           select_fi_documents            = p_fidocs
+  268                           select_co_documents            = p_codocs
+  269
+  270                           prodper_as_period              = p_ppper
+  271                           prodper_last_eq_first          = p_ppday
+  272
+  273                           post_equity_change             = abap_false
+  274                           post_suspense                  = abap_false
+  275                           post_equity_adjust             = abap_false
+  276                           post_farm_in_out               = abap_false
+  277                           post_cutback                   = abap_false
+  278                           post_cash_call                 = abap_false
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      7
+--------------------------------------------------------------------------------
+
+  279
+  280                           check_venture                  = p_vname
+  281                           update_venture                 = p_vnupd
+  282                           repost_venture                 = p_vnrep
+  283                           check_equity_group             = p_egrup
+  284                           update_equity_group            = p_egupd
+  285                           repost_equity_group            = p_egrep
+  286                           check_venture_partner          = p_vptnr
+  287                           update_venture_partner         = p_vpupd
+  288                           repost_venture_partner         = p_vprep
+  289                           check_recovery_indicator       = p_recid
+  290                           update_recovery_indicator      = p_riupd
+  291                           repost_recovery_indicator      = p_rirep
+  292                           check_billing_indicator        = p_bilid
+  293                           update_billing_indicator       = p_biupd
+  294                           repost_billing_indicator       = p_birep
+  295                           check_production_period        = p_prodp
+  296                           update_production_period       = p_ppupd
+  297                           repost_production_period       = p_pprep
+  298                           check_co_in_bs_lines           = p_cobs
+  299                           update_co_in_bs_lines          = p_bsupd
+  300                           repost_co_in_bs_lines          = p_bsrep
+  301                           check_co_in_co_lines           = p_coco
+  302                           update_co_in_co_lines          = p_coupd
+  303                           repost_co_in_co_lines          = p_corep
+  304
+  305                           exclude_balancing_lines        = p_exclbl
+  306
+  307                           use_original_posting_date      = p_oripd
+  308                           use_new_posting_date           = p_newpd
+  309                           posting_date                   = p_budat
+  310
+  311                           analysis_only                  = p_analys
+  312                           testrun                        = p_test
+  313
+  314                           correct_all_ledgers            = p_alllds
+  315
+  316                           heuristic_line_assignment      = p_heur
+  317                           balance_check_over_line_check  = p_balov
+  318
+  319                           bulk_no_of_doc_headers_in_mem  = conv int4( p_b
+       ldoch )
+  320                           bulk_no_of_docs_for_line_proc  = conv int4( p_b
+       ldlpr )
+  321
+  322                           log_use_update_task_for_db_upd = p_luptsk
+  323                           log_bulk_no_of_itms_for_db_upd = p_lbulk
+  324                           log_set_global_timestamp       = p_lgltms
+  325                           log_set_timestamp_at_db_update = p_luptms
+  326
+  327                           parallel_processing            = p_parall
+  328                           server_group                   = p_rfcgrp
+  329                           maximum_number_of_tasks        = p_mxtsks
+  330                           number_of_docs_per_task        = p_doctsk
+  331                           create_spool_for_each_task     = p_sptask
+  332
+  333                           update_existing_lines          = abap_false
+  334                           post_new_documents             = abap_false
+  335
+  336                           show_all_lines                 = p_shwall
+  337                           show_updates_and_errors        = p_upderr
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      8
+--------------------------------------------------------------------------------
+
+  338                           show_errors_only               = p_erronl
+  339
+  340                           create_spools_in_foreground    = p_spfor
+  341                           do_not_store_issue_details     = p_nodet
+  342                           use_se16n_to_display_doc       = p_se16n
+  343
+  344                           repid_callback                 = sy-repid ).
+  345
+  346    go_correct_acdoca = cl_jva_mig_correct_acdoca=>get_instance( ).
+  347
+  348    go_correct_acdoca->execute_process( ls_progpars ).
+  349
+  350  endform.
+  351
+  352  *---------------------------------------------------------------------*
+  353  *       FORM BEFORE_RFC                                               *
+  354  *---------------------------------------------------------------------*
+  355  *       Callback-Form for parallel processing                         *
+  356  *       invoked before each RFC                                       *
+  357  *---------------------------------------------------------------------*
+  358  form before_rfc using    is_before_rfc_imp     type spta_t_before_rfc_im
+       p
+  359                  changing cs_before_rfc_exp     type spta_t_before_rfc_ex
+       p
+  360                           ct_rfcdata            type spta_t_indxtab
+  361                           ct_failed_objects     type spta_t_failed_object
+       s
+  362                           ct_objects_in_process type spta_t_objects_in_pr
+       ocess
+  363                           cv_user_param.
+  364
+  365    go_correct_acdoca->parall_before_rfc( exporting
+  366                                            is_before_rfc_imp     = is_bef
+       ore_rfc_imp
+  367                                          changing
+  368                                            cs_before_rfc_exp     = cs_bef
+       ore_rfc_exp
+  369                                            ct_rfcdata            = ct_rfc
+       data
+  370                                            ct_failed_objects     = ct_fai
+       led_objects
+  371                                            ct_objects_in_process = ct_obj
+       ects_in_process
+  372                                            cv_user_param         = cv_use
+       r_param ).
+  373
+  374  endform.                               "BEFORE_RFC
+  375
+  376  *---------------------------------------------------------------------*
+  377  *       FORM IN_RFC                                                   *
+  378  *---------------------------------------------------------------------*
+  379  *       Callback-Form for parallel processing                         *
+  380  *       Invoked within the RFC                                        *
+  381  *---------------------------------------------------------------------*
+  382  form in_rfc using    is_in_rfc_imp type spta_t_in_rfc_imp
+  383              changing cs_in_rfc_exp type spta_t_in_rfc_exp
+  384                       ct_rfcdata    type spta_t_indxtab.
+  385
+  386    cl_jva_mig_correct_acdoca=>get_instance( )->parall_in_rfc( exporting
+  387                                                                 is_in_rfc
+       _imp = is_in_rfc_imp
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page      9
+--------------------------------------------------------------------------------
+
+  388                                                               changing
+  389                                                                 cs_in_rfc
+       _exp = cs_in_rfc_exp
+  390                                                                 ct_rfcdat
+       a    = ct_rfcdata ).
+  391
+  392  endform.
+  393
+  394  *---------------------------------------------------------------------*
+  395  *       FORM AFTER_RFC                                                *
+  396  *---------------------------------------------------------------------*
+  397  *       Callback-Form for parallel processing                         *
+  398  *       Invoked after RFC                                             *
+  399  *---------------------------------------------------------------------*
+  400  form after_rfc using    it_rfcdata            type spta_t_indxtab
+  401                          iv_rfcsubrc           type sy-subrc
+  402                          iv_rfcmsg             type spta_t_rfcmsg
+  403                          it_objects_in_process type spta_t_objects_in_pro
+       cess
+  404                          is_after_rfc_imp      type spta_t_after_rfc_imp
+  405                 changing cs_after_rfc_exp      type spta_t_after_rfc_exp
+  406                          cv_user_param.
+  407
+  408    go_correct_acdoca->parall_after_rfc( exporting
+  409                                           it_rfcdata            = it_rfcd
+       ata
+  410                                           iv_rfcsubrc           = iv_rfcs
+       ubrc
+  411                                           iv_rfcmsg             = iv_rfcm
+       sg
+  412                                           it_objects_in_process = it_obje
+       cts_in_process
+  413                                           is_after_rfc_imp      = is_afte
+       r_rfc_imp
+  414                                         changing
+  415                                           cs_after_rfc_exp      = cs_afte
+       r_rfc_exp
+  416                                           cv_user_param         = cv_user
+       _param ).
+  417
+  418  endform.                               "AFTER_RFC
+  419
+  420  *&---------------------------------------------------------------------*
+  421  *&   FORM modify_screen
+  422  *&---------------------------------------------------------------------*
+  423  form modify_screen.
+  424
+  425  * Close Selection-Screen
+  426    p_ado = abap_true.
+  427
+  428  * Set Text and Icon for Pushbutton "Additional Selection Parameters"
+  429    concatenate icon_collapse: text-add into pushadoc.
+  430    concatenate icon_expand:   text-add into pushadoo.
+  431
+  432  * Close Selection-Screen Block 1
+  433    p_upo = abap_true.
+  434
+  435  * Set Text and Icon for Pushbutton "Additional Update Options"
+  436    concatenate icon_collapse: text-upo into pushupoo.
+  437    concatenate icon_expand:   text-upo into pushupoc.
+  438
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page     10
+--------------------------------------------------------------------------------
+
+  439  endform.
+  440
+  441  *---------------------------------------------------------------------*
+  442  *       FORM prepare_sel_screen_frame
+  443  *---------------------------------------------------------------------*
+  444  form prepare_sel_screen_frame.
+  445
+  446    loop at screen.
+  447      perform close_block using: p_ado 'ADC' space,
+  448                                 p_ado 'ADO' abap_true.
+  449      perform close_block using: p_upo 'UPC' space,
+  450                                 p_upo 'UPO' abap_true.
+  451    endloop.
+  452
+  453    case gv_sscr_ucomm.
+  454      when 'UCOMM_OPENADO'.                   "Open Block
+  455        set cursor field 'S_BUDAT'.
+  456      when 'UCOMM_OPENUPO'.                   "Open Block
+  457        set cursor field 'P_VNCORR'.
+  458      when others.
+  459        set cursor field gv_cursor_field.
+  460    endcase.
+  461
+  462  endform.
+  463
+  464  *---------------------------------------------------------------------*
+  465  *       FORM process_sel_screen_actions
+  466  *---------------------------------------------------------------------*
+  467  form process_sel_screen_actions.
+  468
+  469    get cursor field gv_cursor_field.
+  470
+  471    gv_sscr_ucomm = sy-ucomm. "sscrfields-ucomm.
+  472
+  473  * Auf die User-Commands reagieren
+  474    case gv_sscr_ucomm.
+  475      when 'UCOMM_OPENADO'.                   "Open Block
+  476        clear p_ado.
+  477      when 'UCOMM_CLOSEADO'.                  "Close Block
+  478        p_ado = abap_true.
+  479
+  480      when 'UCOMM_OPENUPO'.                   "Open Block
+  481        clear p_upo.
+  482      when 'UCOMM_CLOSEUPO'.                  "Close Block
+  483        p_upo = abap_true.
+  484    endcase.
+  485
+  486  endform.
+  487
+  488  *---------------------------------------------------------------------*
+  489  *       FORM close_block
+  490  *---------------------------------------------------------------------*
+  491  form close_block using value(iv_close_block) like p_ado
+  492                         iv_modify_id          like screen-group1
+  493                         iv_convert.
+  494
+  495    if not iv_convert is initial.
+  496      if iv_close_block is initial.
+  497        iv_close_block = abap_true.
+  498      else.
+  499        clear iv_close_block.
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page     11
+--------------------------------------------------------------------------------
+
+  500      endif.
+  501    endif.
+  502
+  503    if ( screen-group1 = iv_modify_id )
+  504    and ( not iv_close_block is initial ).
+  505      screen-active = '0'.
+  506      modify screen.
+  507    endif.
+  508
+  509  endform.                               " CLOSE_BLOCK
+  510
+  511
+  512  *---------------------------------------------------------------------*
+  513  * UNIT TEST
+  514  *---------------------------------------------------------------------*
+  515  class ltc_test definition final
+  516    for testing
+  517    risk level harmless
+  518    duration short.
+  519
+  520    private section.
+  521
+  522      methods:
+  523        run_ok for testing,
+  524        parallelization_handlers_ok for testing.
+  525
+  526  endclass.
+  527
+  528  class ltc_test implementation.
+  529
+  530    method run_ok.
+  531
+  532      data: lv_subrc type sy-subrc,
+  533            lo_mock  type ref to if_jva_mig_correct_acdoca.
+  534
+  535      lo_mock ?= cl_abap_testdouble=>create( 'IF_JVA_MIG_CORRECT_ACDOCA' )
+       .
+  536      cl_jva_mig_correct_acdoca=>set_instance( lo_mock ).
+  537
+  538      try.
+  539          perform run_process.
+  540        catch cx_root.
+  541          lv_subrc = 4.
+  542      endtry.
+  543
+  544      cl_abap_unit_assert=>assert_equals( act = lv_subrc
+  545                                          quit = if_aunit_constants=>quit-
+       no
+  546                                          exp = 0 ).
+  547
+  548    endmethod.
+  549
+  550    method parallelization_handlers_ok.
+  551
+  552      data: lv_subrc              type sy-subrc,
+  553            ls_before_rfc_imp     type spta_t_before_rfc_imp,
+  554            ls_before_rfc_exp     type spta_t_before_rfc_exp,
+  555            lt_rfcdata            type spta_t_indxtab,
+  556            lt_failed_objects     type spta_t_failed_objects,
+  557            lt_objects_in_process type spta_t_objects_in_process,
+  558            lv_user_param         type c,
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page     12
+--------------------------------------------------------------------------------
+
+  559            lv_rfcsubrc           type sy-subrc,
+  560            lv_rfcmsg             type spta_t_rfcmsg,
+  561            ls_after_rfc_imp      type spta_t_after_rfc_imp,
+  562            ls_after_rfc_exp      type spta_t_after_rfc_exp,
+  563            ls_in_rfc_imp         type spta_t_in_rfc_imp,
+  564            ls_in_rfc_exp         type spta_t_in_rfc_exp.
+  565
+  566      go_correct_acdoca = cl_jva_mig_correct_acdoca=>get_instance( ).
+  567
+  568      try.
+  569          perform before_rfc using    ls_before_rfc_imp
+  570                             changing ls_before_rfc_exp
+  571                                      lt_rfcdata
+  572                                      lt_failed_objects
+  573                                      lt_objects_in_process
+  574                                      lv_user_param.
+  575        catch cx_root.
+  576          lv_subrc = 4.
+  577      endtry.
+  578
+  579      cl_abap_unit_assert=>assert_equals( act = lv_subrc
+  580                                          quit = if_aunit_constants=>quit-
+       no
+  581                                          exp = 0 ).
+  582
+  583
+  584      clear lv_subrc.
+  585
+  586      try.
+  587          perform in_rfc using    ls_in_rfc_imp
+  588                         changing ls_in_rfc_exp
+  589                                  lt_rfcdata.
+  590        catch cx_root.
+  591          lv_subrc = 4.
+  592      endtry.
+  593
+  594      cl_abap_unit_assert=>assert_equals( act = lv_subrc
+  595                                          quit = if_aunit_constants=>quit-
+       no
+  596                                          exp = 0 ).
+  597
+  598      clear lv_subrc.
+  599
+  600      try.
+  601          perform after_rfc using    lt_rfcdata
+  602                                     lv_rfcsubrc
+  603                                     lv_rfcmsg
+  604                                     lt_objects_in_process
+  605                                     ls_after_rfc_imp
+  606                            changing ls_after_rfc_exp
+  607                                     lv_user_param.
+  608        catch cx_root.
+  609          lv_subrc = 4.
+  610      endtry.
+  611
+  612      cl_abap_unit_assert=>assert_equals( act = lv_subrc
+  613                                          quit = if_aunit_constants=>quit-
+       no
+  614                                          exp = 0 ).
+  615
+  616    endmethod.
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA        Page     13
+--------------------------------------------------------------------------------
+
+  617
+  618  endclass.
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA text e Page     14
+--------------------------------------------------------------------------------
+
+Title:
+   Report to update the accounting data in the ACDOCA table with JVA data
+
+--------------------------------------------------------------------------------
+Text elements:
+
+ACC   Accounting Entities to Be Corrected
+ADD   Additional Selection Parameters
+BLK   Bulk Processing Options
+BUO   Billing Indicator Update Options
+CBO   Cost Object in Balance Sheet Lines Update Options
+CCO   Cost Object in CO Lines Update Options
+DCT   Document Types
+EUO   Equity Group Update Options
+LUO   Correction Log Update Options
+OPO   Output Options
+PPH   Production Period Handling for CO documents
+PRL   Parallel Processing Options
+PRO   Processing Options
+PSD   Posting Date Options for Reversal/Reposting Documents
+PUO   Production Period Update Options
+RUO   Recovery Indicator Update Options
+SEL   Selection Parameters
+UPO   Database Update Options
+VPO   Venture Partner Update Options
+VUO   Venture Update Options
+
+
+--------------------------------------------------------------------------------
+Selection texts:
+
+P_ALLLDS
+        Correct All Ledgers
+P_ANALYS
+        Analysis Only (No Postings)
+P_BALOV
+        Balance Ch. Overules Line Ch.
+P_BILID
+        Billing Indicator
+P_BIREP
+        Reverse and Repost Line
+P_BIUPD
+        Update Existing Line
+P_BLDLPR
+        No. of Docs f. Line Processing
+P_BLDOCH
+        No. of Doc. Headers in Memory
+P_BSREP
+        Reverse and Repost Line
+P_BSUPD
+        Update Existing Line
+P_BUDAT
+             Posting Date
+P_COBS
+        CO Objects in Bal. Sheet Lines
+P_COCO
+        CO Objects in CO Lines
+P_CODOCS
+        CO Documents
+P_COREP
+        Reverse and Repost Line
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA text e Page     15
+--------------------------------------------------------------------------------
+
+P_COUPD
+        Update Existing Line
+P_DOCTSK
+        Number of Docs per Process
+P_EGREP
+        Reverse and Repost Line
+P_EGRUP
+        Equity Group
+P_EGUPD
+        Update Existing Line
+P_ERRONL
+        Only Display Docs with Errors
+P_EXCLBL
+        Excl. venture balancing lines
+P_FIDOCS
+        FI Documents
+P_HEUR
+        Heuristic Line Assignment
+P_JVLEDG
+        Correct JV/Leading Ledger Only
+P_LBULK
+        Number of Items per DB Update
+P_LGLTMS
+        Use Global Timestamp
+P_LUPTMS
+        Set Timestamp at Update
+P_LUPTSK
+        Use Update Task
+P_MXTSKS
+        Maximum Number of Processes
+P_NEWPD
+        Use New Posting Date:
+P_NODET
+        Do not store issue details
+P_ORIPD
+        Use the Original Posting Date
+P_PARALL
+        Parallel Processing
+P_PPDAY
+        Last Day of Period eq to First
+P_PPPER
+        Prod. Per. As Period Not Day
+P_PPREP
+        Reverse and Repost Line
+P_PPUPD
+        Update Existing Line
+P_PRODP
+        Production Period
+P_RECID
+        Recovery Indicator
+P_RFCGRP
+D       .
+P_RIREP
+        Reverse and Repost Line
+P_RIUPD
+        Update Existing Line
+P_SE16N
+        Use SE16N for Doc Drilldown
+P_SHWALL
+        Display All Items Processed
+P_SPFOR
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Program RGJV_UPDATE_ACC_DATA_IN_ACDOCA text e Page     16
+--------------------------------------------------------------------------------
+
+        Create Spools in Foreground
+P_SPTASK
+        Create Spool for Each Process
+P_TEST
+        Test Run
+P_UPDATE
+        Update Run
+P_UPDERR
+        Display Updates and Errors
+P_VNAME
+        Venture
+P_VNREP
+        Reverse and Repost Line
+P_VNUPD
+        Update Existing Line
+P_VPREP
+        Reverse and Repost Line
+P_VPTNR
+        Venture Partner
+P_VPUPD
+        Update Existing Line
+S_APLZL
+D       .
+S_AUFPL
+D       .
+S_BELNR
+        FI Document Number
+S_BILID
+D       .
+S_BLDAT
+D       .
+S_BUDAT
+D       .
+S_BUKRS
+D       .
+S_NPLNR
+D       .
+S_POPER
+D       .
+S_PRODP
+D       .
+S_RACCT
+D       .
+S_RCNTR
+D       .
+S_REFNR
+        CO/Ref. Document Number
+S_REGROU
+D       .
+S_RJVNAM
+D       .
+S_RORDNR
+D       .
+S_RPROJK
+D       .
+S_RRECIN
+D       .
+S_RYEAR
+D       .
+--------------------------------------------------------------------------------
+19.10.26 OCQ      Internal Program Environment RGJV_UPDATE_ACC_DPage N   17
+--------------------------------------------------------------------------------
+
+Subroutines:                                                  Line  Page
+
+AFTER_RFC..................... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  400     9
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  601    12
+BEFORE_RFC.................... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  358     8
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  569    12
+CLOSE_BLOCK................... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  447    10
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  447    10
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  449    10
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  449    10
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  491    10
+IN_RFC........................ RGJV_UPDATE_ACC_DATA_IN_ACDOCA  382     8
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  587    12
+MODIFY_SCREEN................. RGJV_UPDATE_ACC_DATA_IN_ACDOCA  173     5
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  423     9
+PREPARE_SEL_SCREEN_FRAME...... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  209     5
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  444    10
+PROCESS_SEL_SCREEN_ACTIONS.... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  217     5
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  467    10
+RUN_PROCESS................... RGJV_UPDATE_ACC_DATA_IN_ACDOCA  236     6
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  242     6
+                               RGJV_UPDATE_ACC_DATA_IN_ACDOCA  539    11
+--------------------------------------------------------------------------------

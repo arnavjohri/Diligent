@@ -1,0 +1,194 @@
+----------------------------------------------------------------------------------------------------
+Class pool       IF_JVA_MIG_CORRECT_ACDOCA=====IP          Level 0    Page 1
+Object           IF_JVA_MIG_CORRECT_ACDOCA                 Lines 4
+System           OCQ / 500   User SAP_ABAP   19.10.2026 14:50:35
+----------------------------------------------------------------------------------------------------
+1      interface-pool.
+2      *"* class pool for interface IF_JVA_MIG_CORRECT_ACDOCA
+3
+4        include IF_JVA_MIG_CORRECT_ACDOCA=====iu.
+*--- End of IF_JVA_MIG_CORRECT_ACDOCA=====IP - 4 lines ---
+
+----------------------------------------------------------------------------------------------------
+Interface        IF_JVA_MIG_CORRECT_ACDOCA=====IU          Level 1    Page 2
+Object           IF_JVA_MIG_CORRECT_ACDOCA                 Lines 177
+System           OCQ / 500   User SAP_ABAP   19.10.2026 14:50:35
+----------------------------------------------------------------------------------------------------
+1      interface if_jva_mig_correct_acdoca
+2        public .
+3
+4          types:
+5            begin of gty_s_year_and_periods,
+6              ryear   type jvso1-ryear,
+7              t_poper type standard table of jvso1-poper with default key,
+8            end of gty_s_year_and_periods.
+9          types:
+10           gty_t_year_and_periods type standard table of gty_s_year_and_periods with default key.
+11
+12         types:
+13           begin of gty_s_task_package,
+14             t_periods          type gty_t_year_and_periods,
+15             doc_count          type i,
+16           end of gty_s_task_package.
+17         types:
+18           gty_t_task_packages type standard table of gty_s_task_package with default key.
+19
+20       types:
+21         begin of gty_program_parameters,
+22           r_bukrs                        type range of bukrs,
+23           r_ryear                        type range of jvso1-ryear,
+24           r_poper                        type range of jvso1-poper,
+25           r_docnr                        type range of jvso1-docnr,
+26           r_belnr                        type range of jvso1-reffidoc,
+27           r_refnr                        type range of jvso1-refdocnr,
+28           r_budat                        type range of jvso1-budat,
+29           r_bldat                        type range of jvso1-bldat,
+30           r_racct                        type range of jvso1-racct,
+31           r_rjvnam                       type range of jvso1-rjvnam,
+32           r_regrou                       type range of jvso1-regrou,
+33           r_rrecin                       type range of jvso1-rrecin,
+34           r_bilid                        type range of jvso1-bilid,
+35           r_prodper                      type range of jvso1-prodper,
+36           r_rcntr                        type range of jvso1-rcntr,
+37           r_rordnr                       type range of jvso1-rordnr,
+38           r_rprojk                       type range of jvso1-rprojk,
+39           r_nplnr                        type range of jvso1-nplnr,
+40           r_aufpl                        type range of jvso1-aufpl,
+41           r_aplzl                        type range of jvso1-aplzl,
+42
+43           correct_all_ledgers            type abap_bool,
+44
+45           analysis_only                  type abap_bool,
+46           testrun                        type abap_bool,
+47
+48           bulk_no_of_doc_headers_in_mem  type i,
+49           bulk_no_of_docs_for_line_proc  type i,
+50
+51           log_use_update_task_for_db_upd type abap_bool,
+52           log_bulk_no_of_itms_for_db_upd type i,
+53           log_set_global_timestamp       type abap_bool,
+54           log_set_timestamp_at_db_update type abap_bool,
+55
+56           parallel_processing            type abap_bool,
+57           server_group                   type spta_rfcgr,
+58           maximum_number_of_tasks        type int4,
+59           number_of_docs_per_task        type numc7,
+60           create_spool_for_each_task     type abap_bool,
+61
+62           heuristic_line_assignment      type abap_bool,
+63           balance_check_over_line_check  type abap_bool,
+64
+65           search_by_accounting_data      type abap_bool,
+66
+67           simulate_gl_split              type abap_bool,
+68
+69           select_fi_documents            type abap_bool,
+70           select_open_items_only         type abap_bool,
+71           select_co_documents            type abap_bool,
+72
+73           prodper_as_period              type abap_bool,
+74           prodper_last_eq_first          type abap_bool,
+75
+76           post_equity_change             type abap_bool,
+77           post_suspense                  type abap_bool,
+78           post_equity_adjust             type abap_bool,
+79           post_farm_in_out               type abap_bool,
+80           post_cutback                   type abap_bool,
+81           post_cash_call                 type abap_bool,
+82           check_jva_data                 type abap_bool,
+83           check_venture                  type abap_bool,
+84           update_venture                 type abap_bool,
+85           repost_venture                 type abap_bool,
+86           check_equity_group             type abap_bool,
+87           update_equity_group            type abap_bool,
+88           repost_equity_group            type abap_bool,
+89           check_venture_partner          type abap_bool,
+90           update_venture_partner         type abap_bool,
+91           repost_venture_partner         type abap_bool,
+92           check_recovery_indicator       type abap_bool,
+93           update_recovery_indicator      type abap_bool,
+94           repost_recovery_indicator      type abap_bool,
+95           check_billing_indicator        type abap_bool,
+96           update_billing_indicator       type abap_bool,
+97           repost_billing_indicator       type abap_bool,
+98           check_production_period        type abap_bool,
+99           update_production_period       type abap_bool,
+100          repost_production_period       type abap_bool,
+101          check_co_in_bs_lines           type abap_bool,
+102          update_co_in_bs_lines          type abap_bool,
+103          repost_co_in_bs_lines          type abap_bool,
+104          check_co_in_co_lines           type abap_bool,
+105          update_co_in_co_lines          type abap_bool,
+106          repost_co_in_co_lines          type abap_bool,
+107          exclude_balancing_lines        type abap_bool,
+108
+109          use_original_posting_date      type abap_bool,
+110          use_new_posting_date           type abap_bool,
+111          posting_date                   type budat,
+112
+113          update_fagl_split              type abap_bool,
+114          update_existing_lines          type abap_bool,
+115          post_new_documents             type abap_bool,
+116          show_all_lines                 type abap_bool,
+117          show_updates_and_errors        type abap_bool,
+118          show_errors_only               type abap_bool,
+119
+120          create_spools_in_foreground    type abap_bool,
+121          do_not_store_issue_details     type abap_bool,
+122          use_se16n_to_display_doc       type abap_bool,
+123
+124          "From here: Non-entered parameters
+125
+126          t_bukrs                        type fagl_t_bukrs,
+127          bukrs                          type bukrs,
+128
+129          jv_ledger                      type fins_ledger,
+130          newgl_integration_active       type abap_bool,
+131
+132          print_results                  type abap_bool,
+133          repid_callback                 type repid,
+134
+135          timestamp_db_updates           type timestamp,
+136          r_activ_fico                   type range of jvso1-activ,
+137          r_activ_me                     type range of jvso1-activ,
+138          r_activ_op                     type range of jvso1-activ,
+139
+140          is_parallel_task               type abap_bool,
+141          s_task_package                 type gty_s_task_package,
+142
+143        end of gty_program_parameters.
+144
+145      methods execute_process
+146        importing
+147          !is_progpars type gty_program_parameters.
+148
+149      methods parall_after_rfc
+150        importing
+151          !is_after_rfc_imp      type spta_t_after_rfc_imp
+152          !it_objects_in_process type spta_t_objects_in_process
+153          !it_rfcdata            type spta_t_indxtab
+154          !iv_rfcmsg             type spta_t_rfcmsg
+155          !iv_rfcsubrc           type sy-subrc
+156        changing
+157          !cs_after_rfc_exp      type spta_t_after_rfc_exp
+158          !cv_user_param         type any.
+159
+160      methods parall_before_rfc
+161        importing
+162          !is_before_rfc_imp     type spta_t_before_rfc_imp
+163        changing
+164          !ct_rfcdata            type spta_t_indxtab
+165          !cs_before_rfc_exp     type spta_t_before_rfc_exp
+166          !ct_failed_objects     type spta_t_failed_objects
+167          !ct_objects_in_process type spta_t_objects_in_process
+168          !cv_user_param         type any.
+169
+170      methods parall_in_rfc
+171        importing
+172          !is_in_rfc_imp type spta_t_in_rfc_imp
+173        changing
+174          !cs_in_rfc_exp type spta_t_in_rfc_exp
+175          !ct_rfcdata    type spta_t_indxtab.
+176
+177    endinterface.
+*--- End of IF_JVA_MIG_CORRECT_ACDOCA=====IU - 177 lines ---
