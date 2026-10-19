@@ -28,7 +28,7 @@ outside the repo is a file that will be lost.
 | OVL system | **OCQ**, client 500. Older S/4 release. No ADT connection, no outbound internet |
 | Transfer into SAP | abapGit standalone (offline ZIP) or copy-paste from SE80. Nothing else |
 | `abap-adt` MCP | Points at `192.168.11.21` client 200 — a **different** system. Scratch syntax rig only, when explicitly asked. Never `setObjectSource` / `activateByName` / `deleteObject` against a project object |
-| Mass download helper | `ZR_PROG_DOWNLOAD` — pulls a program with its full include tree (also FGs/classes, by package or name list) |
+| Mass download helper | `ZR_PROG_DOWNLOAD` — pulls a program with its full include tree (also FGs/classes, by package or name list; CDS DDL sources since 19/10/26). Source: `tools/zr_prog_download/` — the first version was never filed and had to be rewritten |
 | Not on any machine | `DDLS_BASE_FIELDS.txt`, `ARS_API_SUCCESSOR.xlsx`. CDS element names cannot be re-verified — use only mappings already written down |
 
 **Assume no system access.** Never propose "let me check table X in your system". Reason

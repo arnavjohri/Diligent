@@ -119,6 +119,10 @@ ovl/                             OVL / ONGC Videsh
 gail/                            GAIL — S2A project
 mwc/                             MWC
 rws/                             RWS
+
+tools/                           Developer utilities (paste-only reports)
+  zr_find_enh/                   Enhancement finder - FM / method / program call tree
+  zr_prog_download/              Mass source download with include tree (programs, FGs, classes, DDLS)
 ```
 
 `gail/`, `mwc/` and `rws/` keep the delivered engagement structure:
