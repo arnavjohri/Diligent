@@ -7,9 +7,32 @@ to the application server (`OPEN DATASET`), **one file per object**, in the
 Paste-only (single report, no includes, no screens beyond 1000). Create in SE38 as
 type 1 executable, paste `ZR_PROG_DOWNLOAD.abap` whole, maintain the texts below, activate.
 
-**History.** The first version (Aug 2026) was never filed in the repo and is lost. This is a
-rewrite from its description and from the layout of the listings it produced
-(`ovl/atc/sources/reports/*.ABAP`). One addition: **CDS DDL sources (DDLS)**.
+## Status 19/10/26 — the live program is NOT this file
+
+The August 2026 version **is installed and running** in the system (title *download entire
+program*; selection screen in `original/ZR_PROG_DOWNLOAD_selscreen_2026-10-19.png`). Its
+source was never filed here. It has more options than the rewrite below: class / interface,
+"Main objects only", "List includes as well", max nesting depth (15), "Add generated
+includes", "Print line numbers", extension `.txt`. **Keep it.** What it lacks is a CDS DDL
+source object type — that is the only change wanted.
+
+Next step: run the live program on itself (Program / report = `ZR_PROG_DOWNLOAD`, list
+includes, `.txt`), drop the file in `incoming/`, file it with
+`./scripts/save-original.sh tools/zr_prog_download incoming/ZR_PROG_DOWNLOAD.txt`, and the DDLS
+block is added to the real source with `*BOC/*EOC By Arnav` markers. Three pieces, all small:
+a `CDS DDL source` select-option in *Objects by name* plus a *Take CDS DDL sources* checkbox in
+*Objects by package*; one FORM reading `DDDDLSRC` (active version) and splitting `SOURCE` into
+lines; a hook in the download loop writing it as `<name>.ddls.asddls`. The FORM
+`add_ddl_source` in `ZR_PROG_DOWNLOAD.abap` below is that piece, ready to graft.
+
+`ZR_PROG_DOWNLOAD.abap` in this folder is a **rewrite from the listing layout**, made on
+19/10/26 before the live program was seen. It is a reference and a fallback only — do not
+create it over the existing program.
+
+**Until the DDLS block is in:** the 26 DDL sources of `ovl/zmm_purchdoc_cds_ext` come out
+without any code via abapGit standalone — *New Offline* repo on the package that holds them →
+*Export ZIP*. The ZIP carries each view as `<name>.ddls.asddls` (plus a `.ddls.xml`), which is
+exactly the file the repo expects.
 
 ## What it downloads
 
