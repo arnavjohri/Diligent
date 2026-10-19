@@ -151,3 +151,31 @@ task receives, hence the parallel WHERE `ryear = ... AND ( poper = ... OR ... )`
 - SE11: JVSO1 (fields REFFIDOC, REFDOCNR, ACTIV), ACDOCA (VNAME, EGRUP, VPTNR, RECID,
   BTYPE, ETYPE, PRODPER, MIG_SOURCE, JVACTIVITY, CO_BELNR, PREC_*).
 - SE16H: `JVA_ACD_UPD_LOG` for what earlier runs changed.
+
+## 6. FI-only run with a document in S_BELNR — why ACDOCA may not update (19/10/26)
+
+The tool copies JVA values **from the JVSO1 line to the matched ACDOCA line**; it
+derives nothing from FI. S_BELNR filters `JVSO1-REFFIDOC`, not ACDOCA-BELNR.
+Chain: JVSO1 (rldnr 4A, activ JVFI/JVMM, reffidoc in S_BELNR) → BKPF header
+(GJEC/GJ19/GJ17/GJFARM dropped) → ACDOCA by belnr = reffidoc → `compare_lines` →
+`compare_field_values` (vname<>rjvnam, egrup<>regrou, ...) → `determine_correction_type`
+(update_line only when the entity's "Update Existing Line" radio is set) →
+`cl_jva_mig_post_acdoca->update_acdoca_line( iv_test = testrun )`.
+
+Checklist, in order:
+1. P_TEST is the default — must be Update Run. Test run writes nothing.
+2. JVSO1 and ACDOCA already agree, or JVSO1-RJVNAM is blank → "Document OK", no update.
+   Tool cannot fill a venture that JVA itself does not hold.
+3. No JVSO1 row with REFFIDOC = document, or ACTIV not JVFI/JVMM → skipped silently.
+4. ACDOCA line missing → FI mode maps line_missing to correction_not_possible.
+5. Line assignment fails (P_HEUR off) or amounts differ → rev_and_repost_doc, not update.
+6. Entity checkbox off, or radio on "Reverse and Repost" → no in-place update.
+7. P_JVLEDG → only the JV ledger is read.
+8. P_EXCLBL default on → balancing lines (ACTIV/REFACTIV) excluded.
+9. Migrated docs present → FI read adds `mig_source IS INITIAL OR vname IS NOT INITIAL`;
+   a migrated line with blank VNAME is not selected at all.
+10. Update run needs activity 16 on JV process CUTBACK2 (G4 292 otherwise).
+11. Hidden filters S_BUDAT/S_BLDAT/... apply to JVSO1 — stale value excludes the doc.
+
+Diagnose: Analysis Only + "Display All Items Processed" on the one document; the
+per-line message names the case. Empty list = never selected from JVSO1 (3 or 11).
