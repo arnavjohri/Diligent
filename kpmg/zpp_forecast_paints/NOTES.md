@@ -14,33 +14,50 @@ names the Adhesive tables.
 
 ## Status
 
-**19/10/26 — FS read, Assumptions and Queries issued, no code.**
-`docs/ZFORECAST_Paints_Assumptions_and_Queries.md` (+ `.docx`) carries seven mandatory
-queries (M1–M7), the assumptions (P01–P26), further queries (Q1–Q9) and the proposed object
-list. Waiting on answers and on approval of the object list.
+**19/10/26 — FS read, Assumptions and Queries issued (v2), no code.**
+`docs/ZFORECAST_Paints_Assumptions_and_Queries.md` (+ `.docx`) carries the reuse decision
+per Adhesive object (§0.1), seven mandatory queries (M1–M7), assumptions (P01–P26),
+further queries (Q1–Q10), the proposed object list (§4) and 28 defects found in the FS
+(§8). Waiting on answers and on approval of the object list.
 
-## Proposed shape (pending approval — see the document, section 4)
+## Standing rule: no Adhesive program or class is edited for Paints
+
+Arnav's call, 19/10/26: the Adhesive objects work and are in functional testing. Paints
+calls them and shares their tables; anything Paints-specific is a new object. The v1 idea
+of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
+`ZCL_PP_FCST` is withdrawn.
+
+## Proposed shape (pending approval — see the document, §0.1 and §4)
 
 - **Shared with Adhesive, unchanged:** the eight `ZPPT_*` tables, `ZPPFCST`, auth object
-  `ZPP_FCST`, msag `ZPP_FCST`, `ZCL_PP_FCST_UTIL`, `ZPP_FORECAST_REPORT`, tcodes
-  `ZFCST_UPL` / `ZFCST_RPT`.
-- **Shared, changed:** `ZPP_FORECAST_UPLOAD` (ninth radio, brand upload; category upload
-  accepts the two new indicator values), `ZCL_PP_FCST` (`READ_PRICES` made public, no
-  logic change), `ZDO_MTS_MTO` (fixed values `DIS`, `TIN`).
+  `ZPP_FCST`, msag `ZPP_FCST`, `ZCL_PP_FCST`, `ZCL_PP_FCST_UTIL`, `ZPP_FORECAST_REPORT`,
+  and `ZPP_FORECAST_UPLOAD` for six of its eight types (tracking, exclusion, history,
+  business forecast Q/M, change Q/M). Tcodes `ZFCST_UPL` / `ZFCST_RPT` serve both.
+- **One DDIC touch:** `ZDO_MTS_MTO` gains fixed values `DIS`, `TIN`, length unchanged. No
+  conversion, no code. The zero-touch alternative (a Paints-only indicator in the brand
+  table) is recorded and rejected in §0.1.
 - **New:** `ZPPT_BRAND` (+ `ZDO_BRAND`, `ZDE_BRAND`, SM30 view `ZPPV_BRAND`),
-  `ZCL_PP_FCST_PNT` (enrichment: Paints columns on top of `ZCL_PP_FCST=>TY_ALV`),
-  `ZPP_FORECAST_PAINTS` (tcode `ZFCST_PAINTS`, SE41 status `PF_STATUS`).
-- **Not built:** a Paints copy of the engine, upload or report.
+  `ZCL_PP_FCST_PNT` (enrichment: Paints columns on top of `ZCL_PP_FCST=>TY_ALV`, own
+  A923 price read for annual, tonnage on gross weight ÷ 1000, KL and crores),
+  `ZPP_FORECAST_PAINTS` (tcode `ZFCST_PAINTS`, SE41 status `PF_STATUS`),
+  `ZPP_FORECAST_PAINTS_UPL` (tcode `ZFCST_PAINTS_UPL`: category with four indicator
+  values, and brand — the two uploads the shared program cannot take).
+- **Not built:** a Paints copy of the engine or the report.
+- **Known duplication:** the A923 price read (~30 lines) and the upload file handling
+  (~400 lines) exist twice. A fix on the Adhesive side has to be repeated here.
 
 ## Gotchas, already known before a line is written
 
-- The Adhesive program `ZPP_FORECAST` is the template for the new one. Do not edit it.
+- `ZPP_FORECAST` and `ZPP_FORECAST_UPLOAD` are templates for the new programs. Copy from
+  a fresh download, never edit them.
 - Everything shared is in functional testing on the Adhesive side with **no transport**
-  and the auth bypass of 07/09 still in `ZCL_PP_FCST_UTIL`. A change to a shared object
-  reaches the Adhesive testers at once. Ask for the fresh SE80 download before touching
-  `ZPP_FORECAST_UPLOAD` or `ZCL_PP_FCST` — none has been supplied since 03/09/26.
+  and the auth bypass of 07/09 still in `ZCL_PP_FCST_UTIL`. Paints inherits the bypass;
+  restoring it restores both. The material-type filter TVARVC `ZPP_FORECAST_MTART`
+  applies to Paints through the engine (Q7).
 - The domain change on `ZDO_MTS_MTO` touches four tables holding data. Adding fixed
   values at the same length needs no conversion; changing the length would.
+- Paints plants need their own `ZPPT_FCST_CFG` rows (sales org 4000) — configuration,
+  not code, but only if a plant never carries both divisions (M1).
 - Screen-free, like Adhesive: `CL_SALV_TABLE` only, no `CALL SCREEN`, no
   `cl_gui_custom_container`. The SE41 status is the one manual GUI object.
 - Pack size: `MARM` has several alternative units per material; the rule for which one
