@@ -15,12 +15,14 @@
 *&   JV ledger 4A lines (record type 0, version 001) that reference those
 *&   documents are read. Both sides are totalled by company code,
 *&   venture, equity group, G/L account, recovery indicator, year and
-*&   period and shown side by side with the difference in local, group
-*&   and transaction currency (ACDOCA HSL/KSL/WSL vs JVSO1 HSL/KSL/TSL).
+*&   period and shown side by side with the difference in local and
+*&   group currency (ACDOCA HSL/KSL vs JVSO1 HSL/KSL). Transaction
+*&   currency is not compared: one key can hold several currencies.
 *&   Display only - nothing is written to the database.
 *&
 *& CHANGE HISTORY
 *&   19.10.2026  Arnav Johri  <TR>  Initial development
+*&   21.10.2026  Arnav Johri  <TR>  Transaction currency (WSL/TSL) comparison removed
 *&---------------------------------------------------------------------*
 REPORT zfi_acdoca_jvso1_recon.
 
@@ -50,7 +52,6 @@ TYPES:
     recid  TYPE acdoca-recid,
     hsl    TYPE acdoca-hsl,
     ksl    TYPE acdoca-ksl,
-    wsl    TYPE acdoca-wsl,
   END OF ty_acd_sum,
 
   " FI document keys found in ACDOCA - driver for the JVSO1 read
@@ -74,7 +75,6 @@ TYPES:
     rrecin TYPE jvso1-rrecin,
     hsl    TYPE jvso1-hsl,
     ksl    TYPE jvso1-ksl,
-    tsl    TYPE jvso1-tsl,
   END OF ty_jv_line.
 
 " Output row: key + ACDOCA amount, JVSO1 amount and difference per currency
@@ -86,9 +86,6 @@ TYPES:   hsl_acd  TYPE acdoca-hsl,
          ksl_acd  TYPE acdoca-ksl,
          ksl_jv   TYPE acdoca-ksl,
          ksl_diff TYPE acdoca-ksl,
-         wsl_acd  TYPE acdoca-wsl,
-         wsl_jv   TYPE acdoca-wsl,
-         wsl_diff TYPE acdoca-wsl,
          diff     TYPE abap_bool,
        END OF ty_out.
 
@@ -170,7 +167,7 @@ FORM read_acdoca.
   " Totals per company code / year / period / venture / equity group /
   " account / recovery indicator, summed on the database
   SELECT rbukrs, gjahr, poper, vname, egrup, racct, recid,
-         SUM( hsl ) AS hsl, SUM( ksl ) AS ksl, SUM( wsl ) AS wsl
+         SUM( hsl ) AS hsl, SUM( ksl ) AS ksl
     FROM acdoca
     WHERE rldnr      = @gc_rldnr_acd
       AND rbukrs    IN @s_bukrs
@@ -211,7 +208,7 @@ FORM read_jvso1.
 *----------------------------------------------------------------------*
   IF gt_docs IS NOT INITIAL.
     SELECT rbukrs, ryear, docnr, docln, poper,
-           rjvnam, regrou, racct, rrecin, hsl, ksl, tsl
+           rjvnam, regrou, racct, rrecin, hsl, ksl
       FROM jvso1
       FOR ALL ENTRIES IN @gt_docs
       WHERE rldnr    = @gc_rldnr_jv
@@ -240,14 +237,8 @@ FORM build_output.
     PERFORM get_sum_row USING ls_key CHANGING lr_row.
     lr_row->hsl_acd = lr_row->hsl_acd + <ls_acd>-hsl.
     lr_row->ksl_acd = lr_row->ksl_acd + <ls_acd>-ksl.
-    lr_row->wsl_acd = lr_row->wsl_acd + <ls_acd>-wsl.
   ENDLOOP.
 
-*----------------------------------------------------------------------*
-* ASSUMPTION: JVSO1 has no WSL column. Its transaction-currency amount
-*   is TSL, which SAP's correction tool compares with ACDOCA-WSL, so
-*   TSL fills the "JVSO1 transaction amount" column.
-*----------------------------------------------------------------------*
   LOOP AT gt_jv_line ASSIGNING FIELD-SYMBOL(<ls_jv>).
     CLEAR ls_key.
     ls_key-rbukrs = <ls_jv>-rbukrs.
@@ -260,14 +251,12 @@ FORM build_output.
     PERFORM get_sum_row USING ls_key CHANGING lr_row.
     lr_row->hsl_jv = lr_row->hsl_jv + <ls_jv>-hsl.
     lr_row->ksl_jv = lr_row->ksl_jv + <ls_jv>-ksl.
-    lr_row->wsl_jv = lr_row->wsl_jv + <ls_jv>-tsl.
   ENDLOOP.
 
   LOOP AT gt_sum ASSIGNING FIELD-SYMBOL(<ls_sum>).
     <ls_sum>-hsl_diff = <ls_sum>-hsl_acd - <ls_sum>-hsl_jv.
     <ls_sum>-ksl_diff = <ls_sum>-ksl_acd - <ls_sum>-ksl_jv.
-    <ls_sum>-wsl_diff = <ls_sum>-wsl_acd - <ls_sum>-wsl_jv.
-    IF <ls_sum>-hsl_diff <> 0 OR <ls_sum>-ksl_diff <> 0 OR <ls_sum>-wsl_diff <> 0.
+    IF <ls_sum>-hsl_diff <> 0 OR <ls_sum>-ksl_diff <> 0.
       <ls_sum>-diff = abap_true.
       gv_diff_cnt = gv_diff_cnt + 1.
     ENDIF.
@@ -344,14 +333,8 @@ FORM display_alv.
     'JVSO1 GC'   'JVSO1 Group Amt'    'JVSO1 Amount in Group Currency (KSL)'.
   PERFORM set_col_text USING lo_columns 'KSL_DIFF'
     'Diff GC'    'Difference Group'   'Difference Group Curr. (ACDOCA - JVSO1)'.
-  PERFORM set_col_text USING lo_columns 'WSL_ACD'
-    'ACDOCA TC'  'ACDOCA Trans. Amt'  'ACDOCA Amount in Transaction Curr. (WSL)'.
-  PERFORM set_col_text USING lo_columns 'WSL_JV'
-    'JVSO1 TC'   'JVSO1 Trans. Amt'   'JVSO1 Amount in Transaction Curr. (TSL)'.
-  PERFORM set_col_text USING lo_columns 'WSL_DIFF'
-    'Diff TC'    'Difference Trans.'  'Difference Trans. Curr. (ACDOCA - JVSO1)'.
   PERFORM set_col_text USING lo_columns 'DIFF'
-    'Diff'       'Difference exists'  'Difference exists in any currency'.
+    'Diff'       'Difference exists'  'Difference in local or group currency'.
 
   lv_title = |ACDOCA 0L vs JVSO1 4A - lines created before { p_cutdt DATE = USER }|.
   lo_alv->get_display_settings( )->set_list_header( lv_title ).
