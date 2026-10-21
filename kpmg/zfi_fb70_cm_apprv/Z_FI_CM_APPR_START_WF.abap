@@ -21,27 +21,22 @@ FUNCTION z_fi_cm_appr_start_wf.
 * Author          : Arnav Johri
 * Date            : 14.10.2026, changed 15.10.2026 (X tables, Z class)
 * Attributes      : Processing type = Remote-Enabled Module (mandatory,
-*                   it is called STARTING NEW TASK). Import parameters
+*                   it is called IN BACKGROUND TASK). Import parameters
 *                   pass by value. No exceptions, no export parameters.
 * Description     : Called asynchronously by Z_FI_CM_APPR_PARK_EVENT
-*                   (BTE 00002218) while FB70 is still saving, with all
-*                   six BTE tables (X = new, Y = old state). Waits 5 s for
-*                   the park to commit, then starts the journal entry
+*                   (BTE 00002218) as a background task, i.e. after the
+*                   park's update has completed, with all six BTE tables
+*                   (X = new, Y = old state). Starts the journal entry
 *                   verification workflow through
 *                   ZCL_CM_WORKFLOW->START_WORKFLOW (credit memo copy
 *                   of ZCL_GL_WORKFLOW, fed from the BTE tables) and
 *                   commits. No read of VBKPF; the BTE tables are the data.
-*                   Pattern as agreed with the team (Z_JV_MASSGL_WF).
-* Error path      : an asynchronous task has no caller to report to; a
-*                   log table (object 3) is the place for failures once
-*                   it exists.
+* Error path      : a failing task stays in SM58 with its message and
+*                   can be re-executed there.
 *----------------------------------------------------------------------*
 
   DATA: lv_status   TYPE char1,
         lo_workflow TYPE REF TO zcl_cm_workflow.
-
-* Let the FB70 park transaction commit (team pattern)
-  WAIT UP TO 5 SECONDS.
 
 * Start the verification workflow from the BTE tables
   CREATE OBJECT lo_workflow.

@@ -17,10 +17,10 @@ FUNCTION z_fi_cm_appr_park_event.
 * Description     : BTE 00002218 (PRELIMINARY POSTING: When document is
 *                   saved). Fires inside the FB70 park transaction before
 *                   its COMMIT WORK. Filters for a customer credit memo on
-*                   first park and calls Z_FI_CM_APPR_START_WF
-*                   asynchronously (STARTING NEW TASK), same pattern as
-*                   Z_JV_MASSGL_WF in the mass GL program. The called
-*                   module waits 5 seconds for the park to commit.
+*                   first park and registers Z_FI_CM_APPR_START_WF
+*                   IN BACKGROUND TASK: it runs after the park's update
+*                   has completed, so VBKPF/BKPF exist when it reads
+*                   them. Failures are visible in SM58.
 *                   No database write and no COMMIT WORK here.
 * Registration    : FIBF -> Settings -> P/S Modules -> of a customer,
 *                   event 00002218, product ZFI (existing, active).
@@ -83,14 +83,12 @@ FUNCTION z_fi_cm_appr_park_event.
     RETURN.
   ENDIF.
 
-*--- 7. Hand over to the RFC module in a new task (asynchronous RFC,
-*      own session, own LUW), together with all six BTE tables (X = new,
-*      Y = old state), so the workflow is built from what FB70 saved
-*      and not re-read by key. The called module waits 5 seconds so the park
-*      transaction has committed before it touches VBKPF.
+*--- 7. Hand over to the RFC module as a background task (own LUW, run
+*      by the update task after the park's update completed), together
+*      with all six BTE tables (X = new, Y = old state). Decided
+*      21/10/26 after the asynchronous call raced the park update.
   CALL FUNCTION 'Z_FI_CM_APPR_START_WF'
-    STARTING NEW TASK 'ZCMAPR'
-    DESTINATION 'NONE'
+    IN BACKGROUND TASK
     EXPORTING
       iv_bukrs = ls_new-bukrs
       iv_belnr = ls_new-belnr

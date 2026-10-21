@@ -6,9 +6,9 @@
 *               credit memo parked in FB70. Same code, except:
 *               - PRELIMINARY_POSTING_DOC_READ removed: the tables come
 *                 in from BTE 00002218 (IT_VBKPF, IT_VBSEG, IT_VBSEC);
-*               - PRELIMINARY_POSTING_DOC_WRITE replaced by one UPDATE
-*                 of XWFFR, because the BTE gives no VBSET and a write
-*                 with an empty VBSET would delete the tax lines;
+*               - PRELIMINARY_POSTING_DOC_WRITE replaced by UPDATEs of
+*                 XWFFR and TCODE on VBKPF and TCODE on BKPF (no VBSET
+*                 from the BTE; TCODE rewrite needed by the GL scenario);
 *               - the status SELECT at the end removed: it runs before
 *                 the caller's COMMIT WORK and would always give 'E'.
 * Create via  : ADT or SE24 source-based, paste whole file.
@@ -88,12 +88,30 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     ENDLOOP.
 
 * Release flag on the parked header (was PRELIMINARY_POSTING_DOC_WRITE;
-* no VBSET from the BTE, so only the flag is written)
+* no VBSET from the BTE, so only the flag is written) plus the Fiori app
+* transaction code on both headers: the GL verification scenario's views
+* filter on BKPF-TCODE in (FBDC_P001, FBDC_P050, FBDC_P051), and its
+* posting check (enhancement ZEI_GL_WORKLFOW_INTR) keys on the same code.
+* Decision Gaurav/Arnav 21/10/26: stay on the GL scenario with these
+* rewrites. Document not on the database yet -> no event (RETURN).
     UPDATE vbkpf
-      SET xwffr = @abap_true
+      SET xwffr = @abap_true,
+          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
       WHERE ausbk = @<fs_vbkpf>-ausbk
         AND belnr = @<fs_vbkpf>-belnr
         AND gjahr = @<fs_vbkpf>-gjahr.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    UPDATE bkpf
+      SET tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+      WHERE bukrs = @<fs_vbkpf>-bukrs
+        AND belnr = @<fs_vbkpf>-belnr
+        AND gjahr = @<fs_vbkpf>-gjahr.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 
     IF lt_vbseg IS NOT INITIAL.
       SELECT saknr , ktoks FROM ska1 FOR ALL ENTRIES IN @lt_vbseg
