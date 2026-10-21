@@ -5,16 +5,40 @@ Trigger corrected 05/10/26: SAP does not raise `FIPP.CREATED` on park without re
 customising; object 2 (BTE 00002218) raises it.
 Client folder is a placeholder (`kpmg/`) until Arnav names the project; move with `git mv`.
 
-## Status 16/10/26 — trigger built and proven; GL verification scenario ruled out
+## Status 21/10/26 — trigger proven; GL verification scenario cannot post a credit memo
 
-Trigger (BTE `00002218` → `Z_FI_CM_APPR_PARK_EVENT` → `Z_FI_CM_APPR_START_WF` STARTING NEW
-TASK → `ZCL_CM_WORKFLOW`) is built, active in DEV and proven by workflow log. Reusing the
-standard GL verification scenario `WS02800046` (as the JV upload app does) was tested end to
-end and fails at SAP's posting step with `FDC_POSTING_001 092` "Parked document is no GL
-posting"; the scenario also filters its inbox views on the Fiori app transaction codes.
-Decision pending: Accounts Receivable verification scenario if the release has one, else the
-custom `FIPP` workflow below. Either way the trigger objects stay; only the event raised in
-`ZCL_CM_WORKFLOW` changes.
+**Trigger is done and proven by workflow log.** BTE `00002218` → `Z_FI_CM_APPR_PARK_EVENT`
+→ `Z_FI_CM_APPR_START_WF` (IN BACKGROUND TASK, runs after the park's update) →
+`ZCL_CM_WORKFLOW` raises the event. FB70 Save-as-completed of a `DG` credit memo starts the
+workflow, the approval step completes.
+
+**Reusing the GL verification scenario `WS02800046` (as the JV upload app does) is ruled
+out**, by this chain of evidence:
+
+1. Its inbox views (`I_GLJrnlEntryToBeVerified`) filter on `BKPF-TCODE` in the Fiori app
+   codes (`FBDC_P001/P050/P051`); an FB70 document carries `FB70`. Rewriting TCODE on `BKPF`
+   and `VBKPF` gets the document into the views and the agent rule gets its context.
+2. The posting step (task `TS02800036`, `CL_FDC_ACCDOC_VER->IF_FDC_ACCDOC_VER~POST` →
+   `CL_FDC_ACCDOC_PARK_ACCESS=>POST` → `CL_FAC_FINANCIALS_POST_DPC_EXT->
+   ACCDOC_FUNC_PARK_DOC_POST`) posts through the Fiori "Post General Journal Entries" app
+   API, whose document model has G/L lines only. It rejects the credit memo with
+   `FDC_POSTING_001 092` "Parked document is no GL posting". The team's enhancement
+   `ZEI_GL_WORKLFOW_INTR` on `IS_DOC_VALID_FOR_NEW_WORKFLOW` does not cover this path.
+   Bypassing the check would post without the customer line. Not viable.
+3. Side findings: `ZCL_GL_EXCHANGE_AMOUNT_DET` had all four UPD work processes of DS4 in
+   an endless loop for days (all updates in client 400 stuck Initial); a `DO. ENDDO.`
+   debugging hook in `ZCL_AGENT_GL_WF_RULE` hung a dialog process. Both are the JV
+   team's objects, reported.
+
+**Decision for Gaurav:** (a) Accounts Receivable verification scenario, if this release
+offers one in "Manage Workflows for Journal Entry Verification" — same trigger, the class
+raises that scenario's event; or (b) the custom `FIPP` workflow below — same trigger, the
+class raises `FIPP.CREATED`, posting via `FIPP.POST` (normal FBV0 path, any parked
+document). Recommendation: (b) unless (a) exists on this release.
+
+**To revert in the system once decided:** the TCODE rewrites on `BKPF`/`VBKPF` out of
+`ZCL_CM_WORKFLOW` (keep the `XWFFR` update only if (a) needs it); the extension of
+`ZEI_GL_WORKLFOW_INTR` not applied; checkpoint group `ZFI_CM_APPR` deactivated.
 
 ## Requirement (as stated)
 
