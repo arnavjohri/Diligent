@@ -33,7 +33,7 @@ FUNCTION z_fi_cm_appr_park_event.
 * ASSUMPTION: company code filter left EMPTY = all company codes until
 *             FI names the codes. Fill lt_bukrs below to restrict.
   CONSTANTS: gc_blart_cm   TYPE blart VALUE 'DG',
-             gc_bstat_park TYPE bstat VALUE 'V'.
+             gc_bstat_park TYPE vbkpf-bstat VALUE 'V'.
 
   DATA: ls_new   TYPE fvbkpf,
         lt_bukrs TYPE RANGE OF bukrs,

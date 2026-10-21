@@ -32,7 +32,7 @@
 ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
 *BOC By Arnav on 21/10/26
   CONSTANTS: lc_zcm_blart    TYPE blart VALUE 'DG',
-             lc_zcm_parked   TYPE bstat VALUE 'V',
+             lc_zcm_parked   TYPE vbkpf-bstat VALUE 'V',
              lc_zcm_complete TYPE c LENGTH 9 VALUE 'COMPLETED'.
 
   DATA: lt_zcm_vbkpf TYPE STANDARD TABLE OF vbkpf,
@@ -42,7 +42,7 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
         ls_zcm_key   TYPE if_fdc_je_wf_list_db=>ts_fdc_je_wf_list_key,
         lv_zcm_wfstat TYPE c LENGTH 20,
         lv_zcm_blart  TYPE blart,
-        lv_zcm_bstat  TYPE bstat,
+        lv_zcm_bstat  TYPE vbkpf-bstat,
         lv_zcm_apply  TYPE abap_bool.
 
 * Entry conditions, read from the scenario's own inbox view (the view
