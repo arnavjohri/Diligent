@@ -134,6 +134,46 @@ The GUI's `SERIAL_NO` order is not a value-help contract in Fiori — `serial_no
 column so users can sort on it. `@Semantics.text` is used here on a classic `define view`, where
 it is allowed; it is the view-entity form that fails on this release (MEMORY §4.1).
 
+## One value help for all fixed-value domains — 21/10/26
+
+Arnav confirmed in SE11 that several customer-data fields get their GUI F4 from the fixed
+values of their domain (Inspection Type is the one seen in the popup: `1 Source Inspection`,
+`2 Destination Inspection`). The copy of `ZC_PURCHASEORDERTP_EXT` he pasted on 21/10/26 is
+byte-identical to `original/`, so the 19/10 change (positions 230–260) is **not active yet**;
+all value-help annotations go into that one re-paste.
+
+**Zero-object route first.** The OData runtime derives a fixed-value list from the domain on
+its own. Check `$metadata` for `sap:value-list="fixed-values"` (OData V2) or
+`Common.ValueListWithFixedValues` (V4) on `zzinsp_typ`. Present → nothing to build for these
+fields. Absent only on the custom fields → a `cast` somewhere in the five-layer chain dropped
+the data element; the lower extension sources are then needed. Absent everywhere → fallback:
+
+`ZI_DOM_FIXVAL_VH.ddls.asddls` (this folder) — **one** value help over `DD07T` for all of
+them: keys `DomainName` + `DomainValue`, text `DomainValueText`, `ValuePosition`, filtered to
+the logon language and the active version. Each element restricts it to its own domain in
+the annotation, so there is one view instead of one per domain:
+
+    @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' },
+                                         additionalBinding: [{ element: 'DomainName',
+                                                               localConstant: 'ZINSP_TYP',
+                                                               usage: #FILTER }] }]
+
+Risks, to be tested on the first field before annotating the rest:
+
+1. `additionalBinding.localConstant` is release-dependent. If activation reports
+   `Annotation 'Consumption.valueHelpDefinition.additionalBinding.localConstant' unknown`, the
+   fallback is one view per domain: the same source with `where domname = 'ZINSP_TYP'` added
+   and `DomainName` dropped from the keys.
+2. Older SAPUI5 may not apply the constant filter when it renders the `#XS` dropdown, so the
+   list would show every domain's values. Then remove `@ObjectModel.resultSet.sizeCategory: #XS`
+   — the value help dialog applies the filter and matches the GUI popup anyway.
+3. The view must be an entity set of the service, same as `ZI_NAT_PROC_VH` (see above).
+4. `DomainValue` is CHAR 10 against CHAR 2/3 and NUMC 3 elements. ADT warns, activation is
+   fine. For NUMC domains the fixed values must carry leading zeros in SE11.
+
+Not for this view: fields whose GUI F4 comes from a check table, a search help or a
+`PROCESS ON VALUE-REQUEST` module. Those keep one value-help view each over their table.
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
