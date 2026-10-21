@@ -2,15 +2,17 @@
 * Enhancement implementation : ZEI_GL_WORKLFOW_INTR  (existing, team's)
 * Spot                       : implicit, end of method
 *   CL_FDC_ACCDOC_VER_SERVICES->IS_DOC_VALID_FOR_NEW_WORKFLOW
-* Change by Arnav, 16/10/26  : second branch for a customer credit memo
-*   submitted to the GL verification scenario by Z_FI_CM_APPR_START_WF.
+* Change by Arnav, 21/10/26  : (1) LOG-POINT on checkpoint group
+*   ZFI_CM_APPR so the inputs of the WF-BATCH posting step can be read
+*   in SAAB; (2) second branch for a customer credit memo submitted to
+*   the GL verification scenario by Z_FI_CM_APPR_START_WF.
 *   The standard allows only the account types in
 *   CL_FDC_ACCDOC_PARK_ACCESS=>CO_ALLOWED_ACCT_TY_FOR_PARKING (G/L and
 *   supplier); the customer line 'D' raises FDC_POSTING_001 092.
 * Paste-only: SE24 -> method -> Enhance -> edit the existing
 *   implementation. Whole implementation below, first line to last.
-* PRECONDITION: confirm in the debugger (SWIA restart of the failed
-*   posting work item) that 092 is raised here and nowhere else.
+* Checkpoint group: SAAB, create ZFI_CM_APPR, Logpoints = Log, activate
+*   for all users (or WF-BATCH) with a short validity. Deactivate after.
 *----------------------------------------------------------------------*
 ENHANCEMENT 1  ZEI_GL_WORKLFOW_INTR.    "active version
 IF lv_tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting AND iv_post_mode = '2'
@@ -19,7 +21,14 @@ IF lv_tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting AND iv_p
   rv_result = abap_true.
 ENDIF.
 
-*BOC By Arnav on 16/10/26
+*BOC By Arnav on 21/10/26
+* Diagnosis: inputs of every call, readable in SAAB while the checkpoint
+* group ZFI_CM_APPR is active. Inactive group = no code executed.
+LOG-POINT ID zfi_cm_appr
+  SUBKEY 'IS_DOC_VALID'
+  FIELDS iv_tcode lv_tcode iv_awtyp iv_koars iv_post_mode
+         ev_error_occurred rv_result lv_dummy sy-uname.
+
 * Customer credit memo parked in FB70 and submitted to the GL
 * verification scenario (Z_FI_CM_APPR_START_WF rewrites TCODE to the
 * app code). Account types are G/L + customer only, no supplier, asset
@@ -35,6 +44,6 @@ IF lv_tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
   CLEAR: lv_dummy, ev_error_occurred.
   rv_result = abap_true.
 ENDIF.
-*EOC By Arnav on 16/10/26
+*EOC By Arnav on 21/10/26
 
 ENDENHANCEMENT.
