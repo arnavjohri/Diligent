@@ -33,15 +33,17 @@ out**, by this chain of evidence:
    debugging hook in `ZCL_AGENT_GL_WF_RULE` hung a dialog process. Both are the JV
    team's objects, reported.
 
-**Decision for Gaurav:** (a) Accounts Receivable verification scenario, if this release
-offers one in "Manage Workflows for Journal Entry Verification" — same trigger, the class
-raises that scenario's event; or (b) the custom `FIPP` workflow below — same trigger, the
-class raises `FIPP.CREATED`, posting via `FIPP.POST` (normal FBV0 path, any parked
-document). Recommendation: (b) unless (a) exists on this release.
-
-**To revert in the system once decided:** the TCODE rewrites on `BKPF`/`VBKPF` out of
-`ZCL_CM_WORKFLOW` (keep the `XWFFR` update only if (a) needs it); the extension of
-`ZEI_GL_WORKLFOW_INTR` not applied; checkpoint group `ZFI_CM_APPR` deactivated.
+**Decision 21/10/26 (Gaurav): the GL scenario is the only way.** So the posting step is
+replaced for customer documents: implicit enhancement `ZEI_FI_CM_APPR_POST` at the start of
+`CL_FDC_ACCDOC_VER->IF_FDC_ACCDOC_VER~POST`. If `VBSEGD` has a row for the document, it
+sets the release flag (`PRELIMINARY_POSTING_REL_SET`), posts with
+`PRELIMINARY_POSTING_POST_ALL` (the call of standard object `FIPP` method `POST`), sets the
+scenario's workflow status to posted/failed exactly as the standard method does, and
+returns. G/L documents never enter the block. Together with the TCODE rewrite in
+`ZCL_CM_WORKFLOW` that is the complete set of standard overrides for this route.
+Known limit: approvers see the document through the G/L views (G/L lines and their amount;
+customer and tax lines not shown). The extension of `ZEI_GL_WORKLFOW_INTR` is withdrawn;
+checkpoint group `ZFI_CM_APPR` to be deactivated.
 
 ## Requirement (as stated)
 

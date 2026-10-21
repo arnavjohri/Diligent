@@ -1,4 +1,11 @@
 *----------------------------------------------------------------------*
+* NOT APPLIED (21/10/26). The 092 is not raised in this method on the
+* posting path; it comes from the Fiori app conversion in
+* CL_FAC_FINANCIALS_POST_DPC_EXT. Posting is handled by
+* ZEI_FI_CM_APPR_POST instead. The team's enhancement stays as it was.
+* Kept for reference only.
+*----------------------------------------------------------------------*
+*----------------------------------------------------------------------*
 * Enhancement implementation : ZEI_GL_WORKLFOW_INTR  (existing, team's)
 * Spot                       : implicit, end of method
 *   CL_FDC_ACCDOC_VER_SERVICES->IS_DOC_VALID_FOR_NEW_WORKFLOW
