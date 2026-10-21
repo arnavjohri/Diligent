@@ -20,11 +20,14 @@ out**, by this chain of evidence:
    and `VBKPF` gets the document into the views and the agent rule gets its context.
 2. The posting step (task `TS02800036`, `CL_FDC_ACCDOC_VER->IF_FDC_ACCDOC_VER~POST` →
    `CL_FDC_ACCDOC_PARK_ACCESS=>POST` → `CL_FAC_FINANCIALS_POST_DPC_EXT->
-   ACCDOC_FUNC_PARK_DOC_POST`) posts through the Fiori "Post General Journal Entries" app
-   API, whose document model has G/L lines only. It rejects the credit memo with
-   `FDC_POSTING_001 092` "Parked document is no GL posting". The team's enhancement
-   `ZEI_GL_WORKLFOW_INTR` on `IS_DOC_VALID_FOR_NEW_WORKFLOW` does not cover this path.
-   Bypassing the check would post without the customer line. Not viable.
+   ACCDOC_FUNC_PARK_DOC_POST`) does not post the parked document: it converts it into the
+   Fiori "Post General Journal Entries" app's temporary document
+   (`ACCDOC_FUNC_PARKD_DOC_READ_UPD` with `IV_FOR_POST`) and posts that
+   (`ACCDOC_FUNC_DOC_POST`). The app's document model has G/L lines only; the conversion
+   rejects the credit memo with `FDC_POSTING_001 092` "Parked document is no GL posting".
+   The team's enhancement `ZEI_GL_WORKLFOW_INTR` on `IS_DOC_VALID_FOR_NEW_WORKFLOW` does
+   not cover this path, and bypassing the check would post without the customer line.
+   Not viable. (Method sources pasted by Arnav 21/10/26.)
 3. Side findings: `ZCL_GL_EXCHANGE_AMOUNT_DET` had all four UPD work processes of DS4 in
    an endless loop for days (all updates in client 400 stuck Initial); a `DO. ENDDO.`
    debugging hook in `ZCL_AGENT_GL_WF_RULE` hung a dialog process. Both are the JV
