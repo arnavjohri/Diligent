@@ -20,9 +20,9 @@
 *   block between ENHANCEMENT and ENDENHANCEMENT. Activate.
 * Variables carry the prefix ZCM to avoid the method's own LT_VBKPF /
 *   LS_VBKPF.
-* Entry conditions (Arnav 21/10/26): work item of posting task
-*   TS02800036 exists for the document, VBKPF-BSTAT = 'V', BLART = 'DG'.
-*   Anything else runs the standard code.
+* Entry conditions (Arnav 21/10/26): document present in the scenario
+*   view C_GLJRNLENTRYTOBEVERIFIED with TaskProcessingStatus not
+*   COMPLETED, parked (category 'V'), type 'DG'. Else standard code.
 * ASSUMPTION: credit memo document type 'DG', same constant as the BTE
 *   module; change both together if FI uses another type.
 * ASSUMPTION: WF-BATCH holds the FI posting authorisations for customer
@@ -31,47 +31,43 @@
 *----------------------------------------------------------------------*
 ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
 *BOC By Arnav on 21/10/26
-  CONSTANTS: lc_zcm_blart TYPE blart VALUE 'DG',
-             lc_zcm_bstat TYPE bstat VALUE 'V',
-             lc_zcm_task  TYPE sww_wi2obj-wi_rh_task VALUE 'TS02800036'.
+  CONSTANTS: lc_zcm_blart    TYPE blart VALUE 'DG',
+             lc_zcm_parked   TYPE bstat VALUE 'V',
+             lc_zcm_complete TYPE c LENGTH 9 VALUE 'COMPLETED'.
 
   DATA: lt_zcm_vbkpf TYPE STANDARD TABLE OF vbkpf,
         ls_zcm_vbkpf TYPE vbkpf,
         lt_zcm_msg   TYPE STANDARD TABLE OF fimsg1,
         ls_zcm_msg   TYPE fimsg1,
         ls_zcm_key   TYPE if_fdc_je_wf_list_db=>ts_fdc_je_wf_list_key,
-        lv_zcm_instid TYPE sww_wi2obj-instid,
-        lv_zcm_wi_id  TYPE sww_wi2obj-wi_id,
+        lv_zcm_wfstat TYPE c LENGTH 20,
         lv_zcm_blart  TYPE blart,
         lv_zcm_bstat  TYPE bstat,
         lv_zcm_apply  TYPE abap_bool.
 
-* Entry conditions, all three required, else the standard code runs:
-*   1. called from the workflow: a work item of the posting task exists
-*      for this document (same table and key as the agent rule uses);
-*   2. the document is parked (VBKPF-BSTAT 'V');
-*   3. it is a credit memo (VBKPF-BLART 'DG', as in the BTE module).
-  CLEAR: lv_zcm_apply, lv_zcm_wi_id, lv_zcm_blart, lv_zcm_bstat.
+* Entry conditions, read from the scenario's own inbox view (the view
+* ZCL_GL_WORKFLOW checks after the raise). All required, else the
+* standard code runs:
+*   1. the document is in the verification scenario (row exists) and
+*      its task is not completed;
+*   2. it is parked (AccountingDocumentCategory = BSTAT 'V');
+*   3. it is a credit memo (AccountingDocumentType 'DG', as in the BTE).
+* ASSUMPTION: TaskProcessingStatus values are upper-case words as in the
+*             GL class ('ERROR'); 'COMPLETED' is the finished state.
+  CLEAR: lv_zcm_apply, lv_zcm_wfstat, lv_zcm_blart, lv_zcm_bstat.
 
-  CONCATENATE me->belnr me->ausbk me->gjahr INTO lv_zcm_instid.
-  CONDENSE lv_zcm_instid.
-  SELECT SINGLE wi_id
-    FROM sww_wi2obj
-    WHERE instid     = @lv_zcm_instid
-      AND wi_rh_task = @lc_zcm_task
-    INTO @lv_zcm_wi_id.
-  IF sy-subrc = 0.
-    SELECT SINGLE blart, bstat
-      FROM vbkpf
-      WHERE ausbk = @me->ausbk
-        AND belnr = @me->belnr
-        AND gjahr = @me->gjahr
-      INTO ( @lv_zcm_blart, @lv_zcm_bstat ).
-    IF sy-subrc = 0
-       AND lv_zcm_bstat = lc_zcm_bstat
-       AND lv_zcm_blart = lc_zcm_blart.
-      lv_zcm_apply = abap_true.
-    ENDIF.
+  SELECT SINGLE taskprocessingstatus, accountingdocumenttype,
+                accountingdocumentcategory
+    FROM c_gljrnlentrytobeverified
+    WHERE accountingdocument = @me->belnr
+      AND companycode        = @me->ausbk
+      AND fiscalyear         = @me->gjahr
+    INTO ( @lv_zcm_wfstat, @lv_zcm_blart, @lv_zcm_bstat ).
+  IF sy-subrc = 0
+     AND lv_zcm_wfstat <> lc_zcm_complete
+     AND lv_zcm_bstat   = lc_zcm_parked
+     AND lv_zcm_blart   = lc_zcm_blart.
+    lv_zcm_apply = abap_true.
   ENDIF.
 
   IF lv_zcm_apply = abap_true.
