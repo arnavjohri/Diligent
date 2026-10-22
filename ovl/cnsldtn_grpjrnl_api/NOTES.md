@@ -157,9 +157,22 @@ member tables `mt_journalentry_header` / `mt_journalentry_items` and a save serv
 `cl_fincs_journalentry_util=>cons_before_save_type_s/_p`. It also uses
 `cl_fincs_je_api_factory=>get( )->create_je_workflow( ) / create_log_handler( )`: an API
 factory exists on this release and is the best candidate for a plain-data posting service.
-To open next: `CL_FINCS_JE_API_FACTORY` methods and the interface `GET( )` returns;
-`DISPATCH_POST` source; the attribute types of `mt_journalentry_header/items`;
-`CL_FINCS_JE_FACTORY` methods.
+`CL_FINCS_JE_FACTORY` methods (seen 22/10/26, all static public): GET_RULE_PROVIDER,
+GET_SV_TRACER_REPO, GET_SV_COI_TRACER_REPO, GET_SV_ENGINE, GET_SV_ENGINE_CLIENT,
+GET_JE_RULE_BOPF_CONV, GET_FINCS_JE_ATTACHMENT, GET_JE_FIELD_DESC, GET_SV_REPOSITORY,
+GET_MULTIGC_DRAFT, GET_VERSION_ACCESS, GET_JE_DRAFT_POST, GET_JE_DRAFT_PREPARE,
+GET_IJE_EPU_TEMPLATE, GET_EXTBLT_FIELD_DESC, GET_DOCTY_ACCESS, GET_IJE_MULTIGC_PREPARE,
+GET_JE_DRAFT_HANDLER, GET_IJE_CREATE_DRAFT, GET_UUID_GENERATOR, GET_JE_COI_FIELD_HANDLER,
+GET_JE_LEGACY, GET_JE_ATTACHMENT, GET_IJE_EXCEL_PARSE, GET_IJE_DAO, GET_MULTIGC_ENABLE,
+GET_FEATURE_DISPATCHER, GET_MULTIGP_ENABLE, GET_MULTIGP_DRAFT, CLEAR, GET_JE_DAO,
+CREATE_RSTMT_ENABLE, CREATE_RSTMT_DRAFT, GET_WORKFLOW_BUFFER, GET_JE_REPLACE,
+GET_DEBIT_CREDIT_STATE, GET_SV_ENGINE_CLIENT_COI, GET_SV_ENGINE_CLIENT_JE.
+Draft handling throughout (IJE = import journal entry app also goes draft -> post). SV =
+substitution/validation rules. The one name that could be a plain-data posting service is
+`GET_JE_LEGACY`; `GET_JE_DAO` is the DB access layer.
+To open next: `DISPATCH_POST` source (decisive); `GET_JE_LEGACY` returning type and that
+interface's methods; `CL_FINCS_JE_API_FACTORY` methods; attribute types of
+`mt_journalentry_header/items`.
 
 Still to paste: `DELETE_D...` full name and parameters; `CL_FINCS_DP_DOCUMENT_POST`
 constructor; where-used of `IF_FINCS_DP_DOCUMENT_POST~POST` (example caller); SE11 fields of
