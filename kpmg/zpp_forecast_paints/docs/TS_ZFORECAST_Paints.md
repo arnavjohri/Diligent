@@ -35,7 +35,7 @@ is built as new objects that call the Adhesive engine and share its tables.
 | `ZPPT_PNT_FCST_YR`, `ZPPT_PNT_FCST_QT`, `ZPPT_PNT_FCST_MN` | Tables | New — Paints annual, quarterly, monthly forecast | `ZPP_FORECAST_PAINTS` | |
 | `ZCL_PP_FCST_PNT` | Class | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPP_FORECAST_PAINTS` | Report | New | `ZPP_FORECAST_PAINTS` | |
-| `ZPP_FORECAST_PAINTS_UPL` | Report | New | `ZPP_FORECAST_PAINTS` | |
+| `ZPP_FORECAST_UPLOAD` | Report | **Changed** 22.10.2026, markers `By Arnav on 22/10/26`: ninth upload type Brand, indicator MTS/MTO/DIS/TIN | `ZPP_FORECAST` | |
 | `PF_STATUS` of `ZPP_FORECAST_PAINTS` | GUI status | New, manual SE41 | | |
 | `ZFCST_PAINTS`, `ZFCST_PAINTS_UPL` | Transactions | New, manual SE93 | | |
 | `ZPPV_BRAND` | SM30 view | New, manual SE54, optional | | |
@@ -85,12 +85,19 @@ in `ZPPT_FCST_QT-M4_TON…M6_TON` for Paints rows.
 
 ### 4.2a The Paints forecast tables and `SAVE_PAINTS`
 
-`ZPPT_PNT_FCST_YR` (key WERKS, MATNR, FYEAR), `ZPPT_PNT_FCST_QT` (key WERKS, MATNR, GJAHR,
-QUARTER) and `ZPPT_PNT_FCST_MN` (key WERKS, MATNR, GJAHR, PERIOD) are the Adhesive tables
-field for field plus `NAME1`, `BRAND`, `PACK_SIZE`, `PACK_UNIT`, `QTY_CARTON`, `BRGEW` (ref
-`GEWEI`), the per-month `Mnn_KL` / `Mnn_CR` (annual twelve each, quarterly M4–M6, monthly
-M4), and on annual and monthly `WAERS` + `PRICE` (ref `WAERS`), which the Adhesive tables
-do not carry. Delivery class A, APPL0, size 0.
+`ZPPT_PNT_FCST_YR` (key WERKS, MATNR, FYEAR, 73 fields), `ZPPT_PNT_FCST_QT` (key WERKS, MATNR,
+GJAHR, QUARTER, 58 fields) and `ZPPT_PNT_FCST_MN` (key WERKS, MATNR, GJAHR, PERIOD, 45 fields)
+mirror the displayed list column for column: `FCST_NO`, the lead block `NAME1 BRAND MAKTX
+MTS_MTO MVGR1_TXT MVGR2_TXT MVGR5_TXT MATKL PACK_SIZE PACK_UNIT PRICE QTY_CARTON`, the mode's
+columns in list order (annual `M01_FCST…M12_FCST`, `M01_KL…`, `M01_CR…`, `M01_TON…`; quarterly
+the comparison block, `FCST_QTY BUS_FCST FINAL_QTY` and per month `Mn_FCST BUS_FCST_ADDn
+Mn_FCST_FINAL Mn_KL Mn_CR Mn_TON`; monthly the comparison block, `BUS_FCST_ADD TOTAL_QTY M4_KL
+M4_CR M4_TON`), `BRGEW`, and the audit fields. `MEINS`, `WAERS`, `GEWEI` are carried as the
+unit references the QUAN, CURR and weight fields need. Material groups are stored as the
+descriptions the list shows (`BEZEI20`). Not stored: what the list does not show (history
+months, groups 3 and 4, net weight, MSL, reason) — those stay in the shared tables. Delivery
+class A, APPL0, size 0. Generated from the Adhesive table XML's field blocks by
+`tools/mktables.py`.
 
 `ZCL_PP_FCST_PNT=>SAVE_PAINTS( iv_mode, ct_alv, ct_msg )` runs after `ZCL_PP_FCST=>SAVE`: for
 every row with `MARK` and a forecast number it builds the table row with `CORRESPONDING`,
@@ -101,15 +108,24 @@ written by the engine first: it reads the business forecast, additional quantiti
 price back from them at generation, the change upload requires the shared row, the forecast
 number is shared through them, and ZFCST_RPT reads them. Nothing reads the Paints tables yet.
 
-### 4.3 `ZPP_FORECAST_PAINTS_UPL` — all nine Paints uploads
+### 4.3 `ZPP_FORECAST_UPLOAD` (ZFCST_UPL) — the Paints uploads, in the Adhesive program
 
-`ZPP_FORECAST_UPLOAD` copied whole (repo copy activated 23/09/26: eight radio buttons, each
-with its own Download Template button, Excel through `CL_FDT_XL_SPREADSHEET`, CSV, tab text,
-header detection, per-row result list with traffic light, commit of good rows only) with
-three additions: a ninth radio button Brand, `FORM DO_BRAND`, and `FORM CHECK_INDICATOR`
-replacing the MTS/MTO-only check in `FORM DO_CATEGORY`. Tracking, exclusion, legacy history,
-business forecast and forecast change are the Adhesive routines unchanged and write the same
-tables. A Paints user never needs ZFCST_UPL.
+Changed on 22.10.2026 with markers `By Arnav on 22/10/26`, originals commented in place:
+
+| Unit | Anchor | Change |
+|---|---|---|
+| Selection screen, block `b0` | after the `p_chgm` line (inside the 31/08/26 block, so single-line markers) | ninth radio button `p_brd` with comment `c_brd` and template button `b_brd` (`TBRD`) |
+| `INITIALIZATION` | after `c_chgm = …` / `b_chgm = …` | texts for the new button |
+| `AT SELECTION-SCREEN` | after `WHEN 'TCGM'` | `WHEN 'TBRD'` → template `BRD` |
+| `START-OF-SELECTION` | after `WHEN p_chgm` | `WHEN p_brd. PERFORM do_brand.` |
+| `FORM current_type` | after `WHEN p_chgm` | `'BRD'` |
+| `FORM template_columns` | before `WHEN OTHERS` | `WHEN 'BRD'`: `ZPPT_BRAND-WERKS`, `-MATNR`, `-BRAND`, file name `ZFCST_Brand` |
+| `FORM do_category` | the MTS/MTO check on column 5 | replaced by `PERFORM check_indicator USING lv_tmp CHANGING lv_mts lv_err` — old three lines commented |
+| new `FORM check_indicator` | appended | MTS, MTO, DIS, TIN stored as typed; DIS ART / DISART → DIS, TINTING → TIN; anything else rejected; blank stays blank |
+| new `FORM do_brand` | appended | Plant, Material, Brand → `ZPPT_BRAND`; MARC check, brand mandatory, overwrite or insert, created-by kept, test run honoured |
+
+Selection text `P_BRD` "Brand" added to the text pool. The separate Paints upload program of
+19.10.2026 is withdrawn.
 
 | Type | Template | Columns | Checks | Writes |
 |------------|----------------------|----------------------------|------------------------|--------------|

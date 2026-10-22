@@ -121,3 +121,8 @@ SE54 for the four SM30 views.
 for when SE24 paste is preferred over an import, and `zpp_forecast_v2_nocomments.abap` exists
 at the repository root as well. Both drift silently from
 `src/zcl_pp_fcst.clas.abap`, which is the source of truth — keep them in step or delete them.
+
+- **Since 22/10/26 `ZPP_FORECAST_UPLOAD` carries a ninth upload type, Brand (`ZPPT_BRAND`,
+  Paints), and its category upload accepts MTS, MTO, DIS and TIN.** The only Adhesive object
+  changed for the Paints build; everything else Paints is in `kpmg/zpp_forecast_paints/`. The
+  program now depends on `ZPPT_BRAND` from package ZPP_FORECAST_PAINTS. See ISSUES.md 22/10/26.

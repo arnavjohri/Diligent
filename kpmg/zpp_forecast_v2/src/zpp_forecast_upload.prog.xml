@@ -77,6 +77,12 @@
     </item>
     <item>
      <ID>S</ID>
+     <KEY>P_BRD</KEY>
+     <ENTRY>Brand</ENTRY>
+     <LENGTH>5</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
      <KEY>P_FILE</KEY>
      <ENTRY>Excel / CSV File</ENTRY>
      <LENGTH>16</LENGTH>
