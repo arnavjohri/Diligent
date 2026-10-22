@@ -20,6 +20,9 @@
 *              four views active and ZCL_MM_PO_VH_DPC + ZEI_MM_PO_VH_DPC
 *              v3 before it. Each block has its own TRY: a view that is
 *              not there yet costs only its own value help.
+*              22/10/26 v10 - 'Unable to interpret "40"': a method
+*              parameter takes no LENGTH (MEMORY 4.1). Named types
+*              TY_NAME40 / TY_FIELD30 instead.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -81,7 +84,9 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
         label    TYPE string,    "title of the value help
         domain   TYPE string,    "domain whose fixed values apply
       END OF ty_field,
-      tt_field TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY.
+      tt_field  TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY,
+      ty_name40  TYPE c LENGTH 40,     "OData names into the MED API   - ASSUMPTION A8
+      ty_field30 TYPE c LENGTH 30.     "ABAP field names into the MED API
 
     CONSTANTS:
       gc_po_entity_type   TYPE string VALUE 'C_PurchaseOrderTPType',     "ASSUMPTION A1 (VOCAN only)
@@ -144,8 +149,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
     CLASS-METHODS add_property
       IMPORTING
         io_entity_type     TYPE REF TO /iwbep/if_mgw_odata_entity_typ
-        iv_name            TYPE c LENGTH 40                 "ASSUMPTION A8
-        iv_field           TYPE c LENGTH 30                 "ASSUMPTION A8
+        iv_name            TYPE ty_name40                   "ASSUMPTION A8
+        iv_field           TYPE ty_field30                  "ASSUMPTION A8
         iv_length          TYPE i DEFAULT 0
         iv_is_key          TYPE abap_bool DEFAULT abap_false
       RETURNING
@@ -179,8 +184,8 @@ ENDCLASS.
 CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
   METHOD add_value_helps.
-    DATA lv_set_name  TYPE c LENGTH 40.                                    "ASSUMPTION A8
-    DATA lv_prop_name TYPE c LENGTH 40.                                    "ASSUMPTION A8
+    DATA lv_set_name  TYPE ty_name40.                                      "ASSUMPTION A8
+    DATA lv_prop_name TYPE ty_name40.                                      "ASSUMPTION A8
     DATA lo_vh_type   TYPE REF TO /iwbep/if_mgw_odata_entity_typ.
     DATA lo_entity_set TYPE REF TO /iwbep/if_mgw_odata_entity_set.
 
