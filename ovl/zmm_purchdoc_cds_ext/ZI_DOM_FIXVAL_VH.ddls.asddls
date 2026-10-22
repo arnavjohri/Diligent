@@ -18,8 +18,11 @@
 //             so that interval fixed values (ZPRE_AWD / ZPST_AWD, 001-100)
 //             show their upper bound in the F4, as in the GUI. Paste
 //             BEFORE class v13, which reads the new column.
+//             22/10/26 v3 as activated by Arnav: the DD07T value fields
+//             are DOMVAL_LD / DOMVAL_HD (DOMVALUE_L / _H are DD07L's);
+//             repo copy aligned to the system. Column names unchanged.
 //----------------------------------------------------------------------
-// ASSUMPTION: DomainValue stays CHAR 10 (DD07T-DOMVALUE_L) so that one
+// ASSUMPTION: DomainValue stays CHAR 10 (DD07T-DOMVAL_LD) so that one
 // view serves CHAR 1/2/3 and NUMC 3 domains alike. ADT may warn that
 // its length differs from the bound element; that warning is expected.
 // Known: domain ZARBIT has a fixed value with a blank key (No
@@ -43,7 +46,7 @@ define view ZI_DOM_FIXVAL_VH
       @ObjectModel.text.element: ['DomainValueText']
       @UI.textArrangement: #TEXT_LAST
       @Search.defaultSearchElement: true
-  key domvalue_l as DomainValue,
+  key domval_ld  as DomainValue,
 
       @EndUserText.label: 'Description'
       @Semantics.text: true
@@ -53,7 +56,7 @@ define view ZI_DOM_FIXVAL_VH
       //BOC By Arnav on 22/10/26
       // v3: upper bound of an interval fixed value, blank for single values
       @EndUserText.label: 'Upper Value'
-      domvalue_h as DomainValueHigh,
+      domval_hd  as DomainValueHigh,
       //EOC By Arnav on 22/10/26
 
       @EndUserText.label: 'Sequence'
