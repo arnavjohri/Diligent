@@ -1,0 +1,27 @@
+{
+  "ConsolidationLedger": "Y1",
+  "ConsolidationVersion": "Y10",
+  "ConsolidationChartOfAccounts": "Y1",
+  "FiscalYear": "2026",
+  "FiscalPeriod": "010",
+  "ConsolidationDocumentType": "01",
+  "ConsolidationUnit": "1010",
+  "<NAV_TO_ITEM>": [
+    {
+      "ConsolidationUnit": "1010",
+      "FinancialStatementItem": "111100",
+      "SubItemCategory": "1",
+      "SubItem": "915",
+      "AmountInLocalCurrency": "2500.00",
+      "TransactionCurrency": "INR"
+    },
+    {
+      "ConsolidationUnit": "1010",
+      "FinancialStatementItem": "411100",
+      "SubItemCategory": "2",
+      "SubItem": "YB10",
+      "AmountInLocalCurrency": "-2500.00",
+      "TransactionCurrency": "INR"
+    }
+  ]
+}
