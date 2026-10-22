@@ -18,6 +18,11 @@
 *              22/10/26 v4 - sap:value-list set with SET_VALUE_LIST, the
 *              API SAP's own DEFINE of the MPC_EXT uses, instead of a
 *              hand-added 'sap' annotation. A1 confirmed from that DEFINE.
+*              22/10/26 v5 - F4 in the app showed keys 1 / 2 without text:
+*              sap:text = DomainValueText on the key property DomainValue,
+*              which the dropdown and display mode read the description
+*              from (SADL writes it from @ObjectModel.text.element; a
+*              hand-built entity has to carry it itself).
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -165,8 +170,11 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     lo_property->set_is_key( ).
     lo_property->set_maxlength( 10 ).
     set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
-      )->add( iv_key = 'label' iv_value = 'Value' ).
+    " One 'sap' annotation object, two keys: label, and text = the
+    " description property, which gives the dropdown its wording (v5)
+    DATA(lo_sap_anno) = lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    lo_sap_anno->add( iv_key = 'label' iv_value = 'Value' ).
+    lo_sap_anno->add( iv_key = 'text'  iv_value = 'DomainValueText' ).
 
     lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainValueText'
                                                    iv_abap_fieldname = 'DOMAINVALUETEXT' ).
