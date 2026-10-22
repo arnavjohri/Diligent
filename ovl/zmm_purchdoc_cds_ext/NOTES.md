@@ -197,6 +197,28 @@ Routes, to be decided once the project type and the app's ownership are known:
 
 Never modify `MM_PUR_PO_MAINT_V2` itself (standard object).
 
+**Settled 22/10/26 from the source of `C_PurchaseOrderTP`** (filed as
+`original/C_PURCHASEORDERTP.ddls.asddls`, 810 lines, reference only — standard object, never
+edited): the view is BOPF-based (`transactionalProcessingDelegated: true`, `draftEnabled`,
+actions `BOPF:COPY_PO` …). A BOPF TP view is served by a **SEGW project with referenced data
+source**, so the RAP route (service definition extension) is gone. What remains: Z redefinition
+of the service plus an app that calls it, a UI extension, or Custom Fields.
+
+Why `IncotermsVersion` shows a `CollectionPath` although it has no `@Consumption.valueHelpDefinition`:
+its list comes from `@ObjectModel.foreignKey.association: '_IncotermsVersion'` with the
+association exposed in the select list, and SAP's project includes that target as an entity
+set. Same mechanism, same precondition. SAP's own fields `PurchaseOrderType`, `PaymentTerms`,
+`IncotermsClassification` use exactly the `valueHelpDefinition` + `entity` form we used on
+`zzinsp_typ`; the only difference is that their targets are entity sets of the project.
+An association added through `ZC_PURCHASEORDERTP_EXT` would not change that — entity sets and
+navigations of a referenced-data-source project are fixed at generation, only properties are
+read at runtime.
+
+The upgrade-safe pairing for the redefinition route: SEGW Redefine → `ZMM_PUR_PO_MAINT_V2_SRV`,
+then an **adaptation project / app variant** of Manage Purchase Orders with "Replace OData
+Service" pointing at the Z service. If the "custom PO app" already is such a variant with its
+own tile, only that one step is missing.
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
