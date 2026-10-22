@@ -28,6 +28,14 @@
 *              did. The loop with name variables is gone: every
 *              fixed-value field is one explicit block with literal
 *              names, the code path proven on 22/10/26.
+*              22/10/26 v12 - MESSAGE_TYPE_X on every request after
+*              v11: an entity type whose BIND_STRUCTURE failed (view
+*              not active) stayed half-built in the model and the
+*              metadata build dumped. Every table block now checks
+*              that its SQL view exists BEFORE creating the type, and
+*              skips itself otherwise. The two blocks that wait for a
+*              decision (ZVT_PERNR, ZVT_ADRC) are switched off until
+*              it is taken (GC_WITH_PERNR / GC_WITH_ADRC).
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -88,6 +96,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       ty_field30 TYPE c LENGTH 30.     "ABAP field names into the MED API
 
     CONSTANTS:
+      gc_with_pernr       TYPE abap_bool VALUE abap_false,  "ZVT_PERNR: on once HR has agreed
+      gc_with_adrc        TYPE abap_bool VALUE abap_false,  "ZVT_ADRC:  on once functional has agreed
       gc_po_entity_type   TYPE string VALUE 'C_PurchaseOrderTPType',     "ASSUMPTION A1 (VOCAN only)
       gc_common           TYPE string VALUE 'com.sap.vocabularies.Common.v1',
       gc_schema_namespace TYPE string VALUE 'MM_PUR_PO_MAINT_V2_SRV'.    "ASSUMPTION A5
@@ -152,6 +162,15 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RAISING
         /iwbep/cx_mgw_med_exception.
 
+    "! abap_true when the DDIC structure (SQL view) is active - checked
+    "! BEFORE an entity type is created on it, so that a missing view
+    "! can never leave a half-built type in the model (v12)
+    CLASS-METHODS structure_exists
+      IMPORTING
+        iv_structure     TYPE ty_field30
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool.
+
     "! Flags shared by every value-help entity set
     CLASS-METHODS set_vh_set_flags
       IMPORTING
@@ -200,12 +219,16 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
     " 1. Fixed values of a domain: one shared type, one set per domain.
     "    Literal names in every block on purpose (v11): the proven path.
-    TRY.
-        lo_vh_type = create_dom_fixval_type( io_model ).
-      CATCH cx_root INTO DATA(lx_dom).
-        gv_last_error = |{ gv_last_error }ZI_DOM_FIXVAL_VH: { lx_dom->get_text( ) }; |.
-        CLEAR lo_vh_type.
-    ENDTRY.
+    IF structure_exists( 'ZIDOMFIXVALVH' ) = abap_true.
+      TRY.
+          lo_vh_type = create_dom_fixval_type( io_model ).
+        CATCH cx_root INTO DATA(lx_dom).
+          gv_last_error = |{ gv_last_error }ZI_DOM_FIXVAL_VH: { lx_dom->get_text( ) }; |.
+          CLEAR lo_vh_type.
+      ENDTRY.
+    ELSE.
+      gv_last_error = |{ gv_last_error }ZIDOMFIXVALVH not active; |.
+    ENDIF.
 
     " 1.1 Inspection Type - domain ZINSP_TYP
     IF lo_vh_type IS BOUND.
@@ -388,6 +411,9 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     ENDIF.
 
     " 2. Tender Process - table ZNAT_PROC through ZI_NAT_PROC_VH, dropdown
+    IF structure_exists( 'ZINATPROCVH' ) = abap_false.
+      gv_last_error = |{ gv_last_error }zznat_proc: ZINATPROCVH not active; |.
+    ELSE.
     TRY.
         lo_vh_type = create_nat_proc_type( io_model ).
         lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_NAT_PROC' ).
@@ -403,8 +429,12 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_nat).
         gv_last_error = |{ gv_last_error }zznat_proc: { lx_nat->get_text( ) }; |.
     ENDTRY.
+    ENDIF.
 
     " 3. Final Release Code - T16FC through ZI_REL_CODE_VH, dialog
+    IF structure_exists( 'ZIRELCODEVH' ) = abap_false.
+      gv_last_error = |{ gv_last_error }zzrelcode: ZIRELCODEVH not active; |.
+    ELSE.
     TRY.
         lo_vh_type = create_rel_code_type( io_model ).
         lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_RELCODE' ).
@@ -419,9 +449,11 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_rel).
         gv_last_error = |{ gv_last_error }zzrelcode: { lx_rel->get_text( ) }; |.
     ENDTRY.
+    ENDIF.
 
     " 4. Contact Person / Indenting Person - PA0002 through ZI_PERNR_VH,
-    "    dialog; one set, two fields (pending the HR decision, see header)
+    "    dialog; one set, two fields. Off until HR agrees (GC_WITH_PERNR).
+    IF gc_with_pernr = abap_true AND structure_exists( 'ZIPERNRVH' ) = abap_true.
     TRY.
         lo_vh_type = create_pernr_type( io_model ).
         lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_PERNR' ).
@@ -443,9 +475,11 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_pernr).
         gv_last_error = |{ gv_last_error }zzcpo/zzindper: { lx_pernr->get_text( ) }; |.
     ENDTRY.
+    ENDIF.
 
     " 5. The four address-number fields - ADRC through ZI_ADRC_VH, dialog;
-    "    one set, four fields (pending the functional decision, see header)
+    "    one set, four fields. Off until functional agrees (GC_WITH_ADRC).
+    IF gc_with_adrc = abap_true AND structure_exists( 'ZIADRCVH' ) = abap_true.
     TRY.
         lo_vh_type = create_adrc_type( io_model ).
         lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_ADRC' ).
@@ -481,6 +515,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_adrc).
         gv_last_error = |{ gv_last_error }address fields: { lx_adrc->get_text( ) }; |.
     ENDTRY.
+    ENDIF.
 
     " 6. PO Signing Authority - a user ID: SAP's own set, annotation only
     TRY.
@@ -644,6 +679,16 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     ro_property->set_filterable( abap_true ).
     ro_property->set_sortable( abap_true ).
     ro_property->set_nullable( abap_false ).
+  ENDMETHOD.
+
+
+  METHOD structure_exists.
+    DATA lo_descr TYPE REF TO cl_abap_typedescr.
+    cl_abap_typedescr=>describe_by_name( EXPORTING  p_name         = iv_structure
+                                         RECEIVING  p_descr_ref    = lo_descr
+                                         EXCEPTIONS type_not_found = 1
+                                                    OTHERS         = 2 ).
+    rv_exists = COND #( WHEN sy-subrc = 0 AND lo_descr IS BOUND THEN abap_true ELSE abap_false ).
   ENDMETHOD.
 
 
