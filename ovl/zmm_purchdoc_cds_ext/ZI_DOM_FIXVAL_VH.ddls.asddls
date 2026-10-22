@@ -1,28 +1,28 @@
 //----------------------------------------------------------------------
 // Object    : ZI_DOM_FIXVAL_VH (DDL source, value help view)
-// Table     : DD07T (fixed-value texts of domains)
+// Tables    : DD07L (fixed values of domains) + DD07T (their texts)
 // Purpose   : Value help for the PO custom fields whose GUI F4 is the
 //             fixed values of their domain (Inspection Type, Nature of
-//             tender, Bidding System, ...): one view over DD07T, read by
-//             the DPC enhancement ZEI_MM_PO_VH_DPC, which filters on the
-//             domain taken from the entity set name (ZVH_<DOMAIN>). The
-//             entity sets are created in the model by ZCL_MM_PO_VH_MPC.
+//             tender, Bidding System, ...): one view, read by the DPC
+//             enhancement ZEI_MM_PO_VH_DPC, which filters on the domain
+//             taken from the entity set name (ZVH_<DOMAIN>). The entity
+//             sets are created in the model by ZCL_MM_PO_VH_MPC.
 // Author    : Arnav Johri
 // Date      : 21.10.2026
-// Change    : 22/10/26 Arnav - restricted to domain ZINSP_TYP in the WHERE
-//             clause (done by hand in ADT; repo copy aligned).
-//             22/10/26 v2 Arnav - restriction lifted again: the DPC now
-//             filters per domain, so one view serves every fixed-value
-//             field. Paste after ZCL_MM_PO_VH_MPC v8 is active.
-//             22/10/26 v3 Arnav - DomainValueHigh (DD07T-DOMVALUE_H) added
-//             so that interval fixed values (ZPRE_AWD / ZPST_AWD, 001-100)
-//             show their upper bound in the F4, as in the GUI. Paste
-//             BEFORE class v13, which reads the new column.
-//             22/10/26 v3 as activated by Arnav: the DD07T value fields
-//             are DOMVAL_LD / DOMVAL_HD (DOMVALUE_L / _H are DD07L's);
-//             repo copy aligned to the system. Column names unchanged.
+// Change    : 22/10/26 Arnav - restricted to domain ZINSP_TYP (by hand).
+//             22/10/26 v2 Arnav - restriction lifted again: the DPC
+//             filters per domain.
+//             22/10/26 v3 Arnav - DomainValueHigh added for the interval
+//             fixed values (ZPRE_AWD / ZPST_AWD, 001-100), taken from
+//             DD07T-DOMVAL_LD / DOMVAL_HD.
+//             22/10/26 v4 Arnav - DD07T's DOMVAL_LD / DOMVAL_HD are display
+//             fields and are EMPTY on OCQ: the interval row came up blank
+//             in the app. The values now come from DD07L (DOMVALUE_L /
+//             DOMVALUE_H, which is what the GUI F4 shows), the text from
+//             DD07T by a left outer join. Column names unchanged, so
+//             ZCL_MM_PO_VH_MPC v13 and ZCL_MM_PO_VH_DPC need no change.
 //----------------------------------------------------------------------
-// ASSUMPTION: DomainValue stays CHAR 10 (DD07T-DOMVAL_LD) so that one
+// ASSUMPTION: DomainValue stays CHAR 10 (DD07L-DOMVALUE_L) so that one
 // view serves CHAR 1/2/3 and NUMC 3 domains alike. ADT may warn that
 // its length differs from the bound element; that warning is expected.
 // Known: domain ZARBIT has a fixed value with a blank key (No
@@ -36,37 +36,33 @@
 @ObjectModel.resultSet.sizeCategory: #XS
 @Search.searchable: true
 define view ZI_DOM_FIXVAL_VH
-  as select from dd07t
+  as select from dd07l
+    left outer join dd07t on  dd07t.domname    = dd07l.domname
+                          and dd07t.as4local   = dd07l.as4local
+                          and dd07t.valpos     = dd07l.valpos
+                          and dd07t.as4vers    = dd07l.as4vers
+                          and dd07t.ddlanguage = $session.system_language
 {
       @EndUserText.label: 'Domain'
       @UI.hidden: true
-  key domname    as DomainName,
+  key dd07l.domname    as DomainName,
 
       @EndUserText.label: 'Value'
       @ObjectModel.text.element: ['DomainValueText']
       @UI.textArrangement: #TEXT_LAST
       @Search.defaultSearchElement: true
-  key domval_ld  as DomainValue,
+  key dd07l.domvalue_l as DomainValue,
 
       @EndUserText.label: 'Description'
       @Semantics.text: true
       @Search.defaultSearchElement: true
-      ddtext     as DomainValueText,
+      dd07t.ddtext     as DomainValueText,
 
-      //BOC By Arnav on 22/10/26
-      // v3: upper bound of an interval fixed value, blank for single values
       @EndUserText.label: 'Upper Value'
-      domval_hd  as DomainValueHigh,
-      //EOC By Arnav on 22/10/26
+      dd07l.domvalue_h as DomainValueHigh,
 
       @EndUserText.label: 'Sequence'
-      valpos     as ValuePosition
+      dd07l.valpos     as ValuePosition
 }
 where
-      ddlanguage = $session.system_language
-  and as4local   = 'A'
-  //BOC By Arnav on 22/10/26
-  // v2, same day: the single-domain restriction is lifted again - the DPC
-  // filters on the domain of each entity set (ZVH_<DOMAIN>).
-  // and domname    = 'ZINSP_TYP'
-  //EOC By Arnav on 22/10/26
+  dd07l.as4local = 'A'
