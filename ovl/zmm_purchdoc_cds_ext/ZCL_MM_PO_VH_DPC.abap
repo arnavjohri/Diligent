@@ -23,6 +23,7 @@
 *   ZI_NAT_PROC_VH, whose fields were taken from the GUI module, not
 *   from SE11 - confirm the view activates before relying on it.
 * ASSUMPTION A2: an empty dynamic WHERE string selects all rows.
+* Change: 22/10/26 v2 - ZVT_GEM_ORDER (GEM PO No., view ZI_GEM_ORDER_VH).
 *----------------------------------------------------------------------*
 CLASS zcl_mm_po_vh_dpc DEFINITION
   PUBLIC
@@ -132,6 +133,10 @@ CLASS zcl_mm_po_vh_dpc IMPLEMENTATION.
         ev_view       = 'ZI_ADRC_VH'.
         ev_structure  = 'ZIADRCVH'.
         ev_sort_field = 'NAME'.
+      WHEN 'ZVT_GEM_ORDER'.                       "GEM PO No. (ZGEM_ORDERDET)
+        ev_view       = 'ZI_GEM_ORDER_VH'.
+        ev_structure  = 'ZIGEMORDERVH'.
+        ev_sort_field = 'GEMORDERID'.
       " next: ZVT_MSE (ZMSE_EKKO), ZVT_TENDER (ZMM_PUR_TENDER_D) - once
       " their fields are known and the views exist
     ENDCASE.

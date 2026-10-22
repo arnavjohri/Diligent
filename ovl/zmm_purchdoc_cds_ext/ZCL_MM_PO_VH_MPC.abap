@@ -41,6 +41,11 @@
 *              GUI: a dialog showing lower value, upper value and text.
 *              Needs view v3 (column DOMAINVALUEHIGH); the property and
 *              the two blocks are added only when that column exists.
+*              22/10/26 v14 - GEM PO No. (ZGEMPO): dialog over
+*              ZI_GEM_ORDER_VH (table ZGEM_ORDERDET, the selection
+*              method of GUI search help ZGEM_ORDER), filtered by the
+*              PO's supplier through a ValueListParameterIn, as the
+*              search help's LIFNR import parameter does in the GUI.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -70,6 +75,10 @@
 * ASSUMPTION A8: names into the MED API are passed as C LENGTH 40
 *   (property, entity set) and C LENGTH 30 (ABAP field). If activation
 *   reports another length, change the DATA / parameter length it names.
+* ASSUMPTION A10: the supplier property of C_PurchaseOrderTPType is
+*   named Supplier (EKKO-LIFNR). If the GEM dialog shows all orders
+*   instead of the supplier's, read the name in $metadata and correct
+*   the one literal in block 7.
 * ASSUMPTION A9: SAP's set C_PurOrdCreatedByValHelp has the key property
 *   UserID (from the association _CreatedByValueHelp in C_PurchaseOrderTP).
 *   If the dialog on PO Signing Authority stays empty, read the property
@@ -143,6 +152,15 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RAISING
         /iwbep/cx_mgw_med_exception.
 
+    "! Entity type for ZI_GEM_ORDER_VH (GEM orders, ZGEM_ORDERDET)
+    CLASS-METHODS create_gem_order_type
+      IMPORTING
+        io_model              TYPE REF TO /iwbep/if_mgw_odata_model
+      RETURNING
+        VALUE(ro_entity_type) TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
     "! Entity type for ZI_ADRC_VH (address numbers, ADRC)
     CLASS-METHODS create_adrc_type
       IMPORTING
@@ -202,6 +220,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
         iv_vh_key      TYPE string        "key property of that set
         iv_vh_text     TYPE string OPTIONAL   "its description property, if any
         iv_vh_text2    TYPE string OPTIONAL   "a second display-only column (v13)
+        iv_in_local    TYPE string OPTIONAL   "PO property passed IN as a filter (v14)
+        iv_in_vh       TYPE string OPTIONAL   "the value-help property it filters
         iv_dropdown    TYPE abap_bool DEFAULT abap_false   "dropdown instead of dialog
       RAISING
         /iwbep/cx_mgw_med_exception.
@@ -568,6 +588,28 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     ENDTRY.
     ENDIF.
 
+    " 7. GEM PO No. - ZGEM_ORDERDET through ZI_GEM_ORDER_VH, dialog,
+    "    filtered by the PO's supplier (search help ZGEM_ORDER, LIFNR in)
+    IF structure_exists( 'ZIGEMORDERVH' ) = abap_false.
+      gv_last_error = |{ gv_last_error }zgempo: ZIGEMORDERVH not active; |.
+    ELSE.
+    TRY.
+        lo_vh_type = create_gem_order_type( io_model ).
+        lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_GEM_ORDER' ).
+        set_vh_set_flags( lo_entity_set ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zgempo' )
+                             iv_property    = 'zgempo'
+                             iv_label       = 'GEM PO No.'
+                             iv_vh_set      = 'ZVT_GEM_ORDER'
+                             iv_vh_key      = 'GemOrderId'
+                             iv_in_local    = 'Supplier'                 "ASSUMPTION A10
+                             iv_in_vh       = 'Supplier' ).
+      CATCH cx_root INTO DATA(lx_gem).
+        gv_last_error = |{ gv_last_error }zgempo: { lx_gem->get_text( ) }; |.
+    ENDTRY.
+    ENDIF.
+
     " 6. PO Signing Authority - a user ID: SAP's own set, annotation only
     TRY.
         annotate_value_list( io_vocan_model = io_vocan_model
@@ -690,6 +732,24 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       )->add( iv_key = 'label' iv_value = 'Name' ).
 
     ro_entity_type->bind_structure( iv_structure_name = 'ZIPERNRVH' ).      "ASSUMPTION A2
+  ENDMETHOD.
+
+
+  METHOD create_gem_order_type.
+    ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_GEM_ORDER_VH'
+                                                   iv_def_entity_set   = abap_false ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'GemOrderId' iv_field = 'GEMORDERID'
+                  iv_is_key = abap_true
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'GEM Order' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'Supplier' iv_field = 'SUPPLIER'
+                  iv_length = 10 iv_is_key = abap_true
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Supplier' ).
+
+    ro_entity_type->bind_structure( iv_structure_name = 'ZIGEMORDERVH' ).   "ASSUMPTION A2
   ENDMETHOD.
 
 
@@ -817,6 +877,14 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     IF iv_vh_text2 IS NOT INITIAL.
       lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
       lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_vh_text2 ).
+    ENDIF.
+
+    " In: a PO property handed to the value help as a filter (v14), the
+    " way an import parameter of a GUI search help takes a screen field
+    IF iv_in_local IS NOT INITIAL AND iv_in_vh IS NOT INITIAL.
+      lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterIn| ).
+      lo_param->create_property( 'LocalDataProperty' )->create_simple_value( )->set_property_path( iv_in_local ).
+      lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_in_vh ).
     ENDIF.
 
     " 3. Text arrangement of the PO field: key and description together,
