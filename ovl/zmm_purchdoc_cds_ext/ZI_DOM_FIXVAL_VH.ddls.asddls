@@ -1,27 +1,27 @@
 //----------------------------------------------------------------------
 // Object    : ZI_DOM_FIXVAL_VH (DDL source, value help view)
 // Table     : DD07T (fixed-value texts of domains)
-// Purpose   : ONE value help for every PO custom field whose GUI F4 is
-//             the fixed-value list of its domain (Inspection Type, ...).
-//             The element in ZC_PURCHASEORDERTP_EXT restricts it to its
-//             own domain, so no view per field is needed:
+// Purpose   : Value help for PO custom field ZZINSP_TYP (Inspection Type):
+//             the fixed values of its domain, same list as the GUI F4.
+//             Referenced from ZC_PURCHASEORDERTP_EXT via
 //               @Consumption.valueHelpDefinition: [{
-//                 entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' },
-//                 additionalBinding: [{ element: 'DomainName',
-//                                       localConstant: 'ZINSP_TYP',
-//                                       usage: #FILTER }] }]
-//             Needed only where the OData runtime does not already emit
-//             sap:value-list="fixed-values" for the property.
+//                 entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' } }]
 // Author    : Arnav Johri
 // Date      : 21.10.2026
+// Change    : 22/10/26 Arnav - restricted to domain ZINSP_TYP in the WHERE
+//             clause (done by hand in ADT; repo copy aligned). The generic
+//             form, one view for all domains with additionalBinding /
+//             localConstant on DomainName, is dropped. Each further
+//             fixed-value field now gets its own copy of this view with
+//             its own domain name.
 //----------------------------------------------------------------------
 // ASSUMPTION: DomainValue stays CHAR 10 (DD07T-DOMVALUE_L) so that one
 // view serves CHAR 2, CHAR 3 and NUMC 3 domains alike. ADT may warn that
 // its length differs from the bound element; that warning is expected.
 // For NUMC domains confirm in SE11 that the fixed values were entered
 // with leading zeros, otherwise the copied value will not match.
-// ASSUMPTION: the domain name in localConstant is spelled exactly as in
-// DD07T (upper case). Take it from SE11, not from the data element name.
+// ASSUMPTION: the domain of data element ZINSP_TYP is ZINSP_TYP, spelled
+// as in DD07T (upper case). Taken from SE11 by Arnav, not re-verified here.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIDOMFIXVALVH'
 @AbapCatalog.compiler.compareFilter: true
@@ -54,3 +54,6 @@ define view ZI_DOM_FIXVAL_VH
 where
       ddlanguage = $session.system_language
   and as4local   = 'A'
+  //BOC By Arnav on 22/10/26
+  and domname    = 'ZINSP_TYP'
+  //EOC By Arnav on 22/10/26

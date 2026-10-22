@@ -7,9 +7,9 @@
 //             positions 230-260, continuing the existing 120-220 run.
 //             Nothing else touched.
 // Change    : 22/10/26 Arnav - Inspection Type (zzinsp_typ): Fiori F4 via
-//             the shared value help ZI_DOM_FIXVAL_VH restricted to the
-//             field's domain. First of the fixed-value fields; the others
-//             follow with the same view. Nothing else touched.
+//             value help ZI_DOM_FIXVAL_VH (DD07T, restricted to domain
+//             ZINSP_TYP inside the view). First of the fixed-value
+//             fields. Nothing else touched.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewAppendName: 'ZCPURORDTP'
 @EndUserText.label: 'Extension of C_PurchaseOrderTP'
@@ -30,13 +30,13 @@ PurchaseOrderTP.zzt_nature     as zzt_nature,
 
     @UI.identification: [{ position: 120 }]
     //BOC By Arnav on 22/10/26
-    // ASSUMPTION: the domain of data element ZINSP_TYP is ZINSP_TYP.
-    // Confirm in SE11 (data element, Definition tab) before activating;
-    // if it differs, change only the localConstant literal.
-    @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' },
-                                         additionalBinding: [{ element: 'DomainName',
-                                                               localConstant: 'ZINSP_TYP',
-                                                               usage: #FILTER }] }]
+    // First version, same day, bound the domain through the annotation:
+    // @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' },
+    //                                      additionalBinding: [{ element: 'DomainName',
+    //                                                            localConstant: 'ZINSP_TYP',
+    //                                                            usage: #FILTER }] }]
+    // Replaced: the view itself is now restricted to domain ZINSP_TYP.
+    @Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_DOM_FIXVAL_VH', element: 'DomainValue' } }]
     //EOC By Arnav on 22/10/26
     PurchaseOrderTP.zzinsp_typ     as zzinsp_typ,
 
