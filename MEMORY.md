@@ -2,7 +2,7 @@
 
 **Written 22/09/26.** This file exists so that nothing established at cost has to be
 re-derived, and so that no mistake already made gets made again.
-Last addition 22/10/26: §4.3 (Fiori value help on a custom field), §5 M-22 – M-24.
+Last addition 22/10/26: §4.3 (Fiori value help on a custom field), §5 M-22 – M-25.
 
 `CLAUDE.md` is the rulebook — *what to do*. This file is the memory — *what we already
 know, and what already went wrong*. Read `CLAUDE.md` first; read §3 and §5 of this file
@@ -257,7 +257,7 @@ Every row below was established on the system, not read from documentation.
 | Finding | Consequence |
 |---|---|
 | A `C_…TP` consumption view with `transactionalProcessingDelegated: true` and `BOPF:` actions (`C_PurchaseOrderTP`) | BOPF-based → served by a **SEGW project with referenced data source**, not a RAP service binding. There is no service definition extension route |
-| Entity sets of a referenced-data-source SEGW project are **fixed when the project is generated**; the *properties* of the referenced view are read at runtime | Extension fields (`zz*`) show in the app with no regeneration. A new value-help view does **not** enter the service — not through `@Consumption.valueHelpDefinition`, and not through an association exposed in the extension (tested: `_ZzInspTypVH` activated cleanly, service document still without the collection after cache cleanup) |
+| Entity sets of a referenced-data-source SEGW project are **fixed when the project is generated**; the *properties* of the referenced view are read at runtime | Extension fields (`zz*`) show in the app with no regeneration. A new value-help view does **not** enter the service through `@Consumption.valueHelpDefinition`, nor through an association exposed as a navigation in the extension (tested: `_ZzInspTypVH` activated cleanly, service document still without the collection after cache cleanup). **Not tested:** that association plus `@ObjectModel.foreignKey.association: '_ZzInspTypVH'` on the element — the form SAP's own fields carry (`PurchasingGroup` → `_PurchasingGrpValueHelp`, `IncotermsVersion` → `_IncotermsVersion`). The test also ran on the standard service, not the Z one. If a test is wanted it is one object; the SEGW route does not depend on it |
 | F4 opens the bare *Define Conditions* dialog with no value list | The VH entity is not in the service document, or a cache is stale. Not a CDS defect. Fix: add the VH view as **Data Source Reference** entity set in the **Z** SEGW project, Generate Runtime Objects, `/IWFND/MAINT_SERVICE` Load Metadata, the three cache cleanups, re-test on the Z service |
 | Value-help sets already in `MM_PUR_PO_MAINT_V2_SRV`: plant, supplier, customer, business user, cost centre, WBS, country, region, material group, currency, unit, G/L account, profit centre … | A custom field whose values are one of these gets its F4 from `@Consumption.valueHelpDefinition` alone, no exposure work. Full list: `ovl/zmm_purchdoc_cds_ext/original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` |
 | Only 12 of 84 extension elements visible in the app | An element without `@UI.identification` (`@UI.lineItem` for the list) reaches `$metadata` but no section. `@UI.facet` is entity-level: an `extend view` cannot add it, and a DDLX needs `@Metadata.allowExtensions: true` on the base view |
@@ -458,6 +458,16 @@ object, only the later one active — and the repo root file is the only place b
 line of the delivery ("this file also carries X, which is not in the system yet"), and diff
 the next system copy against the repo root file before anything else. Every hand edit in
 ADT re-opens the drift of §2.1.**
+
+**M-25 — Over-claimed a negative test.** The association test was logged as "exposed
+exactly like `_IncotermsVersion`" and the route marked closed. `IncotermsVersion` gets its
+value list from `@ObjectModel.foreignKey.association: '_IncotermsVersion'` on the element;
+the test put the association in the extension and exposed it, but never set
+`@ObjectModel.foreignKey.association: '_ZzInspTypVH'` on `zzinsp_typ`. It also ran on the
+standard service. Arnav caught it: "we did not use this annotation".
+→ **A negative test rules out only the exact variant that was run. Before writing "ruled
+out", list every annotation and object the reference mechanism uses and tick each one
+against what was actually pasted. Record the variants that remain untested by name.**
 
 ---
 

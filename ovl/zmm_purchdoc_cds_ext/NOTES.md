@@ -219,6 +219,19 @@ extension exactly like `_IncotermsVersion`, activated cleanly; after cache clean
 Metadata the service document of `MM_PUR_PO_MAINT_V2_SRV` still has no `ZI_DOM_FIXVAL_VH`
 collection. Confirms: the standard project's entity sets are closed. Association commented out.
 
+**Correction 22/10/26 (Arnav: "we did not use this annotation").** The test was *not* exactly
+like `_IncotermsVersion`. SAP's fields carry the association **and**
+`@ObjectModel.foreignKey.association` on the element — `PurchasingGroup` has
+`foreignKey.association: '_PurchasingGrpValueHelp'`, `text.association`, plus
+`@Consumption.valueHelpDefinition` to `C_PurchasingGroupValueHelp`; `IncotermsVersion` has
+`foreignKey.association: '_IncotermsVersion'` only (`original/C_PURCHASEORDERTP.ddls.asddls`
+lines 169–170, 461). The test put `_ZzInspTypVH` in the extension and exposed it in the select
+list, but never set `@ObjectModel.foreignKey.association: '_ZzInspTypVH'` on `zzinsp_typ`. It
+also ran against the standard service, not the Z one the app uses. So the negative result
+covers "association exposed as navigation" only; the foreignKey variant is **untested**. If
+wanted it is a one-object test (annotation on the element, association back in, re-test on the
+Z service). The SEGW route below does not depend on it and stays the fix.
+
 **Correction, 22/10/26 evening — the app does not run on the standard service.** Arnav: the
 custom tiles come from a **Z service** derived from `MM_PUR_PO_MAINT_V2_SRV`, which already
 exists; the BAS app is deployed against it. So the Gateway Client test above was run against
