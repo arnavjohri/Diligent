@@ -1,0 +1,396 @@
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+        ZSTR_HEADER
+          Short description:Structure For Header Part of PO.
+          Structure
+          Active version
+
+
+        Field Structure
+          Number of fields: 83
+          Total of field lengths: 2423
+
+        Component      K Type Length Type
+        Short Text____________________________________________________________
+        EBELN            CHAR     10 EBELN
+         Purchasing Document Number
+        MATKL            CHAR      9 MATKL
+         Material Group
+        PLIFZ            DEC       3 PLIFZ
+         Planned Delivery Time in Days
+        WEBAZ            DEC       3 WEBAZ
+         Goods receipt processing time in days
+        ZZT_NATURE       CHAR      3 ZT_NATURE
+         Nature of tender
+        ZZTND_DT         DATS      8 ZTND_DT
+         Collective (Tender) Date
+        ZZLST_SEL_DATE   DATS      8 ZLST_SEL_DATE
+         Last date of selling tender
+        ZZSUB_TIME       TIMS      6 ZSUB_TIME
+         Time of Submission of Tender
+        ZZTB_OP_DT       DATS      8 ZTB_OP_DT
+         Date of opening of bid / Tech-comm. Bid
+        ZZTB_OP_TM       TIMS      6 ZTB_OP_TM
+         Time of opening of bid / Tech-comm. Bid
+        ZZPB_OP_DT       DATS      8 ZPB_OP_DT
+         Date of Price Bid Opening
+        ZZPB_OP_TM       TIMS      6 ZPB_OP_TM
+         Time of Price Bid Opening
+        ZZPRE_BID_DT     DATS      8 ZPRE_BID_DT
+         Date of Pre-Bid Conference
+        ZZBD_TYPE        CHAR      3 ZBD_TYPE
+         Bidding System
+        ZZT_DURATION     CHAR      3 ZT_DURATION
+         Tender Duration type
+        ZZLST_DT_QUE     DATS      8 ZLST_DT_QUE
+         Last Date for receiving queries for Pre-bid conference
+        ZZINSP_TYP       CHAR      3 ZINSP_TYP
+         Inspection Type
+        ZZVEND_CAT       CHAR      3 ZVEND_CAT
+         Vendor Category
+        ZZINSP_AUTH      CHAR      3 ZINSP_AUTH
+         Inspection Authority
+        ZZPRE_AWD        NUMC      3 ZPRE_AWD
+         Pre award communication
+        ZZPST_AWD        NUMC      3 ZPST_AWD
+         Post award communication
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             1
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+        Component      K Type Length Type
+        Short Text____________________________________________________________
+        ZZARBIT          CHAR      2 ZARBIT
+         Arbitration cases
+        ZZAR_OP_DT       DATS      8 ZAR_OP_DT
+         Date of Arbitration open
+        ZZAR_CL_DT       DATS      8 ZAR_CL_DT
+         Date of Arbitration closed
+        ZZTPI_ADD        CHAR     10 ZTPI_ADD
+         Third Party Inspection address
+        ZZQAD_DET        CHAR     10 ZQAD_DET
+         QAD Department
+        ZZPORT_CON       CHAR     10 ZPORT_CON
+         Port Consignee
+        ZZULT_CON        CHAR     10 ZULT_CON
+         Ultimate consignee
+        ZUPFLAG          CHAR      1 ZUPFLAG
+         Flag for Ultimate & Port Cong.
+        ZZNAT_PROC       CHAR      2 ZNATPROC
+         Tender Process
+        ZZNITDT          DATS      8 ZNITDT
+         Date of Publication of NIT in Website
+        ZZBIDER_AGR      CHAR      1 ZBIDERAGR
+         Contract / PO awarded to Lowest bidder
+        ZZSCH_ST_DT      DATS      8 ZSCHSTDT
+         Scheduled Work Start Date
+        ZZSCH_EN_DT      DATS      8 ZSCHENDT
+         Schedule Work End Date
+        ZZSUBMI          CHAR     10 SUBMI
+         Collective Number
+        ZZEPC            CHAR      1 ZZEPC
+         EPC approval OLD Value
+        ZZEXCHNG_RATE    DEC       9 ZWKURS
+         SRM-Exchange rate
+        ZZPSA            CHAR     12 ZPSA
+         PO Signing Authority
+        ZZCPO            NUMC      8 ZZCPO
+          Contact Person for current PO
+        ZZPHONE          CHAR     11 ZZPNO
+         Landline Number
+        ZZFAX            CHAR     25 ZZFAX
+         Fax Number
+        ZZMOBILE         CHAR     11 ZZMOB
+         Mobile Number
+        ZZEMAIL          CHAR     40 ZZEMA
+         Email ID
+        ZZINDPER         NUMC      8 ZZIND
+         Indenting person for current PO
+        ZZINDPHONE       CHAR     11 ZZPNO
+         Landline Number
+        ZZINDFAX         CHAR     25 ZZFAX
+         Fax Number
+        ZZINDMOBILE      CHAR     11 ZZMOB
+         Mobile Number
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             2
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+        Component      K Type Length Type
+        Short Text____________________________________________________________
+        ZZINDEMAIL       CHAR     40 ZZEMA
+         Email ID
+        ZZRELDATE        DATS      8 ZZRELDATE
+         Release Date
+        ZZRELCODE        CHAR      2 ZFRGCO
+         Final Release Code
+        ZZLOINO          CHAR     20 ZZLOINO
+         LOI/NOA number
+        ZZLOIDT          DATS      8 ZZLOIDT
+         LOI/NOA  Date
+        ZZFAXDT          DATS      8 ZZFAXDT
+         Fax Order Date
+        ZZMSE            CHAR      2 ZZMSE
+         For MSE
+        ZZDMEP           CHAR      3 ZZDMEP
+         Domestically Manufactured Electronic Products (DMEP)
+        ZSUPCONCT        CHAR     15 ZZSUPCONCT
+         Supplier Contact No
+        ZSUPEMAIL        CHAR     50 ZZSUPEMAIL
+         Supplier Email
+        ZFILENO          CHAR     50 ZZFILENO
+         File Number
+        ZULTNAME         CHAR     40 AD_NAME1
+         Name 1
+        ZULTSTREET       CHAR     60 AD_STREET
+         Street
+        ZULTSTREET1      CHAR     40 AD_STRSPP1
+         Street 2
+        ZULTCITY         CHAR     40 AD_CITY1
+         City
+        ZULTCONTCT       CHAR     30 AD_TLNMBR1
+         First Telephone No.: Dialing Code + Number
+        ZULTEMAIL        CHAR    241 AD_SMTPADR
+         E-Mail Address
+        ZINVNAME         CHAR     40 AD_NAME1
+         Name 1
+        ZINVSTREET       CHAR     60 AD_STREET
+         Street
+        ZINVSTREET1      CHAR     40 AD_STRSPP1
+         Street 2
+        ZINVCITY         CHAR     40 AD_CITY1
+         City
+        ZINVCONTCT       CHAR     30 AD_TLNMBR1
+         First Telephone No.: Dialing Code + Number
+        ZINVEMAIL        CHAR    241 AD_SMTPADR
+         E-Mail Address
+        ZINSNAME         CHAR     40 AD_NAME1
+         Name 1
+        ZINSSTREET       CHAR     60 AD_STREET
+         Street
+        ZINSSTREET1      CHAR     40 AD_STRSPP1
+         Street 2
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             3
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+        Component      K Type Length Type
+        Short Text____________________________________________________________
+        ZINSCITY         CHAR     40 AD_CITY1
+         City
+        ZINSCONTCT       CHAR     30 AD_TLNMBR1
+         First Telephone No.: Dialing Code + Number
+        ZINSEMAIL        CHAR    241 AD_SMTPADR
+         E-Mail Address
+        ZPAYNAME         CHAR     40 AD_NAME1
+         Name 1
+        ZPAYSTREET       CHAR     60 AD_STREET
+         Street
+        ZPAYSTREET1      CHAR     40 AD_STRSPP1
+         Street 2
+        ZPAYCITY         CHAR     40 AD_CITY1
+         City
+        ZPAYCONTCT       CHAR     30 AD_TLNMBR1
+         First Telephone No.: Dialing Code + Number
+        ZPAYEMAIL        CHAR    241 AD_SMTPADR
+         E-Mail Address
+        ZGEMPO           CHAR     30 ZGEMPONO
+         GEM PO NO____________________________________________________________
+
+          Fields with conversion routines:
+            Field name      Conversion routine
+            EBELN           ALPHA
+            ZZTPI_ADD       ALPHA
+            ZZQAD_DET       ALPHA
+            ZZPORT_CON      ALPHA
+            ZZULT_CON       ALPHA
+            ZZEXCHNG_RATE   EXCRT
+            ZZEMAIL         ALPHA
+            ZZINDEMAIL      ALPHA
+            ZULTEMAIL       SXIDN
+            ZINVEMAIL       SXIDN
+            ZINSEMAIL       SXIDN
+            ZPAYEMAIL       SXIDN
+
+
+        Input Checks (Foreign Keys, Fiexed Values)
+
+          ZZT_NATURE checked against fixed values from domain ZT_NATURE
+          Fixed values:
+            1       ST - OEM
+            10      Open Tender
+            2       ST - PAC
+            3       ST - Nomination
+            4       ST - Indegineous development
+            5       LT - empanelled (oil specific)
+            6       LT - Limited vendors / Suppliers
+            7       LT - OEM / OES
+            8       LT - Normal
+            9       LT - Indegineous development
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             4
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+
+          ZZBD_TYPE checked against fixed values from domain ZBD_TYPE
+          Fixed values:
+            1       Single Bid
+            2       Two bid
+
+          ZZT_DURATION checked against fixed values from domain ZT_DURATION
+          Fixed values:
+            1       Short Tender
+            2       Regular Tender
+
+          ZZINSP_TYP checked against fixed values from domain ZINSP_TYP
+          Fixed values:
+            1       Source Inspection
+            2       Destination Inspection
+
+          ZZVEND_CAT checked against fixed values from domain ZVEND_CAT
+          Fixed values:
+            1       OEM/OES
+            10      DGS&D
+            11      ONGC Registered
+            12      Others
+            13      MSE/NSIC/SSI-SC/ST-Women
+            2       OEM/OES & NSIC
+            3       OEM/OES & DGS&D
+            4       OEM/OES & CPSU
+            5       MSE/NSIC/SSI-General
+            6       MSE/NSIC/SSI-Women
+            7       MSE/NSIC/SSI-SC/ST
+            8       CPSU
+            9       CPSU & DGS&D
+
+          ZZINSP_AUTH checked against fixed values from domain ZINSP_AUTH
+          Fixed values:
+            1       QAD
+            2       QAD &  Indentor
+            3       Indentor
+            4       Third party inspection agency
+            5       QAD &  Third party inspection agency
+            6       Third party inspection agency &  Indentor
+            7       Others
+
+          ZZPRE_AWD checked against fixed values from domain ZPRE_AWD
+          Fixed values:
+            001     100     Validate the ranges from 1 to 100
+
+          ZZPST_AWD checked against fixed values from domain ZPST_AWD
+          Fixed values:
+            001     100     Validate the ranges from 1 to 100
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             5
+
+
+
+
+        ABAP Dictionary                 Rel. 816                    ZSTR_HEADER______________________________________________________________________
+
+
+
+
+
+          ZZARBIT checked against fixed values from domain ZARBIT
+          Fixed values:
+                    No Arbitration
+            CA      Arbitration Closed
+            OA      Arbitration Open
+
+          ZZNAT_PROC is checked against check table ZNAT_PROC
+          Field assignment:
+            ZNAT_PROC - MANDT = SYST - MANDT
+            ZNAT_PROC - ZZNAT_PROC = ZSTR_HEADER - ZZNAT_PROC
+            ZNAT_PROC - SERIAL_NO = * (generic)
+
+          ZZBIDER_AGR checked against fixed values from domain ZBIDERAGR
+          Fixed values:
+            N       No
+            Y       Yes
+
+          ZZEPC checked against fixed values from domain ZZEPC
+          Fixed values:
+            N       No
+            Y       Yes
+
+          ZZMSE is checked against check table ZMSE_EKKO
+          Field assignment:
+            ZMSE_EKKO - MANDT = SYST - MANDT
+            ZMSE_EKKO - ZZMSE = ZSTR_HEADER - ZZMSE
+
+          ZZDMEP checked against fixed values from domain ZZDMEP
+          Fixed values:
+            NO      No
+            YES     Yes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             6

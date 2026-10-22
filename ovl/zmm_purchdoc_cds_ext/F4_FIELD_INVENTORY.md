@@ -1,13 +1,17 @@
 # F4 field inventory — ZC_PURCHASEORDERTP_EXT (PO header custom fields)
 
 Built 22/10/26 from `ZSTR_HEADER_vs_view.md` (data elements transcribed from SE11 on 19/10/26) and the
+extension's select list; Domain / Fixed values filled from the SE11 print of `ZSTR_HEADER` with its
+*Input Checks* section (`original/ZSTR_HEADER_SE11_print_2026-10-22.txt`). The print covers the 83
+structure fields, not the 5 append-only ones, and shows foreign keys and fixed values only — a search
+help assigned to a data element or a `PROCESS ON VALUE-REQUEST` module is not in it.
 extension's select list. Fill **Domain** and **Fixed values** from SE11 (data element → Definition tab →
 Domain; domain → Value Range tab). Only the rows marked YES / maybe need looking up; the others
 cannot carry a fixed-value or table F4 by their type. `zzinsp_typ` is done (domain `ZINSP_TYP`).
 
 | # | CDS element | ZSTR_HEADER component | Data element | Type | Description | F4 candidate | Domain | Fixed values / table |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `zzt_nature` | `ZZT_NATURE` | `ZT_NATURE` | CHAR 3 | Nature of tender | YES — code field, check domain |  |  |
+| 1 | `zzt_nature` | `ZZT_NATURE` | `ZT_NATURE` | CHAR 3 | Nature of tender | fixed values | `ZT_NATURE` | 10 values: 1 ST-OEM … 10 Open Tender |
 | 2 | `zztnd_dt` | `ZZTND_DT` | `ZTND_DT` | DATS 8 | Collective (Tender) Date | no — date/time |  |  |
 | 3 | `zzlst_sel_date` | `ZZLST_SEL_DATE` | `ZLST_SEL_DATE` | DATS 8 | Last date of selling tender | no — date/time |  |  |
 | 4 | `zzsub_time` | `ZZSUB_TIME` | `ZSUB_TIME` | TIMS 6 | Time of Submission of Tender | no — date/time |  |  |
@@ -16,44 +20,44 @@ cannot carry a fixed-value or table F4 by their type. `zzinsp_typ` is done (doma
 | 7 | `zzpb_op_dt` | `ZZPB_OP_DT` | `ZPB_OP_DT` | DATS 8 | Date of Price Bid Opening | no — date/time |  |  |
 | 8 | `zzpb_op_tm` | `ZZPB_OP_TM` | `ZPB_OP_TM` | TIMS 6 | Time of Price Bid Opening | no — date/time |  |  |
 | 9 | `zzpre_bid_dt` | `ZZPRE_BID_DT` | `ZPRE_BID_DT` | DATS 8 | Date of Pre-Bid Conference | no — date/time |  |  |
-| 10 | `zzbd_type` | `ZZBD_TYPE` | `ZBD_TYPE` | CHAR 3 | Bidding System | YES — code field, check domain |  |  |
-| 11 | `zzt_duration` | `ZZT_DURATION` | `ZT_DURATION` | CHAR 3 | Tender Duration type | YES — code field, check domain |  |  |
+| 10 | `zzbd_type` | `ZZBD_TYPE` | `ZBD_TYPE` | CHAR 3 | Bidding System | fixed values | `ZBD_TYPE` | 1 Single Bid, 2 Two bid |
+| 11 | `zzt_duration` | `ZZT_DURATION` | `ZT_DURATION` | CHAR 3 | Tender Duration type | fixed values | `ZT_DURATION` | 1 Short Tender, 2 Regular Tender |
 | 12 | `zzlst_dt_que` | `ZZLST_DT_QUE` | `ZLST_DT_QUE` | DATS 8 | Last Date for receiving queries for Pre-bid conference | no — date/time |  |  |
 | 13 | `zzinsp_typ` | `ZZINSP_TYP` | `ZINSP_TYP` | CHAR 3 | Inspection Type | done | `ZINSP_TYP` | 1 Source / 2 Destination Inspection |
-| 14 | `zzvend_cat` | `ZZVEND_CAT` | `ZVEND_CAT` | CHAR 3 | Vendor Category | YES — code field, check domain |  |  |
-| 15 | `zzinsp_auth` | `ZZINSP_AUTH` | `ZINSP_AUTH` | CHAR 3 | Inspection Authority | YES — code field, check domain |  |  |
-| 16 | `zzpre_awd` | `ZZPRE_AWD` | `ZPRE_AWD` | NUMC 3 | Pre award communication | YES — code field, check domain |  |  |
-| 17 | `zzpst_awd` | `ZZPST_AWD` | `ZPST_AWD` | NUMC 3 | Post award communication | YES — code field, check domain |  |  |
-| 18 | `zzarbit` | `ZZARBIT` | `ZARBIT` | CHAR 2 | Arbitration cases | YES — code field, check domain |  |  |
+| 14 | `zzvend_cat` | `ZZVEND_CAT` | `ZVEND_CAT` | CHAR 3 | Vendor Category | fixed values | `ZVEND_CAT` | 13 values: 1 OEM/OES … 13 MSE/NSIC/SSI-SC/ST-Women |
+| 15 | `zzinsp_auth` | `ZZINSP_AUTH` | `ZINSP_AUTH` | CHAR 3 | Inspection Authority | fixed values | `ZINSP_AUTH` | 7 values: 1 QAD … 7 Others |
+| 16 | `zzpre_awd` | `ZZPRE_AWD` | `ZPRE_AWD` | NUMC 3 | Pre award communication | no — interval 001–100, no list | `ZPRE_AWD` | interval 001–100 (validation only) |
+| 17 | `zzpst_awd` | `ZZPST_AWD` | `ZPST_AWD` | NUMC 3 | Post award communication | no — interval 001–100, no list | `ZPST_AWD` | interval 001–100 (validation only) |
+| 18 | `zzarbit` | `ZZARBIT` | `ZARBIT` | CHAR 2 | Arbitration cases | fixed values (one with blank key) | `ZARBIT` | '' No Arbitration, CA Closed, OA Open |
 | 19 | `zzar_op_dt` | `ZZAR_OP_DT` | `ZAR_OP_DT` | DATS 8 | Date of Arbitration open | no — date/time |  |  |
 | 20 | `zzar_cl_dt` | `ZZAR_CL_DT` | `ZAR_CL_DT` | DATS 8 | Date of Arbitration closed | no — date/time |  |  |
-| 21 | `zztpi_add` | `ZZTPI_ADD` | `ZTPI_ADD` | CHAR 10 | Third Party Inspection address | YES — code field, check domain |  |  |
-| 22 | `zzqad_det` | `ZZQAD_DET` | `ZQAD_DET` | CHAR 10 | QAD Department | YES — code field, check domain |  |  |
-| 23 | `zzport_con` | `ZZPORT_CON` | `ZPORT_CON` | CHAR 10 | Port Consignee | YES — code field, check domain |  |  |
-| 24 | `zzult_con` | `ZZULT_CON` | `ZULT_CON` | CHAR 10 | Ultimate consignee | YES — code field, check domain |  |  |
-| 25 | `zupflag` | `ZUPFLAG` | `ZUPFLAG` | CHAR 1 | Flag for Ultimate & Port Cong. | YES — code field, check domain |  |  |
-| 26 | `zznat_proc` | `ZZNAT_PROC` | `ZNATPROC` | CHAR 2 | Tender Process | YES — Z table |  | table `ZNAT_PROC`, `STATUS = 'active'` (GUI `pop_up`) |
+| 21 | `zztpi_add` | `ZZTPI_ADD` | `ZTPI_ADD` | CHAR 10 | Third Party Inspection address | no DDIC check — search help on the data element / screen? | — | ALPHA, CHAR 10: vendor or customer number? |
+| 22 | `zzqad_det` | `ZZQAD_DET` | `ZQAD_DET` | CHAR 10 | QAD Department | no DDIC check — search help on the data element / screen? | — | ALPHA, CHAR 10 |
+| 23 | `zzport_con` | `ZZPORT_CON` | `ZPORT_CON` | CHAR 10 | Port Consignee | no DDIC check — search help on the data element / screen? | — | ALPHA, CHAR 10: vendor or customer number? |
+| 24 | `zzult_con` | `ZZULT_CON` | `ZULT_CON` | CHAR 10 | Ultimate consignee | no DDIC check — search help on the data element / screen? | — | ALPHA, CHAR 10: vendor or customer number? |
+| 25 | `zupflag` | `ZUPFLAG` | `ZUPFLAG` | CHAR 1 | Flag for Ultimate & Port Cong. | no DDIC check — probably a checkbox | — |  |
+| 26 | `zznat_proc` | `ZZNAT_PROC` | `ZNATPROC` | CHAR 2 | Tender Process | check table | — | table `ZNAT_PROC` (key `ZZNAT_PROC`, `SERIAL_NO` generic); GUI `pop_up`: `STATUS = 'active'` |
 | 27 | `zznitdt` | `ZZNITDT` | `ZNITDT` | DATS 8 | Date of Publication of NIT in Website | no — date/time |  |  |
-| 28 | `zzbider_agr` | `ZZBIDER_AGR` | `ZBIDERAGR` | CHAR 1 | Contract / PO awarded to Lowest bidder | YES — code field, check domain |  |  |
+| 28 | `zzbider_agr` | `ZZBIDER_AGR` | `ZBIDERAGR` | CHAR 1 | Contract / PO awarded to Lowest bidder | fixed values | `ZBIDERAGR` | N No, Y Yes |
 | 29 | `zzsch_st_dt` | `ZZSCH_ST_DT` | `ZSCHSTDT` | DATS 8 | Scheduled Work Start Date | no — date/time |  |  |
 | 30 | `zzsch_en_dt` | `ZZSCH_EN_DT` | `ZSCHENDT` | DATS 8 | Schedule Work End Date | no — date/time |  |  |
 | 31 | `zzsubmi` | `ZZSUBMI` | `SUBMI` | CHAR 10 | Collective Number | no — free text / number |  |  |
-| 32 | `zzepc` | `ZZEPC` | `ZZEPC` | CHAR 1 | EPC approval OLD Value | YES — code field, check domain |  |  |
+| 32 | `zzepc` | `ZZEPC` | `ZZEPC` | CHAR 1 | EPC approval OLD Value | fixed values | `ZZEPC` | N No, Y Yes |
 | 33 | `zzexchng_rate` | `ZZEXCHNG_RATE` | `ZWKURS` | DEC 9,5 | SRM-Exchange rate | no — amount/rate |  |  |
 | 34 | `zzusr` | — (append only) | **?** |  | User (EKKO append, not in ZSTR_HEADER) | YES — flag/user, data element unknown |  |  |
-| 35 | `zzpsa` | `ZZPSA` | `ZPSA` | CHAR 12 | PO Signing Authority | YES — code field, check domain |  |  |
-| 36 | `zzcpo` | `ZZCPO` | `ZZCPO` | NUMC 8 | Contact Person for current PO | maybe — person number, probably a table |  |  |
+| 35 | `zzpsa` | `ZZPSA` | `ZPSA` | CHAR 12 | PO Signing Authority | no DDIC check — search help on the data element / screen? | — | CHAR 12: user ID? |
+| 36 | `zzcpo` | `ZZCPO` | `ZZCPO` | NUMC 8 | Contact Person for current PO | no DDIC check — search help on the data element / screen? | — | NUMC 8: personnel number? |
 | 37 | `zzphone` | `ZZPHONE` | `ZZPNO` | CHAR 11 | Landline Number | no — free text / number |  |  |
 | 38 | `zzfax` | `ZZFAX` | `ZZFAX` | CHAR 25 | Fax Number | no — free text / number |  |  |
 | 39 | `zzmobile` | `ZZMOBILE` | `ZZMOB` | CHAR 11 | Mobile Number | no — free text / number |  |  |
 | 40 | `zzemail` | `ZZEMAIL` | `ZZEMA` | CHAR 40 | Email ID | no — free text / number |  |  |
-| 41 | `zzindper` | `ZZINDPER` | `ZZIND` | NUMC 8 | Indenting person for current PO | maybe — person number, probably a table |  |  |
+| 41 | `zzindper` | `ZZINDPER` | `ZZIND` | NUMC 8 | Indenting person for current PO | no DDIC check — search help on the data element / screen? | — | NUMC 8: personnel number? |
 | 42 | `zzindphone` | `ZZINDPHONE` | `ZZPNO` | CHAR 11 | Landline Number | no — free text / number |  |  |
 | 43 | `zzindfax` | `ZZINDFAX` | `ZZFAX` | CHAR 25 | Fax Number | no — free text / number |  |  |
 | 44 | `zzindmobile` | `ZZINDMOBILE` | `ZZMOB` | CHAR 11 | Mobile Number | no — free text / number |  |  |
 | 45 | `zzindemail` | `ZZINDEMAIL` | `ZZEMA` | CHAR 40 | Email ID | no — free text / number |  |  |
 | 46 | `zzreldate` | `ZZRELDATE` | `ZZRELDATE` | DATS 8 | Release Date | no — date/time |  |  |
-| 47 | `zzrelcode` | `ZZRELCODE` | `ZFRGCO` | CHAR 2 | Final Release Code | YES — code field, check domain |  |  |
+| 47 | `zzrelcode` | `ZZRELCODE` | `ZFRGCO` | CHAR 2 | Final Release Code | no DDIC check — search help on the data element / screen? | — | release code |
 | 48 | `zzloino` | `ZZLOINO` | `ZZLOINO` | CHAR 20 | LOI/NOA number | no — free text / number |  |  |
 | 49 | `zzloidt` | `ZZLOIDT` | `ZZLOIDT` | DATS 8 | LOI/NOA Date | no — date/time |  |  |
 | 50 | `zzfaxdt` | `ZZFAXDT` | `ZZFAXDT` | DATS 8 | Fax Order Date | no — date/time |  |  |
@@ -61,8 +65,8 @@ cannot carry a fixed-value or table F4 by their type. `zzinsp_typ` is done (doma
 | 52 | `zzflag_mum` | — (append only) | **?** |  | Flag Mumbai (EKKO append) | YES — flag/user, data element unknown |  |  |
 | 53 | `zzflag_chen` | — (append only) | **?** |  | Flag Chennai (EKKO append) | YES — flag/user, data element unknown |  |  |
 | 54 | `zzflag_del` | — (append only) | **?** |  | Flag Delhi (EKKO append) | YES — flag/user, data element unknown |  |  |
-| 55 | `zzmse` | `ZZMSE` | `ZZMSE` | CHAR 2 | For MSE | YES — code field, check domain |  |  |
-| 56 | `zzdmep` | `ZZDMEP` | `ZZDMEP` | CHAR 3 | Domestically Manufactured Electronic Products (DMEP) | YES — code field, check domain |  |  |
+| 55 | `zzmse` | `ZZMSE` | `ZZMSE` | CHAR 2 | For MSE | check table | — | table `ZMSE_EKKO` (key `ZZMSE`); text field unknown |
+| 56 | `zzdmep` | `ZZDMEP` | `ZZDMEP` | CHAR 3 | Domestically Manufactured Electronic Products (DMEP) | fixed values | `ZZDMEP` | NO No, YES Yes |
 | 57 | `zsupconct` | `ZSUPCONCT` | `ZZSUPCONCT` | CHAR 15 | Supplier Contact No | no — free text / number |  |  |
 | 58 | `zsupemail` | `ZSUPEMAIL` | `ZZSUPEMAIL` | CHAR 50 | Supplier Email | no — free text / number |  |  |
 | 59 | `zfileno` | `ZFILENO` | `ZZFILENO` | CHAR 50 | File Number | no — free text / number |  |  |
@@ -93,3 +97,16 @@ cannot carry a fixed-value or table F4 by their type. `zzinsp_typ` is done (doma
 | 84 | `zgempo` | `ZGEMPO` | `ZGEMPONO` | CHAR 30 | GEM PO NO | no — free text / number |  |  |
 
 Candidates to look up: 27 of 84 (plus `zzinsp_typ`, done).
+
+## Sorted by F4 source (22/10/26)
+
+| Case | Fields | Build |
+|---|---|---|
+| Fixed values of a domain (9) | `zzt_nature` `ZT_NATURE`, `zzbd_type` `ZBD_TYPE`, `zzt_duration` `ZT_DURATION`, `zzvend_cat` `ZVEND_CAT`, `zzinsp_auth` `ZINSP_AUTH`, `zzarbit` `ZARBIT`, `zzbider_agr` `ZBIDERAGR`, `zzepc` `ZZEPC`, `zzdmep` `ZZDMEP` | shared DD07T set, one block per field in the class; the view's WHERE widened |
+| Interval fixed values (2) | `zzpre_awd`, `zzpst_awd` | nothing — 001–100 is a validation range, no list in the GUI either |
+| Check table (2) | `zznat_proc` → `ZNAT_PROC` (view `ZI_NAT_PROC_VH` written 19/10, activation unknown), `zzmse` → `ZMSE_EKKO` (fields unknown) | one VH view + one entity set + one DPC branch each |
+| No DDIC check (10) | `zztpi_add` `zzqad_det` `zzport_con` `zzult_con` `zupflag` `zzpsa` `zzcpo` `zzindper` `zzrelcode` + the 5 append fields | F4 source from the data element's search help (SE11, Further Characteristics) or the GUI screen; vendor / customer / user / personnel → SAP's own sets, annotation only |
+
+Watch-outs: `ZARBIT` has a fixed value with a blank key (No Arbitration) — a key property with an empty
+value in the entity set; test that the dropdown accepts it. `ZT_NATURE` value `10` sorts after `1` as
+CHAR — order by `ValuePosition`, which the DPC does.
