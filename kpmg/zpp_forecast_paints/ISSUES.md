@@ -156,3 +156,11 @@ rewritten as the full functional test pack: delivered tcodes, one-time setup, th
 file layouts and rules, the 14-step run sequence with the table to check after each, the
 column expectations per mode, 22 test cases with expected results, behaviour to be aware of,
 8 decisions to settle, reporting format. Paints only.
+
+## 22/10/26 — technical handover for the next ABAPer
+
+`docs/ZFORECAST_Paints_Technical_Handover.md` (+ docx): timeline and decisions, inventory,
+every DDIC field, `ZCL_PP_FCST_PNT` method by method, `ZPP_FORECAST_PAINTS` globals, screen,
+flow, handler, column lists, headings, the 22/10 upload change touch by touch, how the engine
+is used and what it reads back, shipping and tools, repository map, assumptions, open items,
+how to change things safely. Transaction codes left out at Arnav's request (not created).
