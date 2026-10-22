@@ -369,6 +369,9 @@ through Add Fragment, with `appdescr_app_addNewDataSource` + `appdescr_ui5_addNe
 second service. Scope: object page only; an F4 on the same field in the list-report filter bar
 is a separate custom filter field.
 
+Handover sheet for the Fiori consultant, with manifest / fragment snippets: `FIORI_HANDOVER_F4.md`.
+Decision 22/10/26 (Arnav): UI route first; the MPC/DPC enhancement objects stay parked in the repo.
+
 Trade-off against the enhancement route: nothing inside SAP's generated classes, upgrade-safe,
 but one custom control per field and no native SmartField behaviour. Few fields and a Fiori
 consultant available → UI route; many fields → enhancement route (one call per field, no UI work).
