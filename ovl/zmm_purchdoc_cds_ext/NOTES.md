@@ -324,6 +324,28 @@ then an **adaptation project / app variant** of Manage Purchase Orders with "Rep
 Service" pointing at the Z service. If the "custom PO app" already is such a variant with its
 own tile, only that one step is missing.
 
+## Enhancement route — objects, 22/10/26 (Arnav's choice: stay on the alias, no new service)
+
+| # | Object | File | What it does | Status |
+|---|---|---|---|---|
+| 1 | `ZCL_MM_PO_VH_MPC` (global class, paste in ADT) | `ZCL_MM_PO_VH_MPC.abap` (229 lines) | `add_value_helps( io_model io_vocan_model )`: creates entity type + set `ZI_DOM_FIXVAL_VH` bound to SQL view `ZIDOMFIXVALVH`, puts `sap:value-list="fixed-values"` and `Common.ValueList` (InOut `zzinsp_typ`↔`DomainValue`, DisplayOnly `DomainValueText`, Constant `DomainName`=`ZINSP_TYP`) on `zzinsp_typ`. All inside `TRY`; a failure skips the VH and leaves the reason in `gv_last_error` | Delivered, awaiting activation |
+| 2 | `ZEI_MM_PO_VH_MPC` (source-code enhancement) | `ZEI_MM_PO_VH_MPC.abap` (22 lines) | Two statements at the implicit option at the END of `DEFINE` in `CL_MM_PUR_PO_MAINT_V2_MPC_EXT` (or the MPC, whichever implements `DEFINE` — Runtime Artifacts decide). Calls object 1 with `model` / `vocab_anno_model` | Delivered, after object 1 |
+| 3 | DPC enhancement | — | Implicit option at the START of `GET_ENTITYSET` in the DPC_EXT (or DPC): when `iv_entity_set_name = 'ZI_DOM_FIXVAL_VH'`, select from the view, `/iwbep/cl_mgw_data_util=>filtering` + `paging`, `copy_data_to_ref`, `RETURN`. Everything else falls through to SAP's code | Not written yet — needs the DPC class name and whether `GET_ENTITYSET` is redefined |
+
+After 1–3: `/IWFND/MAINT_SERVICE` → `ZMM_PUR_PO_MAINT_V2_SRV` → Load Metadata, `/IWBEP/CACHE_CLEANUP`,
+`/IWFND/CACHE_CLEANUP`, `/UI2/INVALIDATE_CLIENT_CACHES`. Gateway Client: `$metadata` shows
+`EntitySet Name="ZI_DOM_FIXVAL_VH"` and `Common.ValueList` on `zzinsp_typ`;
+`/sap/opu/odata/sap/ZMM_PUR_PO_MAINT_V2_SRV/ZI_DOM_FIXVAL_VH?$format=json` returns the rows.
+If `$metadata` has neither: breakpoint in `zcl_mm_po_vh_mpc=>add_value_helps`, read `gv_last_error`.
+
+Assumptions in object 1 (header, greppable): A1 entity type `C_PurchaseOrderTPType` / property
+`zzinsp_typ` as in `$metadata`; A2 SQL view `ZIDOMFIXVALVH` with columns `DOMAINNAME DOMAINVALUE
+DOMAINVALUETEXT VALUEPOSITION`; A3 Common vocabulary already referenced by SAP's model; A4 domain
+`ZINSP_TYP`; A5 `get_schema_namespace( )` exists on the model interface (else the literal from
+`<Schema Namespace>`). The Constant parameter on `DomainName` is future-proofing: once the WHERE on
+the view is widened again, one set serves every fixed-value field, one `annotate_value_list` call
+per field. `fixed-values` renders a dropdown; `standard` would open the dialog.
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
@@ -341,6 +363,8 @@ own tile, only that one step is missing.
 
 Already in the system under `OCQK901357`; nothing to ship today. Any future change is
 **paste into ADT** (DDL source editor), one object at a time, activated in stack order:
+the enhancement-route objects likewise: `ZCL_MM_PO_VH_MPC` as a new global class in ADT, the
+enhancement implementations through the class editor's implicit enhancement options;
 `I_` extensions before `C_` extensions, `R_`/`P_`/`T_` extensions before the views that
 read them. Do not hand-write abapGit XML for these (see CLAUDE.md — it has not imported on
 this landscape).

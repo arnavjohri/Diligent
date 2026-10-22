@@ -1,0 +1,229 @@
+*----------------------------------------------------------------------*
+* Class      : ZCL_MM_PO_VH_MPC
+* Title      : Value-help entity set + Common.ValueList annotation for
+*              the custom PO header fields, added at runtime to the model
+*              of MM_PUR_PO_MAINT_V2_SRV (Manage Purchase Orders)
+* Author     : Arnav Johri (Diligent)      Created: 22.10.2026
+* Project    : OVL - Fiori F4 on EKKO custom fields (ZC_PURCHASEORDERTP_EXT)
+* Ships by   : paste (ADT global class). Object 1 of 3.
+*----------------------------------------------------------------------*
+* Why: the app runs on SAP's generated SEGW project (referenced data
+* source). Its entity sets are fixed at generation, so the value-help
+* view ZI_DOM_FIXVAL_VH never becomes an entity set and the
+* @Consumption.valueHelpDefinition on zzinsp_typ is dropped by the
+* runtime. This class adds the set and the annotation to the model
+* after SADL has built it. Called from one implicit enhancement at the
+* END of method DEFINE of the model provider class (object 2):
+*
+*   zcl_mm_po_vh_mpc=>add_value_helps( io_model       = model
+*                                      io_vocan_model = vocab_anno_model ).
+*
+* Data for the new set is served by the data provider (object 3).
+* Nothing here can break the PO service: every step is inside TRY; on
+* failure the value help is skipped, the standard model is returned
+* unchanged and the reason is kept in GV_LAST_ERROR (debugger).
+* Test: /IWFND/GW_CLIENT, $metadata of ZMM_PUR_PO_MAINT_V2_SRV shows
+* EntitySet ZI_DOM_FIXVAL_VH and Common.ValueList on zzinsp_typ.
+*
+* ASSUMPTION A1: the PO header entity type is C_PurchaseOrderTPType and
+*   the property is zzinsp_typ, as SADL names them. Verify in $metadata;
+*   if different, change only the constants GC_PO_ENTITY_TYPE / the call.
+* ASSUMPTION A2: SQL view of ZI_DOM_FIXVAL_VH is ZIDOMFIXVALVH with the
+*   columns DOMAINNAME, DOMAINVALUE, DOMAINVALUETEXT, VALUEPOSITION.
+* ASSUMPTION A3: the Common vocabulary is already referenced by SAP's
+*   model (its own fields carry Common.ValueList); none is created here.
+* ASSUMPTION A4: the domain of ZZINSP_TYP is ZINSP_TYP (SE11, 21/10/26).
+* ASSUMPTION A5: /IWBEP/IF_MGW_ODATA_MODEL has GET_SCHEMA_NAMESPACE. If
+*   activation says it is unknown, replace the call by the literal from
+*   <Schema Namespace="..."> in $metadata.
+* Not in this version: search support in the value help (two rows) and
+*   the per-field view copies; the Constant parameter on DomainName
+*   already restricts a shared set per field once the view's WHERE is
+*   widened again.
+*----------------------------------------------------------------------*
+CLASS zcl_mm_po_vh_mpc DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    "! Reason of the last skipped value help; initial when all was added
+    CLASS-DATA gv_last_error TYPE string READ-ONLY.
+
+    "! Add the value-help entity set and the ValueList annotation(s).
+    "! Never raises: a failure skips the value help and sets GV_LAST_ERROR.
+    CLASS-METHODS add_value_helps
+      IMPORTING
+        io_model       TYPE REF TO /iwbep/if_mgw_odata_model
+        io_vocan_model TYPE REF TO /iwbep/if_mgw_vocan_model.
+
+  PRIVATE SECTION.
+    CONSTANTS:
+      gc_po_entity_type TYPE string VALUE 'C_PurchaseOrderTPType',           "ASSUMPTION A1
+      gc_vh_entity_type TYPE string VALUE 'ZI_DOM_FIXVAL_VH',
+      gc_vh_entity_set  TYPE string VALUE 'ZI_DOM_FIXVAL_VH',
+      gc_vh_structure   TYPE string VALUE 'ZIDOMFIXVALVH',                   "ASSUMPTION A2
+      gc_common         TYPE string VALUE 'com.sap.vocabularies.Common.v1'.
+
+    "! Entity type and entity set ZI_DOM_FIXVAL_VH (DD07T fixed values)
+    CLASS-METHODS create_dom_fixval_vh
+      IMPORTING
+        io_model TYPE REF TO /iwbep/if_mgw_odata_model
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! One VH property of the set: key flag, type, length, label
+    CLASS-METHODS add_vh_property
+      IMPORTING
+        io_entity_type TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+        iv_name        TYPE string        "OData property name
+        iv_abap_field  TYPE string        "column of ZIDOMFIXVALVH
+        iv_length      TYPE i
+        iv_label       TYPE string
+        iv_is_key      TYPE abap_bool DEFAULT abap_false
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! Common.ValueList on one PO property, pointing at the value-help set
+    CLASS-METHODS annotate_value_list
+      IMPORTING
+        io_model       TYPE REF TO /iwbep/if_mgw_odata_model
+        io_vocan_model TYPE REF TO /iwbep/if_mgw_vocan_model
+        iv_property    TYPE string        "PO property, e.g. zzinsp_typ
+        iv_label       TYPE string        "title of the value help
+        iv_domain      TYPE string        "domain whose fixed values apply
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+ENDCLASS.
+
+
+CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
+
+  METHOD add_value_helps.
+    CLEAR gv_last_error.
+    IF io_model IS NOT BOUND OR io_vocan_model IS NOT BOUND.
+      gv_last_error = 'Model references not bound'.
+      RETURN.
+    ENDIF.
+
+    TRY.
+        create_dom_fixval_vh( io_model ).
+
+        " One call per custom field. A further fixed-value field is one
+        " more call here; the WHERE of ZI_DOM_FIXVAL_VH must then admit
+        " its domain as well (the Constant parameter does the filtering).
+        annotate_value_list( io_model       = io_model
+                             io_vocan_model = io_vocan_model
+                             iv_property    = 'zzinsp_typ'
+                             iv_label       = 'Inspection Type'
+                             iv_domain      = 'ZINSP_TYP' ).           "ASSUMPTION A4
+
+      CATCH cx_root INTO DATA(lx_any).
+        " Deliberate: the PO service must come up even if the value help
+        " cannot be added. The missing set in $metadata is the signal.
+        gv_last_error = lx_any->get_text( ).
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD create_dom_fixval_vh.
+    DATA(lo_entity_type) = io_model->create_entity_type(
+                             iv_entity_type_name = gc_vh_entity_type
+                             iv_def_entity_set   = abap_false ).
+
+    add_vh_property( io_entity_type = lo_entity_type
+                     iv_name        = 'DomainName'
+                     iv_abap_field  = 'DOMAINNAME'
+                     iv_length      = 30
+                     iv_label       = 'Domain'
+                     iv_is_key      = abap_true ).
+    add_vh_property( io_entity_type = lo_entity_type
+                     iv_name        = 'DomainValue'
+                     iv_abap_field  = 'DOMAINVALUE'
+                     iv_length      = 10
+                     iv_label       = 'Value'
+                     iv_is_key      = abap_true ).
+    add_vh_property( io_entity_type = lo_entity_type
+                     iv_name        = 'DomainValueText'
+                     iv_abap_field  = 'DOMAINVALUETEXT'
+                     iv_length      = 60
+                     iv_label       = 'Description' ).
+    add_vh_property( io_entity_type = lo_entity_type
+                     iv_name        = 'ValuePosition'
+                     iv_abap_field  = 'VALUEPOSITION'
+                     iv_length      = 4
+                     iv_label       = 'Sequence' ).
+
+    lo_entity_type->bind_structure( iv_structure_name = gc_vh_structure ).
+
+    DATA(lo_entity_set) = lo_entity_type->create_entity_set( gc_vh_entity_set ).
+    lo_entity_set->set_creatable( abap_false ).
+    lo_entity_set->set_updatable( abap_false ).
+    lo_entity_set->set_deletable( abap_false ).
+    lo_entity_set->set_pageable( abap_true ).
+    lo_entity_set->set_addressable( abap_true ).
+    lo_entity_set->set_subscribable( abap_false ).
+    lo_entity_set->set_has_ftxt_search( abap_false ).
+    lo_entity_set->set_filter_required( abap_false ).
+  ENDMETHOD.
+
+
+  METHOD add_vh_property.
+    DATA(lo_property) = io_entity_type->create_property(
+                          iv_property_name  = iv_name
+                          iv_abap_fieldname = iv_abap_field ).
+    IF iv_is_key = abap_true.
+      lo_property->set_is_key( ).
+    ENDIF.
+    lo_property->set_type_edm_string( ).
+    lo_property->set_maxlength( iv_length ).
+    lo_property->set_creatable( abap_false ).
+    lo_property->set_updatable( abap_false ).
+    lo_property->set_filterable( abap_true ).
+    lo_property->set_sortable( abap_true ).
+    lo_property->set_nullable( abap_false ).
+    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key   = 'label'
+              iv_value = iv_label ).
+  ENDMETHOD.
+
+
+  METHOD annotate_value_list.
+    " 1. sap:value-list on the PO property. 'fixed-values' renders a
+    "    dropdown, like the GUI popup with its two entries. For the
+    "    value-help dialog instead, use 'standard'.
+    DATA(lo_po_property) = io_model->get_entity_type( gc_po_entity_type
+                             )->get_property( iv_property ).
+    lo_po_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key   = 'value-list'
+              iv_value = 'fixed-values' ).
+
+    " 2. Common.ValueList, the way SAP's own fields carry it
+    DATA(lv_target) = |{ gc_po_entity_type }/{ iv_property }|.
+    DATA(lo_ann_target) = io_vocan_model->create_annotations_target( lv_target ).
+    lo_ann_target->set_namespace_qualifier( io_model->get_schema_namespace( ) ). "ASSUMPTION A5
+
+    DATA(lo_annotation) = lo_ann_target->create_annotation( |{ gc_common }.ValueList| ).
+    DATA(lo_record) = lo_annotation->create_record( ).
+    lo_record->create_property( 'Label' )->create_simple_value( )->set_string( iv_label ).
+    lo_record->create_property( 'CollectionPath' )->create_simple_value( )->set_string( gc_vh_entity_set ).
+    lo_record->create_property( 'SearchSupported' )->create_simple_value( )->set_boolean( abap_false ).
+
+    DATA(lo_parameters) = lo_record->create_property( 'Parameters' )->create_collection( ).
+
+    " In/out: PO field <-> value
+    DATA(lo_param) = lo_parameters->create_record( |{ gc_common }.ValueListParameterInOut| ).
+    lo_param->create_property( 'LocalDataProperty' )->create_simple_value( )->set_property_path( iv_property ).
+    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainValue' ).
+
+    " Display only: the text
+    lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
+    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainValueText' ).
+
+    " Constant: this field's domain, so one set can serve every field
+    lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterConstant| ).
+    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainName' ).
+    lo_param->create_property( 'Constant' )->create_simple_value( )->set_string( iv_domain ).
+  ENDMETHOD.
+
+ENDCLASS.
