@@ -11,17 +11,15 @@
 *              /IWBEP/IF_MGW_ODATA_ANNOTATABL; GET_SCHEMA_NAMESPACE has no
 *              RETURNING; SET_VALUE_LIST as in SAP's DEFINE; sap:text on
 *              the key; UI.TextArrangement via SET_ENUM_MEMBER_BY_NAME).
-*              v7 proven in the app: "1 (Source Inspection)".
-*              22/10/26 v8 - all ten fixed-value fields of the Customers
-*              tab (DD04L / DD01L / DD07T extracts of 22/10/26, filed under
-*              original/). One entity set per domain, ZVH_<DOMAIN>, on
-*              the shared entity type; the DPC (ZEI_MM_PO_VH_DPC v2)
-*              reads the domain from the set name and filters. The first
-*              set ZI_DOM_FIXVAL_VH becomes ZVH_ZINSP_TYP; the Constant
-*              parameter is dropped. Each field has its own TRY, so one
-*              failing field no longer takes the others down.
-*              Order: DPC v2 active -> this class -> widen the WHERE of
-*              ZI_DOM_FIXVAL_VH (view v2).
+*              22/10/26 v8 - all ten fixed-value fields, one entity set
+*              per domain ZVH_<DOMAIN>; proven (ZVH_ZT_NATURE, ten rows).
+*              22/10/26 v9 - table-based value helps: entity types bound
+*              to the value-help views (ZVT_NAT_PROC, ZVT_RELCODE,
+*              ZVT_PERNR, ZVT_ADRC) and the user-ID field annotated
+*              against SAP's own set C_PurOrdCreatedByValHelp. Needs the
+*              four views active and ZCL_MM_PO_VH_DPC + ZEI_MM_PO_VH_DPC
+*              v3 before it. Each block has its own TRY: a view that is
+*              not there yet costs only its own value help.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -33,32 +31,32 @@
 *   zcl_mm_po_vh_mpc=>add_value_helps( io_model       = model
 *                                      io_vocan_model = vocab_anno_model ).
 *
-* Rows are served by ZEI_MM_PO_VH_DPC (object 3). Nothing here can break
-* the PO service: every step is inside TRY; a failing field is skipped
-* and named in GV_LAST_ERROR (debugger), the rest go through.
-* Test: $metadata of ZMM_PUR_PO_MAINT_V2_SRV shows EntitySet ZVH_ZT_NATURE
-* ... ZVH_ZZDMEP and Common.ValueList on each annotated property;
-* /ZVH_ZT_NATURE?$format=json returns ten rows.
+* Rows are served by ZCL_MM_PO_VH_DPC via ZEI_MM_PO_VH_DPC (object 3).
+* Nothing here can break the PO service: every block is inside TRY; a
+* failing field is skipped and named in GV_LAST_ERROR (debugger).
 *
 * ASSUMPTION A1: the PO header entity type is C_PurchaseOrderTPType
 *   (confirmed in SAP's DEFINE) and the properties are the CDS element
 *   names of ZC_PURCHASEORDERTP_EXT (zzt_nature ...), as SADL names them.
-* ASSUMPTION A2: SQL view of ZI_DOM_FIXVAL_VH is ZIDOMFIXVALVH with the
-*   columns DOMAINNAME, DOMAINVALUE, DOMAINVALUETEXT, VALUEPOSITION.
+* ASSUMPTION A2: SQL view names: ZIDOMFIXVALVH, ZINATPROCVH, ZIRELCODEVH,
+*   ZIPERNRVH, ZIADRCVH, with the columns named in the type methods.
+*   ZINATPROCVH's columns come from the GUI module, not from SE11.
 * ASSUMPTION A3: the Common vocabulary is already referenced by SAP's
 *   model (its own fields carry Common.ValueList); none is created here.
 * ASSUMPTION A5: schema namespace MM_PUR_PO_MAINT_V2_SRV (confirmed by the
 *   __metadata.type of the first set, 22/10/26).
 * ASSUMPTION A6: the VOCAN API takes STRING (proven on v7).
-* ASSUMPTION A8: computed names into the MED API (entity set, property)
-*   are passed as C LENGTH 40, the length the compiler reported for
-*   IV_ENTITY_TYPE_NAME. If activation reports another length for
-*   CREATE_ENTITY_SET or GET_PROPERTY, change the two DATA lengths in
-*   ADD_VALUE_HELPS only.
-* Watch-out: domain ZARBIT has a fixed value with a BLANK key
-*   (No Arbitration, position 1). It comes through as a row whose key
-*   DomainValue is ''. If the dropdown rejects it, exclude blank keys in
-*   the DPC - the empty field then simply means No Arbitration.
+* ASSUMPTION A8: names into the MED API are passed as C LENGTH 40
+*   (property, entity set) and C LENGTH 30 (ABAP field). If activation
+*   reports another length, change the DATA / parameter length it names.
+* ASSUMPTION A9: SAP's set C_PurOrdCreatedByValHelp has the key property
+*   UserID (from the association _CreatedByValueHelp in C_PurchaseOrderTP).
+*   If the dialog on PO Signing Authority stays empty, read the property
+*   name in $metadata and correct the one literal in ADD_VALUE_HELPS.
+* Pending decisions (functional lead): ZVT_ADRC (address numbers as a
+*   Fiori input?) and ZVT_PERNR (employee names visible to PO users?).
+*   Until then, the two blocks can be left in: without their views they
+*   skip themselves and are named in GV_LAST_ERROR.
 *----------------------------------------------------------------------*
 CLASS zcl_mm_po_vh_mpc DEFINITION
   PUBLIC
@@ -70,7 +68,7 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
     CLASS-DATA gv_last_error TYPE string READ-ONLY.
 
     "! Add the value-help entity sets and the ValueList annotations.
-    "! Never raises: a failing field is skipped and named in GV_LAST_ERROR.
+    "! Never raises: a failing block is skipped and named in GV_LAST_ERROR.
     CLASS-METHODS add_value_helps
       IMPORTING
         io_model       TYPE REF TO /iwbep/if_mgw_odata_model
@@ -95,8 +93,7 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RETURNING
         VALUE(rt_fields) TYPE tt_field.
 
-    "! Shared entity type ZI_DOM_FIXVAL_VH (DD07T fixed values), bound to
-    "! the SQL view; the entity sets per domain are created on it
+    "! Shared entity type ZI_DOM_FIXVAL_VH (DD07T fixed values)
     CLASS-METHODS create_dom_fixval_type
       IMPORTING
         io_model              TYPE REF TO /iwbep/if_mgw_odata_model
@@ -105,10 +102,54 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RAISING
         /iwbep/cx_mgw_med_exception.
 
-    "! Flags shared by every property of the value-help type
-    CLASS-METHODS set_vh_flags
+    "! Entity type for ZI_NAT_PROC_VH (Tender Process, table ZNAT_PROC)
+    CLASS-METHODS create_nat_proc_type
       IMPORTING
-        io_property TYPE REF TO /iwbep/if_mgw_odata_property
+        io_model              TYPE REF TO /iwbep/if_mgw_odata_model
+      RETURNING
+        VALUE(ro_entity_type) TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! Entity type for ZI_REL_CODE_VH (release codes, T16FC / T16FD)
+    CLASS-METHODS create_rel_code_type
+      IMPORTING
+        io_model              TYPE REF TO /iwbep/if_mgw_odata_model
+      RETURNING
+        VALUE(ro_entity_type) TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! Entity type for ZI_PERNR_VH (personnel numbers, PA0002)
+    CLASS-METHODS create_pernr_type
+      IMPORTING
+        io_model              TYPE REF TO /iwbep/if_mgw_odata_model
+      RETURNING
+        VALUE(ro_entity_type) TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! Entity type for ZI_ADRC_VH (address numbers, ADRC)
+    CLASS-METHODS create_adrc_type
+      IMPORTING
+        io_model              TYPE REF TO /iwbep/if_mgw_odata_model
+      RETURNING
+        VALUE(ro_entity_type) TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+      RAISING
+        /iwbep/cx_mgw_med_exception.
+
+    "! One property of a value-help type: string, read-only, filterable;
+    "! length 0 = take it from the bound structure. Labels are added by the
+    "! caller with literals (the annotation API takes no variables).
+    CLASS-METHODS add_property
+      IMPORTING
+        io_entity_type     TYPE REF TO /iwbep/if_mgw_odata_entity_typ
+        iv_name            TYPE c LENGTH 40                 "ASSUMPTION A8
+        iv_field           TYPE c LENGTH 30                 "ASSUMPTION A8
+        iv_length          TYPE i DEFAULT 0
+        iv_is_key          TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_property) TYPE REF TO /iwbep/if_mgw_odata_property
       RAISING
         /iwbep/cx_mgw_med_exception.
 
@@ -119,7 +160,7 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RAISING
         /iwbep/cx_mgw_med_exception.
 
-    "! Common.ValueList + text arrangement on one PO property
+    "! Common.ValueList + value-list kind + text arrangement on one PO property
     CLASS-METHODS annotate_value_list
       IMPORTING
         io_vocan_model TYPE REF TO /iwbep/if_mgw_vocan_model
@@ -127,6 +168,9 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
         iv_property    TYPE string        "PO property, e.g. zzinsp_typ
         iv_label       TYPE string        "title of the value help
         iv_vh_set      TYPE string        "entity set that serves it
+        iv_vh_key      TYPE string        "key property of that set
+        iv_vh_text     TYPE string OPTIONAL   "its description property, if any
+        iv_dropdown    TYPE abap_bool DEFAULT abap_false   "dropdown instead of dialog
       RAISING
         /iwbep/cx_mgw_med_exception.
 ENDCLASS.
@@ -137,6 +181,8 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
   METHOD add_value_helps.
     DATA lv_set_name  TYPE c LENGTH 40.                                    "ASSUMPTION A8
     DATA lv_prop_name TYPE c LENGTH 40.                                    "ASSUMPTION A8
+    DATA lo_vh_type   TYPE REF TO /iwbep/if_mgw_odata_entity_typ.
+    DATA lo_entity_set TYPE REF TO /iwbep/if_mgw_odata_entity_set.
 
     CLEAR gv_last_error.
     IF io_model IS NOT BOUND OR io_vocan_model IS NOT BOUND.
@@ -144,10 +190,8 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " 1. The shared entity type and the PO entity type - without them
-    "    there is nothing to add, so stop here (the PO model is intact).
+    " 0. The PO entity type - without it there is nothing to annotate
     TRY.
-        DATA(lo_vh_type) = create_dom_fixval_type( io_model ).
         DATA(lo_po_type) = io_model->get_entity_type( 'C_PurchaseOrderTPType' ).  "ASSUMPTION A1
       CATCH cx_root INTO DATA(lx_setup).
         " Deliberate: the PO service must come up even if the value helps
@@ -156,26 +200,137 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    " 2. One entity set and one annotation per field. A field that fails
-    "    is skipped and named; the others still go in.
-    LOOP AT fixed_value_fields( ) INTO DATA(ls_field).
-      TRY.
-          lv_set_name  = |ZVH_{ ls_field-domain }|.
-          lv_prop_name = ls_field-property.
+    " 1. Fixed values of a domain: one shared type, one set per domain
+    TRY.
+        lo_vh_type = create_dom_fixval_type( io_model ).
+        LOOP AT fixed_value_fields( ) INTO DATA(ls_field).
+          TRY.
+              lv_set_name  = |ZVH_{ ls_field-domain }|.
+              lv_prop_name = ls_field-property.
+              lo_entity_set = lo_vh_type->create_entity_set( lv_set_name ).
+              set_vh_set_flags( lo_entity_set ).
+              annotate_value_list( io_vocan_model = io_vocan_model
+                                   io_po_property = lo_po_type->get_property( lv_prop_name )
+                                   iv_property    = ls_field-property
+                                   iv_label       = ls_field-label
+                                   iv_vh_set      = |{ lv_set_name }|
+                                   iv_vh_key      = 'DomainValue'
+                                   iv_vh_text     = 'DomainValueText'
+                                   iv_dropdown    = abap_true ).
+            CATCH cx_root INTO DATA(lx_field).
+              gv_last_error = |{ gv_last_error }{ ls_field-property }: { lx_field->get_text( ) }; |.
+          ENDTRY.
+        ENDLOOP.
+      CATCH cx_root INTO DATA(lx_dom).
+        gv_last_error = |{ gv_last_error }ZI_DOM_FIXVAL_VH: { lx_dom->get_text( ) }; |.
+    ENDTRY.
 
-          DATA(lo_entity_set) = lo_vh_type->create_entity_set( lv_set_name ).
-          set_vh_set_flags( lo_entity_set ).
+    " 2. Tender Process - table ZNAT_PROC through ZI_NAT_PROC_VH, dropdown
+    TRY.
+        lo_vh_type = create_nat_proc_type( io_model ).
+        lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_NAT_PROC' ).
+        set_vh_set_flags( lo_entity_set ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zznat_proc' )
+                             iv_property    = 'zznat_proc'
+                             iv_label       = 'Tender Process'
+                             iv_vh_set      = 'ZVT_NAT_PROC'
+                             iv_vh_key      = 'TenderProcess'
+                             iv_vh_text     = 'TenderProcessText'
+                             iv_dropdown    = abap_true ).
+      CATCH cx_root INTO DATA(lx_nat).
+        gv_last_error = |{ gv_last_error }zznat_proc: { lx_nat->get_text( ) }; |.
+    ENDTRY.
 
-          DATA(lo_po_property) = lo_po_type->get_property( lv_prop_name ).
-          annotate_value_list( io_vocan_model = io_vocan_model
-                               io_po_property = lo_po_property
-                               iv_property    = ls_field-property
-                               iv_label       = ls_field-label
-                               iv_vh_set      = |{ lv_set_name }| ).
-        CATCH cx_root INTO DATA(lx_field).
-          gv_last_error = |{ gv_last_error }{ ls_field-property }: { lx_field->get_text( ) }; |.
-      ENDTRY.
-    ENDLOOP.
+    " 3. Final Release Code - T16FC through ZI_REL_CODE_VH, dialog
+    TRY.
+        lo_vh_type = create_rel_code_type( io_model ).
+        lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_RELCODE' ).
+        set_vh_set_flags( lo_entity_set ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzrelcode' )
+                             iv_property    = 'zzrelcode'
+                             iv_label       = 'Final Release Code'
+                             iv_vh_set      = 'ZVT_RELCODE'
+                             iv_vh_key      = 'ReleaseCode'
+                             iv_vh_text     = 'ReleaseCodeText' ).
+      CATCH cx_root INTO DATA(lx_rel).
+        gv_last_error = |{ gv_last_error }zzrelcode: { lx_rel->get_text( ) }; |.
+    ENDTRY.
+
+    " 4. Contact Person / Indenting Person - PA0002 through ZI_PERNR_VH,
+    "    dialog; one set, two fields (pending the HR decision, see header)
+    TRY.
+        lo_vh_type = create_pernr_type( io_model ).
+        lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_PERNR' ).
+        set_vh_set_flags( lo_entity_set ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzcpo' )
+                             iv_property    = 'zzcpo'
+                             iv_label       = 'Contact Person'
+                             iv_vh_set      = 'ZVT_PERNR'
+                             iv_vh_key      = 'PersonnelNumber'
+                             iv_vh_text     = 'EmployeeName' ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzindper' )
+                             iv_property    = 'zzindper'
+                             iv_label       = 'Indenting Person'
+                             iv_vh_set      = 'ZVT_PERNR'
+                             iv_vh_key      = 'PersonnelNumber'
+                             iv_vh_text     = 'EmployeeName' ).
+      CATCH cx_root INTO DATA(lx_pernr).
+        gv_last_error = |{ gv_last_error }zzcpo/zzindper: { lx_pernr->get_text( ) }; |.
+    ENDTRY.
+
+    " 5. The four address-number fields - ADRC through ZI_ADRC_VH, dialog;
+    "    one set, four fields (pending the functional decision, see header)
+    TRY.
+        lo_vh_type = create_adrc_type( io_model ).
+        lo_entity_set = lo_vh_type->create_entity_set( 'ZVT_ADRC' ).
+        set_vh_set_flags( lo_entity_set ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zztpi_add' )
+                             iv_property    = 'zztpi_add'
+                             iv_label       = 'Third Party Inspection address'
+                             iv_vh_set      = 'ZVT_ADRC'
+                             iv_vh_key      = 'AddressNumber'
+                             iv_vh_text     = 'Name' ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzqad_det' )
+                             iv_property    = 'zzqad_det'
+                             iv_label       = 'QAD Department'
+                             iv_vh_set      = 'ZVT_ADRC'
+                             iv_vh_key      = 'AddressNumber'
+                             iv_vh_text     = 'Name' ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzport_con' )
+                             iv_property    = 'zzport_con'
+                             iv_label       = 'Port Consignee'
+                             iv_vh_set      = 'ZVT_ADRC'
+                             iv_vh_key      = 'AddressNumber'
+                             iv_vh_text     = 'Name' ).
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzult_con' )
+                             iv_property    = 'zzult_con'
+                             iv_label       = 'Ultimate consignee'
+                             iv_vh_set      = 'ZVT_ADRC'
+                             iv_vh_key      = 'AddressNumber'
+                             iv_vh_text     = 'Name' ).
+      CATCH cx_root INTO DATA(lx_adrc).
+        gv_last_error = |{ gv_last_error }address fields: { lx_adrc->get_text( ) }; |.
+    ENDTRY.
+
+    " 6. PO Signing Authority - a user ID: SAP's own set, annotation only
+    TRY.
+        annotate_value_list( io_vocan_model = io_vocan_model
+                             io_po_property = lo_po_type->get_property( 'zzpsa' )
+                             iv_property    = 'zzpsa'
+                             iv_label       = 'PO Signing Authority'
+                             iv_vh_set      = 'C_PurOrdCreatedByValHelp'
+                             iv_vh_key      = 'UserID' ).                 "ASSUMPTION A9
+      CATCH cx_root INTO DATA(lx_user).
+        gv_last_error = |{ gv_last_error }zzpsa: { lx_user->get_text( ) }; |.
+    ENDTRY.
   ENDMETHOD.
 
 
@@ -197,57 +352,153 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
 
   METHOD create_dom_fixval_type.
-    DATA lo_property TYPE REF TO /iwbep/if_mgw_odata_property.
-
     ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_DOM_FIXVAL_VH'
                                                    iv_def_entity_set   = abap_false ).
 
-    " Names into the MED API are literals on purpose: its parameters are
-    " CHAR and take no STRING by reference (activation error, 22/10/26).
-    lo_property = ro_entity_type->create_property( iv_property_name  = 'DomainName'
-                                                   iv_abap_fieldname = 'DOMAINNAME' ).
-    lo_property->set_is_key( ).
-    lo_property->set_maxlength( 30 ).
-    set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+    add_property( io_entity_type = ro_entity_type iv_name = 'DomainName' iv_field = 'DOMAINNAME'
+                  iv_length = 30 iv_is_key = abap_true
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Domain' ).
 
-    lo_property = ro_entity_type->create_property( iv_property_name  = 'DomainValue'
-                                                   iv_abap_fieldname = 'DOMAINVALUE' ).
-    lo_property->set_is_key( ).
-    lo_property->set_maxlength( 10 ).
-    set_vh_flags( lo_property ).
     " One 'sap' annotation object, two keys: label, and text = the
     " description property, which gives the dropdown its wording
-    DATA(lo_sap_anno) = lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    DATA(lo_sap_anno) = add_property( io_entity_type = ro_entity_type iv_name = 'DomainValue'
+                                      iv_field = 'DOMAINVALUE' iv_length = 10 iv_is_key = abap_true
+                          )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
     lo_sap_anno->add( iv_key = 'label' iv_value = 'Value' ).
     lo_sap_anno->add( iv_key = 'text'  iv_value = 'DomainValueText' ).
 
-    lo_property = ro_entity_type->create_property( iv_property_name  = 'DomainValueText'
-                                                   iv_abap_fieldname = 'DOMAINVALUETEXT' ).
-    lo_property->set_maxlength( 60 ).
-    set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+    add_property( io_entity_type = ro_entity_type iv_name = 'DomainValueText'
+                  iv_field = 'DOMAINVALUETEXT' iv_length = 60
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Description' ).
 
-    lo_property = ro_entity_type->create_property( iv_property_name  = 'ValuePosition'
-                                                   iv_abap_fieldname = 'VALUEPOSITION' ).
-    lo_property->set_maxlength( 4 ).
-    set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+    add_property( io_entity_type = ro_entity_type iv_name = 'ValuePosition'
+                  iv_field = 'VALUEPOSITION' iv_length = 4
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Sequence' ).
 
     ro_entity_type->bind_structure( iv_structure_name = 'ZIDOMFIXVALVH' ).  "ASSUMPTION A2
   ENDMETHOD.
 
 
-  METHOD set_vh_flags.
-    io_property->set_type_edm_string( ).
-    io_property->set_creatable( abap_false ).
-    io_property->set_updatable( abap_false ).
-    io_property->set_filterable( abap_true ).
-    io_property->set_sortable( abap_true ).
-    io_property->set_nullable( abap_false ).
+  METHOD create_nat_proc_type.
+    ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_NAT_PROC_VH'
+                                                   iv_def_entity_set   = abap_false ).
+
+    DATA(lo_sap_anno) = add_property( io_entity_type = ro_entity_type iv_name = 'TenderProcess'
+                                      iv_field = 'ZZNAT_PROC' iv_length = 2 iv_is_key = abap_true
+                          )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    lo_sap_anno->add( iv_key = 'label' iv_value = 'Tender Process' ).
+    lo_sap_anno->add( iv_key = 'text'  iv_value = 'TenderProcessText' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'TenderProcessText'
+                  iv_field = 'NAT_PROC_DESC'
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Description' ).
+
+    ro_entity_type->bind_structure( iv_structure_name = 'ZINATPROCVH' ).    "ASSUMPTION A2
+  ENDMETHOD.
+
+
+  METHOD create_rel_code_type.
+    ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_REL_CODE_VH'
+                                                   iv_def_entity_set   = abap_false ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'ReleaseGroup' iv_field = 'RELEASEGROUP'
+                  iv_length = 2 iv_is_key = abap_true
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Release Group' ).
+
+    DATA(lo_sap_anno) = add_property( io_entity_type = ro_entity_type iv_name = 'ReleaseCode'
+                                      iv_field = 'RELEASECODE' iv_length = 2 iv_is_key = abap_true
+                          )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    lo_sap_anno->add( iv_key = 'label' iv_value = 'Release Code' ).
+    lo_sap_anno->add( iv_key = 'text'  iv_value = 'ReleaseCodeText' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'ReleaseCodeText'
+                  iv_field = 'RELEASECODETEXT'
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Description' ).
+
+    ro_entity_type->bind_structure( iv_structure_name = 'ZIRELCODEVH' ).    "ASSUMPTION A2
+  ENDMETHOD.
+
+
+  METHOD create_pernr_type.
+    ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_PERNR_VH'
+                                                   iv_def_entity_set   = abap_false ).
+
+    DATA(lo_sap_anno) = add_property( io_entity_type = ro_entity_type iv_name = 'PersonnelNumber'
+                                      iv_field = 'PERSONNELNUMBER' iv_length = 8 iv_is_key = abap_true
+                          )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    lo_sap_anno->add( iv_key = 'label' iv_value = 'Personnel Number' ).
+    lo_sap_anno->add( iv_key = 'text'  iv_value = 'EmployeeName' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'LastName' iv_field = 'LASTNAME'
+                  iv_length = 40
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Last Name' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'FirstName' iv_field = 'FIRSTNAME'
+                  iv_length = 40
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'First Name' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'EmployeeName' iv_field = 'EMPLOYEENAME'
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Name' ).
+
+    ro_entity_type->bind_structure( iv_structure_name = 'ZIPERNRVH' ).      "ASSUMPTION A2
+  ENDMETHOD.
+
+
+  METHOD create_adrc_type.
+    ro_entity_type = io_model->create_entity_type( iv_entity_type_name = 'ZI_ADRC_VH'
+                                                   iv_def_entity_set   = abap_false ).
+
+    DATA(lo_sap_anno) = add_property( io_entity_type = ro_entity_type iv_name = 'AddressNumber'
+                                      iv_field = 'ADDRESSNUMBER' iv_length = 10 iv_is_key = abap_true
+                          )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap' ).
+    lo_sap_anno->add( iv_key = 'label' iv_value = 'Address Number' ).
+    lo_sap_anno->add( iv_key = 'text'  iv_value = 'Name' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'Name' iv_field = 'NAME' iv_length = 40
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Name' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'City' iv_field = 'CITY' iv_length = 40
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'City' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'Street' iv_field = 'STREET' iv_length = 60
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Street' ).
+
+    add_property( io_entity_type = ro_entity_type iv_name = 'PostalCode' iv_field = 'POSTALCODE'
+                  iv_length = 10
+      )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Postal Code' ).
+
+    ro_entity_type->bind_structure( iv_structure_name = 'ZIADRCVH' ).       "ASSUMPTION A2
+  ENDMETHOD.
+
+
+  METHOD add_property.
+    ro_property = io_entity_type->create_property( iv_property_name  = iv_name
+                                                   iv_abap_fieldname = iv_field ).
+    IF iv_is_key = abap_true.
+      ro_property->set_is_key( ).
+    ENDIF.
+    ro_property->set_type_edm_string( ).
+    IF iv_length > 0.
+      ro_property->set_maxlength( iv_length ).
+    ENDIF.
+    ro_property->set_creatable( abap_false ).
+    ro_property->set_updatable( abap_false ).
+    ro_property->set_filterable( abap_true ).
+    ro_property->set_sortable( abap_true ).
+    ro_property->set_nullable( abap_false ).
   ENDMETHOD.
 
 
@@ -265,9 +516,12 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
   METHOD annotate_value_list.
     " 1. sap:value-list on the PO property, with the API SAP's own DEFINE
-    "    uses for SupplierConfirmationControlKey. FIXED_VALUES renders a
-    "    dropdown, like the GUI popup; STANDARD would open the dialog.
-    io_po_property->set_value_list( /iwbep/if_mgw_odata_property=>gcs_value_list_type_property-fixed_values ).
+    "    uses. FIXED_VALUES renders a dropdown, STANDARD the dialog.
+    IF iv_dropdown = abap_true.
+      io_po_property->set_value_list( /iwbep/if_mgw_odata_property=>gcs_value_list_type_property-fixed_values ).
+    ELSE.
+      io_po_property->set_value_list( /iwbep/if_mgw_odata_property=>gcs_value_list_type_property-standard ).
+    ENDIF.
 
     " 2. Common.ValueList, the way SAP's own fields carry it (VOCAN API,
     "    strings - ASSUMPTION A6)
@@ -283,18 +537,19 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
     DATA(lo_parameters) = lo_record->create_property( 'Parameters' )->create_collection( ).
 
-    " In/out: PO field <-> value
+    " In/out: PO field <-> key of the value help
     DATA(lo_param) = lo_parameters->create_record( |{ gc_common }.ValueListParameterInOut| ).
     lo_param->create_property( 'LocalDataProperty' )->create_simple_value( )->set_property_path( iv_property ).
-    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainValue' ).
+    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_vh_key ).
 
-    " Display only: the text
-    lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
-    lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainValueText' ).
+    " Display only: the description, where the value help has one
+    IF iv_vh_text IS NOT INITIAL.
+      lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
+      lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_vh_text ).
+    ENDIF.
 
     " 3. Text arrangement of the PO field: key and description together,
-    "    key first, as in the GUI popup ("1 Source Inspection"). TextFirst
-    "    gives "Source Inspection (1)", TextOnly the description alone.
+    "    key first, as in the GUI popup ("1 Source Inspection").
     lo_ann_target->create_annotation( 'com.sap.vocabularies.UI.v1.TextArrangement'
       )->create_simple_value( )->set_enum_member_by_name(
         'com.sap.vocabularies.UI.v1.TextArrangementType/TextLast' ).
