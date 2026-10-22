@@ -219,7 +219,19 @@ extension exactly like `_IncotermsVersion`, activated cleanly; after cache clean
 Metadata the service document of `MM_PUR_PO_MAINT_V2_SRV` still has no `ZI_DOM_FIXVAL_VH`
 collection. Confirms: the standard project's entity sets are closed. Association commented out.
 
-## Route decided: Z redefinition + repoint of the BAS app — 22/10/26
+**Correction, 22/10/26 evening — the app does not run on the standard service.** Arnav: the
+custom tiles come from a **Z service** derived from `MM_PUR_PO_MAINT_V2_SRV`, which already
+exists; the BAS app is deployed against it. So the Gateway Client test above was run against
+the wrong service, and the whole "standard project is closed" analysis, while true, was beside
+the point. The Z project exists; what it lacks is the new value-help entity set, for the same
+reason: entity sets of a SEGW project are fixed when it is generated, and `ZI_DOM_FIXVAL_VH`
+was created afterwards. The zz properties come through at runtime; the entity set does not.
+
+**Fix = step 3 below applied to the existing Z project**, then regenerate, Load Metadata, cache
+cleanups, test on the **Z** service. Z service / project name still to be read from the BAS
+app's `manifest.json` (`sap.app.dataSources.mainService.uri`) or `/IWFND/MAINT_SERVICE` (`Z*`).
+
+## Route decided: Z redefinition + repoint of the BAS app — 22/10/26 (project already exists; only step 3 onwards applies)
 
 Backend, SEGW (manual, no paste object):
 
