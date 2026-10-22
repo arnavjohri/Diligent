@@ -1,0 +1,49 @@
+# DD07T, language EN, OCQ 500, SE16N 22/10/26, pasted by Arnav. Columns: DOMNAME DDLANGUAGE AS4LOCAL VALPOS .. DDTEXT .. DOMVALUE_L
+# This is exactly what ZI_DOM_FIXVAL_VH reads. ZARBIT position 1 has a BLANK key (No Arbitration).
+ZARBIT	EN	A	1		No Arbitration			
+ZARBIT	EN	A	2		Arbitration Open			OA
+ZARBIT	EN	A	3		Arbitration Closed			CA
+ZBD_TYPE	EN	A	1		Single Bid			1
+ZBD_TYPE	EN	A	2		Two bid			2
+ZBIDERAGR	EN	A	1		Yes			Y
+ZBIDERAGR	EN	A	2		No			N
+ZINSP_AUTH	EN	A	1		QAD			1
+ZINSP_AUTH	EN	A	2		QAD &  Indentor			2
+ZINSP_AUTH	EN	A	3		Indentor			3
+ZINSP_AUTH	EN	A	4		Third party inspection agency			4
+ZINSP_AUTH	EN	A	5		QAD &  Third party inspection agency			5
+ZINSP_AUTH	EN	A	6		Third party inspection agency &  Indentor			6
+ZINSP_AUTH	EN	A	7		Others			7
+ZINSP_TYP	EN	A	1		Source Inspection			1
+ZINSP_TYP	EN	A	2		Destination Inspection			2
+ZPRE_AWD	EN	A	1		Validate the ranges from 1 to 100			001
+ZPST_AWD	EN	A	1		Validate the ranges from 1 to 100			001
+ZT_DURATION	EN	A	1		Short Tender			1
+ZT_DURATION	EN	A	2		Regular Tender			2
+ZT_NATURE	EN	A	1		ST - OEM			1
+ZT_NATURE	EN	A	2		ST - PAC			2
+ZT_NATURE	EN	A	3		ST - Nomination			3
+ZT_NATURE	EN	A	4		ST - Indegineous development			4
+ZT_NATURE	EN	A	5		LT - empanelled (oil specific)			5
+ZT_NATURE	EN	A	6		LT - Limited vendors / Suppliers			6
+ZT_NATURE	EN	A	7		LT - OEM / OES			7
+ZT_NATURE	EN	A	8		LT - Normal			8
+ZT_NATURE	EN	A	9		LT - Indegineous development			9
+ZT_NATURE	EN	A	10		Open Tender			10
+ZVEND_CAT	EN	A	1		OEM/OES			1
+ZVEND_CAT	EN	A	2		OEM/OES & NSIC			2
+ZVEND_CAT	EN	A	3		OEM/OES & DGS&D			3
+ZVEND_CAT	EN	A	4		OEM/OES & CPSU			4
+ZVEND_CAT	EN	A	5		MSE/NSIC/SSI-General			5
+ZVEND_CAT	EN	A	6		MSE/NSIC/SSI-Women			6
+ZVEND_CAT	EN	A	7		MSE/NSIC/SSI-SC/ST			7
+ZVEND_CAT	EN	A	8		CPSU			8
+ZVEND_CAT	EN	A	9		CPSU & DGS&D			9
+ZVEND_CAT	EN	A	10		DGS&D			10
+ZVEND_CAT	EN	A	11		ONGC Registered			11
+ZVEND_CAT	EN	A	12		Others			12
+ZVEND_CAT	EN	A	13		MSE/NSIC/SSI-SC/ST-Women			13
+ZZDMEP	EN	A	1		Yes			YES
+ZZDMEP	EN	A	2		No			NO
+ZZEPC	EN	A	1		Yes			Y
+ZZEPC	EN	A	2		No			N

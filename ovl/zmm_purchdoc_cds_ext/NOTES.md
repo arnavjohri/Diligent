@@ -328,7 +328,7 @@ own tile, only that one step is missing.
 
 | # | Object | File | What it does | Status |
 |---|---|---|---|---|
-| 1 | `ZCL_MM_PO_VH_MPC` (global class, paste in ADT) | `ZCL_MM_PO_VH_MPC.abap` (273 lines, v7) | `add_value_helps( io_model io_vocan_model )`: creates entity type + set `ZI_DOM_FIXVAL_VH` bound to SQL view `ZIDOMFIXVALVH`, puts `sap:value-list="fixed-values"` and `Common.ValueList` (InOut `zzinsp_typ`↔`DomainValue`, DisplayOnly `DomainValueText`, Constant `DomainName`=`ZINSP_TYP`) on `zzinsp_typ`. All inside `TRY`; a failure skips the VH and leaves the reason in `gv_last_error`. v2 22/10/26: first paste failed activation, `type STRING of GC_VH_ENTITY_TYPE is not compatible with C(40) of IV_ENTITY_TYPE_NAME` — the MED API takes CHAR names by reference; names into it are now literals, STRING only into the VOCAN API. v3: interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL` (30-char name, 5 places); `GET_SCHEMA_NAMESPACE` has no RETURNING parameter → namespace is the constant `MM_PUR_PO_MAINT_V2_SRV` (A5, verify in `$metadata`) | **v7 active 22/10/26 — F4 works in the app: dropdown "1 (Source Inspection)" / "2 (Destination Inspection)"** |
+| 1 | `ZCL_MM_PO_VH_MPC` (global class, paste in ADT) | `ZCL_MM_PO_VH_MPC.abap` (303 lines, v8) | `add_value_helps( io_model io_vocan_model )`: creates entity type + set `ZI_DOM_FIXVAL_VH` bound to SQL view `ZIDOMFIXVALVH`, puts `sap:value-list="fixed-values"` and `Common.ValueList` (InOut `zzinsp_typ`↔`DomainValue`, DisplayOnly `DomainValueText`, Constant `DomainName`=`ZINSP_TYP`) on `zzinsp_typ`. All inside `TRY`; a failure skips the VH and leaves the reason in `gv_last_error`. v2 22/10/26: first paste failed activation, `type STRING of GC_VH_ENTITY_TYPE is not compatible with C(40) of IV_ENTITY_TYPE_NAME` — the MED API takes CHAR names by reference; names into it are now literals, STRING only into the VOCAN API. v3: interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL` (30-char name, 5 places); `GET_SCHEMA_NAMESPACE` has no RETURNING parameter → namespace is the constant `MM_PUR_PO_MAINT_V2_SRV` (A5, verify in `$metadata`) | v7 active 22/10/26 — F4 works in the app: dropdown "1 (Source Inspection)". **v8 delivered:** all ten fixed-value fields, one set per domain `ZVH_<DOMAIN>` on the shared type, per-field `TRY`, Constant parameter dropped. Paste after DPC v2 |
 | 2 | `ZEI_MM_PO_VH_MPC` (source-code enhancement) | `ZEI_MM_PO_VH_MPC.abap` (22 lines) | Two statements at the implicit option at the END of `DEFINE` in `CL_MM_PUR_PO_MAINT_V2_MPC_EXT` (or the MPC, whichever implements `DEFINE` — Runtime Artifacts decide). Calls object 1 with `model` / `vocab_anno_model` | **Active 22/10/26** (end of `DEFINE` in the `_EXT`) |
 | 3 | `ZEI_MM_PO_VH_DPC` (source-code enhancement) | `ZEI_MM_PO_VH_DPC.abap` (57 lines, v2) | Implicit option at the START of `/IWBEP/IF_MGW_APPL_SRV_RUNTIME~GET_ENTITYSET` in the DPC_EXT (or the DPC if the _EXT does not redefine it): when `iv_entity_set_name = 'ZI_DOM_FIXVAL_VH'`, select from the view, `/iwbep/cl_mgw_data_util=>filtering` / `orderby` / `paging`, inline count, `copy_data_to_ref`, `RETURN`. Everything else falls through to SAP's code | v1 active 22/10/26 (START of the method in the `_DPC_EXT`); v2 delivered: serves `ZVH_<DOMAIN>` sets with the domain from the set name, plus the first set — paste before class v8 |
 
@@ -348,6 +348,12 @@ Reference → Data Source there, regenerate, register, repoint the app. The app 
 `ZMM_PUR_PO_MAINT_V2_SRV`, not this project's service. Check before investing further in the
 enhancement: open the project, read Data Model and Runtime Artifacts, and `/IWFND/MAINT_SERVICE`
 for `ZMM_PO_MAINTAIN_EXT1_SRV`.
+
+**Batch 2 (22/10/26), paste order:** `ZEI_MM_PO_VH_DPC` v2 → `ZCL_MM_PO_VH_MPC` v8 → `ZI_DOM_FIXVAL_VH` v2
+(folder root, the `domname = 'ZINSP_TYP'` line commented out inside the existing BOC/EOC block) →
+Load Metadata + the three cache cleanups → `$metadata` shows `ZVH_ZINSP_TYP` … `ZVH_ZZDMEP` →
+`/ZVH_ZT_NATURE?$format=json` returns ten rows → app. Between DPC v2 and the view paste, Inspection
+Type keeps working (the DPC still serves the old set name, and the view still has its domain).
 
 After 1–3: `/IWFND/MAINT_SERVICE` → `ZMM_PUR_PO_MAINT_V2_SRV` → Load Metadata, `/IWBEP/CACHE_CLEANUP`,
 `/IWFND/CACHE_CLEANUP`, `/UI2/INVALIDATE_CLIENT_CACHES`. Gateway Client: `$metadata` shows
