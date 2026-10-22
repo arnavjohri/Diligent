@@ -34,6 +34,16 @@ via Fiori "Post Group Journal Entries" / "Import Group Journal Entries"; automat
 (currency translation, eliminations) by the monitor. Programmatic posting would mean
 unreleased SAP classes behind the Fiori app - flag to Gaurav as a risk before building.
 
+## Decision 22/10/26: team wants `API_CNSLDTNGRPJRNLENTR` (post)
+
+Released OData V2 API, S/4HANA 2022 on-premise and later, posts and simulates group
+journal entries (simulation flag 'X' per SAP's PaPM integration blog). Not found in the
+OVL backend catalogue on 22/10/26, so step 1 is to prove it exists on the target system
+(`/IWFND/MAINT_SERVICE` Add Service, `API_CNSLDTNGRPJRNLENTR*`; System -> Status for the
+product version). Entity set, navigation and property names are to be read from
+`$metadata` on the system, not assumed. Steps given in chat 22/10/26; caller (ECC program
+vs. BAdI) still to be confirmed.
+
 ## Mandatory parameters (all four, every call)
 
 | Parameter | Meaning |
