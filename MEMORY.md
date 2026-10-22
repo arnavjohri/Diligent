@@ -2,6 +2,7 @@
 
 **Written 22/09/26.** This file exists so that nothing established at cost has to be
 re-derived, and so that no mistake already made gets made again.
+Last addition 22/10/26: §4.3 (Fiori value help on a custom field), §5 M-22 – M-24.
 
 `CLAUDE.md` is the rulebook — *what to do*. This file is the memory — *what we already
 know, and what already went wrong*. Read `CLAUDE.md` first; read §3 and §5 of this file
@@ -29,6 +30,7 @@ outside the repo is a file that will be lost.
 | Transfer into SAP | abapGit standalone (offline ZIP) or copy-paste from SE80. Nothing else |
 | `abap-adt` MCP | Points at `192.168.11.21` client 200 — a **different** system. Scratch syntax rig only, when explicitly asked. Never `setObjectSource` / `activateByName` / `deleteObject` against a project object |
 | Mass download helper | `ZR_PROG_DOWNLOAD` — pulls a program with its full include tree (also FGs/classes, by package or name list; CDS DDL sources since 19/10/26). Source: `tools/zr_prog_download/` — the first version was never filed and had to be rewritten |
+| PO Fiori app, OVL | The custom tiles on *Manage Purchase Orders* call an existing **Z** service derived from `MM_PUR_PO_MAINT_V2_SRV` (BAS deployment) — **not** the standard service. Name: read it from the app's `manifest.json` (`sap.app.dataSources.mainService.uri`). Its SEGW project exists; a value-help view created after generation is not an entity set until the project is regenerated (§4.3) |
 | Not on any machine | `DDLS_BASE_FIELDS.txt`, `ARS_API_SUCCESSOR.xlsx`. CDS element names cannot be re-verified — use only mappings already written down |
 
 **Assume no system access.** Never propose "let me check table X in your system". Reason
@@ -227,6 +229,8 @@ that worked. This table is the asset — append to it whenever a new one is foun
 | `Query not fully covered by implementation: … get_paging missing` | A custom-entity query provider **must** honour `get_paging( )` → `get_offset`/`get_page_size`, plus `get_requested_elements`, `get_sort_elements`, `is_total_numb_of_rec_requested` |
 | `A RETURNING parameter must be fully typed` / `Multiple markers … ) (` | Method signatures cannot carry inline `LENGTH`/`DECIMALS`. Declare `TYPES ty_amount TYPE p LENGTH 8 DECIMALS 2.` first |
 | Classic view: arithmetic inside a `CASE` condition is rejected | Pre-compute the value in the underlying view and compare fields only (`ZDPR_P_PERF_AGG` → `ZDPR_Q_PROD_PERF`) |
+| `@Semantics.text: true` / `@ObjectModel.text.element` wanted on a value-help view | Use a classic `define view` (with `@AbapCatalog.sqlViewName`): both activate there (`ZI_DOM_FIXVAL_VH`, 22/10/26). It is the view-entity form that fails (row above) |
+| Warnings `Key Definitions of <view> and DD07T are different, VALPOS / AS4VERS is missing in key` | Expected on every value help over `DD07T` filtered to one domain, the logon language and `as4local = 'A'`: under that filter (`domname`, `domvalue_l`) is unique. Leave as is — adding `valpos` / `as4vers` to the key only widens the OData key |
 
 Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `Type`.
 
@@ -244,6 +248,33 @@ Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `T
 | `CX_SY_DYN_CALL_PARAM_MISSING` | Wrong parameter name in a dynamic `CALL FUNCTION` — these are not syntax-checked |
 | RSDBGENA *"Error generating selection screen 1000"* | Fixed `SELECTION-SCREEN COMMENT 60(nn)` on the same line as a now-40-char MATNR parameter → `VISIBLE LENGTH 18`, or its own BEGIN/END OF LINE. Surfaces only on full regeneration |
 | A retype changes **only** the data element after `TYPE`/`LIKE` | `vbtyp_n TYPE vbtyp_n,` → `vbtyp_n TYPE vbtypl,` — never rename the component |
+
+### 4.3 Fiori value help on a custom CDS field — confirmed by test on OCQ, 22/10/26
+
+The PO app case: `ovl/zmm_purchdoc_cds_ext`, *Manage Purchase Orders*, field `zzinsp_typ`.
+Every row below was established on the system, not read from documentation.
+
+| Finding | Consequence |
+|---|---|
+| A `C_…TP` consumption view with `transactionalProcessingDelegated: true` and `BOPF:` actions (`C_PurchaseOrderTP`) | BOPF-based → served by a **SEGW project with referenced data source**, not a RAP service binding. There is no service definition extension route |
+| Entity sets of a referenced-data-source SEGW project are **fixed when the project is generated**; the *properties* of the referenced view are read at runtime | Extension fields (`zz*`) show in the app with no regeneration. A new value-help view does **not** enter the service — not through `@Consumption.valueHelpDefinition`, and not through an association exposed in the extension (tested: `_ZzInspTypVH` activated cleanly, service document still without the collection after cache cleanup) |
+| F4 opens the bare *Define Conditions* dialog with no value list | The VH entity is not in the service document, or a cache is stale. Not a CDS defect. Fix: add the VH view as **Data Source Reference** entity set in the **Z** SEGW project, Generate Runtime Objects, `/IWFND/MAINT_SERVICE` Load Metadata, the three cache cleanups, re-test on the Z service |
+| Value-help sets already in `MM_PUR_PO_MAINT_V2_SRV`: plant, supplier, customer, business user, cost centre, WBS, country, region, material group, currency, unit, G/L account, profit centre … | A custom field whose values are one of these gets its F4 from `@Consumption.valueHelpDefinition` alone, no exposure work. Full list: `ovl/zmm_purchdoc_cds_ext/original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` |
+| Only 12 of 84 extension elements visible in the app | An element without `@UI.identification` (`@UI.lineItem` for the list) reaches `$metadata` but no section. `@UI.facet` is entity-level: an `extend view` cannot add it, and a DDLX needs `@Metadata.allowExtensions: true` on the base view |
+| `@ObjectModel.resultSet.sizeCategory: #XS` on the VH view | Fiori renders a dropdown instead of the value help dialog. Drop the line for a dialog |
+
+Order of work for any further F4 on a custom field, **before** any CDS is written:
+
+1. Which service does the app call? `manifest.json` → `sap.app.dataSources.mainService.uri`,
+   or `/IWFND/MAINT_SERVICE` filtered on `Z*`. A standard app name on the tile proves nothing.
+2. Is the VH target already an entity set of *that* service? Service document first, then
+   `$metadata` for `Common.ValueList` / `CollectionPath` on the element. Present → annotation
+   only. Absent → SEGW exposure first, in the Z project, never the standard one.
+3. Fixed-value domain → check `$metadata` for `sap:value-list="fixed-values"` on the element
+   first (not yet verified on OCQ); otherwise one `DD07T` view per domain (`ZI_DOM_FIXVAL_VH`
+   is the pattern). Check table or Z table → one view each (`ZI_NAT_PROC_VH` is the pattern).
+4. After every reactivation: `/IWBEP/CACHE_CLEANUP`, `/IWFND/CACHE_CLEANUP`,
+   `/UI2/INVALIDATE_CLIENT_CACHES`, then `$metadata` — before the UI is judged.
 
 ---
 
@@ -397,6 +428,37 @@ independently of the bug being fixed.
 → **Sanity-check the input values against the fiscal calendar before attributing a failure
 to the code.**
 
+**M-22 — Diagnosed a Fiori F4 against the wrong service.** (22/10/26 ·
+`ovl/zmm_purchdoc_cds_ext`) The Gateway Client test ran on standard `MM_PUR_PO_MAINT_V2_SRV`,
+found no `ZI_DOM_FIXVAL_VH` collection, and the day went into "the standard project is
+closed": an association test, the BOPF/SEGW-versus-RAP analysis, three redefinition routes.
+All correct, all beside the point — the custom tiles run on an existing **Z** service derived
+from the standard one (BAS deployment), and that is where the entity set is missing.
+→ **First question on any Fiori/OData symptom: which service does the app actually call?
+`manifest.json` → `sap.app.dataSources.mainService.uri`, or `/IWFND/MAINT_SERVICE` on `Z*`.
+Test on that service and no other. A standard app name on the tile proves nothing.**
+
+**M-23 — Abandoned a method on an undiagnosed symptom.** The single generic `DD07T` value
+help (one view for every fixed-value domain, `additionalBinding` / `localConstant` per
+element) was dropped and the view hard-restricted to `ZINSP_TYP` because F4 opened the bare
+*Define Conditions* dialog. The dialog had nothing to do with the annotation: the view was
+not an entity set of the service, so no form of the annotation could have reached the UI.
+The one-view-per-domain fallback is now on the system, and `localConstant` was never proven
+either way on this release.
+→ **"Define Conditions" with no value list means exposure or cache, never CDS. Read the
+service document and `$metadata` before changing a line of CDS. Keep "annotation rejected
+at activation" (a §4.1 row) apart from "annotation not reaching the UI" (§4.3).**
+
+**M-24 — A delivered-but-not-pasted change was dropped by the next hand edit.** The 19/10
+`@UI.identification` 230–260 change on `ZC_PURCHASEORDERTP_EXT` was delivered. The copy
+pasted on 21/10 still lacked it; on 22/10 the value-help annotation was inserted by hand in
+ADT, so the system now carries the 22/10 change without the 19/10 one. Two deliveries, one
+object, only the later one active — and the repo root file is the only place both exist.
+→ **When a second fix lands on an object whose earlier fix is not yet active, say so in one
+line of the delivery ("this file also carries X, which is not in the system yet"), and diff
+the next system copy against the repo root file before anything else. Every hand edit in
+ADT re-opens the drift of §2.1.**
+
 ---
 
 ## 6. Shipping — what can and cannot go back through abapGit
@@ -476,6 +538,7 @@ chat so they stay clickable.
 | `ovl/atc/kb/*` | Only for a mapping the handover does not spell out. Third-party, mixed-client, self-contradicting. Read named line ranges — reading whole blows the token cap |
 | `COPILOT_CONTEXT_HANDOFF.md` | For the reusable ABAP pattern library (§6), object-header and program skeletons (§8.2–8.6), the TS document template (§8.7), project history (§5). **§4.1 is superseded by §4 of this file.** Its Copilot-specific parts (§8.9, §9) do not apply |
 | `ovl/atc/AUDIT-2026-08-23.md` | The rule audit of the 51 corrected objects — 433 findings, 46 expected activation failures |
+| `ovl/zmm_purchdoc_cds_ext/NOTES.md` | Before any custom field or F4 on the purchasing documents (PO / PR / contract): the five-level view chain per document, the two value-help view patterns, the SEGW Z-redefinition + BAS repoint route, the entity sets the PO service already has |
 | `README.md` | Repo layout and the sync/save-original scripts |
 | `INBOX.md` | Current work queue (rebuilt by `/triage`) |
 
@@ -525,3 +588,6 @@ Arnav Johri | Associate Consultant | Diligent Global
 13. What was deliberately **not** touched, and why, stated explicitly.
 14. Object named, so Arnav knows what to create in ADT. Then stop.
 15. `./scripts/sync.sh "<what changed>"` run, on `main`, commit hash and path reported.
+16. For a CDS object meant for a Fiori app: the service the app calls named from its
+    `manifest.json`, and whether that service already exposes every value-help target as an
+    entity set stated (§4.3). If it does not, the SEGW step is part of the delivery.
