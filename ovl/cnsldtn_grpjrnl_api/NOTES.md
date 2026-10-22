@@ -1,5 +1,8 @@
 # OVL — Group Reporting journal item API (`API_CNSLDTNGRPJRNLITEM`)
 
+**Outcome 22/10/26:** posting wrapper built as `ovl/zcl_gr_je_post/` on the Data Monitor engine.
+This file is the research trail.
+
 Status 22/10/26: service active on the OVL system, metadata read. Requirement not yet
 stated (who consumes it, read or post, which hierarchy/version values). Nothing built.
 
