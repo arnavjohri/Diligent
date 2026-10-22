@@ -36,6 +36,11 @@
 *              skips itself otherwise. The two blocks that wait for a
 *              decision (ZVT_PERNR, ZVT_ADRC) are switched off until
 *              it is taken (GC_WITH_PERNR / GC_WITH_ADRC).
+*              22/10/26 v13 - interval fixed values (Pre / Post award,
+*              domains ZPRE_AWD / ZPST_AWD, 001-100) get an F4 as in the
+*              GUI: a dialog showing lower value, upper value and text.
+*              Needs view v3 (column DOMAINVALUEHIGH); the property and
+*              the two blocks are added only when that column exists.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -171,6 +176,14 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RETURNING
         VALUE(rv_exists) TYPE abap_bool.
 
+    "! abap_true when the active DDIC structure has the component (v13)
+    CLASS-METHODS structure_has_field
+      IMPORTING
+        iv_structure  TYPE ty_field30
+        iv_field      TYPE ty_field30
+      RETURNING
+        VALUE(rv_has) TYPE abap_bool.
+
     "! Flags shared by every value-help entity set
     CLASS-METHODS set_vh_set_flags
       IMPORTING
@@ -188,6 +201,7 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
         iv_vh_set      TYPE string        "entity set that serves it
         iv_vh_key      TYPE string        "key property of that set
         iv_vh_text     TYPE string OPTIONAL   "its description property, if any
+        iv_vh_text2    TYPE string OPTIONAL   "a second display-only column (v13)
         iv_dropdown    TYPE abap_bool DEFAULT abap_false   "dropdown instead of dialog
       RAISING
         /iwbep/cx_mgw_med_exception.
@@ -410,6 +424,43 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 
+    " 1.11 / 1.12 Pre award / Post award - interval fixed values 001-100
+    "    (domains ZPRE_AWD / ZPST_AWD): a dialog that shows the range, as
+    "    the GUI F4 does. Only once view v3 carries DOMAINVALUEHIGH.
+    IF lo_vh_type IS BOUND AND structure_has_field( iv_structure = 'ZIDOMFIXVALVH'
+                                                    iv_field     = 'DOMAINVALUEHIGH' ) = abap_true.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZPRE_AWD' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzpre_awd' )
+                               iv_property    = 'zzpre_awd'
+                               iv_label       = 'Pre award communication'
+                               iv_vh_set      = 'ZVH_ZPRE_AWD'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueHigh'
+                               iv_vh_text2    = 'DomainValueText' ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzpre_awd: { lx_field->get_text( ) }; |.
+      ENDTRY.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZPST_AWD' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzpst_awd' )
+                               iv_property    = 'zzpst_awd'
+                               iv_label       = 'Post award communication'
+                               iv_vh_set      = 'ZVH_ZPST_AWD'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueHigh'
+                               iv_vh_text2    = 'DomainValueText' ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzpst_awd: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ELSE.
+      gv_last_error = |{ gv_last_error }zzpre_awd/zzpst_awd: DOMAINVALUEHIGH not in ZIDOMFIXVALVH; |.
+    ENDIF.
+
     " 2. Tender Process - table ZNAT_PROC through ZI_NAT_PROC_VH, dropdown
     IF structure_exists( 'ZINATPROCVH' ) = abap_false.
       gv_last_error = |{ gv_last_error }zznat_proc: ZINATPROCVH not active; |.
@@ -558,6 +609,15 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Sequence' ).
 
+    " v13: upper bound of an interval, only once view v3 is active - a
+    " property on a column the structure lacks would dump the model build
+    IF structure_has_field( iv_structure = 'ZIDOMFIXVALVH' iv_field = 'DOMAINVALUEHIGH' ) = abap_true.
+      add_property( io_entity_type = ro_entity_type iv_name = 'DomainValueHigh'
+                    iv_field = 'DOMAINVALUEHIGH' iv_length = 10
+        )->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
+        )->add( iv_key = 'label' iv_value = 'Upper Value' ).
+    ENDIF.
+
     ro_entity_type->bind_structure( iv_structure_name = 'ZIDOMFIXVALVH' ).  "ASSUMPTION A2
   ENDMETHOD.
 
@@ -692,6 +752,23 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD structure_has_field.
+    DATA lo_descr TYPE REF TO cl_abap_typedescr.
+    rv_has = abap_false.
+    cl_abap_typedescr=>describe_by_name( EXPORTING  p_name         = iv_structure
+                                         RECEIVING  p_descr_ref    = lo_descr
+                                         EXCEPTIONS type_not_found = 1
+                                                    OTHERS         = 2 ).
+    IF sy-subrc <> 0 OR lo_descr IS NOT BOUND OR lo_descr->kind <> cl_abap_typedescr=>kind_struct.
+      RETURN.
+    ENDIF.
+    DATA(lo_struct) = CAST cl_abap_structdescr( lo_descr ).
+    IF line_exists( lo_struct->components[ name = iv_field ] ).
+      rv_has = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD set_vh_set_flags.
     io_entity_set->set_creatable( abap_false ).
     io_entity_set->set_updatable( abap_false ).
@@ -736,6 +813,10 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     IF iv_vh_text IS NOT INITIAL.
       lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
       lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_vh_text ).
+    ENDIF.
+    IF iv_vh_text2 IS NOT INITIAL.
+      lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterDisplayOnly| ).
+      lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( iv_vh_text2 ).
     ENDIF.
 
     " 3. Text arrangement of the PO field: key and description together,

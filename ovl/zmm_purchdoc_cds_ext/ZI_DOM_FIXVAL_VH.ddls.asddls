@@ -14,6 +14,10 @@
 //             22/10/26 v2 Arnav - restriction lifted again: the DPC now
 //             filters per domain, so one view serves every fixed-value
 //             field. Paste after ZCL_MM_PO_VH_MPC v8 is active.
+//             22/10/26 v3 Arnav - DomainValueHigh (DD07T-DOMVALUE_H) added
+//             so that interval fixed values (ZPRE_AWD / ZPST_AWD, 001-100)
+//             show their upper bound in the F4, as in the GUI. Paste
+//             BEFORE class v13, which reads the new column.
 //----------------------------------------------------------------------
 // ASSUMPTION: DomainValue stays CHAR 10 (DD07T-DOMVALUE_L) so that one
 // view serves CHAR 1/2/3 and NUMC 3 domains alike. ADT may warn that
@@ -45,6 +49,12 @@ define view ZI_DOM_FIXVAL_VH
       @Semantics.text: true
       @Search.defaultSearchElement: true
       ddtext     as DomainValueText,
+
+      //BOC By Arnav on 22/10/26
+      // v3: upper bound of an interval fixed value, blank for single values
+      @EndUserText.label: 'Upper Value'
+      domvalue_h as DomainValueHigh,
+      //EOC By Arnav on 22/10/26
 
       @EndUserText.label: 'Sequence'
       valpos     as ValuePosition
