@@ -44,6 +44,18 @@ product version). Entity set, navigation and property names are to be read from
 `$metadata` on the system, not assumed. Steps given in chat 22/10/26; caller (ECC program
 vs. BAdI) still to be confirmed.
 
+## UI services found 22/10/26 (already registered)
+
+`FINCS_JRNLENTR_POST_SRV` "Consolidation Journal Entry Post" (`ZFINCS_JRNLENTR_POST_SRV`)
+and `FINCS_JRNLENTR_LIST_SRV` "Group Journal Entry List". These are the OData services of
+the Fiori apps Post / Display Group Journal Entries: BOPF, draft-based, the Post button
+runs `CL_FINCS_JE_POST->EXECUTE`. Technically callable over HTTP (token, create draft
+header, create items, function import to post), but a UI service, not a released API: no
+interface stability across upgrades, no support for A2X use. From inside S/4 (the BAdI) it
+is the wrong layer; the engine behind it is `CL_FINCS_DP_DOCUMENT_POST`. From ECC an
+RFC-enabled FM in S/4 wrapping the engine is simpler and more stable than driving a
+draft UI service. If the team still wants it, Gaurav signs off on the upgrade risk.
+
 ## Mandatory parameters (all four, every call)
 
 | Parameter | Meaning |
