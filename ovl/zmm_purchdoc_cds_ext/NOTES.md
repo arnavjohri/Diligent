@@ -293,6 +293,14 @@ this landscape).
 
 ## Gotchas
 
+- `ZI_DOM_FIXVAL_VH` (and every per-domain copy of it) activates with two warnings:
+  *Key Definitions of ZI_DOM_FIXVAL_VH and DD07T are different, VALPOS / AS4VERS is missing in
+  key*. Expected and harmless: the view keys on `domname` + `domvalue_l` while DD07T keys on
+  `VALPOS` and `AS4VERS` as well, and the compiler cannot prove uniqueness. With the WHERE on
+  one domain, the logon language and the active version, a fixed value occurs once, so the
+  OData key (DomainName, DomainValue) is unique. Leave as is — putting `valpos`/`as4vers` into
+  the key would only widen the OData key of a value help for nothing.
+
 - Extending a standard view adds only fields on data sources the view already reads; a
   field from a table the base view does not join needs an association in the extension
   (the F1592 custodian case in `ovl/f1592_asset_worklist/`, branch
