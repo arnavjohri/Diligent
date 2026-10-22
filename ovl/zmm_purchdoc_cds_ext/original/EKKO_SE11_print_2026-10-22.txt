@@ -1,0 +1,2112 @@
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        EKKO
+          Short description:Purchasing Document Header
+          Transparent table
+          Active version
+
+
+        Field Structure
+          Number of fields: 307
+          Total of field lengths: 4309
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+        MANDT                          X CLNT      3 MANDT
+         Client
+        EBELN                          X CHAR     10 EBELN
+         Purchasing Document Number
+        INCLUDE EKKODATA
+         BUKRS                           CHAR      4 BUKRS
+          Company Code
+         BSTYP                           CHAR      1 EBSTYP
+          Purchasing Document Category
+         BSART                           CHAR      4 ESART
+          Purchasing Document Type
+         BSAKZ                           CHAR      1 BSAKZ
+          Control indicator for purchasing document type
+         LOEKZ                           CHAR      1 ELOEK
+          Deletion Indicator in Purchasing Document
+         STATU                           CHAR      1 ESTAK
+          Status of Purchasing Document
+         AEDAT                           DATS      8 MMPUR_ERDAT
+          Creation Date of Purchasing Document
+         ERNAM                           CHAR     12 MMPUR_ERNAM
+          User of person who created a purchasing document
+         LASTCHANGEDATETIME              DEC      21 CHANGEDATETIME
+          Change Time Stamp
+         PINCR                           NUMC      5 PINCR
+          Item Number Interval
+         LPONR                           NUMC      5 LPONR
+          Last Item Number
+         LIFNR                           CHAR     10 ELIFN
+          Supplier's Account Number
+         SPRAS                           LANG      1 SPRAS
+          Language Key
+         ZTERM                           CHAR      4 DZTERM
+          Terms of Payment Key
+         ZBD1T                           DEC       3 DZBDET
+          Cash (Prompt Payment) Discount Days
+         ZBD2T                           DEC       3 DZBDET
+          Cash (Prompt Payment) Discount Days
+         ZBD3T                           DEC       3 DZBDET
+          Cash (Prompt Payment) Discount Days
+         ZBD1P                           DEC       5 DZBD1P
+          Cash Discount Percentage 1
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             1
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+         ZBD2P                           DEC       5 DZBD2P
+          Cash Discount Percentage 2
+         EKORG                           CHAR      4 EKORG
+          Purchasing Organization
+         EKGRP                           CHAR      3 BKGRP
+          Purchasing Group
+         WAERS                           CUKY      5 WAERS
+          Currency Key
+         WKURS                           DEC       9 WKURS
+          Exchange Rate
+         KUFIX                           CHAR      1 KUFIX
+          Indicator for Fixed Exchange Rate
+         BEDAT                           DATS      8 EBDAT
+          Purchasing Document Date
+         KDATB                           DATS      8 KDATB
+          Start of Validity Period
+         KDATE                           DATS      8 KDATE
+          End of Validity Period
+         BWBDT                           DATS      8 BWBDT
+          Closing Date for Applications
+         ANGDT                           DATS      8 ANGAB
+          Deadline for Submission of Bid/Quotation
+         BNDDT                           DATS      8 EBNDT
+          Binding Period for Quotation
+         GWLDT                           DATS      8 MM_GWLDT
+          Warranty Date
+         AUSNR                           CHAR     10 AUSCH
+          Bid invitation number
+         ANGNR                           CHAR     10 ANGNR
+          Quotation Number
+         IHRAN                           DATS      8 IHRAN
+          Quotation Submission Date
+         IHREZ                           CHAR     12 IHREZ
+          Your Reference
+         VERKF                           CHAR     30 EVERK
+          Responsible Salesperson at Supplier's Office
+         TELF1                           CHAR     16 TELF0
+          Supplier's Telephone Number
+         LLIEF                           CHAR     10 LLIEF
+          Goods Supplier
+         KUNNR                           CHAR     10 KUNNR
+          Customer Number
+         ACTIVE_ID                       CHAR     10 EBELN_AD
+          Active Purchasing Document
+         KONNR                           CHAR     10 KONNR
+          Number of principal purchase agreement
+         ABGRU                           CHAR      2 ABDUM
+          Field Not Used
+         AUTLF                           CHAR      1 KMPLF
+          Complete Delivery Stipulated for Each Purchase Order
+         WEAKT                           CHAR      1 WEAKT
+          Indicator: Goods Receipt Message
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             2
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+         RESWK                           CHAR      4 RESWK
+          Supplying (issuing) plant in case of stock transport order
+         LBLIF                           CHAR     10 LBLIF
+          Field not used
+         INCO1                           CHAR      3 INCO1
+          Incoterms (Part 1)
+         INCO2                           CHAR     28 INCO2
+          Incoterms (Part 2)
+         KTWRT                           CURR     15 KTWRT
+          Target Value for Header Area per Distribution
+         DISTRIBUTIONTYPE                CHAR      1 MMPUR_DISTR_TYPE
+          Distribution Type for Purchasing Document
+         SUBMI                           CHAR     10 SUBMI
+          Collective Number
+         KNUMV                           CHAR     10 KNUMV
+          Number of the Document Condition
+         KALSM                           CHAR      6 KALSM_D
+          Procedure (Pricing, Output Control, Acct. Det., Costing,...)
+         STAFO                           CHAR      6 STAFO
+          Update Group for statistics update
+         LIFRE                           CHAR     10 LIFRE
+          Different Invoicing Party
+         EXNUM                           CHAR     10 EXNUM
+          Number of foreign trade data in MM and SD documents
+         UNSEZ                           CHAR     12 UNSEZ
+          Our Reference
+         LOGSY                           CHAR     10 LOGSYSTEM
+          Logical System
+         UPINC                           NUMC      5 UPINC
+          Item Number Interval for Subitems
+         STAKO                           CHAR      1 STAKO
+          Document with time-dependent conditions
+         FRGGR                           CHAR      2 FRGGR
+          Release group
+         FRGSX                           CHAR      2 FRGSX
+          Release Strategy
+         FRGKE                           CHAR      1 FRGKE
+          Release Indicator: Purchasing Document
+         FRGZU                           CHAR      8 FRGZU
+          Release State
+         FRGRL                           CHAR      1 FRGRL
+          Release Not Yet Completely Effected
+         LANDS                           CHAR      3 LAND1_STML
+          Country/Region for Tax Report
+         LPHIS                           CHAR      1 LPHIS
+          Indicator for scheduling agreement release documentation
+         ADRNR                           CHAR     10 AD_ADDRNUM
+          Address Number
+         STCEG_L                         CHAR      3 STCEG_L
+          Country/Region of Sales Tax ID Number
+         STCEG                           CHAR     20 STCEG
+          VAT Registration Number
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             3
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+         ABSGR                           NUMC      2 ABSGR
+          Reason for Cancellation
+         ADDNR                           CHAR     10 ADDI_BELNR
+          Document number for additional
+         KORNR                           CHAR      1 KORNR
+          Correction of miscellaneous provisions
+         MEMORY                          CHAR      1 MEMER
+          Purchase order not yet complete
+         PROCSTAT                        CHAR      2 MEPROCSTATE
+          Purchasing Document Processing State
+         PROCESS_INDICATOR               CHAR      3 MMPUR_PROCESS_INDICATOR
+          Process Indicator for Purchase Order
+         RLWRT                           CURR     15 RLWRT
+          Total value at time of release
+         CR_STAT                         CHAR      2 CR_STAT
+          Change Request Status
+         REVNO                           CHAR      8 REVNO
+          Version number in Purchasing
+         SCMPROC                         CHAR      1 SCMPROC
+          SCM Process That Created the Purchase Order
+         REASON_CODE                     CHAR      4 /SAPPSPRO/_GR_REASON_CODE
+          Goods Receipt Reason Code
+         MEMORYTYPE                      CHAR      1 MEMORYTYPE
+          Category of Incompleteness
+         RETTP                           CHAR      1 RETTP
+          Retention Indicator
+         RETPC                           DEC       5 RETPZ
+          Retention in Percent
+         DPTYP                           CHAR      4 ME_DPTYP
+          Down Payment Indicator
+         DPPCT                           DEC       5 ME_DPPCNT
+          Down Payment Percentage
+         DPAMT                           CURR     11 ME_DPAMNT
+          Down Payment Amount in Document Currency
+         DPDAT                           DATS      8 ME_DPDDAT
+          Due Date for Down Payment
+         MSR_ID                          CHAR     10 MSR_PROCESS_ID
+          Process Identification Number
+         HIERARCHY_EXISTS                CHAR      1 HIERARCHY_EXISTS
+          Part of a Contract Hierarchy
+         GROUPING_ID                     CHAR      3 MMPUR_D_CC_GROUPING_ID
+          Grouping ID for Company Codes
+         PARENT_ID                       CHAR     10 MMPUR_PARENT_DOCUMENT_ID
+          ID of the Parent Document
+         THRESHOLD_EXISTS                CHAR      1 EX_RATE_THRESHOLD
+          Threshold Value for Exchange Rates Exists
+         LEGAL_CONTRACT                  CHAR     40 LEGAL_CONTRACT_ID
+          Legal Contract Number
+         DESCRIPTION                     CHAR     40 CONTRACT_DESCRIPTION
+          Contract Name
+         RELEASE_DATE                    DATS      8 RELEASE_DATE
+          Release Date of Contract
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             4
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+         VSART                           CHAR      2 VERSART
+          Shipping Type
+         HANDOVERLOC                     CHAR     10 HANDOVER_LOC
+          Location for a physical handover of goods
+         SHIPCOND                        CHAR      2 VSBED
+          Shipping Conditions
+         HAS_CATALOG_RELEVANT_ITEMS      CHAR      1 MMPUR_DOC_IS_CATALOG_RELEVANT
+          Indicator for Purchasing Document with Catalog Item(s)
+         INCLUDE INCO_L
+          INCOV                          CHAR      4 INCOV
+           Incoterms Version
+          INCO2_L                        CHAR     70 INCO2_L
+           Incoterms Location 1
+          INCO3_L                        CHAR     70 INCO3_L
+           Incoterms Location 2
+         INCLUDE TMINCO_LOC
+          INCO2_KEY                      RAW      16 /SCMTMS/INC_LOC_1_KEY
+           Incoterm Location 1 - Place of Destination
+          INCO3_KEY                      RAW      16 /SCMTMS/INC_LOC_2_KEY
+           Incoterm Location 2 - Place of Delivery
+          INCO4_KEY                      RAW      16 /SCMTMS/INC_DEV_PLACE_DEST_KEY
+           Incoterm - Deviating Place of Destination
+         GRWCU                           CUKY      5 GRWCU
+          Currency of statistical values for foreign trade
+         INCLUDE INTRA_REL_EXCL
+          INTRA_REL                      CHAR      1 INTRA_REL
+           Relevant for Intrastat Reporting
+          INTRA_EXCL                     CHAR      1 INTRA_EXCL
+           Exclude from Intrastat Reporting
+         INCLUDE MMPUR_S_PRODCOMP_HEADER_ST
+          TOTAL_STATUS_PCS               CHAR      1 MMPUR_PC_TOTAL_STATUS_PCS
+           Product Compliance Supplier Check Status (All Items)
+          TOTAL_STATUS_PMA               CHAR      1 MMPUR_PC_TOTAL_STATUS_PMA
+           Product Marketability Status (All Items)
+          TOTAL_STATUS_DG                CHAR      1 MMPUR_PC_TOTAL_STATUS_DG
+           Dangerous Goods Status (All Items)
+          TOTAL_STATUS_SDS               CHAR      1 MMPUR_PC_TOTAL_STATUS_SDS
+           Safety Data Sheet Status (All Items)
+         INCLUDE MMPUR_S_ITM_HEADER_STATUS
+          TOTAL_STATUS_EMCST             CHAR      1 MMPUR_ITM_TOTAL_STATUS_EMCST
+           Total Embargo Status (International Trade)
+          TOTAL_STATUS_SLCST             CHAR      1 MMPUR_ITM_TOTAL_STATUS_SLCST
+           Total Screening Status (International Trade)
+          TOTAL_STATUS_LCCST             CHAR      1 MMPUR_ITM_TOTAL_STATUS_LCCST
+           Total Legal Control Status (International Trade)
+         QTN_ERLST_SUBMSN_DATE           DATS      8 QTN_ERLST_SUBMSN_DATE
+          The date as of which Quotations can be submitted
+         FOLLOWON_DOC_CAT                CHAR      1 FOLLOWONDOCCAT
+          Follow-On Purchasing Document Category
+         FOLLOWON_DOC_TYPE               CHAR      4 FOLLOWONDOCTYPE
+          Follow-On Purchasing Document Type
+         INCLUDE EKKO_INCL_EEW_PS   Group Name  EXT
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             5
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+          DUMMY_EKKO_INCL_EEW_PS         CHAR      1 EKKO_INCL_EEW
+           Data Element for Extensibility of Purchasing Document Header
+          INCLUDE CI_EKKODB
+           ZZT_NATURE                    CHAR      3 ZT_NATURE
+            Nature of tender
+           ZZTND_DT                      DATS      8 ZTND_DT
+            Collective (Tender) Date
+           ZZLST_SEL_DATE                DATS      8 ZLST_SEL_DATE
+            Last date of selling tender
+           ZZSUB_TIME                    TIMS      6 ZSUB_TIME
+            Time of Submission of Tender
+           ZZTB_OP_DT                    DATS      8 ZTB_OP_DT
+            Date of opening of bid / Tech-comm. Bid
+           ZZTB_OP_TM                    TIMS      6 ZTB_OP_TM
+            Time of opening of bid / Tech-comm. Bid
+           ZZPB_OP_DT                    DATS      8 ZPB_OP_DT
+            Date of Price Bid Opening
+           ZZPB_OP_TM                    TIMS      6 ZPB_OP_TM
+            Time of Price Bid Opening
+           ZZPRE_BID_DT                  DATS      8 ZPRE_BID_DT
+            Date of Pre-Bid Conference
+           ZZBD_TYPE                     CHAR      3 ZBD_TYPE
+            Bidding System
+           ZZT_DURATION                  CHAR      3 ZT_DURATION
+            Tender Duration type
+           ZZLST_DT_QUE                  DATS      8 ZLST_DT_QUE
+            Last Date for receiving queries for Pre-bid conference
+           ZZINSP_TYP                    CHAR      3 ZINSP_TYP
+            Inspection Type
+           ZZVEND_CAT                    CHAR      3 ZVEND_CAT
+            Vendor Category
+           ZZINSP_AUTH                   CHAR      3 ZINSP_AUTH
+            Inspection Authority
+           ZZPRE_AWD                     NUMC      3 ZPRE_AWD
+            Pre award communication
+           ZZPST_AWD                     NUMC      3 ZPST_AWD
+            Post award communication
+           ZZARBIT                       CHAR      2 ZARBIT
+            Arbitration cases
+           ZZAR_OP_DT                    DATS      8 ZAR_OP_DT
+            Date of Arbitration open
+           ZZAR_CL_DT                    DATS      8 ZAR_CL_DT
+            Date of Arbitration closed
+           ZZTPI_ADD                     CHAR     10 ZTPI_ADD
+            Third Party Inspection address
+           ZZQAD_DET                     CHAR     10 ZQAD_DET
+            QAD Department
+           ZZPORT_CON                    CHAR     10 ZPORT_CON
+            Port Consignee
+           ZZULT_CON                     CHAR     10 ZULT_CON
+            Ultimate consignee
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             6
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+           ZUPFLAG                       CHAR      1 ZUPFLAG
+            Flag for Ultimate & Port Cong.
+           ZZNAT_PROC                    CHAR      2 ZNATPROC
+            Tender Process
+           ZZNITDT                       DATS      8 ZNITDT
+            Date of Publication of NIT in Website
+           ZZBIDER_AGR                   CHAR      1 ZBIDERAGR
+            Contract / PO awarded to Lowest bidder
+           ZZSCH_ST_DT                   DATS      8 ZSCHSTDT
+            Scheduled Work Start Date
+           ZZSCH_EN_DT                   DATS      8 ZSCHENDT
+            Schedule Work End Date
+           ZZSUBMI                       CHAR     10 SUBMI
+            Collective Number
+           ZZEPC                         CHAR      1 ZZEPC
+            EPC approval OLD Value
+           ZZEXCHNG_RATE                 DEC       9 ZWKURS
+            SRM-Exchange rate
+           ZZUSR                         CHAR     12 ERNAM
+            Name of Person Responsible for Creating the Object
+           ZZPSA                         CHAR     12 ZPSA
+            PO Signing Authority
+           ZZCPO                         NUMC      8 ZZCPO
+             Contact Person for current PO
+           ZZPHONE                       CHAR     11 ZZPNO
+            Landline Number
+           ZZFAX                         CHAR     25 ZZFAX
+            Fax Number
+           ZZMOBILE                      CHAR     11 ZZMOB
+            Mobile Number
+           ZZEMAIL                       CHAR     40 ZZEMA
+            Email ID
+           ZZINDPER                      NUMC      8 ZZIND
+            Indenting person for current PO
+           ZZINDPHONE                    CHAR     11 ZZPNO
+            Landline Number
+           ZZINDFAX                      CHAR     25 ZZFAX
+            Fax Number
+           ZZINDMOBILE                   CHAR     11 ZZMOB
+            Mobile Number
+           ZZINDEMAIL                    CHAR     40 ZZEMA
+            Email ID
+           ZZRELDATE                     DATS      8 ZZRELDATE
+            Release Date
+           ZZRELCODE                     CHAR      2 ZFRGCO
+            Final Release Code
+           ZZLOINO                       CHAR     20 ZZLOINO
+            LOI/NOA number
+           ZZLOIDT                       DATS      8 ZZLOIDT
+            LOI/NOA  Date
+           ZZFAXDT                       DATS      8 ZZFAXDT
+            Fax Order Date
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             7
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+           ZZFLAG_KOL                    CHAR      1 ZMM_MAIL
+            PO release flag for Kolkata
+           ZZFLAG_MUM                    CHAR      1 ZMM_MAIL2
+            PO release flag for Mumbai
+           ZZFLAG_CHEN                   CHAR      1 ZMM_MAIL3
+            PO release flag for Chennai
+           ZZFLAG_DEL                    CHAR      1 ZMM_MAIL4
+            PO release flag for Delhi
+           ZZMSE                         CHAR      2 ZZMSE
+            For MSE
+           ZZDMEP                        CHAR      3 ZZDMEP
+            Domestically Manufactured Electronic Products (DMEP)
+           ZSUPCONCT                     CHAR     15 ZZSUPCONCT
+            Supplier Contact No
+           ZSUPEMAIL                     CHAR     50 ZZSUPEMAIL
+            Supplier Email
+           ZFILENO                       CHAR     50 ZZFILENO
+            File Number
+           ZULTNAME                      CHAR     40 AD_NAME1
+            Name 1
+           ZULTSTREET                    CHAR     60 AD_STREET
+            Street
+           ZULTSTREET1                   CHAR     40 AD_STRSPP1
+            Street 2
+           ZULTCITY                      CHAR     40 AD_CITY1
+            City
+           ZULTCONTCT                    CHAR     30 AD_TLNMBR1
+            First Telephone No.: Dialing Code + Number
+           ZULTEMAIL                     CHAR    241 AD_SMTPADR
+            E-Mail Address
+           ZINVNAME                      CHAR     40 AD_NAME1
+            Name 1
+           ZINVSTREET                    CHAR     60 AD_STREET
+            Street
+           ZINVSTREET1                   CHAR     40 AD_STRSPP1
+            Street 2
+           ZINVCITY                      CHAR     40 AD_CITY1
+            City
+           ZINVCONTCT                    CHAR     30 AD_TLNMBR1
+            First Telephone No.: Dialing Code + Number
+           ZINVEMAIL                     CHAR    241 AD_SMTPADR
+            E-Mail Address
+           ZINSNAME                      CHAR     40 AD_NAME1
+            Name 1
+           ZINSSTREET                    CHAR     60 AD_STREET
+            Street
+           ZINSSTREET1                   CHAR     40 AD_STRSPP1
+            Street 2
+           ZINSCITY                      CHAR     40 AD_CITY1
+            City
+           ZINSCONTCT                    CHAR     30 AD_TLNMBR1
+            First Telephone No.: Dialing Code + Number
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             8
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+           ZINSEMAIL                     CHAR    241 AD_SMTPADR
+            E-Mail Address
+           ZPAYNAME                      CHAR     40 AD_NAME1
+            Name 1
+           ZPAYSTREET                    CHAR     60 AD_STREET
+            Street
+           ZPAYSTREET1                   CHAR     40 AD_STRSPP1
+            Street 2
+           ZPAYCITY                      CHAR     40 AD_CITY1
+            City
+           ZPAYCONTCT                    CHAR     30 AD_TLNMBR1
+            First Telephone No.: Dialing Code + Number
+           ZPAYEMAIL                     CHAR    241 AD_SMTPADR
+            E-Mail Address
+           ZGEMPO                        CHAR     30 ZGEMPONO
+            GEM PO NO
+         INCLUDE MMPUR_EXTREFERENCE
+          EXTERNALSYSTEM                 CHAR     60 MMPUR_EXTREFERENCESYSTEMID
+           ID of External Reference System
+          EXTERNALREFERENCEID            CHAR     70 MMPUR_EXTERNALREFERENCEID
+           External Reference ID
+         EXT_REV_TMSTMP                  DEC      21 MM_EXT_REV_TMSTMP
+          Timestamp for Revision of External Calls
+         ISEOPBLOCKED                    CHAR      1 EOPBLOCKED
+          Business Purpose Completed
+         ISAGED                          CHAR      1 MMPUR_ISAGED
+          Document is aged
+         APPEND  /ISDFPS/EKKODATA
+          INCLUDE /ISDFPS/ST_FDP_REL
+           FORCE_ID                      CHAR     32 /ISDFPS/FORCE_ID
+            Internal Key for Force Element
+           FORCE_CNT                     NUMC      6 /ISDFPS/FORCE_CNT
+            Internal (Version) Counter
+           RELOC_ID                      CHAR     10 /ISDFPS/RELOC_ID
+            Relocation ID
+           RELOC_SEQ_ID                  CHAR      4 /ISDFPS/RELOC_SEQ_ID
+            Relocation Step ID
+           SOURCE_LOGSYS                 CHAR     10 LOGSYS
+            Logical system
+         APPEND  FSH_EKKODATA_DATA
+          FSH_TRANSACTION                CHAR     10 FSH_TRANSACTION
+           Transaction Number
+          FSH_ITEM_GROUP                 NUMC      5 FSH_ITEM_GROUP
+           Item Group
+          FSH_VAS_LAST_ITEM              NUMC      5 FSH_VAS_LAST_ITEM
+           Last VAS Item Number
+          FSH_OS_STG_CHANGE              CHAR      1 FSH_OS_STG_CHANGE
+           Order Scheduling Strategy Fields Changed Manually
+         APPEND  OIA_EKKODATA
+          OIEXGNUM                       CHAR     10 OIA_EXGNUM
+           Exchange agreement number
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                             9
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+          OIEXGTYP                       CHAR      4 OIA_EXGTYP
+           Exchange type
+          OIAEVGTYPE                     CHAR      1 OIA_EVTYPE
+           Evergreen type
+         APPEND  OID_EXTD_EKKODATA
+          INCLUDE OIC_PIPE
+           OIPIPEVAL                     CHAR      1 OID_PIPEV
+            Validation indicator for pipeline fields (X=ON, blank=OFF)
+           OIC_LIFNR                     CHAR     10 LIFNR
+            Account Number of Supplier
+           INCLUDE OIC_DEST_ORIG   Group Name  OIC_DEST_ORIG
+            OIC_DCITYC                   CHAR      4 OIC_DCITYC
+             Destination city code
+            OIC_DCOUNC                   CHAR      3 OIC_DCOUNC
+             Destination county code
+            OIC_DREGIO                   CHAR      3 OIC_DREGIO
+             Destination region
+            OIC_DLAND1                   CHAR      3 OIC_DLAND1
+             Destination country/Region
+            OIC_OCITYC                   CHAR      4 OIC_OCITYC
+             Origin city code
+            OIC_OCOUNC                   CHAR      3 OIC_OCOUNC
+             Origin county code
+            OIC_OREGIO                   CHAR      3 OIC_OREGIO
+             Origin region
+            OIC_OLAND1                   CHAR      3 OIC_OLAND1
+             Origin Country/Region
+            OIC_PORGIN                   CHAR     15 OIC_PORGIN
+             Tax origin
+            OIC_PDESTN                   CHAR     15 OIC_PDESTN
+             Tax destination
+           OIC_PTRIP                     CHAR     16 OIC_PTRIP
+            Pipeline trip number (external)
+           OIC_PBATCH                    CHAR     16 OIC_PBATCH
+            Pipeline operator´s external batch number
+           OIC_MOT                       CHAR      2 OIC_MOT
+            IS-OIL MAP external details mode of transport
+           OIC_AORGIN                    CHAR     15 OIC_AORGIN
+            Alternate origin
+           OIC_ADESTN                    CHAR     15 OIC_ADESTN
+            Alternate destination
+           OIC_TRUCKN                    CHAR     10 OIC_TRUCKN
+            Truck number
+           OIA_BASELO                    CHAR     15 OIA_BASELO
+            Base location
+          INCLUDE OID_EX
+           OID_EXTBOL                    CHAR     16 OID_EXTBOL
+            External bill of lading
+           OID_MISCDL                    CHAR     16 OID_MISCDL
+            Miscellaneous delivery number
+         APPEND  TMS_EKKODATA
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            10
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+          TMS_REF_UUID                   CHAR     22 TMS_REF_UUID
+           Reference UUID of Transportation Management
+        APPEND  /DMBE/SP_APPEND_PAYMENT_DE
+         INCLUDE /DMBE/SP_PAYMENT_DEEMED
+          /DMBE/PAYMENTDEEMED            DATS      8 /DMBE/EM_DEEMEDDATE
+           Deemed Payment Date
+         INCLUDE /DMBE/SP_SMARTID
+          /DMBE/DEALNUMBER               CHAR     12 /DMBE/EM_SMART_ID
+           Deal Number
+         INCLUDE /DMBE/SP_ADDT_HEADER_FIELD
+          /DMBE/EVGIDRENEWAL             CHAR      4 /DMBE/EM_EVERGREEN_ID
+           Evergreen Renewal Period
+          /DMBE/EVGIDCANCEL              CHAR      4 /DMBE/EM_EVGIDCANCEL
+           Evergreen Cancellation Period
+        APPEND  /ILE/TAEKKO
+         INCLUDE /ILE/TMANX01
+          ZAPCGK                         NUMC      4 /ILE/TAPCGK
+           Annexing package key
+          APCGK_EXTEND                   NUMC     10 /ILE/TAPCGK_EXT
+           Extended key for annexing package
+          ZBAS_DATE                      DATS      8 /ILE/TBASDATE
+           Base Date
+          ZADATTYP                       CHAR      1 /ILE/TADATTYP
+           Annexing Date Type
+          ZSTART_DAT                     DATS      8 /ILE/TASDAT
+           Annexing start date
+          Z_DEV                          DEC       6 /ILE/TMPERC
+           deviation percentage
+          ZINDANX                        CHAR      1 /ILE/TMANIND
+           indicator for annexed order type
+          ZLIMIT_DAT                     DATS      8 /ILE/TALDAT
+           Annexing limit date (purchasing)
+          NUMERATOR                      CHAR     20 /ILE/NUMERATOR
+           IL Annexing Numerator
+         INCLUDE /ILE/TMANXHS
+          HASHCAL_BDAT                   DATS      8 /ILE/HASHCAL_BDAT
+           "The general acountant method" New base date.
+          HASHCAL                        CHAR      1 /ILE/MTG_CHASHCAL
+           Accountant general method
+          NEGATIVE                       CHAR      1 /ILE/NEGATIVE_ANNEXING
+           Do not allow negative annexing
+          HASHCAL_EXISTS                 CHAR      4 EKORG
+           Purchasing Organization
+          KNOWN_INDEX                    CHAR      1 /ILE/KNOWN_INDEX_ANX
+           Known Index indicator in /ILE/T_ANNEXING_CALCULATION Func
+        APPEND  ADSPC_SPEC2000
+         POSTAT                          CHAR      1 ADSPC_POSTAT
+          Flag for the S1POSTAT message
+        APPEND  FPIA_A_INT
+         INCLUDE FPIA_S_INTEREST
+          VZSKZ                          CHAR      2 VZSKZ
+           Interest Indicator
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            11
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+        APPEND  FSH_EKKO
+         FSH_SNST_STATUS                 CHAR      2 FSH_SNST_STATUS
+          Snapshot Status
+        APPEND  PFM_EKKODB02
+         INCLUDE PFM_EKKODB
+          PROCE                          NUMC      9 PFM_01NUMPROCEDIMENTO
+           Procedure number
+          CONC                           CHAR      5 PFM_01CONCURSO
+           Adjustment/contest
+          CONT                           CHAR      5 PFM_01CONTRATO
+           Contract
+          COMP                           CHAR      5 PFM_01COMPETENCIA
+           Legal competence
+          OUTR                           CHAR      5 PFM_01OUTROS
+           Miscellaneous
+          DESP                           CHAR    100 PFM_01DESPACHO
+           Despatch
+          DESP_DAT                       DATS      8 DATUM
+           Date
+          DESP_CARGO                     CHAR      5 PFM_01CARGO
+           Job
+          PARE                           CHAR    100 PFM_01PARECER
+           Assessment
+          PARE_DAT                       DATS      8 DATUM
+           Date
+          PARE_CARGO                     CHAR      5 PFM_01CARGO
+           Job
+          PFM_CONTRACT                   NUMC      8 PFM_CONTRACT
+           PTFM: Contract in Purchasing process
+        APPEND  WRF_PBAS_EKKO_ADDON_STY
+         INCLUDE WRF_POHF_EKKO_ADDON_STY   Group Name  EKKO_POHF
+          POHF_TYPE                      CHAR      1 WRF_POHF_TYPE
+           Document for Seasonal Purchase Order Processing
+          EQ_EINDT                       DATS      8 WRF_POHF_EQ_EINDT
+           Delivery Date Header: All Items Have Same Delivery Date
+          EQ_WERKS                       CHAR      4 WRF_POHF_EQ_EWERK
+           Plant Header: All Items Have Same Receiving Plant
+          FIXPO                          CHAR      1 WRF_POHF_FIXPO
+           Firm Deal Indicator
+          INCLUDE WRF_POHF_GROUP_CRITERIA_ST    Group Name  GROUP_CRITERIA
+           EKGRP_ALLOW                   CHAR      1 WRF_POHF_EKGRP_ALLOW
+            Take Account of Purch. Group
+           WERKS_ALLOW                   CHAR      1 WRF_POHF_WERKS_ALLOW
+            Take Account of Plants
+           CONTRACT_ALLOW                CHAR      1 WRF_POHF_CONTRACT_ALLOW
+            Take Account of Contracts
+           PSTYP_ALLOW                   CHAR      1 WRF_POHF_PSTYP_ALLOW
+            Take Account of Item Categories
+           FIXPO_ALLOW                   CHAR      1 WRF_POHF_FIXPO_ALLOW
+            Take Account of Fixed-Date Purchases Indicator
+           KEY_ID_ALLOW                  CHAR      1 WRF_POHF_KEY_ID_ALLOW
+            Consider Budget
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            12
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+        Field Name                     K Type Length Data Elem.
+        Short Text____________________________________________________________
+           AUREL_ALLOW                   CHAR      1 WRF_POHF_AUREL_ALLOW
+            Take Account of Alloc. Table Relevance
+           DELPER_ALLOW                  CHAR      1 WRF_POHF_DELPER_ALLOW
+            Take Account of Dlvy Period
+           EINDT_ALLOW                   CHAR      1 WRF_POHF_EINDT_ALLOW
+            Take Account of Delivery Date
+           LTSNR_ALLOW                   CHAR      1 WRF_POHF_LTSNR_ALLOW
+            Include Vendor Subrange
+         INCLUDE WRF_POTB_EKKO_ADDON_STY   Group Name  EKKO_POTB
+          OTB_LEVEL                      CHAR      1 WRF_POTB_CHECK_LEVEL
+           OTB Check Level
+          OTB_COND_TYPE                  CHAR      4 WRF_POTB_COND_TYPE
+           OTB Condition Type
+          INCLUDE WRF_POTB_FEEDBACK_STY
+           KEY_ID                        NUMC     16 WRF_BUDG_KEY_ID
+            Unique Number of Budget
+           OTB_VALUE                     CURR     17 WRF_POTB_VALUE
+            Required Budget
+           INCLUDE WRF_POTB_CURRENCY_STY
+            OTB_CURR                     CUKY      5 WRF_POTB_CURRENCY
+             OTB Currency
+           OTB_RES_VALUE                 CURR     17 WRF_POTB_RES_VALUE
+            Reserved Budget for OTB-Relevant Purchasing Document
+           OTB_SPEC_VALUE                CURR     17 WRF_POTB_SPECIAL_VALUE
+            Special Release Budget
+           SPR_RSN_PROFILE               CHAR      4 WRF_POTB_SPR_RSN_PROFILE
+            Reason Profile for OTB Special Release
+           BUDG_TYPE                     CHAR      2 WRF_BUDG_TYPE
+            Budget Type
+           OTB_STATUS                    CHAR      1 WRF_POTB_STATUS
+            OTB Check Status
+           OTB_REASON                    CHAR      3 WRF_POTB_STATUS_REASON
+            Reason Indicator for OTB Check Status
+           CHECK_TYPE                    CHAR      1 WRF_BUDG_OTB_CHECK
+            Type of OTB Check
+         INCLUDE WRF_PCON_EKKO_ADDON_STY   Group Name  EKKO_PCON
+          CON_OTB_REQ                    CHAR      1 WRF_POTB_CON_REQ
+           OTB-Relevant Contract
+          CON_PREBOOK_LEV                CHAR      1 WRF_POTB_PREBOOK_LEVEL
+           OTB Indicator Level for Contracts
+          CON_DISTR_LEV                  CHAR      1 WRF_POTB_DISTRIB_LEVEL
+           Distribution Using Target Value or Item Data____________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            13
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          Fields with reference fields:
+            Field name      Reference field
+            .INCLUDE        SPRAS-
+            KTWRT           EKKO-WAERS
+            RLWRT           EKKO-WAERS
+            DPAMT           EKKO-WAERS
+            OTB_VALUE       WRF_POTB_CURRENCY_STY-OTB_CURR
+            OTB_RES_VALUE   WRF_POTB_CURRENCY_STY-OTB_CURR
+            OTB_SPEC_VALUE  WRF_POTB_CURRENCY_STY-OTB_CURR
+
+          Fields with conversion routines:
+            Field name      Conversion routine
+            EBELN           ALPHA
+            LIFNR           ALPHA
+            SPRAS           ISOLA
+            WKURS           EXCRT
+            AUSNR           ALPHA
+            LLIEF           ALPHA
+            KUNNR           ALPHA
+            ACTIVE_ID       ALPHA
+            KONNR           ALPHA
+            LBLIF           ALPHA
+            STAFO           ALPHA
+            LIFRE           ALPHA
+            LOGSY           ALPHA
+            ADRNR           ALPHA
+            ADDNR           ALPHA
+            REVNO           ALPHA
+            MSR_ID          ALPHA
+            PARENT_ID       ALPHA
+            HANDOVERLOC     ALPHA
+            ZZTPI_ADD       ALPHA
+            ZZQAD_DET       ALPHA
+            ZZPORT_CON      ALPHA
+            ZZULT_CON       ALPHA
+            ZZEXCHNG_RATE   EXCRT
+            ZZEMAIL         ALPHA
+            ZZINDEMAIL      ALPHA
+            ZULTEMAIL       SXIDN
+            ZINVEMAIL       SXIDN
+            ZINSEMAIL       SXIDN
+            ZPAYEMAIL       SXIDN
+            SOURCE_LOGSYS   ALPHA
+            OIEXGNUM        ALPHA
+            OIC_LIFNR       ALPHA
+            PFM_CONTRACT    ABPSP
+
+
+        Technical Settings
+          Data type:APPL1
+          Size category:3
+          Buffering now allowed
+          Logging switched off
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            14
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+
+        Secondary Indexes
+
+          Index ID: FSD
+          Short description: Fuzzy Index for field Description
+          Create index on database
+          Index fields
+            DESCRIPTION
+
+          Index ID: H4P
+          Short description:
+          Create index on database
+          Index fields
+            SUBMI
+
+          Index ID: H7Y
+          Short description:
+          Create index on database
+          Index fields
+            LIFNR
+
+          Index ID: HQ3
+          Short description:
+          Create index on database
+          Index fields
+            ERNAM
+
+          Index ID: ZPO
+          Short description: Index for PO Effective Value Report
+          Do not create index on database
+          Index fields
+            MANDT
+            BEDAT
+
+
+        Input Checks (Foreign Keys, Fiexed Values)
+
+          MANDT is checked against check table T000
+          Field assignment:
+            T000 - MANDT = EKKO - MANDT
+
+          BUKRS is checked against check table T001
+          Field assignment:
+            T001 - MANDT = EKKO - MANDT
+            T001 - BUKRS = EKKO - BUKRS
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            15
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          BSTYP checked against fixed values from domain EBSTYP
+          Fixed values:
+            A       Request for Quotation
+            C       Central Contract
+            F       Purchase Order
+            K       Contract
+            L       Scheduling Agreement
+            N       Central Request for Quotation
+            O       Quotation
+            R       RFQ
+            T       Central Supplier Quotation
+
+          BSART is checked against check table T161
+          Field assignment:
+            T161 - MANDT = EKKO - MANDT
+            T161 - BSTYP = EKKO - BSTYP
+            T161 - BSART = EKKO - BSART
+
+          BSAKZ checked against fixed values from domain BSAKZ
+          Fixed values:
+            C       Subordinate Document
+            H       Hierarchy
+            R       Purchase requisition for outline agreement
+            T       Transport
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            16
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          STATU checked against fixed values from domain ESTAK
+          Fixed values:
+            1       Purchase Order from APO
+            2       Third-Party Order from CRM
+            3       Returns Order from Incorrect Delivery
+            4       Subsequent Stock Transport Order for Additional Item
+            5       Incorrect Item Returns from Stock Transport Orders
+            9       Enjoy Purchase Order
+            A       RFQ with Quotation
+            B       Purchase Order from Automatic Conversion of Requisitions
+            C       Purchase Order from Goods Receipt
+            D       Purchase Order from Data Transfer
+            E       Purchase Order from Allocation Table
+            F       Purchase Order from Kanban
+            G       Purchase Order from Store Order
+            H       Purchase Order from DRP
+            I       Purchase Order from BAPI
+            J       Purchase Order from ALE Scenario
+            K       Purchase Order from BBP
+            L       Scheduling Agreement from CRM
+            M       Purchasing Document from E-Sourcing
+            N       Purchase Document from external Network / System
+            O       Purchase Order from Trading Contract
+            P       Scheduling Agreement from OData
+            R       S4CRM Service Order
+            S       Collective Purchase Order
+            T       Purchase Order from Transportation Management
+            W       Purchase Order Ignored for Collective Delivery Run
+            X       Purchase Order Created via Function Module
+
+          LPONR is checked against check table EKPO
+          Field assignment:
+            EKPO - MANDT = EKKO - MANDT
+            EKPO - EBELN = EKKO - EBELN
+            EKPO - EBELP = EKKO - LPONR
+
+          LIFNR is checked against check table LFA1
+          Field assignment:
+            LFA1 - MANDT = EKKO - MANDT
+            LFA1 - LIFNR = EKKO - LIFNR
+
+          SPRAS is checked against check table T002
+          Field assignment:
+            T002 - SPRAS = EKKO - SPRAS
+
+          EKORG is checked against check table T024E
+          Field assignment:
+            T024E - MANDT = EKKO - MANDT
+            T024E - EKORG = EKKO - EKORG
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            17
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          EKGRP is checked against check table T024
+          Field assignment:
+            T024 - MANDT = EKKO - MANDT
+            T024 - EKGRP = EKKO - EKGRP
+
+          WAERS is checked against check table TCURC
+          Field assignment:
+            TCURC - MANDT = EKKO - MANDT
+            TCURC - WAERS = EKKO - WAERS
+
+          KUFIX checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          AUSNR is checked against check table EKKO
+          Field assignment:
+            EKKO - MANDT = EKKO - MANDT
+            EKKO - EBELN = EKKO - AUSNR
+
+          LLIEF is checked against check table LFA1
+          Field assignment:
+            LFA1 - MANDT = EKKO - MANDT
+            LFA1 - LIFNR = EKKO - LLIEF
+
+          KUNNR is checked against check table KNA1
+          Field assignment:
+            KNA1 - MANDT = EKKO - MANDT
+            KNA1 - KUNNR = EKKO - KUNNR
+
+          KONNR is checked against check table EKKO
+          Field assignment:
+            EKKO - MANDT = EKKO - MANDT
+            EKKO - EBELN = EKKO - KONNR
+
+          AUTLF checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          WEAKT checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          RESWK is checked against check table T001W
+          Field assignment:
+            T001W - MANDT = EKKO - MANDT
+            T001W - WERKS = EKKO - RESWK
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            18
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          LBLIF is checked against check table LFA1
+          Field assignment:
+            LFA1 - MANDT = EKKO - MANDT
+            LFA1 - LIFNR = EKKO - LBLIF
+
+          INCO1 is checked against check table TINC
+          Field assignment:
+            TINC - MANDT = EKKO - MANDT
+            TINC - INCO1 = EKKO - INCO1
+
+          DISTRIBUTIONTYPE checked against fixed values from domain MMPUR_DISTRTYPE
+          Fixed values:
+                    Standard Distribution
+            F       Flexible Distribution
+
+          KALSM is checked against check table T683
+          Field assignment:
+            T683 - MANDT = EKKO - MANDT
+            T683 - KVEWE = T681V - KVEWE
+            T683 - KAPPL = T681A - KAPPL
+            T683 - KALSM = EKKO - KALSM
+
+          STAFO is checked against check table *
+          Field assignment:
+
+          LIFRE is checked against check table LFA1
+          Field assignment:
+            LFA1 - MANDT = EKKO - MANDT
+            LFA1 - LIFNR = EKKO - LIFRE
+
+          EXNUM is checked against check table EIKP
+          Field assignment:
+            EIKP - MANDT = EKKO - MANDT
+            EIKP - EXNUM = EKKO - EXNUM
+
+          LOGSY is checked against check table *
+          Field assignment:
+
+          STAKO checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          FRGGR is checked against check table T16FG
+          Field assignment:
+            T16FG - MANDT = EKKO - MANDT
+            T16FG - FRGGR = EKKO - FRGGR
+
+          FRGSX is checked against check table T16FS
+          Field assignment:
+            T16FS - MANDT = EKKO - MANDT
+            T16FS - FRGGR = EKKO - FRGGR
+            T16FS - FRGSX = EKKO - FRGSX
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            19
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          FRGKE is checked against check table T16FB
+          Field assignment:
+            T16FB - MANDT = EKKO - MANDT
+            T16FB - FRGKE = EKKO - FRGKE
+
+          FRGRL checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          LANDS is checked against check table T005
+          Field assignment:
+            T005 - MANDT = EKKO - MANDT
+            T005 - LAND1 = EKKO - LANDS
+
+          LPHIS checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          ADRNR is checked against check table *
+          Field assignment:
+
+          STCEG_L is checked against check table *
+          Field assignment:
+
+          ABSGR is checked against check table T165R
+          Field assignment:
+            T165R - MANDT = EKKO - MANDT
+            T165R - ABSGR = EKKO - ABSGR
+
+          KORNR checked against fixed values from domain KORNR
+          Fixed values:
+                    No corrections of miscellaneous provisions
+            1       Correction of misc. provisions in invoice verification
+
+          MEMORY checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            20
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          PROCSTAT checked against fixed values from domain MEPROCSTATE
+          Fixed values:
+            01      Version in process
+            02      Active
+            03      In release
+            04      Partially released
+            05      Release completed
+            08      Rejected
+            11      In Distribution
+            12      Error in Distribution
+            13      Distributed
+            14      In Preparation
+            26      In external approval
+
+          PROCESS_INDICATOR checked against fixed values from domain MMPUR_PROCESS_INDICATOR
+          Fixed values:
+                    General / No specific Process
+            ISA     Advanced Intercompany Sales (New IC)
+            IST     Advanced Intercompany Stock Transfer
+            MII     Intercompany PO(Intermediates) for MS ICO STO
+            MIP     Intercompany PO for MS ICo STO (Receiving)
+            MIS     MS ICo Stock Transport Order
+            MSA     Intercompany PO(Selling and Intermediates) for MS ICO Sales
+            RPC     Replica -PO from different system, only as carbon copy in S4
+
+          CR_STAT checked against fixed values from domain CR_STAT
+          Fixed values:
+                    Active document has no enabled change request
+            1       Active document has enabled change request
+            2       Change request document is enabled
+            3       Change request document is disabled
+            4       Change request not applicable (historic version)
+
+          MEMORYTYPE checked against fixed values from domain MM_MEMORYTYPE
+          Fixed values:
+                    Document Saved as Complete
+            A       Document for Approval
+            H       Document on Hold
+            P       Document Parked
+
+          RETTP checked against fixed values from domain RET_TYPE
+          Fixed values:
+                    Not Applicable
+            B       Secured by Bond
+            H       Applicable (Header Level)
+            I       Applicable (Item Level)
+
+          HIERARCHY_EXISTS checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            21
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          GROUPING_ID is checked against check table *
+          Field assignment:
+
+          THRESHOLD_EXISTS checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          VSART is checked against check table *
+          Field assignment:
+
+          SHIPCOND is checked against check table *
+          Field assignment:
+
+          HAS_CATALOG_RELEVANT_ITEMS checked against fixed values from domain ABAP_BOOLEAN
+          Fixed values:
+                    False
+            X       True
+
+          INCOV is checked against check table TINCV
+          Field assignment:
+            TINCV - MANDT = SYST - MANDT
+            TINCV - INCOV = EKKO - INCOV
+
+          GRWCU is checked against check table *
+          Field assignment:
+
+          INTRA_REL checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          INTRA_EXCL checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          TOTAL_STATUS_PCS checked against fixed values from domain MMPUR_PC_TOTAL_STATUS_PCS
+          Fixed values:
+                    OK # Not Relevant
+            A       OK ##Approved
+            C       Blocked ##By Supplier
+            D       Blocked - Not Approved
+            E       Partially Blocked ##By Supplier
+            F       Partially Blocked - Not Approved
+            H       Blocked # Check Pending
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            22
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          TOTAL_STATUS_PMA checked against fixed values from domain MMPUR_PC_TOTAL_STATUS_PMA
+          Fixed values:
+                    OK # Not Relevant
+            A       OK ##Approved
+            C       Blocked ##By Destination Country
+            D       Blocked ##Not approved
+            E       Partially Blocked###By Destination Country
+            F       Partially Blocked ##Not approved
+            H       Blocked # Check Pending
+
+          TOTAL_STATUS_DG checked against fixed values from domain MMPUR_PC_TOTAL_STATUS_DG
+          Fixed values:
+                    OK # Not Relevant
+            A       OK ##Transport Allowed
+            B       Warning ##Transport Restricted
+            C       Partially Blocked###Transport Forbidden
+            D       Blocked ##Transport Forbidden
+            H       Blocked # Check Pending
+
+          TOTAL_STATUS_SDS checked against fixed values from domain MMPUR_PC_TOTAL_STATUS_SDS
+          Fixed values:
+                    OK # Not Relevant
+            A       OK ##Approved
+            B       Warning
+            C       Partially Blocked
+            D       Blocked
+            H       Blocked # Check Pending
+
+          TOTAL_STATUS_EMCST checked against fixed values from domain /SAPSLL/TCDCS
+          Fixed values:
+                    Not Relevant, No Check
+            A       Released
+            B       Pending
+            C       Blocked
+            D       Partially Pending
+            E       Partially Blocked
+            F       Pending - Not yet checked
+
+          TOTAL_STATUS_SLCST checked against fixed values from domain /SAPSLL/TCDCS
+          Fixed values:
+                    Not Relevant, No Check
+            A       Released
+            B       Pending
+            C       Blocked
+            D       Partially Pending
+            E       Partially Blocked
+            F       Pending - Not yet checked
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            23
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          TOTAL_STATUS_LCCST checked against fixed values from domain /SAPSLL/TCDCS
+          Fixed values:
+                    Not Relevant, No Check
+            A       Released
+            B       Pending
+            C       Blocked
+            D       Partially Pending
+            E       Partially Blocked
+            F       Pending - Not yet checked
+
+          FOLLOWON_DOC_CAT checked against fixed values from domain EBSTYP
+          Fixed values:
+            A       Request for Quotation
+            C       Central Contract
+            F       Purchase Order
+            K       Contract
+            L       Scheduling Agreement
+            N       Central Request for Quotation
+            O       Quotation
+            R       RFQ
+            T       Central Supplier Quotation
+
+          FOLLOWON_DOC_TYPE is checked against check table *
+          Field assignment:
+
+          ZZT_NATURE checked against fixed values from domain ZT_NATURE
+          Fixed values:
+            1       ST - OEM
+            10      Open Tender
+            2       ST - PAC
+            3       ST - Nomination
+            4       ST - Indegineous development
+            5       LT - empanelled (oil specific)
+            6       LT - Limited vendors / Suppliers
+            7       LT - OEM / OES
+            8       LT - Normal
+            9       LT - Indegineous development
+
+          ZZBD_TYPE checked against fixed values from domain ZBD_TYPE
+          Fixed values:
+            1       Single Bid
+            2       Two bid
+
+          ZZT_DURATION checked against fixed values from domain ZT_DURATION
+          Fixed values:
+            1       Short Tender
+            2       Regular Tender
+
+          ZZINSP_TYP checked against fixed values from domain ZINSP_TYP
+          Fixed values:
+            1       Source Inspection
+            2       Destination Inspection
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            24
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          ZZVEND_CAT checked against fixed values from domain ZVEND_CAT
+          Fixed values:
+            1       OEM/OES
+            10      DGS&D
+            11      ONGC Registered
+            12      Others
+            13      MSE/NSIC/SSI-SC/ST-Women
+            2       OEM/OES & NSIC
+            3       OEM/OES & DGS&D
+            4       OEM/OES & CPSU
+            5       MSE/NSIC/SSI-General
+            6       MSE/NSIC/SSI-Women
+            7       MSE/NSIC/SSI-SC/ST
+            8       CPSU
+            9       CPSU & DGS&D
+
+          ZZINSP_AUTH checked against fixed values from domain ZINSP_AUTH
+          Fixed values:
+            1       QAD
+            2       QAD &  Indentor
+            3       Indentor
+            4       Third party inspection agency
+            5       QAD &  Third party inspection agency
+            6       Third party inspection agency &  Indentor
+            7       Others
+
+          ZZPRE_AWD checked against fixed values from domain ZPRE_AWD
+          Fixed values:
+            001     100     Validate the ranges from 1 to 100
+
+          ZZPST_AWD checked against fixed values from domain ZPST_AWD
+          Fixed values:
+            001     100     Validate the ranges from 1 to 100
+
+          ZZARBIT checked against fixed values from domain ZARBIT
+          Fixed values:
+                    No Arbitration
+            CA      Arbitration Closed
+            OA      Arbitration Open
+
+          ZZTPI_ADD is checked against check table ADRC
+          Field assignment:
+            ADRC - CLIENT = EKKO - MANDT
+            ADRC - ADDRNUMBER = EKKO - ZZTPI_ADD
+            ADRC - DATE_FROM = * (generic)
+            ADRC - NATION = * (generic)
+
+          ZZQAD_DET is checked against check table ADRC
+          Field assignment:
+            ADRC - CLIENT = EKKO - MANDT
+            ADRC - ADDRNUMBER = EKKO - ZZQAD_DET
+            ADRC - DATE_FROM = * (generic)
+            ADRC - NATION = * (generic)
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            25
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          ZZNAT_PROC is checked against check table ZNAT_PROC
+          Field assignment:
+            ZNAT_PROC - MANDT = SYST - MANDT
+            ZNAT_PROC - ZZNAT_PROC = EKKO - ZZNAT_PROC
+            ZNAT_PROC - SERIAL_NO = * (generic)
+
+          ZZBIDER_AGR checked against fixed values from domain ZBIDERAGR
+          Fixed values:
+            N       No
+            Y       Yes
+
+          ZZSUBMI is checked against check table ZMM_PUR_TENDER_D
+          Field assignment:
+            ZMM_PUR_TENDER_D - MANDT = SYST - MANDT
+            ZMM_PUR_TENDER_D - SUBMI = EKKO - ZZSUBMI
+
+          ZZEPC checked against fixed values from domain ZZEPC
+          Fixed values:
+            N       No
+            Y       Yes
+
+          ZZPSA is checked against check table *
+          Field assignment:
+
+          ZZCPO is checked against check table *
+          Field assignment:
+
+          ZZINDPER is checked against check table *
+          Field assignment:
+
+          ZZRELCODE is checked against check table *
+          Field assignment:
+
+          ZZDMEP checked against fixed values from domain ZZDMEP
+          Fixed values:
+            NO      No
+            YES     Yes
+
+          ISEOPBLOCKED checked against fixed values from domain EOPBLOCKED
+          Fixed values:
+                    Ongoing Business, Active Purpose
+            X       Business Purpose Completed, End of Purpose Reached
+
+          ISAGED checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          RELOC_ID is checked against check table /ISDFPS/REL
+          Field assignment:
+            /ISDFPS/REL - MANDT = SYST - MANDT
+            /ISDFPS/REL - RELOC_ID = EKKO - RELOC_ID
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            26
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          RELOC_SEQ_ID is checked against check table /ISDFPS/RELSEQ
+          Field assignment:
+            /ISDFPS/RELSEQ - MANDT = SYST - MANDT
+            /ISDFPS/RELSEQ - RELOC_SEQ_ID = EKKO - RELOC_SEQ_ID
+
+          FSH_OS_STG_CHANGE checked against fixed values from domain FLAG
+          Fixed values:
+                    Flag is not set
+            X       Flag set (event raised)
+
+          OIEXGTYP is checked against check table *
+          Field assignment:
+
+          OIAEVGTYPE checked against fixed values from domain OIA_EVTYPE
+          Fixed values:
+                    None
+            R       Regular
+            U       Unlimited
+
+          OIPIPEVAL checked against fixed values from domain X
+          Fixed values:
+                    No
+            X       Yes
+
+          OIC_LIFNR is checked against check table LFA1
+          Field assignment:
+            LFA1 - MANDT = SYST - MANDT
+            LFA1 - LIFNR = EKKO - OIC_LIFNR
+
+          OIC_DCITYC is checked against check table T005G
+          Field assignment:
+            T005G - MANDT = SYST - MANDT
+            T005G - LAND1 = EKKO - OIC_DLAND1
+            T005G - REGIO = EKKO - OIC_DREGIO
+            T005G - CITYC = EKKO - OIC_DCITYC
+
+          OIC_DCOUNC is checked against check table T005E
+          Field assignment:
+            T005E - MANDT = SYST - MANDT
+            T005E - LAND1 = EKKO - OIC_DLAND1
+            T005E - REGIO = EKKO - OIC_DREGIO
+            T005E - COUNC = EKKO - OIC_DCOUNC
+
+          OIC_DREGIO is checked against check table T005S
+          Field assignment:
+            T005S - MANDT = SYST - MANDT
+            T005S - LAND1 = EKKO - OIC_DLAND1
+            T005S - BLAND = EKKO - OIC_DREGIO
+
+          OIC_DLAND1 is checked against check table T005
+          Field assignment:
+            T005 - MANDT = SYST - MANDT
+            T005 - LAND1 = EKKO - OIC_DLAND1
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            27
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          OIC_OCITYC is checked against check table T005G
+          Field assignment:
+            T005G - MANDT = SYST - MANDT
+            T005G - LAND1 = EKKO - OIC_OLAND1
+            T005G - REGIO = EKKO - OIC_OREGIO
+            T005G - CITYC = EKKO - OIC_OCITYC
+
+          OIC_OCOUNC is checked against check table T005E
+          Field assignment:
+            T005E - MANDT = SYST - MANDT
+            T005E - LAND1 = EKKO - OIC_OLAND1
+            T005E - REGIO = EKKO - OIC_OREGIO
+            T005E - COUNC = EKKO - OIC_OCOUNC
+
+          OIC_OREGIO is checked against check table T005S
+          Field assignment:
+            T005S - MANDT = SYST - MANDT
+            T005S - LAND1 = EKKO - OIC_OLAND1
+            T005S - BLAND = EKKO - OIC_OREGIO
+
+          OIC_OLAND1 is checked against check table T005
+          Field assignment:
+            T005 - MANDT = SYST - MANDT
+            T005 - LAND1 = EKKO - OIC_OLAND1
+
+          OIC_MOT is checked against check table TVTR
+          Field assignment:
+            TVTR - MANDT = SYST - MANDT
+            TVTR - VKTRA = EKKO - OIC_MOT
+
+          ZAPCGK is checked against check table /ILE/TV01
+          Field assignment:
+            /ILE/TV01 - MANDT = SYST - MANDT
+            /ILE/TV01 - APCGK = EKKO - ZAPCGK
+            /ILE/TV01 - APCGK_EXTEND = EKKO - APCGK_EXTEND
+
+          ZADATTYP checked against fixed values from domain /ILE/TDATETYP
+          Fixed values:
+            1       Good Receipt Document Date
+            2       Good Receipt posting Date
+            3       Invoice Date
+            4       Invoice Posting Date
+            5       period from - services only
+            6       period to -  services only
+            7       Manual annexing date
+            8       PO creation date
+            9       PO end of validity period
+
+          ZINDANX checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            28
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          HASHCAL_EXISTS is checked against check table *
+          Field assignment:
+
+          KNOWN_INDEX checked against fixed values from domain XFELD
+          Fixed values:
+                    No
+            X       Yes
+
+          VZSKZ is checked against check table *
+          Field assignment:
+
+          PROCE is checked against check table PFM_01TD04
+          Field assignment:
+            PFM_01TD04 - MANDT = SYST - MANDT
+            PFM_01TD04 - PROCEDIMENTO = EKKO - PROCE
+
+          CONC is checked against check table PFM_01TP12
+          Field assignment:
+            PFM_01TP12 - MANDT = SYST - MANDT
+            PFM_01TP12 - CONC = EKKO - CONC
+
+          CONT is checked against check table PFM_01TP13
+          Field assignment:
+            PFM_01TP13 - MANDT = SYST - MANDT
+            PFM_01TP13 - CONT = EKKO - CONT
+
+          COMP is checked against check table PFM_01TP14
+          Field assignment:
+            PFM_01TP14 - MANDT = SYST - MANDT
+            PFM_01TP14 - COMP = EKKO - COMP
+
+          OUTR is checked against check table PFM_01TP15
+          Field assignment:
+            PFM_01TP15 - MANDT = SYST - MANDT
+            PFM_01TP15 - OUTR = EKKO - OUTR
+
+          DESP_CARGO is checked against check table PFM_01TP16
+          Field assignment:
+            PFM_01TP16 - MANDT = SYST - MANDT
+            PFM_01TP16 - CARGO = EKKO - DESP_CARGO
+
+          PARE_CARGO is checked against check table PFM_01TP16
+          Field assignment:
+            PFM_01TP16 - MANDT = SYST - MANDT
+            PFM_01TP16 - CARGO = EKKO - PARE_CARGO
+
+          POHF_TYPE checked against fixed values from domain WRF_POHF_TYPE
+          Fixed values:
+                    Document was not created using Seasonal Procurement
+            1       Seasonal Procurement Grouped Purchase Order Document
+            2       Seasonal Procurement Purchase Order
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            29
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          EQ_WERKS is checked against check table *
+          Field assignment:
+
+          FIXPO checked against fixed values from domain WRF_POHF_FIXPO_X
+          Fixed values:
+                    Inactive
+            X       Firm Deal Active
+
+          EKGRP_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          WERKS_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          CONTRACT_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          PSTYP_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          FIXPO_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          KEY_ID_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          AUREL_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            30
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          DELPER_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          EINDT_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          LTSNR_ALLOW checked against fixed values from domain WRF_POHF_CHAR_1_2
+          Fixed values:
+                    Inactive
+            1       For Grouping Process
+            2       Each Time a Document is Processed in Seasonal Procurement
+
+          OTB_LEVEL checked against fixed values from domain WRF_POTB_CHECK_LEVEL
+          Fixed values:
+            1       Header
+            2       Schedule Line
+
+          OTB_COND_TYPE is checked against check table *
+          Field assignment:
+
+          OTB_CURR is checked against check table *
+          Field assignment:
+
+          OTB_STATUS checked against fixed values from domain WRF_POTB_STATUS
+          Fixed values:
+                    Not Checked
+            1       OTB Check Without Errors
+            2       Checked with Errors
+
+          OTB_REASON checked against fixed values from domain WRF_POTB_STATUS_REASON
+          Fixed values:
+            001     No Check Required
+            002     Active Budget Available
+            005     Complete OTB Check Successful
+            006     Complete OTB Check Not Successful
+            007     OTB Check Not Active According to Customizing
+            008     OTB Check Deactivated According to BAdI
+            009     At Least One Variant of Generic Material w. Negative OTB Ch.
+            010     All Variants of Generic Material with Positive OTB Check
+            011     At least one doc. w. same coll. no. OTB neg. (reason 006)
+
+          CHECK_TYPE checked against fixed values from domain WRF_BUDG_OTB_CHECK
+          Fixed values:
+            1       Full Check
+            2       Limited Check
+            3       No Check
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            31
+
+
+
+
+        ABAP Dictionary                 Rel. 816                          EKKO______________________________________________________________________
+
+
+
+
+
+          CON_OTB_REQ checked against fixed values from domain CHAR1_X
+          Fixed values:
+                    Not Selected
+            X       Selected
+
+          CON_PREBOOK_LEV checked against fixed values from domain WRF_POTB_PREBOOK_LEVEL
+          Fixed values:
+            1       OTB Indicator on Header Level
+            2       OTB Indicator on Item Level
+
+          CON_DISTR_LEV checked against fixed values from domain WRF_POTB_DISTRIB_LEVEL
+          Fixed values:
+            1       Distribution Using Contract Target Value
+            2       Distribution Using Item Quantities
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        ______________________________________________________________________
+        SAP AG                         22.10.2026                            32
