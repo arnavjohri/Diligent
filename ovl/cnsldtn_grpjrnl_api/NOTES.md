@@ -143,6 +143,15 @@ TY_T_RA_RTFLG`, `IV_RESTRICT_CU FC_BUNIT`, `IV_RLDNR FC_RLDNR`; exporting `ET_DO
 types, names truncated in the screenshot). Selection is by document type, not by task: the
 task's document type is the link to its previous run.
 
+Fiori app path, confirmed 22/10/26 from `CL_FINCS_JE_POST->/BOBF/IF_FRW_ACTION~EXECUTE`:
+`cl_fincs_je_factory=>get_je_draft_post( )->process_draft( io_read it_draft_key io_modify
+-> eo_message et_failed_draft_key et_active_je )`, then deletes the draft node
+`if_i_cnsldtnjrnlentrytp1_c=>sc_node-i_cnsldtnjrnlentrytp`. `CL_FINCS_JE_FACTORY` hands out
+the journal-entry service layer; the service below `PROCESS_DRAFT` that takes plain header
+and items (after the draft read) is the candidate entry point above the DP engine, because
+it carries the app's checks (balance, FS item validity, posting level from document type).
+To open next: `CL_FINCS_JE_FACTORY` methods, and the `PROCESS_DRAFT` implementation.
+
 Still to paste: `DELETE_D...` full name and parameters; `CL_FINCS_DP_DOCUMENT_POST`
 constructor; where-used of `IF_FINCS_DP_DOCUMENT_POST~POST` (example caller); SE11 fields of
 `FINCS_S_DOCUMENT_HEAD_POST`, `FINCS_S_DOCUMENT_CONTROL_POST`, line type of
