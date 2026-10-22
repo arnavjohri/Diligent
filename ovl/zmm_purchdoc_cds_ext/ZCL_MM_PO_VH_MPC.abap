@@ -26,6 +26,8 @@
 *              22/10/26 v6 - UI.TextArrangement TextLast on the PO field,
 *              so key and description show together, key first, as in
 *              the GUI popup ("1 Source Inspection").
+*              22/10/26 v7 - the simple-value method is
+*              SET_ENUM_MEMBER_BY_NAME (activation error on v6).
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -63,9 +65,11 @@
 * ASSUMPTION A6: the VOCAN API (annotations target, record, property,
 *   simple value) takes STRING. If activation reports a STRING / C(n)
 *   mismatch on one of those lines, change that one actual to a literal.
-* ASSUMPTION A7: /IWBEP/IF_MGW_VOCAN_ANNOTATION has CREATE_SIMPLE_VALUE
-*   and the simple value has SET_ENUM_MEMBER. If activation rejects
-*   either, delete step 3 of ANNOTATE_VALUE_LIST and put
+* ASSUMPTION A7: SET_ENUM_MEMBER_BY_NAME takes the qualified member
+*   'Namespace.Type/Member'. If the arrangement does not show in the
+*   app and $metadata carries the term with an odd EnumMember, try the
+*   short form 'TextLast'. If activation rejects the call altogether,
+*   delete step 3 of ANNOTATE_VALUE_LIST and put
 *   @UI.textArrangement: #TEXT_LAST on zzinsp_typ in
 *   ZC_PURCHASEORDERTP_EXT instead (same effect, CDS side).
 * Not in this version: search support in the value help (two rows) and
@@ -262,7 +266,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     "    key first, as in the GUI popup ("1 Source Inspection"). TextFirst
     "    gives "Source Inspection (1)", TextOnly the description alone.
     lo_ann_target->create_annotation( 'com.sap.vocabularies.UI.v1.TextArrangement'
-      )->create_simple_value( )->set_enum_member(
+      )->create_simple_value( )->set_enum_member_by_name(
         'com.sap.vocabularies.UI.v1.TextArrangementType/TextLast' ).       "ASSUMPTION A7
   ENDMETHOD.
 
