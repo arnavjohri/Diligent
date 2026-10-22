@@ -244,6 +244,24 @@ was created afterwards. The zz properties come through at runtime; the entity se
 cleanups, test on the **Z** service. Z service / project name still to be read from the BAS
 app's `manifest.json` (`sap.app.dataSources.mainService.uri`) or `/IWFND/MAINT_SERVICE` (`Z*`).
 
+**Correction 22/10/26, later — `ZMM_PUR_PO_MAINT_V2_SRV` is a hub alias, not a Z project.**
+`/IWFND/MAINT_SERVICE` (screenshot `original/ZMM_PUR_PO_MAINT_V2_SRV_MAINT_SERVICE_2026-10-22.png`):
+Technical Service Name `ZMM_PUR_PO_MAINT_V2_SRV`, version 1, *Manage Purchase Orders
+(SmartTemplate)*, **External Service Name `MM_PUR_PO_MAINT_V2_SRV`**, type BEP, co-deployed. The
+Z name was given at Add Service time; the backend service, model, DPC/MPC and entity sets are
+SAP's. SEGW accordingly shows only `MM_PUR_PO_MAINT_V2`, which is standard and stays untouched.
+So the Gateway Client test on the standard service was the right test after all, and "step 3
+on the existing Z project" is void: there is no project to add an entity set to. The full
+redefinition route below applies, with one adjustment — the hub name `ZMM_PUR_PO_MAINT_V2_SRV`
+is taken by the alias, so the new project gets a **new name** (`ZMM_PUR_PO_MAINT_EXT` →
+`ZMM_PUR_PO_MAINT_EXT_SRV`) and the BAS app is repointed to it; the alias stays as the
+fallback. Reusing the name would mean deleting the alias registration first (manual, brief
+outage, nothing to fall back to). **Gate before building:** SEGW may refuse to redefine a
+SADL / referenced-data-source service on this release. If Redefine → OData Service (GW)
+rejects `MM_PUR_PO_MAINT_V2_SRV`, the backend route is closed and what remains is a UI
+extension (adaptation project, fragment with a ComboBox on a small Z service exposing only
+`ZI_DOM_FIXVAL_VH`) or the Custom Fields app.
+
 **Entity sets of the standard service** are listed in
 `original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` (service document, 22/10/26, still
 no Z* collection). Useful by-product: value-help sets for plant, supplier, customer, business

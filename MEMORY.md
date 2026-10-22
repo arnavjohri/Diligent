@@ -30,7 +30,7 @@ outside the repo is a file that will be lost.
 | Transfer into SAP | abapGit standalone (offline ZIP) or copy-paste from SE80. Nothing else |
 | `abap-adt` MCP | Points at `192.168.11.21` client 200 — a **different** system. Scratch syntax rig only, when explicitly asked. Never `setObjectSource` / `activateByName` / `deleteObject` against a project object |
 | Mass download helper | `ZR_PROG_DOWNLOAD` — pulls a program with its full include tree (also FGs/classes, by package or name list; CDS DDL sources since 19/10/26). Source: `tools/zr_prog_download/` — the first version was never filed and had to be rewritten |
-| PO Fiori app, OVL | The custom tiles on *Manage Purchase Orders* call an existing **Z** service derived from `MM_PUR_PO_MAINT_V2_SRV` (BAS deployment) — **not** the standard service. Name: read it from the app's `manifest.json` (`sap.app.dataSources.mainService.uri`). Its SEGW project exists; a value-help view created after generation is not an entity set until the project is regenerated (§4.3) |
+| PO Fiori app, OVL | The custom tiles on *Manage Purchase Orders* (BAS deployment) call `ZMM_PUR_PO_MAINT_V2_SRV`. That name is only a **hub registration** in `/IWFND/MAINT_SERVICE` of the standard backend service — column *External Service Name* = `MM_PUR_PO_MAINT_V2_SRV` (screenshot 22/10/26 in `ovl/zmm_purchdoc_cds_ext/original/`). **There is no Z SEGW project**; the model and entity sets are SAP's, frozen at SAP's generation. A new value-help entity set needs a real Z project (§4.3) |
 | Not on any machine | `DDLS_BASE_FIELDS.txt`, `ARS_API_SUCCESSOR.xlsx`. CDS element names cannot be re-verified — use only mappings already written down |
 
 **Assume no system access.** Never propose "let me check table X in your system". Reason
@@ -258,7 +258,7 @@ Every row below was established on the system, not read from documentation.
 |---|---|
 | A `C_…TP` consumption view with `transactionalProcessingDelegated: true` and `BOPF:` actions (`C_PurchaseOrderTP`) | BOPF-based → served by a **SEGW project with referenced data source**, not a RAP service binding. There is no service definition extension route |
 | Entity sets of a referenced-data-source SEGW project are **fixed when the project is generated**; the *properties* of the referenced view are read at runtime | Extension fields (`zz*`) show in the app with no regeneration. A new value-help view does **not** enter the service through `@Consumption.valueHelpDefinition`, nor through an association exposed as a navigation in the extension (tested: `_ZzInspTypVH` activated cleanly, service document still without the collection after cache cleanup). **Not tested:** that association plus `@ObjectModel.foreignKey.association: '_ZzInspTypVH'` on the element — the form SAP's own fields carry (`PurchasingGroup` → `_PurchasingGrpValueHelp`, `IncotermsVersion` → `_IncotermsVersion`). The test also ran on the standard service, not the Z one. If a test is wanted it is one object; the SEGW route does not depend on it |
-| F4 opens the bare *Define Conditions* dialog with no value list | The VH entity is not in the service document, or a cache is stale. Not a CDS defect. Fix: add the VH view as **Data Source Reference** entity set in the **Z** SEGW project, Generate Runtime Objects, `/IWFND/MAINT_SERVICE` Load Metadata, the three cache cleanups, re-test on the Z service |
+| F4 opens the bare *Define Conditions* dialog with no value list | The VH entity is not in the service document, or a cache is stale. Not a CDS defect. Fix: a **real Z SEGW project** that redefines the standard service (Data Model → Redefine → OData Service (GW)), plus the VH view as **Data Source Reference** entity set, Generate Runtime Objects, register, Load Metadata, the three cache cleanups, repoint the app. A hub alias of the standard service (`ZMM_PUR_PO_MAINT_V2_SRV`) has nothing to add to |
 | Value-help sets already in `MM_PUR_PO_MAINT_V2_SRV`: plant, supplier, customer, business user, cost centre, WBS, country, region, material group, currency, unit, G/L account, profit centre … | A custom field whose values are one of these gets its F4 from `@Consumption.valueHelpDefinition` alone, no exposure work. Full list: `ovl/zmm_purchdoc_cds_ext/original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` |
 | Only 12 of 84 extension elements visible in the app | An element without `@UI.identification` (`@UI.lineItem` for the list) reaches `$metadata` but no section. `@UI.facet` is entity-level: an `extend view` cannot add it, and a DDLX needs `@Metadata.allowExtensions: true` on the base view |
 | `@ObjectModel.resultSet.sizeCategory: #XS` on the VH view | Fiori renders a dropdown instead of the value help dialog. Drop the line for a dialog |
@@ -266,7 +266,10 @@ Every row below was established on the system, not read from documentation.
 Order of work for any further F4 on a custom field, **before** any CDS is written:
 
 1. Which service does the app call? `manifest.json` → `sap.app.dataSources.mainService.uri`,
-   or `/IWFND/MAINT_SERVICE` filtered on `Z*`. A standard app name on the tile proves nothing.
+   then `/IWFND/MAINT_SERVICE` on that name and read the **External Service Name** column. A
+   Z technical name over a standard external name is an alias: SEGW shows no Z project, and
+   the entity sets are the standard project's. A standard app name on the tile proves
+   nothing, and neither does a Z service name.
 2. Is the VH target already an entity set of *that* service? Service document first, then
    `$metadata` for `Common.ValueList` / `CollectionPath` on the element. Present → annotation
    only. Absent → SEGW exposure first, in the Z project, never the standard one.
@@ -432,11 +435,15 @@ to the code.**
 `ovl/zmm_purchdoc_cds_ext`) The Gateway Client test ran on standard `MM_PUR_PO_MAINT_V2_SRV`,
 found no `ZI_DOM_FIXVAL_VH` collection, and the day went into "the standard project is
 closed": an association test, the BOPF/SEGW-versus-RAP analysis, three redefinition routes.
-All correct, all beside the point — the custom tiles run on an existing **Z** service derived
-from the standard one (BAS deployment), and that is where the entity set is missing.
-→ **First question on any Fiori/OData symptom: which service does the app actually call?
-`manifest.json` → `sap.app.dataSources.mainService.uri`, or `/IWFND/MAINT_SERVICE` on `Z*`.
-Test on that service and no other. A standard app name on the tile proves nothing.**
+Then came "the tiles run on a Z service", and the plan shrank to one step in "the existing
+Z project". The `/IWFND/MAINT_SERVICE` screenshot the same evening showed
+`ZMM_PUR_PO_MAINT_V2_SRV` with *External Service Name* `MM_PUR_PO_MAINT_V2_SRV`: a hub alias
+of the standard service, no Z project at all. The standard-service test had been the right
+test; the second turn was the wrong one, taken on a service name alone.
+→ **First question on any Fiori/OData symptom: which service does the app call, and what
+is it? `manifest.json` → `sap.app.dataSources.mainService.uri`, then `/IWFND/MAINT_SERVICE`
+and the External Service Name column, then SEGW for the project. A name proves nothing in
+either direction.**
 
 **M-23 — Abandoned a method on an undiagnosed symptom.** The single generic `DD07T` value
 help (one view for every fixed-value domain, `additionalBinding` / `localConstant` per
