@@ -250,6 +250,7 @@ Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `T
 | A retype changes **only** the data element after `TYPE`/`LIKE` | `vbtyp_n TYPE vbtyp_n,` → `vbtyp_n TYPE vbtypl,` — never rename the component |
 | `The type "STRING" of "…=>GC_X" is not compatible with the type "C(40)" of "IV_ENTITY_TYPE_NAME"` | An IMPORTING parameter typed `C(n)` is passed by reference and takes no STRING variable or constant. Pass a **literal** or a field of the exact type. Gateway's metadata API (`/iwbep/if_mgw_odata_*`: entity type, property, set, structure names) is CHAR; the vocabulary API (`/iwbep/if_mgw_vocan_*`) takes strings. Keep name constants as STRING only for string templates |
 | `does not contain an interface "/IWBEP/IF_MGW_ODATA_ANNOTATABLE"` / `GET_SCHEMA_NAMESPACE does not have a RETURNING parameter` | Gateway names are cut at 30 characters: the interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL`. `get_schema_namespace` exports, so it cannot sit in an expression — use the namespace literal (`<SEGW project>_SRV`) instead. Vocabulary simple value: the enum setter is `set_enum_member_by_name`, not `set_enum_member` |
+| Every request on the service dies with `MESSAGE_TYPE_X` in `/IWBEP/CL_MGW_MED_MODEL_UTIL`, `build_attrib_by_struc_name`, `x160(/iwbep/cm_mgw_rt)` "structure type … does not exist" | `bind_structure( )` in a model-provider class does **not** check the structure when called; the name is resolved when the model is built, outside any `TRY`. An entity type bound to the SQL view of a CDS view that is not active takes the whole service down (22/10/26, Manage Purchase Orders, ~10 minutes). Check with `cl_abap_structdescr=>describe_by_name` **before** creating the type, and keep the switch-off (comment the enhancement call) ready |
 
 ### 4.3 Fiori value help on a custom CDS field — confirmed by test on OCQ, 22/10/26
 
@@ -467,6 +468,17 @@ object, only the later one active — and the repo root file is the only place b
 line of the delivery ("this file also carries X, which is not in the system yet"), and diff
 the next system copy against the repo root file before anything else. Every hand edit in
 ADT re-opens the drift of §2.1.**
+
+**M-26 — Took a productive Fiori app down with a value-help block whose view was not active.**
+(22/10/26 · `ovl/zmm_purchdoc_cds_ext`) Class v9 bound four new entity types to SQL views, two of
+which were not pasted yet and one never activated. `bind_structure` accepted the names; the model
+build dumped on the first of them, and every request on the PO service answered 500 until the
+enhancement call was commented out. The `TRY` around the block caught nothing, because nothing
+was raised where the code ran.
+→ **A model-provider enhancement is live for every user of the service the moment it is active.
+Never bind to a structure you have not checked exists, never ship blocks for views that are not
+active yet, and know the one-line switch-off before pasting. A `TRY` proves nothing about what
+the framework does later with what you built.**
 
 **M-25 — Over-claimed a negative test.** The association test was logged as "exposed
 exactly like `_IncotermsVersion`" and the route marked closed. `IncotermsVersion` gets its
