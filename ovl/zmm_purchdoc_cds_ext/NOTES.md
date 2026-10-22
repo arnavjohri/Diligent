@@ -332,6 +332,23 @@ own tile, only that one step is missing.
 | 2 | `ZEI_MM_PO_VH_MPC` (source-code enhancement) | `ZEI_MM_PO_VH_MPC.abap` (22 lines) | Two statements at the implicit option at the END of `DEFINE` in `CL_MM_PUR_PO_MAINT_V2_MPC_EXT` (or the MPC, whichever implements `DEFINE` — Runtime Artifacts decide). Calls object 1 with `model` / `vocab_anno_model` | Delivered, after object 1 |
 | 3 | DPC enhancement | — | Implicit option at the START of `GET_ENTITYSET` in the DPC_EXT (or DPC): when `iv_entity_set_name = 'ZI_DOM_FIXVAL_VH'`, select from the view, `/iwbep/cl_mgw_data_util=>filtering` + `paging`, `copy_data_to_ref`, `RETURN`. Everything else falls through to SAP's code | Not written yet — needs the DPC class name and whether `GET_ENTITYSET` is redefined |
 
+**Runtime Artifacts, confirmed 22/10/26** (screenshot
+`original/SEGW_MM_PUR_PO_MAINTAIN_V2_runtime_artifacts_2026-10-22.png`): SEGW project is
+`MM_PUR_PO_MAINTAIN_V2`; classes `CL_MM_PUR_PO_MAINT_V2_DPC`, `_DPC_EXT`, `_MPC`, `_MPC_EXT`;
+model `MM_PUR_PO_MAINT_V2_MDL`; service `MM_PUR_PO_MAINT_V2_SRV` (so the schema namespace
+assumption A5 holds); annotation model `MM_PUR_PO_MAINTAIN_V2_ANNO_MDL` — served under the same
+service, no concern for the enhancement route, but it is the reason the redefinition route would
+have needed its annotations re-created.
+
+**Open question, same screenshot:** a Z project `ZMM_PO_MAINTAIN_EXT1`, description "Manage
+Purchase Orde…", sits in the same SEGW list. Nobody has looked inside it. If it is a redefinition
+of `MM_PUR_PO_MAINT_V2_SRV` (Data Model with the PO entities, Runtime Artifacts `ZCL_ZMM_PO_MAINTAIN_EXT1_*`,
+service `ZMM_PO_MAINTAIN_EXT1_SRV`), the clean route exists after all: add `ZI_DOM_FIXVAL_VH` as
+Reference → Data Source there, regenerate, register, repoint the app. The app today calls the alias
+`ZMM_PUR_PO_MAINT_V2_SRV`, not this project's service. Check before investing further in the
+enhancement: open the project, read Data Model and Runtime Artifacts, and `/IWFND/MAINT_SERVICE`
+for `ZMM_PO_MAINTAIN_EXT1_SRV`.
+
 After 1–3: `/IWFND/MAINT_SERVICE` → `ZMM_PUR_PO_MAINT_V2_SRV` → Load Metadata, `/IWBEP/CACHE_CLEANUP`,
 `/IWFND/CACHE_CLEANUP`, `/UI2/INVALIDATE_CLIENT_CACHES`. Gateway Client: `$metadata` shows
 `EntitySet Name="ZI_DOM_FIXVAL_VH"` and `Common.ValueList` on `zzinsp_typ`;
