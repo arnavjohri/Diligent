@@ -6,6 +6,12 @@
 * Author     : Arnav Johri (Diligent)      Created: 22.10.2026
 * Project    : OVL - Fiori F4 on EKKO custom fields (ZC_PURCHASEORDERTP_EXT)
 * Ships by   : paste (ADT global class). Object 1 of 3.
+* Change     : 22/10/26 v2 - activation error "type STRING of
+*              GC_VH_ENTITY_TYPE is not compatible with C(40) of
+*              IV_ENTITY_TYPE_NAME": the metadata (MED) API takes CHAR
+*              names by reference, so a STRING cannot be passed. Names
+*              into the MED API are now literals or C LENGTH 40; STRING
+*              only where the vocabulary (VOCAN) API takes it.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -26,8 +32,9 @@
 * EntitySet ZI_DOM_FIXVAL_VH and Common.ValueList on zzinsp_typ.
 *
 * ASSUMPTION A1: the PO header entity type is C_PurchaseOrderTPType and
-*   the property is zzinsp_typ, as SADL names them. Verify in $metadata;
-*   if different, change only the constants GC_PO_ENTITY_TYPE / the call.
+*   the property is zzinsp_typ, as SADL names them. Verify in $metadata.
+*   The names stand at the places marked "A1": the constant (used in
+*   the annotation target) and the literals in ADD_VALUE_HELPS.
 * ASSUMPTION A2: SQL view of ZI_DOM_FIXVAL_VH is ZIDOMFIXVALVH with the
 *   columns DOMAINNAME, DOMAINVALUE, DOMAINVALUETEXT, VALUEPOSITION.
 * ASSUMPTION A3: the Common vocabulary is already referenced by SAP's
@@ -36,6 +43,9 @@
 * ASSUMPTION A5: /IWBEP/IF_MGW_ODATA_MODEL has GET_SCHEMA_NAMESPACE. If
 *   activation says it is unknown, replace the call by the literal from
 *   <Schema Namespace="..."> in $metadata.
+* ASSUMPTION A6: the VOCAN API (annotations target, record, property,
+*   simple value) takes STRING. If activation reports a STRING / C(n)
+*   mismatch on one of those lines, change that one actual to a literal.
 * Not in this version: search support in the value help (two rows) and
 *   the per-field view copies; the Constant parameter on DomainName
 *   already restricts a shared set per field once the view's WHERE is
@@ -59,10 +69,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS:
-      gc_po_entity_type TYPE string VALUE 'C_PurchaseOrderTPType',           "ASSUMPTION A1
-      gc_vh_entity_type TYPE string VALUE 'ZI_DOM_FIXVAL_VH',
-      gc_vh_entity_set  TYPE string VALUE 'ZI_DOM_FIXVAL_VH',
-      gc_vh_structure   TYPE string VALUE 'ZIDOMFIXVALVH',                   "ASSUMPTION A2
+      gc_po_entity_type TYPE string VALUE 'C_PurchaseOrderTPType',   "ASSUMPTION A1 (VOCAN only)
+      gc_vh_entity_set  TYPE string VALUE 'ZI_DOM_FIXVAL_VH',        "VOCAN only
       gc_common         TYPE string VALUE 'com.sap.vocabularies.Common.v1'.
 
     "! Entity type and entity set ZI_DOM_FIXVAL_VH (DD07T fixed values)
@@ -72,15 +80,10 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       RAISING
         /iwbep/cx_mgw_med_exception.
 
-    "! One VH property of the set: key flag, type, length, label
-    CLASS-METHODS add_vh_property
+    "! Flags shared by every property of the value-help set
+    CLASS-METHODS set_vh_flags
       IMPORTING
-        io_entity_type TYPE REF TO /iwbep/if_mgw_odata_entity_typ
-        iv_name        TYPE string        "OData property name
-        iv_abap_field  TYPE string        "column of ZIDOMFIXVALVH
-        iv_length      TYPE i
-        iv_label       TYPE string
-        iv_is_key      TYPE abap_bool DEFAULT abap_false
+        io_property TYPE REF TO /iwbep/if_mgw_odata_property
       RAISING
         /iwbep/cx_mgw_med_exception.
 
@@ -89,6 +92,7 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       IMPORTING
         io_model       TYPE REF TO /iwbep/if_mgw_odata_model
         io_vocan_model TYPE REF TO /iwbep/if_mgw_vocan_model
+        io_po_property TYPE REF TO /iwbep/if_mgw_odata_property
         iv_property    TYPE string        "PO property, e.g. zzinsp_typ
         iv_label       TYPE string        "title of the value help
         iv_domain      TYPE string        "domain whose fixed values apply
@@ -109,14 +113,17 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     TRY.
         create_dom_fixval_vh( io_model ).
 
-        " One call per custom field. A further fixed-value field is one
-        " more call here; the WHERE of ZI_DOM_FIXVAL_VH must then admit
+        " One block per custom field. A further fixed-value field is one
+        " more block here; the WHERE of ZI_DOM_FIXVAL_VH must then admit
         " its domain as well (the Constant parameter does the filtering).
+        DATA(lo_po_property) = io_model->get_entity_type( 'C_PurchaseOrderTPType'   "ASSUMPTION A1
+                                 )->get_property( 'zzinsp_typ' ).          "ASSUMPTION A1
         annotate_value_list( io_model       = io_model
                              io_vocan_model = io_vocan_model
-                             iv_property    = 'zzinsp_typ'
+                             io_po_property = lo_po_property
+                             iv_property    = 'zzinsp_typ'                 "ASSUMPTION A1
                              iv_label       = 'Inspection Type'
-                             iv_domain      = 'ZINSP_TYP' ).           "ASSUMPTION A4
+                             iv_domain      = 'ZINSP_TYP' ).               "ASSUMPTION A4
 
       CATCH cx_root INTO DATA(lx_any).
         " Deliberate: the PO service must come up even if the value help
@@ -127,36 +134,47 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
 
   METHOD create_dom_fixval_vh.
+    DATA lo_property TYPE REF TO /iwbep/if_mgw_odata_property.
+
     DATA(lo_entity_type) = io_model->create_entity_type(
-                             iv_entity_type_name = gc_vh_entity_type
+                             iv_entity_type_name = 'ZI_DOM_FIXVAL_VH'
                              iv_def_entity_set   = abap_false ).
 
-    add_vh_property( io_entity_type = lo_entity_type
-                     iv_name        = 'DomainName'
-                     iv_abap_field  = 'DOMAINNAME'
-                     iv_length      = 30
-                     iv_label       = 'Domain'
-                     iv_is_key      = abap_true ).
-    add_vh_property( io_entity_type = lo_entity_type
-                     iv_name        = 'DomainValue'
-                     iv_abap_field  = 'DOMAINVALUE'
-                     iv_length      = 10
-                     iv_label       = 'Value'
-                     iv_is_key      = abap_true ).
-    add_vh_property( io_entity_type = lo_entity_type
-                     iv_name        = 'DomainValueText'
-                     iv_abap_field  = 'DOMAINVALUETEXT'
-                     iv_length      = 60
-                     iv_label       = 'Description' ).
-    add_vh_property( io_entity_type = lo_entity_type
-                     iv_name        = 'ValuePosition'
-                     iv_abap_field  = 'VALUEPOSITION'
-                     iv_length      = 4
-                     iv_label       = 'Sequence' ).
+    " Names into the MED API are literals on purpose: its parameters are
+    " CHAR and take no STRING by reference (activation error, 22/10/26).
+    lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainName'
+                                                   iv_abap_fieldname = 'DOMAINNAME' ).
+    lo_property->set_is_key( ).
+    lo_property->set_maxlength( 30 ).
+    set_vh_flags( lo_property ).
+    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Domain' ).
 
-    lo_entity_type->bind_structure( iv_structure_name = gc_vh_structure ).
+    lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainValue'
+                                                   iv_abap_fieldname = 'DOMAINVALUE' ).
+    lo_property->set_is_key( ).
+    lo_property->set_maxlength( 10 ).
+    set_vh_flags( lo_property ).
+    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Value' ).
 
-    DATA(lo_entity_set) = lo_entity_type->create_entity_set( gc_vh_entity_set ).
+    lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainValueText'
+                                                   iv_abap_fieldname = 'DOMAINVALUETEXT' ).
+    lo_property->set_maxlength( 60 ).
+    set_vh_flags( lo_property ).
+    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Description' ).
+
+    lo_property = lo_entity_type->create_property( iv_property_name  = 'ValuePosition'
+                                                   iv_abap_fieldname = 'VALUEPOSITION' ).
+    lo_property->set_maxlength( 4 ).
+    set_vh_flags( lo_property ).
+    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key = 'label' iv_value = 'Sequence' ).
+
+    lo_entity_type->bind_structure( iv_structure_name = 'ZIDOMFIXVALVH' ).  "ASSUMPTION A2
+
+    DATA(lo_entity_set) = lo_entity_type->create_entity_set( 'ZI_DOM_FIXVAL_VH' ).
     lo_entity_set->set_creatable( abap_false ).
     lo_entity_set->set_updatable( abap_false ).
     lo_entity_set->set_deletable( abap_false ).
@@ -168,23 +186,13 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_vh_property.
-    DATA(lo_property) = io_entity_type->create_property(
-                          iv_property_name  = iv_name
-                          iv_abap_fieldname = iv_abap_field ).
-    IF iv_is_key = abap_true.
-      lo_property->set_is_key( ).
-    ENDIF.
-    lo_property->set_type_edm_string( ).
-    lo_property->set_maxlength( iv_length ).
-    lo_property->set_creatable( abap_false ).
-    lo_property->set_updatable( abap_false ).
-    lo_property->set_filterable( abap_true ).
-    lo_property->set_sortable( abap_true ).
-    lo_property->set_nullable( abap_false ).
-    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
-      )->add( iv_key   = 'label'
-              iv_value = iv_label ).
+  METHOD set_vh_flags.
+    io_property->set_type_edm_string( ).
+    io_property->set_creatable( abap_false ).
+    io_property->set_updatable( abap_false ).
+    io_property->set_filterable( abap_true ).
+    io_property->set_sortable( abap_true ).
+    io_property->set_nullable( abap_false ).
   ENDMETHOD.
 
 
@@ -192,16 +200,15 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     " 1. sap:value-list on the PO property. 'fixed-values' renders a
     "    dropdown, like the GUI popup with its two entries. For the
     "    value-help dialog instead, use 'standard'.
-    DATA(lo_po_property) = io_model->get_entity_type( gc_po_entity_type
-                             )->get_property( iv_property ).
-    lo_po_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
-      )->add( iv_key   = 'value-list'
-              iv_value = 'fixed-values' ).
+    io_po_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+      )->add( iv_key = 'value-list' iv_value = 'fixed-values' ).
 
-    " 2. Common.ValueList, the way SAP's own fields carry it
+    " 2. Common.ValueList, the way SAP's own fields carry it.
+    "    The VOCAN API takes strings (ASSUMPTION A6): only here are the
+    "    STRING constants used.
     DATA(lv_target) = |{ gc_po_entity_type }/{ iv_property }|.
     DATA(lo_ann_target) = io_vocan_model->create_annotations_target( lv_target ).
-    lo_ann_target->set_namespace_qualifier( io_model->get_schema_namespace( ) ). "ASSUMPTION A5
+    lo_ann_target->set_namespace_qualifier( |{ io_model->get_schema_namespace( ) }| ). "ASSUMPTION A5
 
     DATA(lo_annotation) = lo_ann_target->create_annotation( |{ gc_common }.ValueList| ).
     DATA(lo_record) = lo_annotation->create_record( ).
