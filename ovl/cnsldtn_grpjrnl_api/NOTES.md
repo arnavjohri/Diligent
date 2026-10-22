@@ -91,6 +91,39 @@ Call shape expected (signatures still to be confirmed from SE24):
     cl_fincs_dp_document_post_fac=>get_factory( )->if_fincs_dp_document_post_fac~create...( )
       -> if_fincs_dp_document_post~post / post_test...
 
-Still to paste: parameters of `CREATE...`, `POST`, `POST_TES...`; the header/item types they
-use; full names and parameters of `SELECT_DOC...`/`DELETE_D...`; one standard caller of
-`GET_FACTORY` (where-used list) as the example — `CL_FINCS_UPLOAD_POSTING` is a candidate.
+### Signatures confirmed 22/10/26 (SE24 screenshots)
+
+`IF_FINCS_DP_DOCUMENT_POST_FAC~CREATE` — no parameters, `RETURNING ro_instance TYPE REF TO
+if_fincs_dp_document_post`. Interface methods: `POST` (into ACDOCU), `POST_DELTA` (delta
+table), `POST_TEST_RUN`, `POST_REVERSAL`.
+
+`IF_FINCS_DP_DOCUMENT_POST~POST`:
+
+| Parameter | Type | Opt |
+|---|---|---|
+| `IV_RUNID` | `FINCS_RUNID` | no |
+| `IV_DRAFT` | `FINCS_DRAFT` | no |
+| `IS_CONTROL` | `FINCS_S_DOCUMENT_CONTROL_POST` | yes |
+| `IS_HEAD` | `FINCS_S_DOCUMENT_HEAD_POST` | no |
+| `IT_DOCUMENT` | `FC05_T_PDOC_S4H_QFLE` | no |
+| `IO_MESSAGE_HANDLER` | `REF TO IF_FINCS_TE_MESSAGE_HANDLER` | no |
+
+Everything the engine needs goes on `POST`; no task context in the factory call.
+
+`IF_FINCS_DOCUMENT_REFRESH~SELECT_DOCUMENTS` (documents of the previous run): mandatory
+`IV_SELECTION_MODE FC05_DR_TYPE`, `IV_DIMEN FC_DIMEN`, `IV_ITCLG FC_ITCLG`, `IV_RVERS
+FC_RVERS`, `IV_RYEAR FC_RYEAR`, `IV_PERID FC_PERID`; optional `IV_RRCTY RRCTY` (default
+`FC00_C_RRCTY_ACT`), `IV_DOCTY FC_DOCTY`, `IV_DOCCT DOCCT` (default `FC00_C_DOCCT_CONS`),
+`IV_CONGR FC_CONGR`, `IT_CU FC05_T_DR_CU`, `IT_CU_PCU FC05_T_DR_CU_PCU`, `IT_CG_INV
+FC05_T_DR_CG_INV`, `IS_INV FC05_S_DR_INV`, `IS_PAIR_LOCK FC02_S_PAIR_LOCK`, `IT_RA_RTFLG
+TY_T_RA_RTFLG`, `IV_RESTRICT_CU FC_BUNIT`, `IV_RLDNR FC_RLDNR`; exporting `ET_DOCUMENT`,
+`ET_DOCUMENT_ND`, `ET_DOCUMENT_OP`, `ET_DOCUMENT_FULL`, `ET_DOCUMENT_ND_FULL` (interface
+types, names truncated in the screenshot). Selection is by document type, not by task: the
+task's document type is the link to its previous run.
+
+Still to paste: `DELETE_D...` full name and parameters; `CL_FINCS_DP_DOCUMENT_POST`
+constructor; where-used of `IF_FINCS_DP_DOCUMENT_POST~POST` (example caller); SE11 fields of
+`FINCS_S_DOCUMENT_HEAD_POST`, `FINCS_S_DOCUMENT_CONTROL_POST`, line type of
+`FC05_T_PDOC_S4H_QFLE`; data elements `FINCS_RUNID`, `FINCS_DRAFT`; domain `FC05_DR_TYPE`
+values; `IF_FINCS_TE_MESSAGE_HANDLER` methods and implementing class; the BAdI `EXECUTE`
+parameter list (screenshot lost to context compaction).
