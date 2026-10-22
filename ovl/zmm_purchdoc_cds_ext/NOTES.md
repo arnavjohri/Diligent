@@ -231,6 +231,14 @@ was created afterwards. The zz properties come through at runtime; the entity se
 cleanups, test on the **Z** service. Z service / project name still to be read from the BAS
 app's `manifest.json` (`sap.app.dataSources.mainService.uri`) or `/IWFND/MAINT_SERVICE` (`Z*`).
 
+**Entity sets of the standard service** are listed in
+`original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` (service document, 22/10/26, still
+no Z* collection). Useful by-product: value-help sets for plant, supplier, customer, business
+user, cost center, WBS, country, region, material group, currency, unit, G/L account, profit
+center etc. are **already in the service**. A custom field whose values are one of those
+objects gets its F4 from `@Consumption.valueHelpDefinition` alone, no exposure work — which of
+the remaining fields qualify is decided by their check table / domain, not yet supplied.
+
 ## Route decided: Z redefinition + repoint of the BAS app — 22/10/26 (project already exists; only step 3 onwards applies)
 
 Backend, SEGW (manual, no paste object):
