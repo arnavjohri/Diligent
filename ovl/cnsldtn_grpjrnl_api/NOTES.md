@@ -150,7 +150,16 @@ Fiori app path, confirmed 22/10/26 from `CL_FINCS_JE_POST->/BOBF/IF_FRW_ACTION~E
 the journal-entry service layer; the service below `PROCESS_DRAFT` that takes plain header
 and items (after the draft read) is the candidate entry point above the DP engine, because
 it carries the app's checks (balance, FS item validity, posting level from document type).
-To open next: `CL_FINCS_JE_FACTORY` methods, and the `PROCESS_DRAFT` implementation.
+`PROCESS_DRAFT` (seen 22/10/26): reads the draft via `cl_fincs_je_factory=>get_multigp_draft( )
+->get_base( )->init_draft_by_header( )`, then `dispatch_post( )` (or `reverse( )`), working on
+member tables `mt_journalentry_header` / `mt_journalentry_items` and a save service
+`lcl_factory=>get_doc_save( )`. Test run = `iv_is_testrun`, before-save status from
+`cl_fincs_journalentry_util=>cons_before_save_type_s/_p`. It also uses
+`cl_fincs_je_api_factory=>get( )->create_je_workflow( ) / create_log_handler( )`: an API
+factory exists on this release and is the best candidate for a plain-data posting service.
+To open next: `CL_FINCS_JE_API_FACTORY` methods and the interface `GET( )` returns;
+`DISPATCH_POST` source; the attribute types of `mt_journalentry_header/items`;
+`CL_FINCS_JE_FACTORY` methods.
 
 Still to paste: `DELETE_D...` full name and parameters; `CL_FINCS_DP_DOCUMENT_POST`
 constructor; where-used of `IF_FINCS_DP_DOCUMENT_POST~POST` (example caller); SE11 fields of
