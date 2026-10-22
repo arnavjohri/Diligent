@@ -15,6 +15,9 @@
 *              22/10/26 v3 - interface is /IWBEP/IF_MGW_ODATA_ANNOTATABL
 *              (30-char name); GET_SCHEMA_NAMESPACE has no RETURNING
 *              parameter, so the schema namespace is a constant (A5).
+*              22/10/26 v4 - sap:value-list set with SET_VALUE_LIST, the
+*              API SAP's own DEFINE of the MPC_EXT uses, instead of a
+*              hand-added 'sap' annotation. A1 confirmed from that DEFINE.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -34,8 +37,9 @@
 * Test: /IWFND/GW_CLIENT, $metadata of ZMM_PUR_PO_MAINT_V2_SRV shows
 * EntitySet ZI_DOM_FIXVAL_VH and Common.ValueList on zzinsp_typ.
 *
-* ASSUMPTION A1: the PO header entity type is C_PurchaseOrderTPType and
-*   the property is zzinsp_typ, as SADL names them. Verify in $metadata.
+* ASSUMPTION A1: the PO header entity type is C_PurchaseOrderTPType
+*   (confirmed 22/10/26 in SAP's DEFINE) and the property is zzinsp_typ,
+*   as SADL names it (verify once in $metadata).
 *   The names stand at the places marked "A1": the constant (used in
 *   the annotation target) and the literals in ADD_VALUE_HELPS.
 * ASSUMPTION A2: SQL view of ZI_DOM_FIXVAL_VH is ZIDOMFIXVALVH with the
@@ -203,11 +207,11 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
 
   METHOD annotate_value_list.
-    " 1. sap:value-list on the PO property. 'fixed-values' renders a
-    "    dropdown, like the GUI popup with its two entries. For the
-    "    value-help dialog instead, use 'standard'.
-    io_po_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
-      )->add( iv_key = 'value-list' iv_value = 'fixed-values' ).
+    " 1. sap:value-list on the PO property, with the API SAP's own DEFINE
+    "    uses for SupplierConfirmationControlKey. FIXED_VALUES renders a
+    "    dropdown, like the GUI popup with its two entries; STANDARD
+    "    would open the value-help dialog instead.
+    io_po_property->set_value_list( /iwbep/if_mgw_odata_property=>gcs_value_list_type_property-fixed_values ).
 
     " 2. Common.ValueList, the way SAP's own fields carry it.
     "    The VOCAN API takes strings (ASSUMPTION A6): only here are the
