@@ -249,6 +249,7 @@ Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `T
 | RSDBGENA *"Error generating selection screen 1000"* | Fixed `SELECTION-SCREEN COMMENT 60(nn)` on the same line as a now-40-char MATNR parameter → `VISIBLE LENGTH 18`, or its own BEGIN/END OF LINE. Surfaces only on full regeneration |
 | A retype changes **only** the data element after `TYPE`/`LIKE` | `vbtyp_n TYPE vbtyp_n,` → `vbtyp_n TYPE vbtypl,` — never rename the component |
 | `The type "STRING" of "…=>GC_X" is not compatible with the type "C(40)" of "IV_ENTITY_TYPE_NAME"` | An IMPORTING parameter typed `C(n)` is passed by reference and takes no STRING variable or constant. Pass a **literal** or a field of the exact type. Gateway's metadata API (`/iwbep/if_mgw_odata_*`: entity type, property, set, structure names) is CHAR; the vocabulary API (`/iwbep/if_mgw_vocan_*`) takes strings. Keep name constants as STRING only for string templates |
+| `does not contain an interface "/IWBEP/IF_MGW_ODATA_ANNOTATABLE"` / `GET_SCHEMA_NAMESPACE does not have a RETURNING parameter` | Gateway names are cut at 30 characters: the interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL`. `get_schema_namespace` exports, so it cannot sit in an expression — use the namespace literal (`<SEGW project>_SRV`) instead |
 
 ### 4.3 Fiori value help on a custom CDS field — confirmed by test on OCQ, 22/10/26
 

@@ -12,6 +12,9 @@
 *              names by reference, so a STRING cannot be passed. Names
 *              into the MED API are now literals or C LENGTH 40; STRING
 *              only where the vocabulary (VOCAN) API takes it.
+*              22/10/26 v3 - interface is /IWBEP/IF_MGW_ODATA_ANNOTATABL
+*              (30-char name); GET_SCHEMA_NAMESPACE has no RETURNING
+*              parameter, so the schema namespace is a constant (A5).
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -40,9 +43,11 @@
 * ASSUMPTION A3: the Common vocabulary is already referenced by SAP's
 *   model (its own fields carry Common.ValueList); none is created here.
 * ASSUMPTION A4: the domain of ZZINSP_TYP is ZINSP_TYP (SE11, 21/10/26).
-* ASSUMPTION A5: /IWBEP/IF_MGW_ODATA_MODEL has GET_SCHEMA_NAMESPACE. If
-*   activation says it is unknown, replace the call by the literal from
-*   <Schema Namespace="..."> in $metadata.
+* ASSUMPTION A5: the schema namespace of the service is
+*   MM_PUR_PO_MAINT_V2_SRV (SEGW project name + _SRV; the hub alias
+*   ZMM_PUR_PO_MAINT_V2_SRV does not rename it). Verify once in
+*   $metadata, <Schema Namespace="...">, and correct GC_SCHEMA_NAMESPACE
+*   if it differs - a wrong namespace leaves the annotation unmatched.
 * ASSUMPTION A6: the VOCAN API (annotations target, record, property,
 *   simple value) takes STRING. If activation reports a STRING / C(n)
 *   mismatch on one of those lines, change that one actual to a literal.
@@ -71,7 +76,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
     CONSTANTS:
       gc_po_entity_type TYPE string VALUE 'C_PurchaseOrderTPType',   "ASSUMPTION A1 (VOCAN only)
       gc_vh_entity_set  TYPE string VALUE 'ZI_DOM_FIXVAL_VH',        "VOCAN only
-      gc_common         TYPE string VALUE 'com.sap.vocabularies.Common.v1'.
+      gc_common         TYPE string VALUE 'com.sap.vocabularies.Common.v1',
+      gc_schema_namespace TYPE string VALUE 'MM_PUR_PO_MAINT_V2_SRV'.   "ASSUMPTION A5
 
     "! Entity type and entity set ZI_DOM_FIXVAL_VH (DD07T fixed values)
     CLASS-METHODS create_dom_fixval_vh
@@ -147,7 +153,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     lo_property->set_is_key( ).
     lo_property->set_maxlength( 30 ).
     set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Domain' ).
 
     lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainValue'
@@ -155,21 +161,21 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     lo_property->set_is_key( ).
     lo_property->set_maxlength( 10 ).
     set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Value' ).
 
     lo_property = lo_entity_type->create_property( iv_property_name  = 'DomainValueText'
                                                    iv_abap_fieldname = 'DOMAINVALUETEXT' ).
     lo_property->set_maxlength( 60 ).
     set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Description' ).
 
     lo_property = lo_entity_type->create_property( iv_property_name  = 'ValuePosition'
                                                    iv_abap_fieldname = 'VALUEPOSITION' ).
     lo_property->set_maxlength( 4 ).
     set_vh_flags( lo_property ).
-    lo_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+    lo_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'label' iv_value = 'Sequence' ).
 
     lo_entity_type->bind_structure( iv_structure_name = 'ZIDOMFIXVALVH' ).  "ASSUMPTION A2
@@ -200,7 +206,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     " 1. sap:value-list on the PO property. 'fixed-values' renders a
     "    dropdown, like the GUI popup with its two entries. For the
     "    value-help dialog instead, use 'standard'.
-    io_po_property->/iwbep/if_mgw_odata_annotatable~create_annotation( 'sap'
+    io_po_property->/iwbep/if_mgw_odata_annotatabl~create_annotation( 'sap'
       )->add( iv_key = 'value-list' iv_value = 'fixed-values' ).
 
     " 2. Common.ValueList, the way SAP's own fields carry it.
@@ -208,7 +214,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     "    STRING constants used.
     DATA(lv_target) = |{ gc_po_entity_type }/{ iv_property }|.
     DATA(lo_ann_target) = io_vocan_model->create_annotations_target( lv_target ).
-    lo_ann_target->set_namespace_qualifier( |{ io_model->get_schema_namespace( ) }| ). "ASSUMPTION A5
+    lo_ann_target->set_namespace_qualifier( gc_schema_namespace ).           "ASSUMPTION A5
 
     DATA(lo_annotation) = lo_ann_target->create_annotation( |{ gc_common }.ValueList| ).
     DATA(lo_record) = lo_annotation->create_record( ).
