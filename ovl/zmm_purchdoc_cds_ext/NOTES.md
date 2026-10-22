@@ -346,6 +346,33 @@ DOMAINVALUETEXT VALUEPOSITION`; A3 Common vocabulary already referenced by SAP's
 the view is widened again, one set serves every fixed-value field, one `annotate_value_list` call
 per field. `fixed-values` renders a dropdown; `standard` would open the dialog.
 
+## UI route — division of work, 22/10/26 (if the Fiori consultant takes it)
+
+A second OData service cannot be *assigned* as F4 to the existing field: Fiori Elements resolves
+`Common.ValueList` / `CollectionPath` inside the app's own service only, so a SmartField never
+reads a value list from another service. The Fiori consultant therefore replaces the control,
+not the annotation.
+
+ABAP (Arnav): SEGW project `ZMM_PO_VH` → Data Model → Reference → Data Source → `ZI_DOM_FIXVAL_VH`
+(later `ZI_NAT_PROC_VH` and every further VH view, one entity each, no associations) → Generate →
+`/IWFND/MAINT_SERVICE` Add Service `ZMM_PO_VH_SRV`. Plain views, so a referenced-data-source
+project works as it does everywhere. Then `@UI.hidden: true` on `zzinsp_typ` in
+`ZC_PURCHASEORDERTP_EXT` so the SmartField without F4 disappears and the field is not shown twice.
+
+Fiori: in the BAS app, `manifest.json` → second data source `/sap/opu/odata/sap/ZMM_PO_VH_SRV/`
+and a named model on it; object-page extension (`sap.ui.viewExtensions` → `SmartFormExtension`
+or `AfterFacet` of the section that holds the custom fields) with a fragment: `sap.m.ComboBox`,
+`selectedKey="{zzinsp_typ}"` on the default model (draft two-way binding writes it like any
+other field), `editable="{ui>/editable}"`, `items` bound to `ZI_DOM_FIXVAL_VH` of the VH model,
+key `DomainValue`, text `DomainValueText`. In an adaptation project the same fragment goes in
+through Add Fragment, with `appdescr_app_addNewDataSource` + `appdescr_ui5_addNewModel` for the
+second service. Scope: object page only; an F4 on the same field in the list-report filter bar
+is a separate custom filter field.
+
+Trade-off against the enhancement route: nothing inside SAP's generated classes, upgrade-safe,
+but one custom control per field and no native SmartField behaviour. Few fields and a Fiori
+consultant available → UI route; many fields → enhancement route (one call per field, no UI work).
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
