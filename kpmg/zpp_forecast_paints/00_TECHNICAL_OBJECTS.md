@@ -2,6 +2,7 @@
 
 Astral / UDAY / Paints (WRICEF ID-2B) · built to `Forecast_Template-Paints_1.xlsx` received
 19.10.2026, **Sheet1 taken as the authority**; the mode sheets fill in what Sheet1 abbreviates.
+Transport DEVK930479 (UDAYABAP03, UDAY: PP: 2B: Forcast Paints), not released.
 Author Arnav Johri. First build 19.10.2026; brand upload moved into the Adhesive upload and
 Paints forecast tables reshaped to the displayed list on 22.10.2026.
 

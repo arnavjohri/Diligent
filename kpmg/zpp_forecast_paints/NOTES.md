@@ -14,7 +14,7 @@ names the Adhesive tables.
 
 ## Status
 
-**22/10/26 — the 22/10 delta ZIPs imported and activated in DEV (Adhesive upload change, Paints tables as the list, save into them). Manual steps pending: SE41 status, SE93, SM30 config rows.**
+**22/10/26 — imported, activated, SE41 status and SE93 done. TR DEVK930479 (not released). Functional test pack issued (`docs/ZFORECAST_Paints_Test_Handover.docx`). Pending: SM30 config rows for the Paints plants (test setup step 1), the functional test itself.**
 
 **19/10/26 PM — IMPORTED in DEV from `ZPP_FORECAST_PAINTS.zip` via ZABAPGIT_STANDALONE,
 Arnav's report "everything is imported".** First hand-written abapGit ZIP that has pulled on

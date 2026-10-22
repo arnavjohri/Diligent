@@ -146,3 +146,13 @@ indicator), the three Paints forecast tables with their domains and data element
 `ZCL_PP_FCST_PNT` and `ZPP_FORECAST_PAINTS` are active in DEV. Remaining manual: SE41
 `PF_STATUS` for `ZPP_FORECAST_PAINTS`, SE93 `ZFCST_PAINTS`, SM30 `ZPPV_FCST_CFG` rows for the
 Paints plants. Functional test next. TR: none.
+
+## 22/10/26 — status and tcode done; TR DEVK930479; functional test pack issued
+
+Arnav: `PF_STATUS` created, `ZFCST_PAINTS` created. Transport **DEVK930479** (UDAYABAP03,
+"UDAY: PP: 2B: Forcast Paints"), not released. SM30 `ZPPV_FCST_CFG` rows for the Paints plants
+are in the test pack as setup step 1. `docs/ZFORECAST_Paints_Test_Handover.md` (+ docx)
+rewritten as the full functional test pack: delivered tcodes, one-time setup, the nine upload
+file layouts and rules, the 14-step run sequence with the table to check after each, the
+column expectations per mode, 22 test cases with expected results, behaviour to be aware of,
+8 decisions to settle, reporting format. Paints only.

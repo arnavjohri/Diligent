@@ -28,7 +28,7 @@ is built as new objects that call the Adhesive engine and share its tables.
 
 | Object | Type | New / changed | Package | TR |
 |-----------------------------|--------------|------------|------------------------|----------|
-| `ZPP_FORECAST_PAINTS` | Package | New | — | |
+| `ZPP_FORECAST_PAINTS` | Package | New | — | DEVK930479 |
 | `ZDO_BRAND`, `ZDO_FCST_KL` (DEC 13,3), `ZDO_FCST_CR` (DEC 13,4) | Domains | New | `ZPP_FORECAST_PAINTS` | |
 | `ZDE_BRAND`, `ZDE_PACK_SIZE`, `ZDE_QTY_CARTON`, `ZDE_FCST_KL`, `ZDE_FCST_CR` | Data elements | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPPT_BRAND` | Table | New | `ZPP_FORECAST_PAINTS` | |
