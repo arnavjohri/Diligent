@@ -138,3 +138,11 @@ elements, 3 tables, class, program, repo on ZPP_FORECAST_PAINTS). One ZIP cannot
 packages. Full `ZPP_FORECAST_PAINTS.zip` rebuilt (18 files). Docs: 00_TECHNICAL_OBJECTS,
 MANUAL_STEPS, KT_TCODES, TS, test handover rewritten for ZFCST_UPL. Static checks pass; not
 syntax-checked on a system. TR: none.
+
+## 22/10/26 — both delta ZIPs imported and activated in DEV
+
+Arnav: "everything is imported and activated". `ZPP_FORECAST_UPLOAD` (brand, four-value
+indicator), the three Paints forecast tables with their domains and data elements,
+`ZCL_PP_FCST_PNT` and `ZPP_FORECAST_PAINTS` are active in DEV. Remaining manual: SE41
+`PF_STATUS` for `ZPP_FORECAST_PAINTS`, SE93 `ZFCST_PAINTS`, SM30 `ZPPV_FCST_CFG` rows for the
+Paints plants. Functional test next. TR: none.

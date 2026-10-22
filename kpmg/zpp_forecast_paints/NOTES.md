@@ -14,6 +14,8 @@ names the Adhesive tables.
 
 ## Status
 
+**22/10/26 — the 22/10 delta ZIPs imported and activated in DEV (Adhesive upload change, Paints tables as the list, save into them). Manual steps pending: SE41 status, SE93, SM30 config rows.**
+
 **19/10/26 PM — IMPORTED in DEV from `ZPP_FORECAST_PAINTS.zip` via ZABAPGIT_STANDALONE,
 Arnav's report "everything is imported".** First hand-written abapGit ZIP that has pulled on
 this landscape (the Adhesive DDIC/class XML shapes plus the 03/09 PROGDIR order). Not yet
