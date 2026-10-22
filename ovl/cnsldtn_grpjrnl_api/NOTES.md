@@ -183,3 +183,11 @@ constructor; where-used of `IF_FINCS_DP_DOCUMENT_POST~POST` (example caller); SE
 `FC05_T_PDOC_S4H_QFLE`; data elements `FINCS_RUNID`, `FINCS_DRAFT`; domain `FC05_DR_TYPE`
 values; `IF_FINCS_TE_MESSAGE_HANDLER` methods and implementing class; the BAdI `EXECUTE`
 parameter list (screenshot lost to context compaction).
+
+## Test data for `FINCS_JRNLENTR_POST_SRV` (22/10/26)
+
+`ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md`: Step 0 read-only GETs
+to capture the real property names and OCQ keys, 8 data sets (TD-01..TD-08), 14 test cases
+(TC-00..TC-13), plus JSON deep-insert payloads. Built from the service document only (it was
+supplied from the Woodside host `s4hdevap01`, not OCQ). Property names, navigation and the post
+function import are SAP standard naming, not confirmed, until `$metadata` is read (Step 0.1).
