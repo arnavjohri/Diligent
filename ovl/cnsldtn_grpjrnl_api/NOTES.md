@@ -18,6 +18,16 @@ journal items, read) and `UI_RFM_POCNSLDTNRULE` (procurement, unrelated). The po
 service `API_CNSLDTNGRPJRNLENTR` does **not** exist on this release. There is no released
 OData API to create group journal entries here.
 
+Second pass 22/10/26, `API_GR*`: only Grants Management (`API_GRANT`, `API_GRANTCORE`,
+`API_GRANTCOREHIERARCHY`, `API_GRANTHIERARCHY`). Already registered as
+`ZAPI_GRTRANSACTIONDATA_SRV`: `API_GRTRANSACTIONDATA_SRV` "Transaction Data for Group
+Reporting - Read", the `ACDOCU` read API for data collection / analytics, no posting.
+Catalogue exhausted: **no OData service on this release posts group journal entries.**
+
+The hub artifact `sap-vdm-sot-CnsldtnGroupJournalEntry-v1` is an SAP Object Type
+catalogue page (object model plus the list of its APIs), not a callable service; the
+posting API it lists is `API_CNSLDTNGRPJRNLENTR`, S/4HANA 2022 and later.
+
 **How ACDOCU is written on OVL, therefore:** company code data via Data Monitor task
 "Release Universal Journal" (ACDOCA -> ACDOCU, posting level 00); consolidation adjustments
 via Fiori "Post Group Journal Entries" / "Import Group Journal Entries"; automatic tasks
