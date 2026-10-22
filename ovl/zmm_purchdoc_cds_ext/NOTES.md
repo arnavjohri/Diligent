@@ -214,6 +214,45 @@ An association added through `ZC_PURCHASEORDERTP_EXT` would not change that — 
 navigations of a referenced-data-source project are fixed at generation, only properties are
 read at runtime.
 
+**Association test, 22/10/26 — negative.** `_ZzInspTypVH` to the VH view, exposed in the
+extension exactly like `_IncotermsVersion`, activated cleanly; after cache cleanup and Load
+Metadata the service document of `MM_PUR_PO_MAINT_V2_SRV` still has no `ZI_DOM_FIXVAL_VH`
+collection. Confirms: the standard project's entity sets are closed. Association commented out.
+
+## Route decided: Z redefinition + repoint of the BAS app — 22/10/26
+
+Backend, SEGW (manual, no paste object):
+
+1. SEGW → Create Project `ZMM_PUR_PO_MAINT_V2`, own package, TR.
+2. Data Model → right-click → **Redefine → OData Service (GW)** → technical service
+   `MM_PUR_PO_MAINT_V2_SRV`, version 1 → next → tick **all** artifacts (entity types, sets,
+   associations, function imports, complex types) → Finish. The generated `*_DPC_EXT` inherits
+   SAP's `CL_MM_PUR_PO_MAINT_V2_DPC_EXT`, so BOPF, draft, actions and the SADL exits keep working.
+3. Data Model → right-click → **Reference → Data Source** → CDS view `ZI_DOM_FIXVAL_VH` → tick
+   the entity, no associations → Finish. Repeat later for every further value-help view.
+   Plan B if SEGW refuses a data-source reference inside a redefined project: Import → DDIC
+   Structure on the SQL view `ZIDOMFIXVALVH` and a 5-line `GET_ENTITYSET` in the DPC_EXT.
+4. Generate Runtime Objects.
+5. `/IWFND/MAINT_SERVICE` → Add Service → alias LOCAL → `ZMM_PUR_PO_MAINT_V2_SRV` → Add, activate
+   the ICF node.
+6. Gateway Client on the Z service: service document lists `ZI_DOM_FIXVAL_VH`; `$metadata` has
+   `Common.ValueList` on `zzinsp_typ` with `CollectionPath="ZI_DOM_FIXVAL_VH"`;
+   `ZI_DOM_FIXVAL_VH?$format=json` returns the two rows.
+
+Front end, BAS:
+
+- Adaptation project (app variant of Manage Purchase Orders): **Replace OData Service** →
+  `/sap/opu/odata/sap/ZMM_PUR_PO_MAINT_V2_SRV/` → deploy.
+- Generated FE / freestyle app: `manifest.json` → `sap.app.dataSources.mainService.uri` →
+  `/sap/opu/odata/sap/ZMM_PUR_PO_MAINT_V2_SRV/` → deploy.
+
+**Risk to check before building:** if the manifest also lists an annotation data source
+`…MM_PUR_PO_MAINT_V2_ANNO_MDL…` (catalog service URI), those annotations are keyed to the SAP
+schema namespace and will not match the Z service's namespace. They must then be re-created
+for the Z service (SEGW, Annotation Model for Referenced Service) or the UI facets they carry
+re-declared locally. CDS-derived annotations are unaffected — they come inline with the Z
+service's own `$metadata`.
+
 The upgrade-safe pairing for the redefinition route: SEGW Redefine → `ZMM_PUR_PO_MAINT_V2_SRV`,
 then an **adaptation project / app variant** of Manage Purchase Orders with "Replace OData
 Service" pointing at the Z service. If the "custom PO app" already is such a variant with its

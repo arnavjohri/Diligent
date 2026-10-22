@@ -13,17 +13,19 @@
 //             Same day, test: association _ZzInspTypVH to the value help
 //             view, exposed like SAP's _IncotermsVersion, to see whether
 //             the standard service MM_PUR_PO_MAINT_V2_SRV picks the
-//             target up as an entity set. Expected: it does not (entity
-//             sets of a referenced-data-source project are fixed at
-//             generation). Remove again if the service document still
-//             shows no ZI_DOM_FIXVAL_VH collection.
+//             target up as an entity set. Result: it does not (service
+//             document still without ZI_DOM_FIXVAL_VH after activation
+//             and cache cleanup). Association commented out again; the
+//             value help needs the view exposed by the service itself
+//             (Z redefinition of MM_PUR_PO_MAINT_V2_SRV).
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewAppendName: 'ZCPURORDTP'
 @EndUserText.label: 'Extension of C_PurchaseOrderTP'
 extend view C_PurchaseOrderTP with ZC_PurchaseOrderTP_EXT
   //BOC By Arnav on 22/10/26
-  association [0..1] to ZI_DOM_FIXVAL_VH as _ZzInspTypVH
-    on $projection.zzinsp_typ = _ZzInspTypVH.DomainValue
+  // Test association, negative result (see header) - kept for the record:
+  // association [0..1] to ZI_DOM_FIXVAL_VH as _ZzInspTypVH
+  //   on $projection.zzinsp_typ = _ZzInspTypVH.DomainValue
   //EOC By Arnav on 22/10/26
 {
 PurchaseOrderTP.zzt_nature     as zzt_nature,
@@ -162,10 +164,12 @@ PurchaseOrderTP.zzt_nature     as zzt_nature,
     //BOC By Arnav on 19/10/26
     @UI.identification: [{ position: 260 }]
     //EOC By Arnav on 19/10/26
-    PurchaseOrderTP.zgempo         as zgempo,
+    PurchaseOrderTP.zgempo         as zgempo
 
     //BOC By Arnav on 22/10/26
-    @Consumption.filter.hidden: true
-    _ZzInspTypVH
+    // Test association exposure, negative result - kept for the record:
+    // ,
+    // @Consumption.filter.hidden: true
+    // _ZzInspTypVH
     //EOC By Arnav on 22/10/26
 }
