@@ -62,12 +62,12 @@ each (all guarded by `IS NOT INITIAL`, `FOR ALL ENTRIES` on de-duplicated driver
 
 | Read | Source | Rule |
 |----------------------|------------------------------------------------|------------------------------|
-| `READ_CONFIG` | `ZPPT_FCST_CFG` | `VKORG` per plant. Missing row → message 018 (W) in the run log, 4000 used |
 | `READ_NAMES` | `T001W` | `NAME1` |
 | `READ_BRANDS` | `ZPPT_BRAND` | by plant and material |
 | `READ_MARA` | `MARA` | `MEINS`, `BRGEW`, `GEWEI` |
 | `READ_PACK_SIZES` | `MARM` | units L, ML, KG, G only; first in that order that is not the base unit; pack = `UMREN` ÷ `UMREZ`; ML and G ÷ 1000 |
-| `READ_CARTONS` | `MVKE` | `AUMNG` where `MVGR1` not blank, `VKORG` in the configured sales organisations |
+| `READ_SALES_VIEW` | `MVKE` | sales org 4000 hardcoded (`GC_VKORG`, FS row 91): `MVGR1..5` overwrite the engine's groups, `AUMNG` where `MVGR1` not blank |
+| `READ_GROUP_TEXTS` | `TVM1T`..`TVM5T` | descriptions for groups 1..5 in the logon language |
 | `READ_PRICES` | `A923` → `KONP` | annual mode only; material alone, latest `DATAB`, lowest `KOPOS`, `KBETR`. Same rule as `ZCL_PP_FCST=>READ_PRICES` |
 
 Per row, then: `NAME1`, `BRAND`, `BRGEW`, `PACK_SIZE`/`PACK_UNIT`, `QTY_CARTON` (sales org of the

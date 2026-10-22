@@ -65,7 +65,7 @@ the three tables through them, and ZFCST_RPT reads them. Nothing reads the Paint
 |---|---|---|
 | 1 | SE41 | GUI status `PF_STATUS` of `ZPP_FORECAST_PAINTS`: copy from `ZPP_FORECAST` / `PF_STATUS`, or from `SAPLSALV_METADATA_STATUS` / `SALV_STANDARD` plus ZSAVE, ZSELALL, ZDESEL, ZEXCEL |
 | 2 | SE93 | `ZFCST_PAINTS` → `ZPP_FORECAST_PAINTS`, screen 1000 |
-| 3 | SM30 `ZPPV_FCST_CFG` | One row per Paints plant: VKORG 4000, legacy TVARVC name |
+| 3 | SM30 `ZPPV_FCST_CFG` | Not needed since 22/10/26 (VKORG 4000 hardcoded in `ZCL_PP_FCST_PNT`); only for a legacy TVARVC name |
 | 4 | SE54, optional | `ZPPV_BRAND` on `ZPPT_BRAND`; views on the three Paints forecast tables only if hand editing is wanted |
 | 5 | SE11, optional | `ZDO_MTS_MTO` fixed values DIS "Dis Art", TIN "Tinting" — only for SM30 maintenance of categories; the upload writes the codes regardless |
 | 6 | SE38, optional | Delete `ZPP_FORECAST_PAINTS_UPL` |
@@ -100,10 +100,10 @@ XML's blocks; the upload change by `tools/mkupl_adhesive.py` with every anchor a
 | MFG. PLANT NAME | `T001W-NAME1` |
 | BRAND | `ZPPT_BRAND`, blank when not maintained |
 | MTS / MTO / DIS ART / TINTING | `ZPPT_PROD_CAT-MTS_MTO`, codes MTS MTO DIS TIN; ZFCST_UPL category upload accepts the four (and the long forms) |
-| MATERIAL GROUP 1, 2, 5 · MATERIAL GROUP | Engine (`MVGR1/2/5_TXT`, `MATKL`); groups 3 and 4 hidden, reachable via Change Layout |
+| MATERIAL GROUP 1, 2, 5 · MATERIAL GROUP | `ZCL_PP_FCST_PNT` re-reads MVKE in sales org 4000 and TVM1T–TVM5T, overwriting the engine's groups; `MATKL` from the engine; groups 3 and 4 hidden, reachable via Change Layout |
 | PACK SIZE | `MARM` — first of L, ML, KG, G the material carries that is not its base unit; UMREN ÷ UMREZ; ML and G ÷ 1000. **Assumption** (query M5). `PACK_UNIT` via layout |
 | DPL | Engine price for quarterly and monthly; the same A923 → KONP read inside `ZCL_PP_FCST_PNT` for annual |
-| QTY / CARTON | `MVKE-AUMNG`, `MVGR1` not blank, sales org from `ZPPT_FCST_CFG` of the plant (default 4000) |
+| QTY / CARTON | `MVKE-AUMNG` of sales org 4000 (hardcoded), where `MVGR1` is not blank |
 | Forecast Qty (EA) per month | Engine `Mnn_FCST` (annual), `Mn_FCST` / additional / `Mn_FCST_FINAL` (quarterly), `TOTAL_QTY` (monthly) |
 | Volume in KL per month | quantity × pack size ÷ 1000 — `Mnn_KL`, `M4/5/6_KL` |
 | Value in Crores per month | DPL × quantity ÷ 1,00,00,000 — `Mnn_CR`, `M4/5/6_CR` |
@@ -152,7 +152,7 @@ calendar: `Q2 Jul-26 Forecast Qty`, `Q2 Jul-26 Volume in KL`, `Jul-26 additional
 |---|---|---|
 | `ZDO_BRAND` | Brand is free text, 40 characters | M2 |
 | `ZPP_FORECAST_UPLOAD` `CHECK_INDICATOR` | Indicator codes DIS and TIN; long forms DIS ART / TINTING accepted | M3 |
-| `ZCL_PP_FCST_PNT=>GC_VKORG_DEFAULT` | 4000 when the plant has no `ZPPT_FCST_CFG` row; message 018 logged | M4, M1 |
+| `ZCL_PP_FCST_PNT=>GC_VKORG` | 4000 hardcoded as FS row 91 states (Arnav, 22/10/26); material groups 1–5 and qty per carton read from that sales view, overwriting the engine's groups | M4 |
 | `ZCL_PP_FCST_PNT=>READ_PACK_SIZES` | Unit preference L, ML, KG, G; codes as internal MSEHI (`G` not `GM`); UMREN ÷ UMREZ | M5 |
 | `ZCL_PP_FCST_PNT=>READ_PRICES` | A923 holds the Paints DPL; material alone, latest DATAB, lowest KOPOS | Q1 |
 | `ZCL_PP_FCST_PNT=>READ_CARTONS` | `MVKE-AUMNG` is the quantity per carton | Q2 |

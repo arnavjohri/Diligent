@@ -73,17 +73,12 @@ program, screen 1000, GUI support SAP GUI for Windows and HTML → Save, package
 `ZPP_FORECAST_PAINTS`. Uploads for Paints go through the existing `ZFCST_UPL`; no second
 upload transaction.
 
-## 3. Configuration row per Paints plant (SM30 `ZPPV_FCST_CFG`)
+## 3. Configuration row per Paints plant — not needed
 
-| Field | Value |
-|---|---|
-| Plant | each Paints plant |
-| Sales Org (`VKORG`) | 4000 (FS value; confirm) |
-| TVARV name for legacy users | as for Adhesive, or blank |
-| Movement type | leave blank, no longer used |
-
-Without a row the run logs message 018 in SLG1 and uses 4000. The material groups and the
-quantity per carton are read for this sales organisation.
+Since 22/10/26 the Paints sales organisation 4000 is hardcoded in `ZCL_PP_FCST_PNT`
+(`GC_VKORG`), as the FS states; the class reads the material groups and the quantity per
+carton itself with it. No `ZPPV_FCST_CFG` row is needed for a Paints plant. A row is only
+needed if the Legacy Data checkbox is to be used (TVARVC name of the permitted users).
 
 ## 4. Optional
 

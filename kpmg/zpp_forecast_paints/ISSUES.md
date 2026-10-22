@@ -164,3 +164,18 @@ every DDIC field, `ZCL_PP_FCST_PNT` method by method, `ZPP_FORECAST_PAINTS` glob
 flow, handler, column lists, headings, the 22/10 upload change touch by touch, how the engine
 is used and what it reads back, shipping and tools, repository map, assumptions, open items,
 how to change things safely. Transaction codes left out at Arnav's request (not created).
+
+## 22/10/26 — sales organisation 4000 hardcoded, config row dropped for Paints
+
+Arnav: "we want hard coded 4000 as per the fs". `ZCL_PP_FCST_PNT` only: `GC_VKORG = '4000'`
+(FS RADIO BUTTON 1 ANNUAL row 91) replaces the config read; `READ_CONFIG`, `READ_CARTONS`
+and `ADD_MSG` removed; new `READ_SALES_VIEW` (one MVKE read per material in 4000: MVGR1..5
+and AUMNG; first distribution channel) and `READ_GROUP_TEXTS` (TVM1T..TVM5T in the logon
+language, read whole). `ENRICH` clears the engine's material groups and texts and fills them
+from the 4000 view, so Paints material groups no longer depend on a `ZPPT_FCST_CFG` row
+(the engine still reads MVKE with its own sales org, which is now irrelevant for Paints).
+`ENRICH` keeps the `ct_msg` parameter (nothing written) so `ZPP_FORECAST_PAINTS` is
+unchanged — the class is the only code change. Message 018 no longer raised by Paints.
+843 lines, 9 methods. Delta ZIP `ZPP_FORECAST_PAINTS_22-10-26_vkorg_delta.zip` (class
+only); full ZIP rebuilt. Docs: MANUAL_STEPS §3, test pack B.1 and case 21, KT,
+00_TECHNICAL_OBJECTS, TS, technical handover. TR DEVK930479.

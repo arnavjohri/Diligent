@@ -6,17 +6,22 @@ CLASS zcl_pp_fcst_pnt DEFINITION
 *"* ZFORECAST (Paints) - the Paints columns on top of the Adhesive engine
 *"* Astral / UDAY, built to Forecast_Template-Paints_1.xlsx received 19.10.2026
 *"* (Sheet1 is the authority; the mode sheets fill in what it abbreviates).
-*"* Author Arnav Johri, 19.10.2026. Initial development.
+*"* Author Arnav Johri, 19.10.2026. 22.10.2026: sales organisation 4000
+*"* hardcoded as the FS states, material groups re-read with it, save into
+*"* the Paints tables.
 *"*
 *"* ZCL_PP_FCST generates and saves exactly as it does for Adhesive and is
 *"* NOT changed. This class adds, for display only, after the engine has run:
 *"*
 *"*   NAME1        T001W-NAME1 of the row's plant
 *"*   BRAND        ZPPT_BRAND by plant and material, blank when not maintained
+*"*   MVGR1..5     MVKE of sales organisation 4000 (FS row 91), with the
+*"*                descriptions from TVM1T..TVM5T - overwrites what the engine
+*"*                read with its own sales organisation
+*"*   QTY_CARTON   MVKE-AUMNG of sales organisation 4000 where MVGR1 is filled
 *"*   PACK_SIZE    MARM-UMREN / UMREZ of the material's volume or weight unit
 *"*                (L, ML, KG, G in that order of preference), ML and G divided
 *"*                by 1000, so the figure is litres or kilograms per piece
-*"*   QTY_CARTON   MVKE-AUMNG for the plant's sales organisation, MVGR1 not blank
 *"*   BRGEW        MARA-BRGEW, the gross weight per piece
 *"*   PRICE (DPL)  A923 latest DATAB -> KONP-KBETR, read here for the ANNUAL
 *"*                mode only; quarterly and monthly rows already carry it from
@@ -29,16 +34,19 @@ CLASS zcl_pp_fcst_pnt DEFINITION
 *"* The quantity is the month's FINAL (forecast plus additional) in quarterly,
 *"* the month's total (final plus additional plus MSL) in monthly, and the
 *"* month's forecast in annual - the same quantity the engine prices.
+*"*
+*"* SAVE_PAINTS writes the saved rows, shaped as the list, into
+*"* ZPPT_PNT_FCST_YR / _QT / _MN after the engine has written the shared tables.
 
   PUBLIC SECTION.
 
     CONSTANTS gc_msgid TYPE symsgid VALUE 'ZPP_FCST'.
 
-*   ASSUMPTION: the Paints sales organisation when no ZPPT_FCST_CFG row
-*   exists for the plant. FS row 91 names 4000. A configuration row per
-*   Paints plant is expected; a missing one is reported with message 018
-*   and this default is used.
-    CONSTANTS gc_vkorg_default TYPE vkorg VALUE '4000'.
+*   The Paints sales organisation. FS (RADIO BUTTON 1 ANNUAL, row 91):
+*   "VKORG=4000" - hardcoded as the FS states, Arnav's call of 22/10/26.
+*   Used for the material groups and the quantity per carton. No
+*   ZPPT_FCST_CFG row is needed for a Paints plant.
+    CONSTANTS gc_vkorg TYPE vkorg VALUE '4000'.
 
     TYPES: ty_kl TYPE p LENGTH 13 DECIMALS 3,
            ty_cr TYPE p LENGTH 13 DECIMALS 4.
@@ -89,19 +97,20 @@ CLASS zcl_pp_fcst_pnt DEFINITION
            tt_alv TYPE STANDARD TABLE OF ty_alv WITH DEFAULT KEY.
 
     "! Fill the Paints columns of every row. IV_MODE is ZCL_PP_FCST=>GC_MODE.
-    "! Messages (missing configuration) are appended to CT_MSG.
+    "! CT_MSG is kept for the caller's run log; nothing is written to it
+    "! since the sales organisation became a constant (22/10/26).
     METHODS enrich
       IMPORTING iv_mode TYPE char1
       CHANGING  ct_alv  TYPE tt_alv
                 ct_msg  TYPE bapiret2_t.
 
     "! Write the rows carrying MARK = X and a forecast number into the Paints
-    "! tables ZPPT_PNT_FCST_YR / _QT / _MN - the engine's row plus the Paints
-    "! columns. Called by ZPP_FORECAST_PAINTS right after ZCL_PP_FCST=>SAVE,
-    "! which has already drawn the number and written the shared tables that
-    "! the engine, the uploads and the final report read. MARK is cleared on
-    "! every row processed; a row the database refuses gets LIGHT 1 and a
-    "! message. Commits its own work.
+    "! tables ZPPT_PNT_FCST_YR / _QT / _MN - the list, column for column.
+    "! Called by ZPP_FORECAST_PAINTS right after ZCL_PP_FCST=>SAVE, which has
+    "! already drawn the number and written the shared tables that the engine,
+    "! the uploads and the final report read. MARK is cleared on every row
+    "! processed; a row the database refuses gets LIGHT 1 and a message.
+    "! Commits its own work.
     METHODS save_paints
       IMPORTING iv_mode TYPE char1
       CHANGING  ct_alv  TYPE tt_alv
@@ -124,12 +133,6 @@ CLASS zcl_pp_fcst_pnt DEFINITION
              matnr TYPE matnr,
            END OF ty_key,
            tt_key TYPE STANDARD TABLE OF ty_key WITH DEFAULT KEY,
-
-           BEGIN OF ty_cfg,
-             werks TYPE werks_d,
-             vkorg TYPE vkorg,
-           END OF ty_cfg,
-           tt_cfg TYPE STANDARD TABLE OF ty_cfg WITH DEFAULT KEY,
 
            BEGIN OF ty_name,
              werks TYPE werks_d,
@@ -167,12 +170,26 @@ CLASS zcl_pp_fcst_pnt DEFINITION
            END OF ty_marm,
            tt_marm TYPE STANDARD TABLE OF ty_marm WITH DEFAULT KEY,
 
+*          The sales view of sales organisation 4000: material groups and
+*          the quantity per carton in one read
            BEGIN OF ty_mvke,
              matnr TYPE matnr,
-             vkorg TYPE vkorg,
+             mvgr1 TYPE mvgr1,
+             mvgr2 TYPE mvgr2,
+             mvgr3 TYPE mvgr3,
+             mvgr4 TYPE mvgr4,
+             mvgr5 TYPE mvgr5,
              aumng TYPE aumng,
            END OF ty_mvke,
            tt_mvke TYPE STANDARD TABLE OF ty_mvke WITH DEFAULT KEY,
+
+*          Material group descriptions, group number 1..5 and code
+           BEGIN OF ty_grptxt,
+             nr    TYPE i,
+             code  TYPE mvgr1,
+             bezei TYPE bezei20,
+           END OF ty_grptxt,
+           tt_grptxt TYPE STANDARD TABLE OF ty_grptxt WITH DEFAULT KEY,
 
            BEGIN OF ty_price,
              matnr TYPE matnr,
@@ -185,12 +202,6 @@ CLASS zcl_pp_fcst_pnt DEFINITION
              div   TYPE i,
            END OF ty_unit,
            tt_unit TYPE STANDARD TABLE OF ty_unit WITH DEFAULT KEY.
-
-    "! The plants of the run with their sales organisation
-    METHODS read_config
-      IMPORTING it_plant      TYPE tt_plant
-      CHANGING  ct_msg        TYPE bapiret2_t
-      RETURNING VALUE(rt_cfg) TYPE tt_cfg.
 
     METHODS read_names
       IMPORTING it_plant       TYPE tt_plant
@@ -210,10 +221,15 @@ CLASS zcl_pp_fcst_pnt DEFINITION
                 it_mara        TYPE tt_mara
       RETURNING VALUE(rt_pack) TYPE tt_pack.
 
-    METHODS read_cartons
+    "! MVKE of sales organisation 4000: material groups 1..5 and AUMNG
+    METHODS read_sales_view
       IMPORTING it_mat         TYPE tt_mat
-                it_cfg         TYPE tt_cfg
       RETURNING VALUE(rt_mvke) TYPE tt_mvke.
+
+    "! TVM1T..TVM5T in the logon language - small customising tables,
+    "! read whole
+    METHODS read_group_texts
+      RETURNING VALUE(rt_txt) TYPE tt_grptxt.
 
     "! A923 latest DATAB -> KONP-KBETR, the same rule as ZCL_PP_FCST=>READ_PRICES.
     "! Re-implemented here because that method is private and the Adhesive
@@ -221,13 +237,6 @@ CLASS zcl_pp_fcst_pnt DEFINITION
     METHODS read_prices
       IMPORTING it_mat          TYPE tt_mat
       RETURNING VALUE(rt_price) TYPE tt_price.
-
-    METHODS add_msg
-      IMPORTING iv_type TYPE symsgty
-                iv_no   TYPE symsgno
-                iv_v1   TYPE any OPTIONAL
-                iv_v2   TYPE any OPTIONAL
-      CHANGING  ct_msg  TYPE bapiret2_t.
 
 ENDCLASS.
 
@@ -244,7 +253,7 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
           ls_plant TYPE ty_plant,
           ls_mat   TYPE ty_mat,
           ls_key   TYPE ty_key,
-          lv_vkorg TYPE vkorg,
+          ls_txt   TYPE ty_grptxt,
           lv_qty   TYPE zde_fcst_qty,
           lv_p     TYPE numc2,
           lv_m     TYPE i,
@@ -278,27 +287,25 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM lt_key COMPARING werks matnr.
 
 *   ---- one read each, never inside the row loop ----------------------
-    DATA(lt_cfg)   = read_config( EXPORTING it_plant = lt_plant
-                                  CHANGING  ct_msg   = ct_msg ).
     DATA(lt_name)  = read_names( lt_plant ).
     DATA(lt_brand) = read_brands( lt_key ).
     DATA(lt_mara)  = read_mara( lt_mat ).
     DATA(lt_pack)  = read_pack_sizes( it_mat  = lt_mat
                                       it_mara = lt_mara ).
-    DATA(lt_mvke)  = read_cartons( it_mat = lt_mat
-                                   it_cfg = lt_cfg ).
+    DATA(lt_mvke)  = read_sales_view( lt_mat ).
+    DATA(lt_txt)   = read_group_texts( ).
 
     DATA(lt_price) = VALUE tt_price( ).
     IF iv_mode = zcl_pp_fcst=>gc_mode-annual.
       lt_price = read_prices( lt_mat ).
     ENDIF.
 
-    SORT: lt_cfg   BY werks,
-          lt_name  BY werks,
+    SORT: lt_name  BY werks,
           lt_brand BY werks matnr,
           lt_mara  BY matnr,
           lt_pack  BY matnr,
-          lt_mvke  BY matnr vkorg,
+          lt_mvke  BY matnr,
+          lt_txt   BY nr code,
           lt_price BY matnr.
 
 *   ---- row by row ----------------------------------------------------
@@ -329,17 +336,51 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
         <ls>-pack_unit = ls_pack-meinh.
       ENDIF.
 
-      lv_vkorg = gc_vkorg_default.
-      READ TABLE lt_cfg INTO DATA(ls_cfg)
-        WITH KEY werks = <ls>-werks BINARY SEARCH.
-      IF sy-subrc = 0 AND ls_cfg-vkorg IS NOT INITIAL.
-        lv_vkorg = ls_cfg-vkorg.
-      ENDIF.
+*     Material groups and quantity per carton from sales organisation
+*     4000. The engine read MVKE with its own sales organisation; for
+*     Paints the FS names 4000, so the groups are replaced here.
+      CLEAR: <ls>-mvgr1, <ls>-mvgr2, <ls>-mvgr3, <ls>-mvgr4, <ls>-mvgr5,
+             <ls>-mvgr1_txt, <ls>-mvgr2_txt, <ls>-mvgr3_txt,
+             <ls>-mvgr4_txt, <ls>-mvgr5_txt.
 
       READ TABLE lt_mvke INTO DATA(ls_mvke)
-        WITH KEY matnr = <ls>-matnr vkorg = lv_vkorg BINARY SEARCH.
+        WITH KEY matnr = <ls>-matnr BINARY SEARCH.
       IF sy-subrc = 0.
-        <ls>-qty_carton = ls_mvke-aumng.
+        <ls>-mvgr1 = ls_mvke-mvgr1.
+        <ls>-mvgr2 = ls_mvke-mvgr2.
+        <ls>-mvgr3 = ls_mvke-mvgr3.
+        <ls>-mvgr4 = ls_mvke-mvgr4.
+        <ls>-mvgr5 = ls_mvke-mvgr5.
+*       FS row 91: AUMNG where MVGR1 is not blank
+        IF ls_mvke-mvgr1 IS NOT INITIAL.
+          <ls>-qty_carton = ls_mvke-aumng.
+        ENDIF.
+
+        READ TABLE lt_txt INTO ls_txt
+          WITH KEY nr = 1 code = ls_mvke-mvgr1 BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls>-mvgr1_txt = ls_txt-bezei.
+        ENDIF.
+        READ TABLE lt_txt INTO ls_txt
+          WITH KEY nr = 2 code = ls_mvke-mvgr2 BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls>-mvgr2_txt = ls_txt-bezei.
+        ENDIF.
+        READ TABLE lt_txt INTO ls_txt
+          WITH KEY nr = 3 code = ls_mvke-mvgr3 BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls>-mvgr3_txt = ls_txt-bezei.
+        ENDIF.
+        READ TABLE lt_txt INTO ls_txt
+          WITH KEY nr = 4 code = ls_mvke-mvgr4 BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls>-mvgr4_txt = ls_txt-bezei.
+        ENDIF.
+        READ TABLE lt_txt INTO ls_txt
+          WITH KEY nr = 5 code = ls_mvke-mvgr5 BINARY SEARCH.
+        IF sy-subrc = 0.
+          <ls>-mvgr5_txt = ls_txt-bezei.
+        ENDIF.
       ENDIF.
 
       IF iv_mode = zcl_pp_fcst=>gc_mode-annual.
@@ -521,44 +562,6 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD read_config.
-
-    DATA: ls_cfg TYPE ty_cfg,
-          ls_pl  TYPE ty_plant.
-
-    CLEAR rt_cfg.
-    CHECK it_plant IS NOT INITIAL.
-
-    SELECT werks, vkorg
-      FROM zppt_fcst_cfg
-      FOR ALL ENTRIES IN @it_plant
-      WHERE werks = @it_plant-werks
-      INTO TABLE @rt_cfg.
-
-    SORT rt_cfg BY werks.
-
-*   A Paints plant with no configuration row gets the default sales
-*   organisation and the run says so - message 018, as the engine's own
-*   READ_CONFIG would, but as a warning in the log rather than an error.
-    LOOP AT it_plant INTO ls_pl.
-      READ TABLE rt_cfg TRANSPORTING NO FIELDS
-        WITH KEY werks = ls_pl-werks BINARY SEARCH.
-      IF sy-subrc <> 0.
-        ls_cfg-werks = ls_pl-werks.
-        ls_cfg-vkorg = gc_vkorg_default.
-        APPEND ls_cfg TO rt_cfg.
-        add_msg( EXPORTING iv_type = 'W'
-                           iv_no   = '018'
-                           iv_v1   = ls_pl-werks
-                 CHANGING  ct_msg  = ct_msg ).
-      ENDIF.
-    ENDLOOP.
-
-    SORT rt_cfg BY werks.
-
-  ENDMETHOD.
-
-
   METHOD read_names.
 
     CLEAR rt_name.
@@ -617,7 +620,7 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
 *
 *  ASSUMPTION: the unit codes are the internal MSEHI values L, ML, KG and
 *  G (gram is G in standard SAP; the FS writes GM). Check T006 and change
-*  the four entries in GT_UNITS below if the system differs.
+*  the four entries in LT_UNITS below if the system differs.
 *
 *  Pack size = UMREN / UMREZ. For 1 piece = 4 L the material carries
 *  UMREZ 1, UMREN 4 against unit L, so this is UMREN exactly as the FS
@@ -696,40 +699,91 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
 
 
 *  ---------------------------------------------------------------------
-*  Quantity per carton
+*  The sales view of sales organisation 4000
 *
 *  FS row 91: "Pass VBRP-MATNR to MVKE-MATNR for MVGR1 is not equal to
-*  blank and VKORG=4000 and take AUMNG."  Built as written. Note that
+*  blank and VKORG=4000 and take AUMNG." FS quarter sheet rows 30-34:
+*  the material groups 1 to 5 from MVKE and their descriptions from
+*  TVM1T to TVM5T. Both from the same row, read once per material.
 *  AUMNG is "minimum order quantity" in the dictionary - query Q2.
-*  The sales organisation is the plant's ZPPT_FCST_CFG-VKORG (query M4).
 *  ---------------------------------------------------------------------
-  METHOD read_cartons.
-
-    DATA: lr_vkorg TYPE RANGE OF vkorg,
-          ls_r     LIKE LINE OF lr_vkorg.
+  METHOD read_sales_view.
 
     CLEAR rt_mvke.
     CHECK it_mat IS NOT INITIAL.
 
-    ls_r-sign   = 'I'.
-    ls_r-option = 'EQ'.
-    LOOP AT it_cfg INTO DATA(ls_cfg).
-      CHECK ls_cfg-vkorg IS NOT INITIAL.
-      ls_r-low = ls_cfg-vkorg.
-      APPEND ls_r TO lr_vkorg.
-    ENDLOOP.
-    IF lr_vkorg IS INITIAL.
-      ls_r-low = gc_vkorg_default.
-      APPEND ls_r TO lr_vkorg.
-    ENDIF.
-
-    SELECT matnr, vkorg, aumng
+    SELECT matnr, mvgr1, mvgr2, mvgr3, mvgr4, mvgr5, aumng
       FROM mvke
       FOR ALL ENTRIES IN @it_mat
       WHERE matnr = @it_mat-matnr
-        AND vkorg IN @lr_vkorg
-        AND mvgr1 <> @space
+        AND vkorg = @gc_vkorg
       INTO TABLE @rt_mvke.
+
+*   One row per material. Several distribution channels under the same
+*   sales organisation would give several rows; the first is taken.
+    SORT rt_mvke BY matnr.
+    DELETE ADJACENT DUPLICATES FROM rt_mvke COMPARING matnr.
+
+  ENDMETHOD.
+
+
+  METHOD read_group_texts.
+
+    DATA ls_txt TYPE ty_grptxt.
+
+    CLEAR rt_txt.
+
+    SELECT mvgr1, bezei FROM tvm1t
+      WHERE spras = @sy-langu
+      INTO TABLE @DATA(lt_t1).
+    LOOP AT lt_t1 INTO DATA(ls_t1).
+      ls_txt-nr    = 1.
+      ls_txt-code  = ls_t1-mvgr1.
+      ls_txt-bezei = ls_t1-bezei.
+      APPEND ls_txt TO rt_txt.
+    ENDLOOP.
+
+    SELECT mvgr2, bezei FROM tvm2t
+      WHERE spras = @sy-langu
+      INTO TABLE @DATA(lt_t2).
+    LOOP AT lt_t2 INTO DATA(ls_t2).
+      ls_txt-nr    = 2.
+      ls_txt-code  = ls_t2-mvgr2.
+      ls_txt-bezei = ls_t2-bezei.
+      APPEND ls_txt TO rt_txt.
+    ENDLOOP.
+
+    SELECT mvgr3, bezei FROM tvm3t
+      WHERE spras = @sy-langu
+      INTO TABLE @DATA(lt_t3).
+    LOOP AT lt_t3 INTO DATA(ls_t3).
+      ls_txt-nr    = 3.
+      ls_txt-code  = ls_t3-mvgr3.
+      ls_txt-bezei = ls_t3-bezei.
+      APPEND ls_txt TO rt_txt.
+    ENDLOOP.
+
+    SELECT mvgr4, bezei FROM tvm4t
+      WHERE spras = @sy-langu
+      INTO TABLE @DATA(lt_t4).
+    LOOP AT lt_t4 INTO DATA(ls_t4).
+      ls_txt-nr    = 4.
+      ls_txt-code  = ls_t4-mvgr4.
+      ls_txt-bezei = ls_t4-bezei.
+      APPEND ls_txt TO rt_txt.
+    ENDLOOP.
+
+    SELECT mvgr5, bezei FROM tvm5t
+      WHERE spras = @sy-langu
+      INTO TABLE @DATA(lt_t5).
+    LOOP AT lt_t5 INTO DATA(ls_t5).
+      ls_txt-nr    = 5.
+      ls_txt-code  = ls_t5-mvgr5.
+      ls_txt-bezei = ls_t5-bezei.
+      APPEND ls_txt TO rt_txt.
+    ENDLOOP.
+
+    SORT rt_txt BY nr code.
 
   ENDMETHOD.
 
@@ -785,25 +839,6 @@ CLASS zcl_pp_fcst_pnt IMPLEMENTATION.
         APPEND ls_price TO rt_price.
       ENDIF.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD add_msg.
-
-    DATA ls_msg TYPE bapiret2.
-
-    ls_msg-type       = iv_type.
-    ls_msg-id         = gc_msgid.
-    ls_msg-number     = iv_no.
-    ls_msg-message_v1 = iv_v1.
-    ls_msg-message_v2 = iv_v2.
-
-    MESSAGE ID gc_msgid TYPE 'S' NUMBER iv_no
-      WITH ls_msg-message_v1 ls_msg-message_v2
-      INTO ls_msg-message.
-
-    APPEND ls_msg TO ct_msg.
 
   ENDMETHOD.
 

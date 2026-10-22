@@ -15,7 +15,7 @@ Development system; not transported, not yet functionally tested.
 
 | Tcode / object | What it is for |
 |------------------------------------|----------------------------------------------------------------------|
-| **SM30 `ZPPV_FCST_CFG`** (`ZPPT_FCST_CFG`) | One row per **Paints plant**: sales organisation 4000 for the material-group and carton reads, TVARVC name of the legacy-user list. A plant without a row logs message 018 and uses 4000. **To be maintained before the first run.** |
+| **SM30 `ZPPV_FCST_CFG`** (`ZPPT_FCST_CFG`) | Not needed for Paints since 22/10/26: sales organisation 4000 is hardcoded in `ZCL_PP_FCST_PNT` as the FS states. Only the TVARVC name of the legacy-user list would go here, if Legacy Data is ever used. |
 | **SM30 `ZPPV_PROD_CAT`** (`ZPPT_PROD_CAT`) | Product category, load factor, indicator. Manual entry of DIS or TIN needs the two fixed values added to domain `ZDO_MTS_MTO` in SE11 (optional); the upload writes them regardless. |
 | **SM30 `ZPPV_MAT_TRACK`**, **`ZPPV_MAT_EXCL`** | Old-to-new material codes; excluded materials. Shared tables, by plant. |
 | **SM30 `ZPPV_BRAND`** (`ZPPT_BRAND`) | Brand per plant and material. View not generated yet (SE54, optional); the upload covers it. |

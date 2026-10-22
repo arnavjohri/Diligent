@@ -21,7 +21,7 @@ should settle.
 
 | # | Where | What | Why |
 |-----|------------------|----------------------------------------------|------------------------------------|
-| 1 | SM30 `ZPPV_FCST_CFG` | One row per Paints plant: Sales Org 4000, legacy TVARVC name blank | Material groups and quantity per carton are read for this sales org. Without the row the run logs a warning and uses 4000 |
+| 1 | Nothing to configure for the sales organisation | Sales org 4000 is fixed in the program, as the FS states | Material groups 1, 2, 5 and quantity per carton are read from the sales view of 4000 |
 | 2 | STVARV `ZPP_FORECAST_MTART` | FERT and HAWA (already maintained for Adhesive) | Only these material types appear on the lists |
 | 3 | Test materials, master data | Sales view in sales org 4000 with Material Group 1, 2, 5 filled; an alternative unit L, ML, KG or G in Additional Data → Units of Measure; gross weight; a DPL condition record (condition table A923) | Qty per carton, material groups, pack size, tonnage and DPL come from here. A material without them shows blank or zero in that column, which is not an error |
 | 4 | Test materials, sales | Billing documents (invoices, not returns, not cancelled, not pro forma) in the previous financial year and in the three months before the planned period, for the Paints plant | This is the sales history. Without it, upload Legacy Sales History (step 5 of section D) |
@@ -136,7 +136,7 @@ separated file.
 | 18 | Save with no row selected | Message "Select at least one line" |
 | 19 | Save: quarterly first, annual later for the same material | Both carry the same forecast number |
 | 20 | ZFCST_RPT for the plant | One line per material with annual, quarterly, additional, monthly, additional and totals; forecast number matches |
-| 21 | Plant without a `ZPPV_FCST_CFG` row | List produced; SLG1 shows "Configuration missing for plant"; material groups read on sales org 4000 |
+| 21 | Material with no sales view in sales org 4000 | Material groups 1, 2, 5 and qty per carton blank; everything else filled |
 | 22 | Tonnage Wise unticked | No tonnage and no gross weight columns; KL and crores still shown |
 
 ## G. Behaviour to be aware of

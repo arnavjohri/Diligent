@@ -94,8 +94,7 @@ in SE38 when convenient. Its source is in git history
 - SE41 GUI status `PF_STATUS` of `ZPP_FORECAST_PAINTS`: **created** on 22/10 — SALV_STANDARD
   plus `ZSAVE`, `ZSELALL`, `ZDESEL`, `ZEXCEL` in the application toolbar. Travels in the
   transport with the program; never in a ZIP.
-- SM30 `ZPPV_FCST_CFG` rows for the Paints plants (sales organisation 4000): part of the
-  functional test setup, not confirmed done.
+- SM30 `ZPPV_FCST_CFG` rows: not needed for Paints since sales org 4000 is hardcoded.
 - SM30 views on `ZPPT_BRAND` and the three Paints tables: **not generated** (optional).
 - Domain `ZDO_MTS_MTO` fixed values `DIS`, `TIN`: **not added** (optional; the upload writes
   the codes regardless, SM30 on the category table would refuse them).
@@ -202,16 +201,17 @@ engine's SAVE. `iv_mode` is `zcl_pp_fcst=>gc_mode-annual / quarterly / monthly` 
 
 | Private method | Table | Selection | Result |
 |--------|--------------------------------------------------|--------------------|----------------------|
-| `READ_CONFIG` | `ZPPT_FCST_CFG` | plants of the run | `VKORG` per plant. A plant without a row gets 4000 and message **018** (W) is appended to `ct_msg` |
 | `READ_NAMES` | `T001W` | plants | `NAME1` |
 | `READ_BRANDS` | `ZPPT_BRAND` | plant + material | `BRAND` |
 | `READ_MARA` | `MARA` | materials | `MEINS`, `BRGEW`, `GEWEI` |
 | `READ_PACK_SIZES` | `MARM` | materials, `MEINH IN (L, ML, KG, G)` | first unit in that preference order that is not the material's base unit; pack = `UMREN / UMREZ`; ML and G divided by 1000. Unit codes assumed as internal MSEHI values — **query M5**. The preference list is a small internal table at the top of the method |
-| `READ_CARTONS` | `MVKE` | materials, `VKORG IN` the configured sales orgs, `MVGR1 <> space` | `AUMNG`, read by material + the row's plant's VKORG — **query Q2** |
+| `READ_SALES_VIEW` | `MVKE` | materials, `VKORG = '4000'` (`GC_VKORG`, hardcoded as FS row 91 states, Arnav 22/10/26) | `MVGR1..5` and `AUMNG`, one row per material (first distribution channel). The groups **overwrite** what the engine read with its own sales org; `AUMNG` is taken only where `MVGR1` is filled — **query Q2** |
+| `READ_GROUP_TEXTS` | `TVM1T`..`TVM5T` | logon language, whole tables | descriptions for groups 1..5 |
 | `READ_PRICES` | `A923` → `KONP` | materials, annual mode only | latest `DATAB` per material, lowest `KOPOS` of that `KNUMH`, `KBETR`. Same rule as the engine's private `READ_PRICES`; re-implemented because the engine is not changed — **query Q1** |
 
-3. Per row: `NAME1`, `BRAND`, `BRGEW`, `PACK_SIZE` / `PACK_UNIT`, `QTY_CARTON`, and for annual
-   `PRICE` (quarterly and monthly already carry it from the engine).
+3. Per row: `NAME1`, `BRAND`, `BRGEW`, `PACK_SIZE` / `PACK_UNIT`, `MVGR1..5` with texts
+   (cleared first, then filled from the 4000 view), `QTY_CARTON`, and for annual `PRICE`
+   (quarterly and monthly already carry it from the engine).
 4. Per forecast month, on the quantity the engine prices:
 
 | Mode | Quantity field | Written |
@@ -232,7 +232,8 @@ created-by is kept; sets `AENAM`/`AEDAT`; `MODIFY` of the mode's table. One `COM
 WAIT` if anything was written. A refused row gets `LIGHT = '1'` and the message "Saved under
 forecast n, Paints table not updated"; a summary E message is appended to `ct_msg`.
 
-`ADD_MSG` builds a `BAPIRET2` with `MESSAGE … INTO` from `ZPP_FCST`.
+`ENRICH` keeps its `ct_msg` parameter for the caller's run log but writes nothing to it
+since 22/10/26.
 
 ---
 
@@ -371,7 +372,7 @@ Adhesive files that carry MTS or MTO behave exactly as before. The program now d
 
 | Engine call | Parameters | What matters for Paints |
 |----------------------|------------------------------------------------|------------------------------|
-| `generate_annual` / `generate_quarterly` / `generate_monthly` | `ir_werks`, `ir_matnr`, `iv_fyear`, `iv_quarter` / `iv_period`, `iv_legacy`, `iv_tonnage` | reads billing (`VBRK`/`VBRP`, `FKIMG`, returns excluded, on `FKDAT`), `ZPPT_SLS_HIST` when legacy, `ZPPT_MAT_TRACK` (old codes absorbed into the successor; an old code typed alone is shown under its successor), `ZPPT_MAT_EXCL`, `ZPPT_PROD_CAT` (category, growth, indicator; missing category → growth 1.000 + message), TVARVC `ZPP_FORECAST_MTART` (FERT, HAWA; unmaintained → message 025, no filter), `ZPPT_FCST_CFG` (VKORG for `MVKE` reads, default 1100 if no row — hence the Paints config row), **`ZPPT_FCST_QT` / `ZPPT_FCST_MN` for BUS_FCST, BUS_FCST_ADD1-3 / BUS_FCST_ADD, MSL, PRICE, REASON** (read back so SAVE cannot blank them), `A923`/`KONP` for the price (quarterly, monthly) |
+| `generate_annual` / `generate_quarterly` / `generate_monthly` | `ir_werks`, `ir_matnr`, `iv_fyear`, `iv_quarter` / `iv_period`, `iv_legacy`, `iv_tonnage` | reads billing (`VBRK`/`VBRP`, `FKIMG`, returns excluded, on `FKDAT`), `ZPPT_SLS_HIST` when legacy, `ZPPT_MAT_TRACK` (old codes absorbed into the successor; an old code typed alone is shown under its successor), `ZPPT_MAT_EXCL`, `ZPPT_PROD_CAT` (category, growth, indicator; missing category → growth 1.000 + message), TVARVC `ZPP_FORECAST_MTART` (FERT, HAWA; unmaintained → message 025, no filter), `ZPPT_FCST_CFG` (VKORG for its own `MVKE` reads, default 1100 — the Paints class re-reads the groups with 4000 and overwrites them), **`ZPPT_FCST_QT` / `ZPPT_FCST_MN` for BUS_FCST, BUS_FCST_ADD1-3 / BUS_FCST_ADD, MSL, PRICE, REASON** (read back so SAVE cannot blank them), `A923`/`KONP` for the price (quarterly, monthly) |
 | `save` | `iv_mode`, `ct_alv` (engine row type) | activity 01 per plant; forecast number: `SHARED_NUMBER` looks in `ZPPT_FCST_YR` (by FYEAR) then `_QT` then `_MN` (by GJAHR), else `NUMBER_GET_NEXT` on `ZPPFCST`, interval = last two digits of the start year, fallback max+1 over the three tables; `MODIFY` of the shared table; per row `STATUS 'S'`, `LIGHT '3'`, `MESSAGE "Saved under forecast n"`, MARK cleared; messages 009 / 022 / 017 / 021 / 010 |
 
 Consequences: the business forecast and change uploads must target the **shared** tables
@@ -438,7 +439,7 @@ MEMORY.md, CLAUDE.md        standing rules of the repository (markers, Open SQL,
 |----------------------|------------------------------------------------|------------------------------|
 | `ZDO_BRAND` | brand is free text, 40 characters | M2 |
 | `ZPP_FORECAST_UPLOAD` `CHECK_INDICATOR` | codes DIS, TIN; long forms accepted | M3 |
-| `ZCL_PP_FCST_PNT` `GC_VKORG_DEFAULT` | 4000 when no config row; message 018 | M4, M1 |
+| `ZCL_PP_FCST_PNT` `GC_VKORG` | 4000 hardcoded as FS row 91 states; groups and carton read from that view | M4 |
 | `READ_PACK_SIZES` | unit preference L, ML, KG, G; internal codes; UMREN ÷ UMREZ; ML, G ÷ 1000 | M5 |
 | `READ_PRICES` | A923 holds the Paints DPL; material alone, latest DATAB | Q1 |
 | `READ_CARTONS` | MVKE-AUMNG is the quantity per carton | Q2 |
@@ -455,7 +456,7 @@ MEMORY.md, CLAUDE.md        standing rules of the repository (markers, Open SQL,
 1. Functional test not started; `docs/ZFORECAST_Paints_Test_Handover.docx` is the pack.
 2. Queries M1–M7, Q1–Q10 unanswered (`docs/ZFORECAST_Paints_Assumptions_and_Queries.docx`).
 3. Transaction codes: not created; run from SE38 until SE93 is done.
-4. SM30 config rows for the Paints plants: not confirmed.
+4. (dropped) sales organisation is hardcoded; no config row.
 5. `ZPP_FORECAST_PAINTS_UPL` still in DEV, to be deleted.
 6. `ZDO_MTS_MTO` fixed values DIS / TIN not added; SM30 on the category table refuses them.
 7. SM30 views on `ZPPT_BRAND` and the Paints tables not generated.
