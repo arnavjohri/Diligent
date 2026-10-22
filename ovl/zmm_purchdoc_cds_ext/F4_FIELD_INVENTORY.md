@@ -103,7 +103,7 @@ cannot carry a fixed-value or table F4 by their type. `zzinsp_typ` is done (doma
 | 81 | `zpaycity` | `ZPAYCITY` | `AD_CITY1` | CHAR 40 | City | no — address text |  |  |
 | 82 | `zpaycontct` | `ZPAYCONTCT` | `AD_TLNMBR1` | CHAR 30 | First Telephone No.: Dialing Code + Number | no — address text |  |  |
 | 83 | `zpayemail` | `ZPAYEMAIL` | `AD_SMTPADR` | CHAR 241 | E-Mail Address | no — address text |  |  |
-| 84 | `zgempo` | `ZGEMPO` | `ZGEMPONO` | CHAR 30 | GEM PO NO | no — free text / number |  |  |
+| 84 | `zgempo` | `ZGEMPO` | `ZGEMPONO` | CHAR 30 | GEM PO NO | YES — search help on the field | — | search help `ZGEM_ORDER` on `ZSTR_HEADER-ZGEMPO` (GUI technical info 22/10/26); selection method and parameters to be read in SE11 |
 
 Candidates to look up: 27 of 84 (plus `zzinsp_typ`, done).
 
@@ -113,9 +113,10 @@ Candidates to look up: 27 of 84 (plus `zzinsp_typ`, done).
 |---|---|---|
 | Fixed values of a domain (9) | `zzt_nature` `ZT_NATURE`, `zzbd_type` `ZBD_TYPE`, `zzt_duration` `ZT_DURATION`, `zzvend_cat` `ZVEND_CAT`, `zzinsp_auth` `ZINSP_AUTH`, `zzarbit` `ZARBIT`, `zzbider_agr` `ZBIDERAGR`, `zzepc` `ZZEPC`, `zzdmep` `ZZDMEP` | shared DD07T set, one block per field in the class; the view's WHERE widened |
 | Interval fixed values (2) | `zzpre_awd`, `zzpst_awd` | the GUI F4 shows the interval line; Fiori gets a dialog with Value, Upper Value, Description from view v3 (`DomainValueHigh`) and class v13; picking the line fills the lower bound |
-| Check table, Z (3) | `zznat_proc` → `ZNAT_PROC` (search help `ZNAT_PROC_H`; view `ZI_NAT_PROC_VH` written 19/10, activation unknown), `zzmse` → `ZMSE_EKKO`, `zzsubmi` → `ZMM_PUR_TENDER_D` (fields of the last two unknown) | one VH view + one entity set + one DPC branch each |
+| Check table, Z (3) | `zznat_proc` → `ZNAT_PROC` (GUI: `MODULE pop_up`; view `ZI_NAT_PROC_VH` written 19/10, **not active** — ST22 22/10), `zzmse` → `ZMSE_EKKO` (GUI: `MODULE pop_up_mse`), `zzsubmi` → `ZMM_PUR_TENDER_D` (no POV module — plain foreign key) | one VH view + one entity set + one DPC branch each; the two modules' code gives the exact selects |
 | Check table, address (4, confirmed) | `zztpi_add`, `zzqad_det`, `zzport_con`, `zzult_con` — all `AD_ADDRNUM`, value table `ADRC`, search help `ADMC` | address-number F4: no `ADRC` set in the service; decide with the functional lead whether an address number is a sensible Fiori input at all |
 | Value table of the domain (4, resolved) | `zzpsa` → `USR02` (user: `I_BusinessUserVH` in the service, annotation only); `zzcpo`, `zzindper` → `PA0003` (personnel number: no set in the service, needs a VH view over HR data — authorisation question); `zzrelcode` → `T16FC` (release code: no set in the service, and the valid codes depend on the PO's release group) | annotation only for `zzpsa`; the other three need a decision |
+| Search help on the field (1) | `zgempo` → `ZGEM_ORDER` | one VH view over the search help's selection method, once read in SE11 |
 | No check at all (6) | `zupflag`, `zzusr`, `zzflag_kol`, `zzflag_mum`, `zzflag_chen`, `zzflag_del` | flags and a user name — no F4 to build unless asked |
 
 Watch-outs: `ZARBIT` has a fixed value with a blank key (No Arbitration) — a key property with an empty
