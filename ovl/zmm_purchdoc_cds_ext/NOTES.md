@@ -262,6 +262,21 @@ rejects `MM_PUR_PO_MAINT_V2_SRV`, the backend route is closed and what remains i
 extension (adaptation project, fragment with a ComboBox on a small Z service exposing only
 `ZI_DOM_FIXVAL_VH`) or the Custom Fields app.
 
+**Confirmed 22/10/26 (Arnav):** `@Consumption.valueHelpDefinition` on a custom field pointed at a
+set that is already in the service shows the F4 in the app. So the annotation path through the
+`extend view` is intact; the single missing piece is the entity set. The `SAP__*` sets at the end
+of the service document (`SAP__FormatSet` … `SAP__ValueHelpSet`, `SAP__Currencies`) are the
+Gateway framework's PDF-export and currency/unit sets, not a generic fixed-value provider — do
+not chase `SAP__ValueHelpSet`.
+
+**Ways to get a set into the service the app calls, 22/10/26:**
+
+| Route | Where the set lives | Cost |
+|---|---|---|
+| Implicit enhancement of SAP's generated classes: post-exit on `DEFINE` of the MPC(_EXT) creates entity type + set for `ZI_DOM_FIXVAL_VH` and the `Common.ValueList` vocabulary annotation on `zzinsp_typ`; enhancement at the start of `GET_ENTITYSET` in the DPC(_EXT) serves it (`SELECT` from the view, `/iwbep/cl_mgw_data_util=>filtering` / `paging`, `copy_data_to_ref`, `RETURN`) | **This service**, nothing repointed | Enhancement, not modification, so allowed; but code inside generated standard classes — SPAU_ENH on every note/SP. Class names to be read from SEGW → Runtime Artifacts first. Variant to try first: pre-exit adding the entity *before* `super->define` — if SADL then keeps the CDS value-help annotation, the hand-written annotation is not needed (unproven) |
+| Redefinition into `ZMM_PUR_PO_MAINT_EXT` + Reference → Data Source | New service `ZMM_PUR_PO_MAINT_EXT_SRV` | Clean Z project, regenerable; one-line repoint in BAS; SEGW may refuse to redefine a SADL service |
+| UI extension: ComboBox on a one-entity Z service | Separate tiny service | No change to the PO service; UI consultant's work; `@UI.hidden` on the SmartField twin |
+
 **Entity sets of the standard service** are listed in
 `original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` (service document, 22/10/26, still
 no Z* collection). Useful by-product: value-help sets for plant, supplier, customer, business
