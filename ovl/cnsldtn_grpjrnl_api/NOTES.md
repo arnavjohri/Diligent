@@ -11,8 +11,18 @@ entry line items from `ACDOCU`. Entity sets `CnsldtnGrpJrnlItem` (parameters) an
 and Update restrictions false. It cannot create group journal entries.
 
 Also registered on the system, both read: `API_CNSLDTNADHOCITEM`, `API_CNSLDTNADHOCSET`.
-The posting service `API_CNSLDTNGRPJRNLENTR` is **not** registered; check the backend
-catalogue (`/IWFND/MAINT_SERVICE`, Add Service) before promising it exists on this release.
+
+**Backend catalogue checked 22/10/26** (`/IWFND/MAINT_SERVICE`, Add Service, alias LOCAL,
+`*CNSLDTN*`): only two more services exist, `API_CNSLDTNRLBSDGRPJRNLITM` (released group
+journal items, read) and `UI_RFM_POCNSLDTNRULE` (procurement, unrelated). The posting
+service `API_CNSLDTNGRPJRNLENTR` does **not** exist on this release. There is no released
+OData API to create group journal entries here.
+
+**How ACDOCU is written on OVL, therefore:** company code data via Data Monitor task
+"Release Universal Journal" (ACDOCA -> ACDOCU, posting level 00); consolidation adjustments
+via Fiori "Post Group Journal Entries" / "Import Group Journal Entries"; automatic tasks
+(currency translation, eliminations) by the monitor. Programmatic posting would mean
+unreleased SAP classes behind the Fiori app - flag to Gaurav as a risk before building.
 
 ## Mandatory parameters (all four, every call)
 
@@ -50,4 +60,5 @@ model of the service) with the same parameters.
 
 1. Requirement: consumer, read vs post, fields and filters needed.
 2. Hierarchy IDs, key date and consolidation version in use.
-3. If posting is wanted: is `API_CNSLDTNGRPJRNLENTR` in the backend catalogue of this release?
+3. If posting by program is wanted: decision on building on unreleased classes (not
+   recommended), or the file for "Import Group Journal Entries" as the deliverable instead.
