@@ -23,6 +23,11 @@
 *              22/10/26 v10 - 'Unable to interpret "40"': a method
 *              parameter takes no LENGTH (MEMORY 4.1). Named types
 *              TY_NAME40 / TY_FIELD30 instead.
+*              22/10/26 v11 - the nine fields added in v8 showed no F4
+*              in the app while Inspection Type (v7, literal names)
+*              did. The loop with name variables is gone: every
+*              fixed-value field is one explicit block with literal
+*              names, the code path proven on 22/10/26.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -79,12 +84,6 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
 
   PRIVATE SECTION.
     TYPES:
-      BEGIN OF ty_field,
-        property TYPE string,    "PO property as in $metadata
-        label    TYPE string,    "title of the value help
-        domain   TYPE string,    "domain whose fixed values apply
-      END OF ty_field,
-      tt_field  TYPE STANDARD TABLE OF ty_field WITH DEFAULT KEY,
       ty_name40  TYPE c LENGTH 40,     "OData names into the MED API   - ASSUMPTION A8
       ty_field30 TYPE c LENGTH 30.     "ABAP field names into the MED API
 
@@ -92,11 +91,6 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
       gc_po_entity_type   TYPE string VALUE 'C_PurchaseOrderTPType',     "ASSUMPTION A1 (VOCAN only)
       gc_common           TYPE string VALUE 'com.sap.vocabularies.Common.v1',
       gc_schema_namespace TYPE string VALUE 'MM_PUR_PO_MAINT_V2_SRV'.    "ASSUMPTION A5
-
-    "! The fixed-value fields: PO property, label, domain (DD04L 22/10/26)
-    CLASS-METHODS fixed_value_fields
-      RETURNING
-        VALUE(rt_fields) TYPE tt_field.
 
     "! Shared entity type ZI_DOM_FIXVAL_VH (DD07T fixed values)
     CLASS-METHODS create_dom_fixval_type
@@ -184,10 +178,9 @@ ENDCLASS.
 CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
 
   METHOD add_value_helps.
-    DATA lv_set_name  TYPE ty_name40.                                      "ASSUMPTION A8
-    DATA lv_prop_name TYPE ty_name40.                                      "ASSUMPTION A8
-    DATA lo_vh_type   TYPE REF TO /iwbep/if_mgw_odata_entity_typ.
+    DATA lo_vh_type    TYPE REF TO /iwbep/if_mgw_odata_entity_typ.
     DATA lo_entity_set TYPE REF TO /iwbep/if_mgw_odata_entity_set.
+    DATA lx_field      TYPE REF TO cx_root.
 
     CLEAR gv_last_error.
     IF io_model IS NOT BOUND OR io_vocan_model IS NOT BOUND.
@@ -205,30 +198,194 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    " 1. Fixed values of a domain: one shared type, one set per domain
+    " 1. Fixed values of a domain: one shared type, one set per domain.
+    "    Literal names in every block on purpose (v11): the proven path.
     TRY.
         lo_vh_type = create_dom_fixval_type( io_model ).
-        LOOP AT fixed_value_fields( ) INTO DATA(ls_field).
-          TRY.
-              lv_set_name  = |ZVH_{ ls_field-domain }|.
-              lv_prop_name = ls_field-property.
-              lo_entity_set = lo_vh_type->create_entity_set( lv_set_name ).
-              set_vh_set_flags( lo_entity_set ).
-              annotate_value_list( io_vocan_model = io_vocan_model
-                                   io_po_property = lo_po_type->get_property( lv_prop_name )
-                                   iv_property    = ls_field-property
-                                   iv_label       = ls_field-label
-                                   iv_vh_set      = |{ lv_set_name }|
-                                   iv_vh_key      = 'DomainValue'
-                                   iv_vh_text     = 'DomainValueText'
-                                   iv_dropdown    = abap_true ).
-            CATCH cx_root INTO DATA(lx_field).
-              gv_last_error = |{ gv_last_error }{ ls_field-property }: { lx_field->get_text( ) }; |.
-          ENDTRY.
-        ENDLOOP.
       CATCH cx_root INTO DATA(lx_dom).
         gv_last_error = |{ gv_last_error }ZI_DOM_FIXVAL_VH: { lx_dom->get_text( ) }; |.
+        CLEAR lo_vh_type.
     ENDTRY.
+
+    " 1.1 Inspection Type - domain ZINSP_TYP
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZINSP_TYP' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzinsp_typ' )
+                               iv_property    = 'zzinsp_typ'
+                               iv_label       = 'Inspection Type'
+                               iv_vh_set      = 'ZVH_ZINSP_TYP'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzinsp_typ: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.2 Nature of tender - domain ZT_NATURE
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZT_NATURE' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzt_nature' )
+                               iv_property    = 'zzt_nature'
+                               iv_label       = 'Nature of tender'
+                               iv_vh_set      = 'ZVH_ZT_NATURE'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzt_nature: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.3 Bidding System - domain ZBD_TYPE
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZBD_TYPE' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzbd_type' )
+                               iv_property    = 'zzbd_type'
+                               iv_label       = 'Bidding System'
+                               iv_vh_set      = 'ZVH_ZBD_TYPE'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzbd_type: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.4 Tender Duration type - domain ZT_DURATION
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZT_DURATION' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzt_duration' )
+                               iv_property    = 'zzt_duration'
+                               iv_label       = 'Tender Duration type'
+                               iv_vh_set      = 'ZVH_ZT_DURATION'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzt_duration: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.5 Vendor Category - domain ZVEND_CAT
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZVEND_CAT' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzvend_cat' )
+                               iv_property    = 'zzvend_cat'
+                               iv_label       = 'Vendor Category'
+                               iv_vh_set      = 'ZVH_ZVEND_CAT'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzvend_cat: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.6 Inspection Authority - domain ZINSP_AUTH
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZINSP_AUTH' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzinsp_auth' )
+                               iv_property    = 'zzinsp_auth'
+                               iv_label       = 'Inspection Authority'
+                               iv_vh_set      = 'ZVH_ZINSP_AUTH'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzinsp_auth: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.7 Arbitration cases - domain ZARBIT
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZARBIT' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzarbit' )
+                               iv_property    = 'zzarbit'
+                               iv_label       = 'Arbitration cases'
+                               iv_vh_set      = 'ZVH_ZARBIT'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzarbit: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.8 Bidder Agreement - domain ZBIDERAGR
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZBIDERAGR' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzbider_agr' )
+                               iv_property    = 'zzbider_agr'
+                               iv_label       = 'Bidder Agreement'
+                               iv_vh_set      = 'ZVH_ZBIDERAGR'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzbider_agr: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.9 EPC approval OLD Value - domain ZZEPC
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZZEPC' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzepc' )
+                               iv_property    = 'zzepc'
+                               iv_label       = 'EPC approval OLD Value'
+                               iv_vh_set      = 'ZVH_ZZEPC'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzepc: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
+
+    " 1.10 DMEP - domain ZZDMEP
+    IF lo_vh_type IS BOUND.
+      TRY.
+          lo_entity_set = lo_vh_type->create_entity_set( 'ZVH_ZZDMEP' ).
+          set_vh_set_flags( lo_entity_set ).
+          annotate_value_list( io_vocan_model = io_vocan_model
+                               io_po_property = lo_po_type->get_property( 'zzdmep' )
+                               iv_property    = 'zzdmep'
+                               iv_label       = 'DMEP'
+                               iv_vh_set      = 'ZVH_ZZDMEP'
+                               iv_vh_key      = 'DomainValue'
+                               iv_vh_text     = 'DomainValueText'
+                               iv_dropdown    = abap_true ).
+        CATCH cx_root INTO lx_field.
+          gv_last_error = |{ gv_last_error }zzdmep: { lx_field->get_text( ) }; |.
+      ENDTRY.
+    ENDIF.
 
     " 2. Tender Process - table ZNAT_PROC through ZI_NAT_PROC_VH, dropdown
     TRY.
@@ -336,23 +493,6 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       CATCH cx_root INTO DATA(lx_user).
         gv_last_error = |{ gv_last_error }zzpsa: { lx_user->get_text( ) }; |.
     ENDTRY.
-  ENDMETHOD.
-
-
-  METHOD fixed_value_fields.
-    " Labels as on the Customers tab of the app. Domains from DD04L,
-    " values from DD07T (original/DD07T_extract_2026-10-22.txt).
-    rt_fields = VALUE #(
-      ( property = 'zzinsp_typ'   label = 'Inspection Type'        domain = 'ZINSP_TYP' )
-      ( property = 'zzt_nature'   label = 'Nature of tender'       domain = 'ZT_NATURE' )
-      ( property = 'zzbd_type'    label = 'Bidding System'         domain = 'ZBD_TYPE' )
-      ( property = 'zzt_duration' label = 'Tender Duration type'   domain = 'ZT_DURATION' )
-      ( property = 'zzvend_cat'   label = 'Vendor Category'        domain = 'ZVEND_CAT' )
-      ( property = 'zzinsp_auth'  label = 'Inspection Authority'   domain = 'ZINSP_AUTH' )
-      ( property = 'zzarbit'      label = 'Arbitration cases'      domain = 'ZARBIT' )
-      ( property = 'zzbider_agr'  label = 'Bidder Agreement'       domain = 'ZBIDERAGR' )
-      ( property = 'zzepc'        label = 'EPC approval OLD Value' domain = 'ZZEPC' )
-      ( property = 'zzdmep'       label = 'DMEP'                   domain = 'ZZDMEP' ) ).
   ENDMETHOD.
 
 
