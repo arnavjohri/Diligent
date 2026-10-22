@@ -23,6 +23,9 @@
 *              which the dropdown and display mode read the description
 *              from (SADL writes it from @ObjectModel.text.element; a
 *              hand-built entity has to carry it itself).
+*              22/10/26 v6 - UI.TextArrangement TextLast on the PO field,
+*              so key and description show together, key first, as in
+*              the GUI popup ("1 Source Inspection").
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so the value-help
@@ -60,6 +63,11 @@
 * ASSUMPTION A6: the VOCAN API (annotations target, record, property,
 *   simple value) takes STRING. If activation reports a STRING / C(n)
 *   mismatch on one of those lines, change that one actual to a literal.
+* ASSUMPTION A7: /IWBEP/IF_MGW_VOCAN_ANNOTATION has CREATE_SIMPLE_VALUE
+*   and the simple value has SET_ENUM_MEMBER. If activation rejects
+*   either, delete step 3 of ANNOTATE_VALUE_LIST and put
+*   @UI.textArrangement: #TEXT_LAST on zzinsp_typ in
+*   ZC_PURCHASEORDERTP_EXT instead (same effect, CDS side).
 * Not in this version: search support in the value help (two rows) and
 *   the per-field view copies; the Constant parameter on DomainName
 *   already restricts a shared set per field once the view's WHERE is
@@ -249,6 +257,13 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     lo_param = lo_parameters->create_record( |{ gc_common }.ValueListParameterConstant| ).
     lo_param->create_property( 'ValueListProperty' )->create_simple_value( )->set_string( 'DomainName' ).
     lo_param->create_property( 'Constant' )->create_simple_value( )->set_string( iv_domain ).
+
+    " 3. Text arrangement of the PO field: key and description together,
+    "    key first, as in the GUI popup ("1 Source Inspection"). TextFirst
+    "    gives "Source Inspection (1)", TextOnly the description alone.
+    lo_ann_target->create_annotation( 'com.sap.vocabularies.UI.v1.TextArrangement'
+      )->create_simple_value( )->set_enum_member(
+        'com.sap.vocabularies.UI.v1.TextArrangementType/TextLast' ).       "ASSUMPTION A7
   ENDMETHOD.
 
 ENDCLASS.
