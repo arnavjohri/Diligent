@@ -328,7 +328,7 @@ own tile, only that one step is missing.
 
 | # | Object | File | What it does | Status |
 |---|---|---|---|---|
-| 1 | `ZCL_MM_PO_VH_MPC` (global class, paste in ADT) | `ZCL_MM_PO_VH_MPC.abap` (273 lines, v7) | `add_value_helps( io_model io_vocan_model )`: creates entity type + set `ZI_DOM_FIXVAL_VH` bound to SQL view `ZIDOMFIXVALVH`, puts `sap:value-list="fixed-values"` and `Common.ValueList` (InOut `zzinsp_typ`↔`DomainValue`, DisplayOnly `DomainValueText`, Constant `DomainName`=`ZINSP_TYP`) on `zzinsp_typ`. All inside `TRY`; a failure skips the VH and leaves the reason in `gv_last_error`. v2 22/10/26: first paste failed activation, `type STRING of GC_VH_ENTITY_TYPE is not compatible with C(40) of IV_ENTITY_TYPE_NAME` — the MED API takes CHAR names by reference; names into it are now literals, STRING only into the VOCAN API. v3: interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL` (30-char name, 5 places); `GET_SCHEMA_NAMESPACE` has no RETURNING parameter → namespace is the constant `MM_PUR_PO_MAINT_V2_SRV` (A5, verify in `$metadata`) | v4 active 22/10/26; v7 (sap:text on DomainValue + UI.TextArrangement TextLast via set_enum_member_by_name) delivered for re-paste; v5, v6 skipped |
+| 1 | `ZCL_MM_PO_VH_MPC` (global class, paste in ADT) | `ZCL_MM_PO_VH_MPC.abap` (273 lines, v7) | `add_value_helps( io_model io_vocan_model )`: creates entity type + set `ZI_DOM_FIXVAL_VH` bound to SQL view `ZIDOMFIXVALVH`, puts `sap:value-list="fixed-values"` and `Common.ValueList` (InOut `zzinsp_typ`↔`DomainValue`, DisplayOnly `DomainValueText`, Constant `DomainName`=`ZINSP_TYP`) on `zzinsp_typ`. All inside `TRY`; a failure skips the VH and leaves the reason in `gv_last_error`. v2 22/10/26: first paste failed activation, `type STRING of GC_VH_ENTITY_TYPE is not compatible with C(40) of IV_ENTITY_TYPE_NAME` — the MED API takes CHAR names by reference; names into it are now literals, STRING only into the VOCAN API. v3: interface is `/IWBEP/IF_MGW_ODATA_ANNOTATABL` (30-char name, 5 places); `GET_SCHEMA_NAMESPACE` has no RETURNING parameter → namespace is the constant `MM_PUR_PO_MAINT_V2_SRV` (A5, verify in `$metadata`) | **v7 active 22/10/26 — F4 works in the app: dropdown "1 (Source Inspection)" / "2 (Destination Inspection)"** |
 | 2 | `ZEI_MM_PO_VH_MPC` (source-code enhancement) | `ZEI_MM_PO_VH_MPC.abap` (22 lines) | Two statements at the implicit option at the END of `DEFINE` in `CL_MM_PUR_PO_MAINT_V2_MPC_EXT` (or the MPC, whichever implements `DEFINE` — Runtime Artifacts decide). Calls object 1 with `model` / `vocab_anno_model` | **Active 22/10/26** (end of `DEFINE` in the `_EXT`) |
 | 3 | `ZEI_MM_PO_VH_DPC` (source-code enhancement) | `ZEI_MM_PO_VH_DPC.abap` (49 lines) | Implicit option at the START of `/IWBEP/IF_MGW_APPL_SRV_RUNTIME~GET_ENTITYSET` in the DPC_EXT (or the DPC if the _EXT does not redefine it): when `iv_entity_set_name = 'ZI_DOM_FIXVAL_VH'`, select from the view, `/iwbep/cl_mgw_data_util=>filtering` / `orderby` / `paging`, inline count, `copy_data_to_ref`, `RETURN`. Everything else falls through to SAP's code | **Active 22/10/26**, START of the method in the `_DPC_EXT` (it redefines it: `INCLUDE mm_pur_odata_check_entity`, then `super->get_entityset`, then field-control mapping) |
 
@@ -361,7 +361,19 @@ two rows (`1` Source Inspection, `2` Destination Inspection) with type
 standard URL; the same backend model serves the alias. Earlier the same day the alias URL answered
 `/IWFND/MED/170 No service found for namespace '', name 'ZMM_PUR_PO_MAINT_V2_SRV'` once (hub registry,
 not the model; cause not established — `/IWFND/ERROR_LOG` transaction `D7FD1DD8A7980260E006AD9F38286E20`).
-App test pending.
+**App confirmed 22/10/26 (Arnav: "working"):** Inspection Type is a dropdown with key and description.
+TR number still to be noted here.
+
+**Pattern for every further field** (one class, no new SEGW object, no CDS paste):
+
+| Source of the GUI F4 | What is added | Where |
+|---|---|---|
+| Fixed values of a domain | One `annotate_value_list` call with the field, label and domain. The shared set `ZI_DOM_FIXVAL_VH` serves it through the Constant parameter — once the hard `domname = 'ZINSP_TYP'` is taken out of the view's WHERE again (first thing to test on field 2: does the dropdown stay filtered to its own domain on this UI5?) | `ZCL_MM_PO_VH_MPC`, `add_value_helps` |
+| Z table or check table (e.g. `ZZNAT_PROC` → `ZNAT_PROC`) | One value-help CDS view (`ZI_NAT_PROC_VH` exists), one entity type + set block bound to its SQL view, one `WHEN` in the DPC block, one `annotate_value_list` call pointing at that set | class + `ZEI_MM_PO_VH_DPC` |
+| An object the standard service already has a set for (plant, supplier, cost centre …) | Annotation only; cheapest in the class as well (`annotate_value_list` against the SAP set, no entity block, no DPC) so the extension view need not be re-pasted | class |
+
+Needed per field before anything is written: property name as in `$metadata`, label, and the
+F4 source as above (domain name, or table + key field + text field + filter, or the SAP set).
 
 Assumptions in object 1 (header, greppable): A1 entity type `C_PurchaseOrderTPType` / property
 `zzinsp_typ` as in `$metadata`; A2 SQL view `ZIDOMFIXVALVH` with columns `DOMAINNAME DOMAINVALUE
