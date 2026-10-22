@@ -174,6 +174,29 @@ Risks, to be tested on the first field before annotating the rest:
 Not for this view: fields whose GUI F4 comes from a check table, a search help or a
 `PROCESS ON VALUE-REQUEST` module. Those keep one value-help view each over their table.
 
+## The consumer is the standard service — 22/10/26
+
+Gateway Client screenshot (22/10/26): the app calls **`MM_PUR_PO_MAINT_V2_SRV`**, SAP's own
+service behind Manage Purchase Orders, host `vhovlocdci.sap.ongcvidesh.in:44300`, OCQ 500.
+The service document lists no `ZI_DOM_FIXVAL_VH` collection (search 0/0), so the value-help
+annotation on `zzinsp_typ` is dropped by the runtime and the app shows the bare
+"Define Conditions" dialog. **The CDS side is complete; the blocker is service exposure.**
+
+Why the zz fields themselves show up but the value help does not: a referenced-data-source
+service takes the *properties* of the referenced view at runtime (extension fields appear
+without regeneration), but its *entity sets* are fixed when the project is generated. A new
+value-help entity therefore never enters a standard service through a CDS annotation alone.
+
+Routes, to be decided once the project type and the app's ownership are known:
+
+| Finding | Route |
+|---|---|
+| SEGW project `MM_PUR_PO_MAINT_V2` exists and the app is a Z copy/extension whose `manifest.json` we own | **Redefine** into a Z SEGW project (`ZMM_PUR_PO_MAINT_V2`, Data Model → Redefine → OData Service (GW) → `MM_PUR_PO_MAINT_V2_SRV`), add `ZI_DOM_FIXVAL_VH` (and every later VH view) as a Data Source Reference entity set, generate, register, repoint the app's `mainService` to the Z service. Everything built so far works unchanged. |
+| Service is a RAP service binding | `extend service … with { expose ZI_DOM_FIXVAL_VH; }` — only if ADT offers the object type "Service Definition Extension" on this release. |
+| Standard app straight from the catalog, standard service, no extension object | No clean CDS/Gateway route. Options: UI extension of the standard app with a ComboBox bound to a small Z service on the VH view; or move the fields to the Custom Fields app (code list), SAP's intended way for standard apps. Both are projects, not fixes. |
+
+Never modify `MM_PUR_PO_MAINT_V2` itself (standard object).
+
 ## Not in the repo yet
 
 - **The 26 sources.** Only the names are known. Nothing can be changed, reviewed or
@@ -183,8 +206,8 @@ Not for this view: fields whose GUI F4 comes from a check table, a search help o
   table rows (`DDDDLSRC`, field `SOURCE`, one row per object).
 - **Which custom fields** the other 25 extensions expose (PO header is now known: 84 `zz*`/`z*`
   fields of the EKKO append, classic CI append, not Custom Fields app).
-- **The consumer**: service definition / binding, or the standard app whose tile shows the
-  fields (Manage Purchase Orders / Requisitions / Contracts, or a custom List Report).
+- **The consumer** for PO: known since 22/10/26 — `MM_PUR_PO_MAINT_V2_SRV` (standard). Project type (SEGW
+  vs service binding) and whether the app is a Z copy still to be confirmed. PR / contract consumers unknown.
 - **Transport status**: released or not, and which systems it has reached.
 
 ## How it ships
