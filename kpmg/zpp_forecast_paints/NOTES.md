@@ -110,7 +110,7 @@ optional SE11 step, so no Adhesive DDIC object is overwritten by a pull.
 
     HANDOVER.md               the one file to give the next ABAPer (and their Claude): everything, with paths
     fs/        the FS as received, plus its text extract — never edited
-    docs/      Assumptions and Queries, TS, test pack, technical handover, manual steps, KT (md + docx)
+    docs/      Assumptions and Queries, TS, test pack, technical handover, manual steps, KT, Word copy of HANDOVER.md
     src/       the 18 abapGit files (3 domains, 5 data elements, 4 tables, class, report, package)
     tools/     mktables.py, mkupl_adhesive.py, mkupl.py (historic), abapcheck.py
     00_TECHNICAL_OBJECTS.md   inventory, import, requirement mapping, column layouts, assumptions
