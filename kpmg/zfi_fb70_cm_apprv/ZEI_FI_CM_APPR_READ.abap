@@ -28,6 +28,11 @@
 *   ZEI_FI_CM_APPR_READ, Z package and request. Paste the block between
 *   ENHANCEMENT and ENDENHANCEMENT. Activate.
 * Switch-off: deactivate the implementation (SE19) - standard returns.
+* Checked 23/10/26 against the pasted READ source: EV_KOARS =
+*   VBKPF-KOARS; ES_ACCDOC_HDR_WA-TCODE = VBKPF-TCODE (MOVE-CORRESPONDING,
+*   not on the copy-with-reference path, hence IV_FOR_CREATE_WITH_REF
+*   excluded); non-G/L lines are carried into the item table (the
+*   ASSERT for them is commented out by SAP, CE2302).
 *----------------------------------------------------------------------*
 ENHANCEMENT 1  ZEI_FI_CM_APPR_READ.    "active version
 *BOC By Arnav on 23/10/26
@@ -43,6 +48,7 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_READ.    "active version
   CLEAR lv_zcm_blart.
 
   IF iv_for_post = abap_false
+     AND iv_for_create_with_ref = abap_false             "Changes by Arnav on 23/10/26
      AND ev_error_occurred IS INITIAL
      AND ev_koars CA 'D'
      AND es_accdoc_hdr_wa-tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting.

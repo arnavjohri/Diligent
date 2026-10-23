@@ -19,3 +19,19 @@ for change in the Fiori G/L posting model (Verify General Journal Entries, and t
 8. `er_data` = temp key (`tmpty`, `tmpid`).
 
 The full source was pasted in the session on 23/10/26; only the structure is kept here.
+
+## `CL_FDC_ACCDOC_PARK_ACCESS=>READ` (pasted 23/10/26)
+
+- `PRELIMINARY_POSTING_DOC_READ` into `FVBKPF/FVBSEG/FVBSET/FVBSEC`; not found -> `E134` or
+  `FIN_ODATA_GL E010`.
+- Header: `MOVE-CORRESPONDING ls_vbkpf TO es_accdoc_hdr_wa` (so `TCODE` = `VBKPF-TCODE`);
+  approval status from `XWFFR`/`XFRGE`, else `cl_fdc_accdoc_ver_services=>get_workflow_item_status`.
+- **`ev_koars = ls_vbkpf-koars.`** — the value `ACCDOC_FUNC_PARKD_DOC_READ_UPD` checks for 092.
+- Items: `MOVE-CORRESPONDING ls_vbseg TO ls_accdoc_itm_wa` (`FDC_S_ACCDOC_ITM`); for `KOART` other
+  than G/L the `ASSERT 1 = 2` is commented out ("CE2302 Allow parking of supplier down payment
+  request"), so a customer line is carried as it is. Whether its customer number survives depends
+  on `FDC_S_ACCDOC_ITM` having a `KUNNR` field.
+- Parameters seen: `IV_BELNR`, `IV_BUKRS`, `IV_GJAHR`, `IV_FOR_POST`, `IV_FOR_CREATE_WITH_REF`,
+  `IV_FOR_SESSION_TMPTY`, `IV_FOR_SESSION_TMPID`, `ES_ACCDOC_HDR_WA`, `ET_ACCDOC_ITM_WA`,
+  `ET_ACCDOC_TAX_WA`, `ET_ACCDOC_ITM_COPA`, `ET_ACCDOC_WHTAX_WA`, `EV_KOARS`, `EV_ERROR_OCCURRED`,
+  `ET_MESSAGE`.
