@@ -35,3 +35,14 @@ The full source was pasted in the session on 23/10/26; only the structure is kep
   `IV_FOR_SESSION_TMPTY`, `IV_FOR_SESSION_TMPID`, `ES_ACCDOC_HDR_WA`, `ET_ACCDOC_ITM_WA`,
   `ET_ACCDOC_TAX_WA`, `ET_ACCDOC_ITM_COPA`, `ET_ACCDOC_WHTAX_WA`, `EV_KOARS`, `EV_ERROR_OCCURRED`,
   `ET_MESSAGE`.
+
+## Source scan 23/10/26 (RS_ABAP_SOURCE_SCAN, CL_FDC* / CL_FAC_FINANCIALS*) - 7 hits
+
+| Include | Line | Code |
+|---|---|---|
+| `CL_FAC_FINANCIALS_POST_DPC_EXT` CM057 (`ACCDOC_HEADER_READ_DOCUMENT`) | 53 | `IF NOT lv_koars CO ...co_allowed_acct_ty_for_parking.` -> E092 |
+| `CL_FAC_FINANCIALS_POST_DPC_EXT` CM05F (`ACCDOC_FUNC_PARKD_DOC_READ_UPD`) | 81 | `ELSEIF NOT lv_koars CO ...` -> E092 |
+| `CL_FDC_ACCDOC_PARK_ACCESS` CU | 8 | `constants CO_ALLOWED_ACCT_TY_FOR_PARKING type KOARS_003 value 'SK '` (CHAR3, blank included) |
+| `CL_FDC_ACCDOC_VER_BASE` CM003 | 58 | `CALL FUNCTION 'SAP_WAPI_DECISION_COMPLETE'` workitem_id = lv_workitem_id, decision_key = iv_decision_key ("0001=resubmit, 0002=Abort"); preceded by `IF lv_modify_success = abap_false. RETURN.` |
+| `CL_FDC_ACCDOC_VER_BASE` CM006 | 35 | same FM with decision_key '0002' (abort / withdraw); `IF lv_workitem_id IS INITIAL. RETURN.` before it |
+| `CL_FDC_ACCDOC_VER_SERVICES` CM00C (`IS_DOC_VALID_FOR_NEW_WORKFLOW`) | 17, 42 (commented) | koars check, 092 / A133 |
