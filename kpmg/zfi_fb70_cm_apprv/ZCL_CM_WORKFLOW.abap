@@ -1,7 +1,7 @@
 *----------------------------------------------------------------------*
 * Class       : ZCL_CM_WORKFLOW
 * Author      : Arnav Johri
-* Date        : 15.10.2026
+* Date        : 15.10.2026, changed 23.10.2026 (VBKPF-TCODE kept)
 * Description : Copy of ZCL_GL_WORKFLOW->START_WORKFLOW for a customer
 *               credit memo parked in FB70. Same code, except:
 *               - PRELIMINARY_POSTING_DOC_READ removed: the tables come
@@ -94,12 +94,23 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 * posting check (enhancement ZEI_GL_WORKLFOW_INTR) keys on the same code.
 * Decision Gaurav/Arnav 21/10/26: stay on the GL scenario with these
 * rewrites. Document not on the database yet -> no event (RETURN).
+*BOC By Arnav on 23/10/26
+* VBKPF-TCODE keeps the entry transaction (FB70). FBV2/FBV3 choose their
+* entry screen from it: with the G/L app code they opened the FB50
+* screen, which has no customer line. The scenario view reads BKPF-TCODE
+* only (proved 21/10/26), so the BKPF rewrite below stays.
+*    UPDATE vbkpf
+*      SET xwffr = @abap_true,
+*          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+*      WHERE ausbk = @<fs_vbkpf>-ausbk
+*        AND belnr = @<fs_vbkpf>-belnr
+*        AND gjahr = @<fs_vbkpf>-gjahr.
     UPDATE vbkpf
-      SET xwffr = @abap_true,
-          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+      SET xwffr = @abap_true
       WHERE ausbk = @<fs_vbkpf>-ausbk
         AND belnr = @<fs_vbkpf>-belnr
         AND gjahr = @<fs_vbkpf>-gjahr.
+*EOC By Arnav on 23/10/26
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
