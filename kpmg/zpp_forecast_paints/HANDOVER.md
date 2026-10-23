@@ -231,7 +231,7 @@ button; Excel, CSV or tab text; test run ticked by default; row-by-row result li
 
 ```
 kpmg/zpp_forecast_paints/
-  HANDOVER.md                      this file
+  HANDOVER.md                      this file (docs/ZFORECAST_Paints_Handover.docx is its Word copy)
   NOTES.md                         what it is, how it ships, gotchas
   ISSUES.md                        dated log: issue -> cause -> fix -> files -> TR  (read it)
   00_TECHNICAL_OBJECTS.md          inventory, import, requirement mapping, column lists, assumptions
