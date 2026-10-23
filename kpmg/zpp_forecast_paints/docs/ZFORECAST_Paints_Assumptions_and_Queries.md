@@ -16,6 +16,14 @@ Version 2 (same day) applies the rule that **no Adhesive program or class is cha
 | Status of document | Draft — no version record, no approval, no message or authorisation section, no test scenarios. The "Month" sheet is a copy of the quarterly sheet. The annual sample rows do not line up with the annual column header |
 | Prepared by | Arnav Johri, 19.10.2026 |
 
+> **Status note, 23/10/26.** This is the v2 document of 19/10/26, kept as issued. Since then:
+> P01, P21 and P26 — the separate Paints upload `ZPP_FORECAST_PAINTS_UPL` / `ZFCST_PAINTS_UPL`
+> was withdrawn on 22/10; its two uploads live in the Adhesive `ZPP_FORECAST_UPLOAD` (ZFCST_UPL,
+> ninth radio button Brand, four-value indicator). P16 — the Paints columns are now also **saved**,
+> into `ZPPT_PNT_FCST_YR` / `_QT` / `_MN`. M4 — sales organisation 4000 is hardcoded in
+> `ZCL_PP_FCST_PNT`, not configured. The queries themselves are still unanswered.
+> Current state: `HANDOVER.md` and `ISSUES.md` in the folder above.
+
 ## 0. Position — how Paints relates to the Adhesive build
 
 The Paints template is the Adhesive template with a different column layout. The three

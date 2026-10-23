@@ -68,7 +68,7 @@ Every upload checks that the material exists in the plant; a row that fails is r
 | 11 | ZFCST_PAINTS → Month Based Planning, period 4, Tonnage Wise ticked | Execute, check section E, Save | `ZPPT_PNT_FCST_MN`: every list column. Also `ZPPT_FCST_MN` |
 | 12 | ZFCST_UPL → Forecast Change Monthly | Period 4, year 2026, a change with reason | `ZPPT_FCST_MN`: BUS_FCST_ADD, REASON. Re-run step 11 |
 | 13 | ZFCST_RPT | Plant, financial year 2026-2027 | Annual, quarter, additional, total quarter, monthly, additional, total month per material, with one forecast number per material |
-| 14 | SLG1, object ZPP_FCST, subobject GENERATE | After any run that looks wrong | The run's messages: no category, load factor defaulted, superseded code shown under its successor, configuration missing |
+| 14 | SLG1, object ZPP_FCST, subobject GENERATE | After any run that looks wrong | The run's messages: no category, load factor defaulted, superseded code shown under its successor, material-type variable not maintained |
 
 The forecast number is drawn on the first save of a plant, material and financial year and
 reused by the other two modes.

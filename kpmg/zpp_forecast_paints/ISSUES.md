@@ -179,3 +179,25 @@ unchanged — the class is the only code change. Message 018 no longer raised by
 843 lines, 9 methods. Delta ZIP `ZPP_FORECAST_PAINTS_22-10-26_vkorg_delta.zip` (class
 only); full ZIP rebuilt. Docs: MANUAL_STEPS §3, test pack B.1 and case 21, KT,
 00_TECHNICAL_OBJECTS, TS, technical handover. TR DEVK930479.
+
+## 23/10/26 — HANDOVER.md for the next ABAPer and their Claude; stale references cleaned
+
+Arnav: "document everything and prepare a handover.md file which she can use in her claude to
+access everything". `HANDOVER.md` written at the folder root: how to use it with Claude (repo
+access, read order, author tag, no system access), one-paragraph description, current state
+with the one thing to verify (`GC_VKORG` in the system copy of `ZCL_PP_FCST_PNT`), object
+inventory (new / changed / shared / withdrawn / manual), how it works (run and save end to
+end, the nine methods, the engine, the Paints tables, the uploads), repository map, the rules
+the code was written to, shipping (ZIP shapes, paste order, abapcheck), gotchas, assumptions
+with the seventeen queries in one line each, open items in priority order, mail format.
+
+Stale references removed from the other documents: `READ_CARTONS` / `GC_VKORG_DEFAULT` →
+`READ_SALES_VIEW` / `GC_VKORG` (00_TECHNICAL_OBJECTS §5, Technical Handover §3.1 line count
+846, §5.1, §11, new §2 rows); "Still to be created" on SE41 / SE93 (KT_TCODES, Technical
+Handover §12); `ZFCST_PAINTS_UPL` and the config-row test scenarios (TS §3, §4.5, §6); SLG1
+rows no longer promise "configuration missing" (message 018 is not raised for Paints and the
+engine itself never raised it); `kpmg/_docs/ZFORECAST_KT_Tcodes.md` brought to the 22/10 state
+(nine uploads, ZFCST_PAINTS_UPL withdrawn, no Paints config row, Paints tables, SE41 done);
+A&Q given a status note (P01/P16/P21/P26 and M4 superseded, queries still open); NOTES.md
+gotchas, shipping counts and layout refreshed. docx copies regenerated. No code change. TR
+DEVK930479.

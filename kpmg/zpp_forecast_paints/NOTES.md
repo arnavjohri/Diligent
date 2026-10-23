@@ -14,7 +14,7 @@ names the Adhesive tables.
 
 ## Status
 
-**22/10/26 — imported, activated, SE41 status and SE93 done. TR DEVK930479 (not released). Functional test pack issued (`docs/ZFORECAST_Paints_Test_Handover.docx`). Sales org 4000 hardcoded 22/10 PM (class only). Pending: the functional test.**
+**22/10/26 — imported, activated, SE41 status and SE93 done. TR DEVK930479 (not released). Functional test pack issued (`docs/ZFORECAST_Paints_Test_Handover.docx`). Sales org 4000 hardcoded 22/10 PM (class only). `HANDOVER.md` written 23/10. Pending: the functional test.**
 
 **19/10/26 PM — IMPORTED in DEV from `ZPP_FORECAST_PAINTS.zip` via ZABAPGIT_STANDALONE,
 Arnav's report "everything is imported".** First hand-written abapGit ZIP that has pulled on
@@ -38,7 +38,7 @@ calls them and shares their tables; anything Paints-specific is a new object. Th
 of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
 `ZCL_PP_FCST` is withdrawn.
 
-## Proposed shape (pending approval — see the document, §0.1 and §4)
+## Shape as built (the 19/10 proposal, amended 22/10)
 
 - **Shared with Adhesive, unchanged:** the eight `ZPPT_*` tables, `ZPPFCST`, auth object
   `ZPP_FCST`, msag `ZPP_FCST`, `ZCL_PP_FCST`, `ZCL_PP_FCST_UTIL`, `ZPP_FORECAST_REPORT`,
@@ -80,8 +80,9 @@ of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
   applies to Paints through the engine (Q7).
 - The domain change on `ZDO_MTS_MTO` touches four tables holding data. Adding fixed
   values at the same length needs no conversion; changing the length would.
-- Paints plants need their own `ZPPT_FCST_CFG` rows (sales org 4000) — configuration,
-  not code, but only if a plant never carries both divisions (M1).
+- Sales organisation 4000 is **hardcoded** in `ZCL_PP_FCST_PNT` (`GC_VKORG`, since 22/10/26,
+  as the FS states). No `ZPPT_FCST_CFG` row is needed for a Paints plant; the class re-reads
+  MVKE and TVM1T–TVM5T itself and overwrites the engine's material groups.
 - Screen-free, like Adhesive: `CL_SALV_TABLE` only, no `CALL SCREEN`, no
   `cl_gui_custom_container`. The SE41 status is the one manual GUI object.
 - Pack size: `MARM` has several alternative units per material; the rule for which one
@@ -89,14 +90,16 @@ of adding a ninth radio to `ZPP_FORECAST_UPLOAD` and opening `READ_PRICES` in
 
 ## Shipping: abapGit ZIP, own package
 
-`ZPP_FORECAST_PAINTS.zip` — `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`)
-at the root, `src/` with package.devc, 1 domain, 1 data element, 1 table, 1 class, 2 reports.
+`ZPP_FORECAST_PAINTS.zip` (18 files) — `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC
+PREFIX`) at the root, `src/` with package.devc, 3 domains, 5 data elements, 4 tables, 1 class,
+1 report (+ its `.prog.xml` with the text pool).
 Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package `ZPP_FORECAST_PAINTS` (new) →
 Import ZIP → Pull. **Nothing Adhesive is in it**, so the pull cannot touch the running
 Adhesive objects. The XML shapes are the Adhesive ones (DDIC and class imported in August,
-PROGDIR order fixed 03/09); this ZIP itself has not been imported anywhere yet — if it
-short-dumps, the paste order is in `00_TECHNICAL_OBJECTS.md` §2. Re-zip from `src/` after
-any change:
+PROGDIR order fixed 03/09); the full ZIP imported on 19/10, the two 22/10 delta ZIPs on 22/10.
+The class-only `ZPP_FORECAST_PAINTS_22-10-26_vkorg_delta.zip` (sales org 4000) is the latest
+delta; Arnav may have pasted the class instead. Paste order, if ever needed, is in
+`docs/ZFORECAST_Paints_Technical_Handover.md` §9. Re-zip from `src/` after any change:
 
     cd kpmg/zpp_forecast_paints && rm -f ZPP_FORECAST_PAINTS.zip && zip -X ZPP_FORECAST_PAINTS.zip .abapgit.xml src/*
 
@@ -105,9 +108,11 @@ optional SE11 step, so no Adhesive DDIC object is overwritten by a pull.
 
 ## Layout
 
+    HANDOVER.md               the one file to give the next ABAPer (and their Claude): everything, with paths
     fs/        the FS as received, plus its text extract — never edited
-    docs/      Assumptions and Queries, TS (md + docx)
-    original/  SE80 downloads of the shared objects, filed with save-original.sh
-    src/       the seven new objects, abapGit layout
-    00_TECHNICAL_OBJECTS.md   inventory, manual steps, column layouts, assumptions
+    docs/      Assumptions and Queries, TS, test pack, technical handover, manual steps, KT (md + docx)
+    src/       the 18 abapGit files (3 domains, 5 data elements, 4 tables, class, report, package)
+    tools/     mktables.py, mkupl_adhesive.py, mkupl.py (historic), abapcheck.py
+    00_TECHNICAL_OBJECTS.md   inventory, import, requirement mapping, column layouts, assumptions
+    MANUAL_STEPS.md / KT_TCODES.md   SE41 / SE93 / SM30 steps; one-page functional view
     ISSUES.md  running log

@@ -37,7 +37,7 @@ is built as new objects that call the Adhesive engine and share its tables.
 | `ZPP_FORECAST_PAINTS` | Report | New | `ZPP_FORECAST_PAINTS` | |
 | `ZPP_FORECAST_UPLOAD` | Report | **Changed** 22.10.2026, markers `By Arnav on 22/10/26`: ninth upload type Brand, indicator MTS/MTO/DIS/TIN | `ZPP_FORECAST` | |
 | `PF_STATUS` of `ZPP_FORECAST_PAINTS` | GUI status | New, manual SE41 | | |
-| `ZFCST_PAINTS`, `ZFCST_PAINTS_UPL` | Transactions | New, manual SE93 | | |
+| `ZFCST_PAINTS` | Transaction | New, manual SE93 (uploads use the existing `ZFCST_UPL`) | | |
 | `ZPPV_BRAND` | SM30 view | New, manual SE54, optional | | |
 | `ZPPT_FCST_CFG` rows for Paints plants | Configuration | Manual SM30 | | |
 | `ZDO_MTS_MTO` | Domain | Fixed values DIS, TIN — manual SE11, optional, not in the ZIP | `ZPP_FORECAST` | |
@@ -155,7 +155,7 @@ shown columns, and heads them with Sheet1's wording and the financial calendar
 
 ### 4.5 Manual steps
 
-See `00_TECHNICAL_OBJECTS.md` §1 "Manual": SE41 copy of `PF_STATUS`, SE93 ×2, SM30 config rows
+See `00_TECHNICAL_OBJECTS.md` §1 "Manual": SE41 `PF_STATUS` (done 22/10), SE93 `ZFCST_PAINTS`; no SM30 config row (sales org 4000 hardcoded)
 for the Paints plants, optional SE54 `ZPPV_BRAND`, optional SE11 fixed values on `ZDO_MTS_MTO`.
 
 ## 5. Requirement mapping
@@ -180,8 +180,8 @@ for the Paints plants, optional SE54 `ZPPV_BRAND`, optional SE11 fixed values on
 | 1 | Brand upload, test run | 3 rows, one material not in the plant | 2 "Would create", 1 "Rejected: Material … is not extended to plant …"; nothing written |
 | 2 | Brand upload, real run, then again | same file twice | first run Created ×2; second run Changed ×2, `ERNAM`/`ERDAT` unchanged, `AENAM`/`AEDAT` updated |
 | 3 | Category upload with DIS ART and TINTING | indicator column "DIS ART", "TINTING", "MTS", "xyz" | stored DIS, TIN, MTS; "xyz" rejected with the indicator message |
-| 4 | Annual run, Paints plant with config row | plant, FY 2026-2027 | lead block incl. brand, pack size, DPL, qty/carton; 12 forecast, 12 KL, 12 crore columns; no history columns; history reachable via Change Layout |
-| 5 | Annual run, plant without config row | | list produced; SLG1 log carries message 018 for the plant; MVKE reads on 4000 |
+| 4 | Annual run, Paints plant | plant, FY 2026-2027 | lead block incl. brand, pack size, DPL, qty/carton; 12 forecast, 12 KL, 12 crore columns; no history columns; history reachable via Change Layout |
+| 5 | Annual run, material without a sales view in sales org 4000 | | list produced; material groups 1, 2, 5 and qty per carton blank for that material; everything else filled |
 | 6 | Pack size | material with L and CAR units, base EA, UMREZ 1 UMREN 4 on L | pack size 4.000, unit L; KL = qty × 4 ÷ 1000 |
 | 7 | Pack size in ML | material with ML only, UMREN 500 | pack size 0.500 |
 | 8 | Quarterly run, Q2, Tonnage ticked | | per month: forecast, additional, final, KL, Cr, tonnage; tonnage = final × BRGEW ÷ 1000; Gross Weight column at the end |

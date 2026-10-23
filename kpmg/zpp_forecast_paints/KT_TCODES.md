@@ -1,7 +1,7 @@
 # ZFORECAST Paints — transactions and what each one does
 
 Astral / UDAY (KPMG), Paints division. Handover note, 22.10.2026, Arnav Johri.
-Development system; not transported, not yet functionally tested.
+Development system; TR DEVK930479 not released; not yet functionally tested. Updated 23.10.2026.
 
 ## Paints transactions
 
@@ -24,9 +24,9 @@ Development system; not transported, not yet functionally tested.
 | **SNRO `ZPPFCST`** | Forecast number range, one interval per financial year, shared with Adhesive. |
 | **SE91 `ZPP_FCST`** | Messages 001 to 026, shared. |
 | **SU21 `ZPP_FCST`** | Authorisation by plant and activity (01 save, 02 upload, 03 display). Both checks are bypassed in `ZCL_PP_FCST_UTIL` since 07/09/26 for testing. |
-| **SLG1** object `ZPP_FCST`, subobject `GENERATE`, external number `PAINTS …` | Log of every ZFCST_PAINTS run: missing category, load factor defaulted, superseded code shown under its successor, configuration missing. |
-| **SE41** `PF_STATUS` of `ZPP_FORECAST_PAINTS` | Copy of the status of `ZPP_FORECAST`, or of SALV_STANDARD plus ZSAVE, ZSELALL, ZDESEL, ZEXCEL. **Still to be created** (`MANUAL_STEPS.md`); until then the list shows the standard toolbar without the four buttons and says so. |
-| **SE93** `ZFCST_PAINTS` | Report transaction, screen 1000. **Still to be created** if not done with the import. |
+| **SLG1** object `ZPP_FCST`, subobject `GENERATE`, external number `PAINTS …` | Log of every ZFCST_PAINTS run: missing category, load factor defaulted, superseded code shown under its successor, material-type variable not maintained. |
+| **SE41** `PF_STATUS` of `ZPP_FORECAST_PAINTS` | SALV_STANDARD plus ZSAVE, ZSELALL, ZDESEL, ZEXCEL. **Created 22/10/26**; travels in TR DEVK930479 with the program. Without it the list shows the standard toolbar without the four buttons and says so. |
+| **SE93** `ZFCST_PAINTS` | Report transaction, screen 1000, program `ZPP_FORECAST_PAINTS`. Reported created 22/10/26 (TR DEVK930479); check in SE93 before quoting it to users, otherwise run from SE38. |
 
 ## Tables
 

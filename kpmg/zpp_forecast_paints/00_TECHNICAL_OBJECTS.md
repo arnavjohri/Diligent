@@ -155,7 +155,7 @@ calendar: `Q2 Jul-26 Forecast Qty`, `Q2 Jul-26 Volume in KL`, `Jul-26 additional
 | `ZCL_PP_FCST_PNT=>GC_VKORG` | 4000 hardcoded as FS row 91 states (Arnav, 22/10/26); material groups 1–5 and qty per carton read from that sales view, overwriting the engine's groups | M4 |
 | `ZCL_PP_FCST_PNT=>READ_PACK_SIZES` | Unit preference L, ML, KG, G; codes as internal MSEHI (`G` not `GM`); UMREN ÷ UMREZ | M5 |
 | `ZCL_PP_FCST_PNT=>READ_PRICES` | A923 holds the Paints DPL; material alone, latest DATAB, lowest KOPOS | Q1 |
-| `ZCL_PP_FCST_PNT=>READ_CARTONS` | `MVKE-AUMNG` is the quantity per carton | Q2 |
+| `ZCL_PP_FCST_PNT=>READ_SALES_VIEW` | `MVKE-AUMNG` is the quantity per carton; first distribution channel of 4000 when there are several | Q2 |
 | `ZCL_PP_FCST_PNT=>ENRICH` | Tonnage on gross weight ÷ 1000 in all three modes, on the priced quantity | Q4 |
 | `ZPP_FORECAST_PAINTS` | Annual list without history columns (Sheet1); they stay reachable via layout | M7 |
 | `ZPP_FORECAST_PAINTS` | Legacy switch is TVARVC `ZPP_FCST_LEGACY`, the Adhesive one | — |

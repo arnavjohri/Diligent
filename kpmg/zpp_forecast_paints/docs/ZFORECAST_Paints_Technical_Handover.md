@@ -1,7 +1,7 @@
 # ZFORECAST Paints — technical handover for the next ABAPer
 
 Astral Limited / Project UDAY (KPMG) · Paints division, WRICEF ID-2B · PP / SD
-Written 22.10.2026 by Arnav Johri. Development system only. Transport **DEVK930479**
+Written 22.10.2026, updated 23.10.2026, by Arnav Johri. Development system only. Transport **DEVK930479**
 (UDAYABAP03, "UDAY: PP: 2B: Forcast Paints"), not released. Repository
 `arnavjohri/Diligent`, folder `kpmg/zpp_forecast_paints/`.
 
@@ -42,6 +42,8 @@ stands on the assumptions in section 11.
 | 22/10 | Brand upload and indicator moved **into the Adhesive `ZPP_FORECAST_UPLOAD`** with markers; `ZPP_FORECAST_PAINTS_UPL` withdrawn; tables reshaped to the displayed list; two delta ZIPs | Arnav: one upload program, tables as the ALV |
 | 22/10 | Imported and activated; SE41 `PF_STATUS` created; TR DEVK930479 | |
 | 22/10 | Functional test pack issued (`docs/ZFORECAST_Paints_Test_Handover.docx`) | test not started |
+| 22/10 PM | Sales organisation 4000 hardcoded in `ZCL_PP_FCST_PNT` (`GC_VKORG`); material groups re-read from that view; config read, `READ_CARTONS`, `ADD_MSG` removed; class-only delta ZIP | Arnav: "we want hard coded 4000 as per the FS" |
+| 23/10 | `HANDOVER.md` written for the next ABAPer and their Claude; stale references to the config row cleaned out of every document | handover |
 
 ---
 
@@ -63,7 +65,7 @@ stands on the assumptions in section 11.
 | `ZPPT_PNT_FCST_YR` | Table | 73 fields | Paints annual forecast = the annual list, §4.2 |
 | `ZPPT_PNT_FCST_QT` | Table | 58 fields | Paints quarterly forecast = the quarterly list, §4.3 |
 | `ZPPT_PNT_FCST_MN` | Table | 45 fields | Paints monthly forecast = the monthly list, §4.4 |
-| `ZCL_PP_FCST_PNT` | Class | 810 | Paints columns on the engine's row (`ENRICH`), save into the Paints tables (`SAVE_PAINTS`), §5 |
+| `ZCL_PP_FCST_PNT` | Class | 846 | Paints columns on the engine's row (`ENRICH`), save into the Paints tables (`SAVE_PAINTS`), §5 |
 | `ZPP_FORECAST_PAINTS` | Report | 1,581 | Generation, three modes, Paints list, save, §6 |
 
 ### 3.2 Changed, package `ZPP_FORECAST` (Adhesive)
@@ -175,7 +177,7 @@ Public, final, create public. No instance attributes; every method works on what
 
 ```
 CONSTANTS gc_msgid         TYPE symsgid VALUE 'ZPP_FCST'.
-CONSTANTS gc_vkorg_default TYPE vkorg   VALUE '4000'.      " ASSUMPTION, query M4
+CONSTANTS gc_vkorg         TYPE vkorg   VALUE '4000'.      " FS row 91, hardcoded 22/10/26
 TYPES ty_kl TYPE p LENGTH 13 DECIMALS 3.
 TYPES ty_cr TYPE p LENGTH 13 DECIMALS 4.
 TYPES: BEGIN OF ty_alv.
@@ -418,6 +420,7 @@ first activation on a system is.
 
 ```
 kpmg/zpp_forecast_paints/
+  HANDOVER.md               start here: everything in one file, written for the next ABAPer's Claude
   00_TECHNICAL_OBJECTS.md   inventory, import, requirement mapping, column lists, assumptions
   MANUAL_STEPS.md           pulls, SE41 status (done), SE93 (pending), SM30, optional steps
   KT_TCODES.md              one-page functional view
@@ -442,7 +445,7 @@ MEMORY.md, CLAUDE.md        standing rules of the repository (markers, Open SQL,
 | `ZCL_PP_FCST_PNT` `GC_VKORG` | 4000 hardcoded as FS row 91 states; groups and carton read from that view | M4 |
 | `READ_PACK_SIZES` | unit preference L, ML, KG, G; internal codes; UMREN ÷ UMREZ; ML, G ÷ 1000 | M5 |
 | `READ_PRICES` | A923 holds the Paints DPL; material alone, latest DATAB | Q1 |
-| `READ_CARTONS` | MVKE-AUMNG is the quantity per carton | Q2 |
+| `READ_SALES_VIEW` | MVKE-AUMNG is the quantity per carton; first distribution channel of 4000 | Q2 |
 | `ENRICH` | tonnage on gross weight ÷ 1000, on the priced quantity, all modes | Q4 |
 | `ZPP_FORECAST_PAINTS` | annual list without history columns (Sheet1); hidden, not absent | M7 |
 | `ZPP_FORECAST_PAINTS` | legacy switch is TVARVC `ZPP_FCST_LEGACY`, the Adhesive one | — |
@@ -455,7 +458,9 @@ MEMORY.md, CLAUDE.md        standing rules of the repository (markers, Open SQL,
 
 1. Functional test not started; `docs/ZFORECAST_Paints_Test_Handover.docx` is the pack.
 2. Queries M1–M7, Q1–Q10 unanswered (`docs/ZFORECAST_Paints_Assumptions_and_Queries.docx`).
-3. Transaction codes: not created; run from SE38 until SE93 is done.
+3. Transaction code `ZFCST_PAINTS`: reported created on 22/10 together with the GUI status, but
+   Arnav asked that tcodes be left out of the handover documents; check SE93 and run from
+   SE38 if it is not there.
 4. (dropped) sales organisation is hardcoded; no config row.
 5. `ZPP_FORECAST_PAINTS_UPL` still in DEV, to be deleted.
 6. `ZDO_MTS_MTO` fixed values DIS / TIN not added; SM30 on the category table refuses them.
