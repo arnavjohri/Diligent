@@ -19,7 +19,13 @@ pasted into SE24. Tables are built by hand in SE11 from the build sheet.
 
 Nothing here is SE80-downloaded original code; there is no `original/` folder.
 
-## Where it stands (14/10/26)
+## Where it stands (23/10/26)
+
+Working end to end in DEV client 400 on the GL verification scenario: park -> approve -> post,
+and reject -> correct in the Verify app -> resubmit -> approver. Objects, reasons, withdrawn
+attempts and open points: `docs/02_SOLUTION_SUMMARY.md`. The sections below are history.
+
+## Where it stood (14/10/26)
 
 - `Z_FI_CM_APPR_PARK_EVENT` and `Z_FI_CM_APPR_START_WF` active in DEV, FG `ZFI_CM_APPR`.
 - FIBF: P/S entry `00002218` -> `Z_FI_CM_APPR_PARK_EVENT`, product `ZFI` (existing, active).
