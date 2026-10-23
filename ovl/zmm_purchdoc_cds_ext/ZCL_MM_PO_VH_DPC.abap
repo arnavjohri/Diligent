@@ -24,6 +24,12 @@
 *   from SE11 - confirm the view activates before relying on it.
 * ASSUMPTION A2: an empty dynamic WHERE string selects all rows.
 * Change: 22/10/26 v2 - ZVT_GEM_ORDER (GEM PO No., view ZI_GEM_ORDER_VH).
+*         23/10/26 v3 - ZVT_ADRC goes live (four address fields). ADRC
+*         holds every address in the system, so a page request without
+*         $orderby now reads only up to the requested page from the
+*         database, sorted there, and counts with COUNT(*). Everything
+*         else (dropdowns without $top, dialog sorted by a column) takes
+*         the v2 path unchanged.
 *----------------------------------------------------------------------*
 CLASS zcl_mm_po_vh_dpc DEFINITION
   PUBLIC
@@ -63,6 +69,7 @@ CLASS zcl_mm_po_vh_dpc IMPLEMENTATION.
     DATA lv_structure  TYPE string.
     DATA lv_sort_field TYPE string.
     DATA lv_where      TYPE string.
+    DATA lv_rows       TYPE i.
     FIELD-SYMBOLS <lt_rows> TYPE STANDARD TABLE.
 
     CLEAR: er_entityset, ev_count, ev_served.
@@ -95,6 +102,27 @@ CLASS zcl_mm_po_vh_dpc IMPLEMENTATION.
 
     CREATE DATA er_entityset TYPE STANDARD TABLE OF (lv_structure).
     ASSIGN er_entityset->* TO <lt_rows>.
+
+*BOC By SAP_ABAP on 23/10/26
+    " a page of a large list (ADRC): sort and cut on the database, count
+    " there, and hand only the requested page back
+    IF it_order IS INITIAL AND is_paging-top > 0 AND lv_sort_field IS NOT INITIAL.
+      SELECT COUNT(*) FROM (lv_view)
+        WHERE (lv_where)                                                "ASSUMPTION A2
+        INTO @ev_count.
+
+      lv_rows = is_paging-skip + is_paging-top.
+      SELECT * FROM (lv_view)
+        WHERE (lv_where)
+        ORDER BY (lv_sort_field)
+        INTO TABLE @<lt_rows>
+        UP TO @lv_rows ROWS.
+
+      /iwbep/cl_mgw_data_util=>paging( EXPORTING is_paging = is_paging
+                                       CHANGING  ct_data   = <lt_rows> ).
+      RETURN.
+    ENDIF.
+*EOC By SAP_ABAP on 23/10/26
 
     SELECT * FROM (lv_view)
       WHERE (lv_where)                                                  "ASSUMPTION A2

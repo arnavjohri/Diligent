@@ -11,8 +11,11 @@
 //----------------------------------------------------------------------
 // Note: ADRC is large. The DPC pushes the dialog's filters into the
 // WHERE clause; the user is expected to filter on name or city first.
-// Pending: the functional lead's word on whether an address number is a
-// sensible input in Fiori at all. Do not paste before that.
+// Decided 23/10/26 (Arnav): all four fields have the GUI F4 and get it
+// in Fiori too. Paste this view first, then the two classes.
+// ASSUMPTION: GUI search help ADMC lists ADRC addresses without a
+// further restriction (e.g. an address group). If the GUI list is
+// narrower, add that condition to the WHERE below.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIADRCVH'
 @AbapCatalog.compiler.compareFilter: true

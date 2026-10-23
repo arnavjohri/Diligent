@@ -46,6 +46,13 @@
 *              method of GUI search help ZGEM_ORDER), filtered by the
 *              PO's supplier through a ValueListParameterIn, as the
 *              search help's LIFNR import parameter does in the GUI.
+*              23/10/26 v15 - the four address-number fields (Third
+*              Party Inspection address, QA Department, Port Consignee,
+*              Ultimate consignee) get their F4: Arnav confirmed all
+*              four have the GUI F4 (search help ADMC), GC_WITH_ADRC
+*              is now on. Address number and GEM supplier carry the
+*              ALPHA conversion exit, so the dialog shows and filters
+*              the numbers without leading zeros, as the GUI does.
 *----------------------------------------------------------------------*
 * Why: the app runs on SAP's generated SEGW project (referenced data
 * source). Its entity sets are fixed at generation, so no value-help
@@ -79,14 +86,18 @@
 *   named Supplier (EKKO-LIFNR). If the GEM dialog shows all orders
 *   instead of the supplier's, read the name in $metadata and correct
 *   the one literal in block 7.
+* ASSUMPTION A11: SET_CONVERSION_EXIT( 'ALPHA' ) on a property makes the
+*   framework convert the dialog's output and its $filter values, as on
+*   SAP's own ExchangeRateForEdit (EXCRT). If the address numbers still
+*   show leading zeros, the help works all the same; only typing a short
+*   number into the dialog's filter would then find nothing.
 * ASSUMPTION A9: SAP's set C_PurOrdCreatedByValHelp has the key property
 *   UserID (from the association _CreatedByValueHelp in C_PurchaseOrderTP).
 *   If the dialog on PO Signing Authority stays empty, read the property
 *   name in $metadata and correct the one literal in ADD_VALUE_HELPS.
-* Pending decisions (functional lead): ZVT_ADRC (address numbers as a
-*   Fiori input?) and ZVT_PERNR (employee names visible to PO users?).
-*   Until then, the two blocks can be left in: without their views they
-*   skip themselves and are named in GV_LAST_ERROR.
+* Pending decision (functional lead): ZVT_PERNR (employee names visible
+*   to PO users?). Until then the block stays off (GC_WITH_PERNR).
+*   ZVT_ADRC decided 23/10/26 (Arnav): on, all four address fields.
 *----------------------------------------------------------------------*
 CLASS zcl_mm_po_vh_mpc DEFINITION
   PUBLIC
@@ -111,7 +122,8 @@ CLASS zcl_mm_po_vh_mpc DEFINITION
 
     CONSTANTS:
       gc_with_pernr       TYPE abap_bool VALUE abap_false,  "ZVT_PERNR: on once HR has agreed
-      gc_with_adrc        TYPE abap_bool VALUE abap_false,  "ZVT_ADRC:  on once functional has agreed
+*     gc_with_adrc        TYPE abap_bool VALUE abap_false,  "ZVT_ADRC:  on once functional has agreed
+      gc_with_adrc        TYPE abap_bool VALUE abap_true,   "ZVT_ADRC:  on since 23/10/26 (v15)
       gc_po_entity_type   TYPE string VALUE 'C_PurchaseOrderTPType',     "ASSUMPTION A1 (VOCAN only)
       gc_common           TYPE string VALUE 'com.sap.vocabularies.Common.v1',
       gc_schema_namespace TYPE string VALUE 'MM_PUR_PO_MAINT_V2_SRV'.    "ASSUMPTION A5
@@ -549,7 +561,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
     ENDIF.
 
     " 5. The four address-number fields - ADRC through ZI_ADRC_VH, dialog;
-    "    one set, four fields. Off until functional agrees (GC_WITH_ADRC).
+    "    one set, four fields. On since 23/10/26 (GC_WITH_ADRC, v15).
     IF gc_with_adrc = abap_true AND structure_exists( 'ZIADRCVH' ) = abap_true.
     TRY.
         lo_vh_type = create_adrc_type( io_model ).
@@ -565,7 +577,7 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
         annotate_value_list( io_vocan_model = io_vocan_model
                              io_po_property = lo_po_type->get_property( 'zzqad_det' )
                              iv_property    = 'zzqad_det'
-                             iv_label       = 'QAD Department'
+                             iv_label       = 'QA Department'                "v15: GUI wording
                              iv_vh_set      = 'ZVT_ADRC'
                              iv_vh_key      = 'AddressNumber'
                              iv_vh_text     = 'Name' ).
@@ -750,6 +762,10 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       )->add( iv_key = 'label' iv_value = 'Supplier' ).
 
     ro_entity_type->bind_structure( iv_structure_name = 'ZIGEMORDERVH' ).   "ASSUMPTION A2
+
+    " v15: supplier numbers without leading zeros, so that the PO's
+    " supplier (external format) matches as the In filter - ASSUMPTION A11
+    ro_entity_type->get_property( 'Supplier' )->set_conversion_exit( iv_conv_exit = 'ALPHA' ).
   ENDMETHOD.
 
 
@@ -781,6 +797,10 @@ CLASS zcl_mm_po_vh_mpc IMPLEMENTATION.
       )->add( iv_key = 'label' iv_value = 'Postal Code' ).
 
     ro_entity_type->bind_structure( iv_structure_name = 'ZIADRCVH' ).       "ASSUMPTION A2
+
+    " v15: address numbers shown and filtered without leading zeros, as in
+    " the GUI F4 (domain AD_ADDRNUM, ALPHA) - ASSUMPTION A11
+    ro_entity_type->get_property( 'AddressNumber' )->set_conversion_exit( iv_conv_exit = 'ALPHA' ).
   ENDMETHOD.
 
 
