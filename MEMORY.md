@@ -509,6 +509,11 @@ breakpoint in the first method never stopped. Two activation cycles lost.
 → **A where-used list is a lead, not proof. Before enhancing the place a message is raised,
 prove the path: external breakpoint on that method for the real user, or the call stack of a
 message breakpoint. No stop = wrong place, whatever the where-used says.**
+Confirmed 23/10/26: where-used of `CL_FDC_ACCDOC_PARK_ACCESS=>CO_ALLOWED_ACCT_TY_FOR_PARKING`
+on the KPMG system lists one hit, yet the debugger showed it in two more methods
+(`ACCDOC_FUNC_PARKD_DOC_READ_UPD`, `ACCDOC_HEADER_READ_DOCUMENT`). The where-used index for SAP
+standard code there is incomplete. For a full-text search over standard code use
+`RS_ABAP_SOURCE_SCAN` (SE38), which reads the source itself.
 
 ---
 
