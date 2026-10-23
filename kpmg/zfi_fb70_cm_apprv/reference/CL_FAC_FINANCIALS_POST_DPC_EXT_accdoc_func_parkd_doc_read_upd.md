@@ -57,3 +57,13 @@ The full source was pasted in the session on 23/10/26; only the structure is kep
    blart mt_costcenter mt_accountgroup mt_companycode )`; **false -> RETURN** (silent).
 4. `SAP_WAPI_DECISION_COMPLETE( workitem_id decision_key = iv_decision_key (0001 resubmit / 0002 abort)
    do_commit = ' ' )`; return code 0 -> `rv_success = abap_true`; WAPI messages copied to `et_message`.
+
+## `CL_FDC_ACCDOC_POST->ACCDOC_POST` (pasted 23/10/26)
+
+Maps the temporary document to ACCHD/ACCIT/ACCCR/ACCTX, `AC_DOCUMENT_CREATE` (check), warning/error
+mapping, keeps the document number for a parked document in change mode, `AC_DOCUMENT_POST`, then
+`MESSAGE s129(fdc_posting_001)` when `status_new` is complete or untested (else s081). No workflow call in
+the method. For a parked-document update it calls `cl_fdc_accdoc_park_access=>check_changes( approval_status
+crdat crtim )` and, for a real post, `cl_fdc_accdoc_ver_services=>get_approver_for_document`.
+Note: the earlier source scan for `129(fdc_posting_001)` missed this line - the scan results of that
+session are not proof of absence.
