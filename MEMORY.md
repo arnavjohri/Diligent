@@ -266,6 +266,7 @@ Every row below was established on the system, not read from documentation.
 | Value-help sets already in `MM_PUR_PO_MAINT_V2_SRV`: plant, supplier, customer, business user, cost centre, WBS, country, region, material group, currency, unit, G/L account, profit centre … | A custom field whose values are one of these gets its F4 from `@Consumption.valueHelpDefinition` alone, no exposure work. Full list: `ovl/zmm_purchdoc_cds_ext/original/MM_PUR_PO_MAINT_V2_SRV_entity_sets_2026-10-22.txt` |
 | Only 12 of 84 extension elements visible in the app | An element without `@UI.identification` (`@UI.lineItem` for the list) reaches `$metadata` but no section. `@UI.facet` is entity-level: an `extend view` cannot add it, and a DDLX needs `@Metadata.allowExtensions: true` on the base view |
 | `@ObjectModel.resultSet.sizeCategory: #XS` on the VH view | Fiori renders a dropdown instead of the value help dialog. Drop the line for a dialog |
+| Reading `$metadata` after the MPC enhancement (23/10/26): one `ZVT_`/`ZVH_` set missing **together with its entity type** while the sibling sets are present | The block's pre-check (`structure_exists`) returned false — the view behind it is not active (SE11 has no SQL view of that name). Not a cache, not the DPC, not the annotation code. A set that is present but whose F4 shows no rows is the DPC's. Check the entity type first; it is created before anything in the block can raise |
 
 Order of work for any further F4 on a custom field, **before** any CDS is written:
 
@@ -490,6 +491,15 @@ standard service. Arnav caught it: "we did not use this annotation".
 → **A negative test rules out only the exact variant that was run. Before writing "ruled
 out", list every annotation and object the reference mechanism uses and tick each one
 against what was actually pasted. Record the variants that remain untested by name.**
+
+**M-27 — Asked for `$metadata` and got it pasted into chat.** (23/10/26 · `ovl/zmm_purchdoc_cds_ext`)
+The reply asked Arnav to "search the same `$metadata` for `ZI_NAT_PROC_VH`". He pasted the whole
+document, 2 MB, and the session ended on `Prompt is too long` before a line of it was read; the
+finding had to be dug out of the transcript by a new session. His own answer was in the last ten
+characters of the paste.
+→ **Never ask for a `$metadata`, a service document, a dump or a log in chat. Ask for the yes/no
+of a Ctrl+F on a named string, a screenshot of the hit, or the file saved under `incoming/` and
+committed. When a paste cannot be avoided, name the exact lines wanted.**
 
 ---
 
