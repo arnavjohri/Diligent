@@ -501,6 +501,15 @@ characters of the paste.
 of a Ctrl+F on a named string, a screenshot of the hit, or the file saved under `incoming/` and
 committed. When a paste cannot be avoided, name the exact lines wanted.**
 
+**M-28 — Trusted a message where-used list as complete.** (21-23/10/26 · `kpmg/zfi_fb70_cm_apprv`)
+SE91 where-used of `FDC_POSTING_001` 092 showed one method, `IS_DOC_VALID_FOR_NEW_WORKFLOW`, and
+an enhancement there was built and activated twice. The Verify app's 092 came from a second,
+identical check in `CL_FAC_FINANCIALS_POST_DPC_EXT->ACCDOC_FUNC_PARKD_DOC_READ_UPD`; an external
+breakpoint in the first method never stopped. Two activation cycles lost.
+→ **A where-used list is a lead, not proof. Before enhancing the place a message is raised,
+prove the path: external breakpoint on that method for the real user, or the call stack of a
+message breakpoint. No stop = wrong place, whatever the where-used says.**
+
 ---
 
 ## 6. Shipping — what can and cannot go back through abapGit
