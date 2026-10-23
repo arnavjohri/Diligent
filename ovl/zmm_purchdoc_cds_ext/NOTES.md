@@ -120,9 +120,11 @@ equivalent is OData-only, no UI5:
 1. `ZI_NAT_PROC_VH.ddls.asddls` (this folder) — value help view, same rows, key + text.
    `@ObjectModel.resultSet.sizeCategory: #XS` makes Fiori render a dropdown instead of a
    dialog; drop the line if a dialog is wanted.
-2. In `ZC_PURCHASEORDERTP_EXT`, on `zznat_proc`:
-   `@Consumption.valueHelpDefinition: [{ entity: { name: 'ZI_NAT_PROC_VH', element: 'zznat_proc' } }]`
-   — to be added **after** the 230–260 change is activated, as the next change to that object.
+2. ~~In `ZC_PURCHASEORDERTP_EXT`, on `zznat_proc`: `@Consumption.valueHelpDefinition …`~~
+   **Withdrawn 23/10/26.** The route since 22/10 is the MPC/DPC enhancement: `ZCL_MM_PO_VH_MPC`
+   block 2 creates set `ZVT_NAT_PROC` on `ZINATPROCVH` and writes the `Common.ValueList`
+   annotation on `zznat_proc` itself; `ZCL_MM_PO_VH_DPC` serves it. No CDS annotation needed,
+   and one pointing at a view that is not a set of the service would be ignored anyway.
 3. The service must expose `ZI_NAT_PROC_VH` as an entity set. SADL-based services do that on
    their own; a RAP service definition does not — check `$metadata` for the entity set and the
    `Common.ValueList` annotation on `zznat_proc`. If missing and the app runs on an SAP service
@@ -335,7 +337,7 @@ own tile, only that one step is missing.
 | 4 | `ZI_REL_CODE_VH` (DDL) | `ZI_REL_CODE_VH.ddls.asddls` (39 lines) | T16FC + T16FD: ReleaseGroup, ReleaseCode, ReleaseCodeText — for `zzrelcode` | Delivered |
 | 5 | `ZI_PERNR_VH` (DDL) | `ZI_PERNR_VH.ddls.asddls` (45 lines) | PA0002 current records: PersonnelNumber, LastName, FirstName, EmployeeName — for `zzcpo`, `zzindper`. **`#NOT_REQUIRED` exposes all employee names to PO users — HR / functional OK before pasting** | Delivered, decision pending |
 | 6 | `ZI_ADRC_VH` (DDL) | `ZI_ADRC_VH.ddls.asddls` (52 lines) | ADRC international version, current: AddressNumber, Name, City, Street, PostalCode — for the four address fields. Decided 23/10/26 (Arnav): all four get the F4 | Delivered, to paste (batch 5) |
-| 7 | `ZI_NAT_PROC_VH` (DDL, 19/10) | `ZI_NAT_PROC_VH.ddls.asddls` | ZNAT_PROC active rows — for `zznat_proc`. Fields assumed from the GUI module; **activation never confirmed** | Written 19/10, status unknown |
+| 7 | `ZI_NAT_PROC_VH` (DDL, 19/10) | `ZI_NAT_PROC_VH.ddls.asddls` | ZNAT_PROC active rows — for `zznat_proc`. Fields assumed from the GUI module (confirmed by activation). Served as set `ZVT_NAT_PROC` by MPC block 2 + DPC `WHEN 'ZVT_NAT_PROC'` | **Activated 23/10/26 (Arnav).** Next: Load Metadata + cache cleanups, `ZVT_NAT_PROC` in the service document, app F4 on Tender Process |
 | 8 | `ZI_GEM_ORDER_VH` (DDL) | `ZI_GEM_ORDER_VH.ddls.asddls` (35 lines) | `ZGEM_ORDERDET`: GemOrderId, Supplier — the selection method of GUI search help `ZGEM_ORDER` (SE11 22/10/26, `original/`). Set `ZVT_GEM_ORDER`, dialog, PO `Supplier` passed in as filter (class v14, DPC class v2) | Delivered 22/10/26 |
 | — | `ZI_MSE_VH`, `ZI_TENDER_VH` | not written | `zzmse` → `ZMSE_EKKO`, `zzsubmi` → `ZMM_PUR_TENDER_D`: field lists not supplied | Blocked on DD03L of the two tables |
 
