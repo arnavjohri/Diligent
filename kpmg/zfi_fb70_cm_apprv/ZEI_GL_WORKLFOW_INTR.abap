@@ -35,7 +35,10 @@ ENDIF.
 *             from our trigger.
 IF lv_tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
   AND iv_koars CA 'D'
-  AND iv_koars CO 'SD'
+*  AND iv_koars CO 'SD'
+* Blank in the set: CO respects trailing blanks of a fixed-length
+* IV_KOARS ('SD   '); SAP's allowed-types constant carries them too.
+  AND iv_koars CO 'SD '
   AND iv_post_mode CA '1236'
   AND ev_error_occurred = abap_true AND rv_result = abap_false
   AND sy-msgid = 'FDC_POSTING_001' AND sy-msgno = '092'.
