@@ -28,6 +28,77 @@
 *   ZEI_FI_CM_APPR_READ, Z package and request. Paste the block between
 *   ENHANCEMENT and ENDENHANCEMENT. Activate.
 * Switch-off: deactivate the implementation (SE19) - standard returns.
+* Callers seen: ACCDOC_FUNC_PARKD_DOC_READ_UPD (open for change) and
+*   ACCDOC_HEADER_READ_DOCUMENT (header read, own copy of the 092 check,
+*   include CM057). Both take EV_KOARS from READ, so one fix covers both.
+* Checked 23/10/26 against the pasted READ source: EV_KOARS =
+*   VBKPF-KOARS; ES_ACCDOC_HDR_WA-TCODE = VBKPF-TCODE (MOVE-CORRESPONDING,
+*   not on the copy-with-reference path, hence IV_FOR_CREATE_WITH_REF
+*   excluded); non-G/L lines are carried into the item table (the
+*   ASSERT for them is commented out by SAP, CE2302).
+*----------------------------------------------------------------------*
+ENHANCEMENT 1  ZEI_FI_CM_APPR_READ.    "active version
+*BOC By Arnav on 23/10/26
+* ASSUMPTION: credit memo document type 'DG', same constant as the BTE
+*             module and ZEI_FI_CM_APPR_POST.
+* ASSUMPTION: a document entered in the Fiori G/L app never carries
+*             account type 'D'; with the app code and type DG this
+*             block only meets documents from our trigger.
+* Guard reads BLART and TCODE from BKPF, the header the Verify list
+* itself filters on. First version compared ES_ACCDOC_HDR_WA-TCODE
+* (= VBKPF-TCODE) and did not fire for 1800000061 (debugger: header
+* read in ACCDOC_HEADER_READ_DOCUMENT still received KOARS 'SD').
+  CONSTANTS lc_zcm_blart TYPE bkpf-blart VALUE 'DG'.
+
+  DATA: lv_zcm_blart TYPE bkpf-blart,
+        lv_zcm_tcode TYPE bkpf-tcode.
+
+  CLEAR: lv_zcm_blart, lv_zcm_tcode.
+
+*  IF iv_for_post = abap_false
+*     AND iv_for_create_with_ref = abap_false
+*     AND ev_error_occurred IS INITIAL
+*     AND ev_koars CA 'D'
+*     AND es_accdoc_hdr_wa-tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting.
+*
+*    SELECT SINGLE blart
+*      FROM vbkpf
+*      WHERE bukrs = @iv_bukrs
+*        AND belnr = @iv_belnr
+*        AND gjahr = @iv_gjahr
+*      INTO @lv_zcm_blart.
+*
+*    IF sy-subrc = 0 AND lv_zcm_blart = lc_zcm_blart.
+*      REPLACE ALL OCCURRENCES OF 'D' IN ev_koars WITH ``.
+*    ENDIF.
+*
+*  ENDIF.
+  IF iv_for_post = abap_false
+     AND iv_for_create_with_ref = abap_false
+     AND ev_error_occurred IS INITIAL
+     AND ev_koars CA 'D'.
+
+    SELECT SINGLE blart, tcode
+      FROM bkpf
+      WHERE bukrs = @iv_bukrs
+        AND belnr = @iv_belnr
+        AND gjahr = @iv_gjahr
+      INTO ( @lv_zcm_blart, @lv_zcm_tcode ).
+
+    IF sy-subrc = 0
+       AND lv_zcm_blart = lc_zcm_blart
+       AND lv_zcm_tcode = cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting.
+*     Empty string literal: removes the character, no blank left behind
+      REPLACE ALL OCCURRENCES OF 'D' IN ev_koars WITH ``.
+    ENDIF.
+
+  ENDIF.
+*EOC By Arnav on 23/10/26
+ENDENHANCEMENT. Activate.
+* Switch-off: deactivate the implementation (SE19) - standard returns.
+* Callers seen: ACCDOC_FUNC_PARKD_DOC_READ_UPD (open for change) and
+*   ACCDOC_HEADER_READ_DOCUMENT (header read, own copy of the 092 check,
+*   include CM057). Both take EV_KOARS from READ, so one fix covers both.
 * Checked 23/10/26 against the pasted READ source: EV_KOARS =
 *   VBKPF-KOARS; ES_ACCDOC_HDR_WA-TCODE = VBKPF-TCODE (MOVE-CORRESPONDING,
 *   not on the copy-with-reference path, hence IV_FOR_CREATE_WITH_REF
