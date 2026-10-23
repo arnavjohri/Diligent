@@ -62,10 +62,15 @@ deactivating its implementation.
 1. **Our branch in `ZEI_GL_WORKLFOW_INTR`.** Test the full flow once with only the team's
    original branch. If everything still works, leave it out (smaller footprint, no unproven
    code in a shared enhancement).
-2. **Workflow amounts on resubmit.** `ZEI_FI_CM_APPR_REDO` does not refresh the amounts in the
-   workflow (the standard REDO does, via `modify_workflow_input`). If the requester changes the
-   amount, the next approver is still chosen on the original amount. Decide whether that
-   matters; the fix is known.
+2. **Workflow amounts on resubmit - control gap with amount-based levels.** `ZEI_FI_CM_APPR_REDO`
+   does not refresh the amounts in the workflow (the standard REDO does, via
+   `cl_fdc_accdoc_ver_services=>modify_workflow_input`). With 2/3/4 approval levels chosen by
+   amount, a requester who raises the amount while correcting gets the levels of the old amount,
+   so a higher approver can be skipped. Recommended before go-live: refresh the amounts in
+   `ZEI_FI_CM_APPR_REDO` before completing the Redo item.
+2a. **Multi-level resubmit untested.** Logs show the resubmit continues the same workflow with a
+   new Verify step; with one level only. Test: reject at level 2, resubmit, check in the log that
+   approval restarts at level 1 and runs all levels again; then a second rejection and resubmit.
 3. **Document integrity after an edit in the app.** After a correction and resubmit, check in
    FBV3 that the customer, amounts and tax are unchanged except for what was edited. Then
    approve and check the posted document.
