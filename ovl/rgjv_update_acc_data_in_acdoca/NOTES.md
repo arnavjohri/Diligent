@@ -198,3 +198,29 @@ Conclusion: one ACDOCA offset line vs many JV split lines per venture/cost objec
 No selection-screen option changes this for an FI document. Functional decision:
 reverse + repost with JVA active, or accept and handle expense lines only
 (`ZFI_ACDOCA_VNAME_UPD` covers those where VNAME is present).
+
+## 8. Way forward agreed in discussion (19–23/10/26)
+
+Debugger confirmed `COMPARE_FIELD_VALUES` line 149: ACDOCA BSEG 003 WSL/HSL
+20,695,950.00 / KSL 222,014.98 vs JV slice 32,400.00 / 345.60. Any grouping would also
+fail on KSL rounding (slices converted individually).
+
+Options: (1) reverse + repost the FI doc with JVA active; (2) Z report filling
+VNAME/EGRUP/RECID on 1:1 lines from JVSO1 (join RBUKRS/RYEAR/REFFIDOC/REFFIDLN,
+ACTIV JVFI/JVMM, only when all slices agree); (3) report history from ledger 4A.
+
+Arnav's preferred fix: **ACDOCA-only split lines** (not in BKPF/BSEG, document type
+DJ/DU). Standard mechanism exists — JVA direct ACDOCA postings are identified by
+`vorgn = 'RFRA' AND bstat = 'U' AND awtyp = 'BKPFF'` (`MAKE_WHERE_CLAUSE`) and posted
+by `CL_JVA_MIG_POST_ACDOCA` (`reverse_acdoca_doc`, `rev_and_rep_acdoca_line`,
+`post_missing_acdoca_line`, `post_new_acdoca_doc`). Standard tool uses them 1:1 only.
+Proposed Z wrapper: per offset line, reverse the one ACDOCA line and post one
+ACDOCA-only line per JVSO1 slice via SAP's class; KSL rounding on last slice; posting
+date per functional decision; test run + log; verify by re-running the SAP tool.
+Evidence that ACDOCA-only entries already exist in OVL: BELNR CC001NVFLO, 0L/OVL/2026,
+VORGN COIN, BLART KJ, AWREF 2726000220 — CO journal entry, not in FB03.
+
+Open before building: `CL_JVA_MIG_POST_ACDOCA` source (where BLART is set);
+SE16H ACDOCA OVL with BSTAT = 'U' / VORGN = 'RFRA' and BLART (is DJ/DU the JVA type?);
+functional decision on posting date; OSS incident recommended first.
+Never INSERT into ACDOCA directly.
