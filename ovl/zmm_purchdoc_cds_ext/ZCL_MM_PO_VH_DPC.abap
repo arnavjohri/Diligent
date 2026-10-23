@@ -42,6 +42,13 @@
 *         SQL view's type was therefore one column off; both reads now
 *         fill by name (CORRESPONDING FIELDS). ZI_DOM_FIXVAL_VH (DD07L,
 *         no client) was the only set tested and never had the gap.
+*         23/10/26 v5 - Tender Process (ZVT_NAT_PROC): its properties
+*         TenderProcess / TenderProcessText are not the view's column
+*         names (ZZNAT_PROC / NAT_PROC_DESC). A $orderby on them went
+*         to /IWBEP/CL_MGW_DATA_UTIL=>ORDERBY, which sorts by component
+*         name and has no such column. A sort that DB_ORDER_BY cannot
+*         map is now left out; the list keeps its default order
+*         (SERIAL_NO, as in the GUI F4).
 *----------------------------------------------------------------------*
 CLASS zcl_mm_po_vh_dpc DEFINITION
   PUBLIC
@@ -172,8 +179,16 @@ CLASS zcl_mm_po_vh_dpc IMPLEMENTATION.
     IF lv_sort_field IS NOT INITIAL.
       SORT <lt_rows> BY (lv_sort_field).
     ENDIF.
-    /iwbep/cl_mgw_data_util=>orderby( EXPORTING it_order = it_order
-                                      CHANGING  ct_data  = <lt_rows> ).
+*BOC By SAP_ABAP on 23/10/26
+*   /iwbep/cl_mgw_data_util=>orderby( EXPORTING it_order = it_order
+*                                     CHANGING  ct_data  = <lt_rows> ).
+    " v5: only a sort whose properties are columns of the view (initial
+    " LV_ORDER = DB_ORDER_BY could not map one, e.g. TenderProcess)
+    IF lv_order IS NOT INITIAL.
+      /iwbep/cl_mgw_data_util=>orderby( EXPORTING it_order = it_order
+                                        CHANGING  ct_data  = <lt_rows> ).
+    ENDIF.
+*EOC By SAP_ABAP on 23/10/26
 
     ev_count = lines( <lt_rows> ).
 
