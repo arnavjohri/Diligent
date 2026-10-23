@@ -46,3 +46,14 @@ The full source was pasted in the session on 23/10/26; only the structure is kep
 | `CL_FDC_ACCDOC_VER_BASE` CM003 | 58 | `CALL FUNCTION 'SAP_WAPI_DECISION_COMPLETE'` workitem_id = lv_workitem_id, decision_key = iv_decision_key ("0001=resubmit, 0002=Abort"); preceded by `IF lv_modify_success = abap_false. RETURN.` |
 | `CL_FDC_ACCDOC_VER_BASE` CM006 | 35 | same FM with decision_key '0002' (abort / withdraw); `IF lv_workitem_id IS INITIAL. RETURN.` before it |
 | `CL_FDC_ACCDOC_VER_SERVICES` CM00C (`IS_DOC_VALID_FOR_NEW_WORKFLOW`) | 17, 42 (commented) | koars check, 092 / A133 |
+
+## `CL_FDC_ACCDOC_VER_BASE->IF_FDC_ACCDOC_VER~REDO` (pasted 23/10/26)
+
+1. `lv_workflow_id = cl_fdc_accdoc_ver_services=>get_workflow_id( iv_ausbk = me->ausbk iv_belnr = me->belnr
+   iv_gjahr = me->gjahr )`.
+2. `lv_workitem_id = cl_fdc_accdoc_ver_services=>get_wf_latest_task( iv_top_workitem = lv_workflow_id )-wi_id`;
+   **initial -> RETURN** (silent).
+3. `lv_modify_success = cl_fdc_accdoc_ver_services=>modify_workflow_input( ausbk belnr gjahr dmbtr dmbe2 dmbe3
+   blart mt_costcenter mt_accountgroup mt_companycode )`; **false -> RETURN** (silent).
+4. `SAP_WAPI_DECISION_COMPLETE( workitem_id decision_key = iv_decision_key (0001 resubmit / 0002 abort)
+   do_commit = ' ' )`; return code 0 -> `rv_success = abap_true`; WAPI messages copied to `et_message`.
