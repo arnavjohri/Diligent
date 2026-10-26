@@ -1,7 +1,7 @@
 ZOVL_ARMS - table entries for QA  (SE10 object list, 26/10/26)
 =====================================================================
 
-Request type : Customizing request
+Request type : WORKBENCH request (a Customizing request rejects the client-independent tables with "incorrect type for an object with type R3TR TABU")
 Description  : ZOVL_ARMS role master tables for QA - Uday Mahato mapping 26/10/26
 
 Lines below are TAB-separated (PgmID / Obj / Object name). In SE10 open the task
