@@ -23,7 +23,10 @@ Tables: ZMM_PREP_ROLEREQ (header), ZMM_PREP_ROLEREI (items).
   `ovl/atc/sources/modpool/` (O01 include filled 26/10/26 from a full-width download).
 - `original/SAPMZMMPREPROLE1_PHASEII.txt` + `original/ZGRC_CALL_TODE.txt`: ZR_PROG_DOWNLOAD
   listings, OCD/500, 26.10.2026 — identical to the repo copy (drift check done).
-- Role-rename patch map (Uday, 10/26): `ROLE_RENAME.md`.
+- Role-rename patch map (Uday, 10/26): `ROLE_RENAME.md`. **Corrected objects:**
+  `MZMMPREPROLE1_PHASEIII01.abap` and `MZMMPREPROLE1_PHASEIIF01.abap` at this folder root —
+  whole includes, paste into SE38, activate `SAPMZMMPREPROLE1_PHASEII`. Author tag `SAP_ABAP`
+  (OVL precedent on OCD).
 - Functional overview (Claude Doc): https://claude.ai/code/artifact/745608d2-f5ad-4d87-937e-f39dada3474c
 - Hardcoded values register (Claude Doc): https://claude.ai/code/artifact/2f8d9310-fb7d-401a-9dd6-ad366facca2c — PDF export: `ZMM_ARMS_Hardcoded_Values_Register.pdf`
 - Role catalogue for Security (Claude Doc): https://claude.ai/code/artifact/2dcf8f4d-d3f8-4def-a921-b3f249e84c0a — PDF: `ZICE_ARMS_Role_Catalogue_for_Security.pdf`

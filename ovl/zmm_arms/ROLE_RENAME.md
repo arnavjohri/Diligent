@@ -1,6 +1,36 @@
 # ZOVL_ARMS — hardcoded PFCG role rename (Uday Mahato mail, 09/10/26 + 26/10/26)
 
-Analysis only. No source changed yet.
+**Status 26/10/26: code written, awaiting activation.** Corrected includes (whole files, paste-only):
+`ovl/zmm_arms/MZMMPREPROLE1_PHASEIII01.abap` (8753 → 8758 lines) and
+`ovl/zmm_arms/MZMMPREPROLE1_PHASEIIF01.abap` (11138 → 11193 lines). Base: the 26/10/26 download
+(`original/SAPMZMMPREPROLE1_PHASEII.txt`). Markers `*BOC/*EOC By SAP_ABAP on 26/10/26`. Paste
+both includes in SE38, activate the main program `SAPMZMMPREPROLE1_PHASEII`. TOP and O01 are
+unchanged. Business confirmed ZOVL_ARMS is the live tcode (see `TCODE_COMPARE.md`).
+
+## 0. What was changed (7 places, all in the two includes above)
+
+| # | Include / FORM-MODULE | Old | New |
+|---|---|---|---|
+| 1 | I01 `validate_header_data` — AGR_USERS gate on the requested user | M:COMMON_USER_TOOLS | Z:S:BS:GENERAL_ACCESS:M:ALL |
+| 2 | F01 `GRC_RISK_ANALYSIS` | M:COMMON_USER_TOOLS | Z:S:BS:GENERAL_ACCESS:M:ALL |
+| 3 | F01 `ROLE_HELP` — delimit loop exclusion | M:COMMON_USER_TOOLS | Z:S:BS:GENERAL_ACCESS:M:ALL |
+| 4 | F01 `INSERT_DATA` — OVL FM_LOGS role | D:FM_LOGS_OVL_ALL | Z:E:FM_LOGS_:M:ALL |
+| 5 | F01 `INSERT_DATA_ADDL` — OVL FM_LOGS role | D:FM_LOGS_OVL_ALL | Z:E:FM_LOGS_:M:ALL |
+| 6 | F01 `INSERT_DATA` — OVL display swap | D:MM_DISPLAY_ALL → D:MM_OVL_DISPLAY_ALL; D:MM_DISPLAY_PM_PS_LIS_CIN → D:MM_OVL_DISPLAY_PM_PS_LIS_CIN | D:MM_DISPLAY_ALL → Z:D:MM:DISPLAY:D:OVL; D:MM_DISPLAY_PM_PS_LIS_CIN → **two rows**, Z:D:PM:DISPLAY:M:OVL and Z:D:PS:DISPLAY:D:OVL |
+| 7 | F01 `INSERT_DATA_ADDL` — same swap, post-loop over IT_ROLES1 | same | same; the PS row is appended inside the loop (it matches neither branch, so the loop ignores it) |
+
+Trigger names stay the old `D:MM_DISPLAY_*` (what ZHELP_MMROLES delivered on ECC). `" ASSUMPTION:`
+in the code: if Uday's table mapping already put the Z: names into ZHELP_MMROLES, neither branch
+matches and the table row goes through unchanged — then the PS role must come from a second
+table row. Confirm with the SE16N of ZHELP_MMROLES.
+
+Not touched, deliberately: the commented-out copies of the COMMON_USER_TOOLS check (`DELIMIT_ROLES`,
+`user_command_100`); the template literals `D:MM_SRV_IND_APPROVE_XX` / `D:MM_PUR_PO_APPROVE_XX`
+(not in the mapping); every `sy-tcode` check (still correct, see entry chain); the non-strict
+Open SQL of the AGR_USERS SELECT (only the literal changed, to keep the diff to the issue);
+`SAPMZMMPREPROLE3_PHASEII` (ZIC_AUTH) and the FI includes — same literals, no fresh download
+yet, separate object.
+
 
 **Entry chain on S/4 (confirmed from the 26/10/26 download):** tcode **ZOVL_ARMS** runs report
 `ZGRC_CALL_TODE` (19 lines), which does `EXPORT gv_auth = 'X' TO MEMORY ID 'AUTH'` and then
