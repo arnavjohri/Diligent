@@ -59,6 +59,13 @@ deactivating its implementation.
 
 ## Open points
 
+0. **26/10/26 - correcting a DG in the Verify app does not work.** Edits are not applied, and
+   changing a line item makes the line disappear. The app's G/L posting model has no customer
+   line. Recommended: corrections in FBV2; resubmit from the FBV2 save through our BTE with SAP's
+   own `IF_FDC_ACCDOC_VER~REDO` (this also closes point 2); and a guard that refuses to save a DG
+   from the Verify app once its customer line is gone. Needs the team's decision, because it
+   reverses "Verify app only".
+
 1. **Our branch in `ZEI_GL_WORKLFOW_INTR`.** Test the full flow once with only the team's
    original branch. If everything still works, leave it out (smaller footprint, no unproven
    code in a shared enhancement).
