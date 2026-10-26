@@ -1,0 +1,41 @@
+ZOVL_ARMS - table entries for QA  (SE10 object list, 26/10/26)
+=====================================================================
+
+Request type : Customizing request
+Description  : ZOVL_ARMS role master tables for QA - Uday Mahato mapping 26/10/26
+
+Lines below are TAB-separated (PgmID / Obj / Object name). In SE10 open the task
+in change mode, Objects tab, click into the first empty PgmID cell and Ctrl+V.
+If only one row lands, enter the rest one by one.
+
+----- Block A: the 14 tables Uday listed -----
+R3TR	TABU	ZHELP_MMROLES
+R3TR	TABU	ZMM_PREP_ROLEDES
+R3TR	TABU	ZHELP_FIROLES
+R3TR	TABU	ZFI_PREP_ROLEDES
+R3TR	TABU	ZHELP_OLMROLES
+R3TR	TABU	ZOL_PREP_ROLEDES
+R3TR	TABU	ZHELP_PMROLES
+R3TR	TABU	ZPM_PREP_ROLEDES
+R3TR	TABU	ZHELP_PSROLES
+R3TR	TABU	ZPS_PREP_ROLEDES
+R3TR	TABU	ZHELP_SDROLES
+R3TR	TABU	ZSD_PREP_ROLEDES
+R3TR	TABU	ZHELP_HSROLES
+R3TR	TABU	ZHS_PREP_ROLEDES
+
+----- Block B: also read by ZOVL_ARMS, not in Uday's list - add only if he confirms they were changed -----
+R3TR	TABU	ZHELP_MMROLES_RC
+R3TR	TABU	ZHELP_PPROLES
+R3TR	TABU	ZHELP_PPROLES1
+R3TR	TABU	ZPP_PREP_ROLEDES
+R3TR	TABU	ZHELP_QMROLES
+R3TR	TABU	ZQM_PREP_ROLEDES
+R3TR	TABU	ZSR_PREP_ROLEDES
+
+After pasting: double-click EVERY object line (or select it and press the Keys
+button), add one key row containing a single  *  and save. Then release the task
+and the request and give Basis the request number and the QA target client.
+
+Key * on import = delete all rows of the table in the QA client, then insert the
+DEV rows. QA becomes a copy of DEV for these tables.
