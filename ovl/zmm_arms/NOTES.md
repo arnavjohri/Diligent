@@ -14,7 +14,10 @@ Tables: ZMM_PREP_ROLEREQ (header), ZMM_PREP_ROLEREI (items).
 - Tcode ZMM_ARMS is hardcoded to show a popup ("discontinued, use ZICE_ARMS") and leave the
   program (`MODULE ICE_ARMS`). Find out which tcode the client actually runs before changing
   anything.
-- Hardcoded values are listed in `HARDCODES.md`.
+- Hardcoded values are listed in `HARDCODES.md` (old ZMM_ARMS program).
+- **S/4 tcode ZOVL_ARMS runs `SAPMZMMPREPROLE1_PHASEII`** (ECC ZICE_ARMS), repo copy in
+  `ovl/atc/sources/modpool/`. Its O01 include is an empty file there; PBO modules are only in the
+  expanded listing. Role-rename patch map (Uday, 10/26): `ROLE_RENAME.md`.
 - Functional overview (Claude Doc): https://claude.ai/code/artifact/745608d2-f5ad-4d87-937e-f39dada3474c
 - Hardcoded values register (Claude Doc): https://claude.ai/code/artifact/2f8d9310-fb7d-401a-9dd6-ad366facca2c — PDF export: `ZMM_ARMS_Hardcoded_Values_Register.pdf`
 - Role catalogue for Security (Claude Doc): https://claude.ai/code/artifact/2dcf8f4d-d3f8-4def-a921-b3f249e84c0a — PDF: `ZICE_ARMS_Role_Catalogue_for_Security.pdf`
