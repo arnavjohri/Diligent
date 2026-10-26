@@ -9,8 +9,10 @@ Tables: ZMM_PREP_ROLEREQ (header), ZMM_PREP_ROLEREI (items).
   no abapGit ZIP.
 - Repo source copy (full-width): `ovl/atc/sources/modpool/SAPMZMMPREPROLE1.abap` + the
   `MZMMPREPROLE1*.abap` includes.
-- `original/SAPMZMMPREPROLE1_listing.txt`: the SE38 print listing supplied 05.10.2026. It is
-  cut at column 72. Use `ZR_PROG_DOWNLOAD` next time to get full lines.
+- `original/SAPMZMMPREPROLE1_listing.txt`: the SE38 print listing supplied 05.10.2026, cut at
+  column 72. Superseded by `original/SAPMZMMPREPROLE1.txt` (ZR_PROG_DOWNLOAD, 26.10.2026, full
+  width, identical to the repo copy).
+- **ZMM_ARMS is dead code; the business tool is ZOVL_ARMS.** Comparison in `TCODE_COMPARE.md`.
 - Tcode ZMM_ARMS is hardcoded to show a popup ("discontinued, use ZICE_ARMS") and leave the
   program (`MODULE ICE_ARMS`). Find out which tcode the client actually runs before changing
   anything.
