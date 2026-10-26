@@ -1,12 +1,25 @@
 # ZOVL_ARMS — hardcoded PFCG role rename (Uday Mahato mail, 09/10/26 + 26/10/26)
 
-Analysis only. No source changed yet. Program behind tcode **ZOVL_ARMS** on S/4 is
-`SAPMZMMPREPROLE1_PHASEII` (ECC tcode ZICE_ARMS). Repo copy used:
-`ovl/atc/sources/modpool/SAPMZMMPREPROLE1_PHASEII.abap` (expanded listing, 28101 lines) and the
-`MZMMPREPROLE1_PHASEII*` includes. **The repo O01 include is an empty file** — the PBO modules
-exist only inside the expanded listing. Get a fresh `ZR_PROG_DOWNLOAD` of
-SAPMZMMPREPROLE1_PHASEII (+ SAPMZMMPREPROLE3_PHASEII) before editing; line numbers below are
-snapshot-bound, locate by FORM/MODULE.
+Analysis only. No source changed yet.
+
+**Entry chain on S/4 (confirmed from the 26/10/26 download):** tcode **ZOVL_ARMS** runs report
+`ZGRC_CALL_TODE` (19 lines), which does `EXPORT gv_auth = 'X' TO MEMORY ID 'AUTH'` and then
+`CALL TRANSACTION 'ZICE_ARMS'`. ZICE_ARMS is still `SAPMZMMPREPROLE1_PHASEII` — the "PHASEII" in
+every include name is the ECC-era program name, not a second version. Inside,
+`MODULE pop_message OUTPUT` (O01 3762–3804) imports the flag and raises
+`'Please Use TRANSACTION ZOVL_ARMS.' TYPE 'E'` when it is not `X`, so ZICE_ARMS cannot be run
+directly. Because CALL TRANSACTION sets `sy-tcode = 'ZICE_ARMS'`, every `sy-tcode` test in the
+module pool (`status_0100` O01 83, `pop_message` O01 3772, `fill_sttab` F01 103 for
+ZIC_ARMS_CONNECT) still holds. **No tcode literal needs to change for the role rename.**
+The wrapper has no AUTHORITY-CHECK of its own; S_TCODE on ZOVL_ARMS is the only gate, and
+memory ID `AUTH` is generic enough that any program exporting it would also open the door.
+
+**Drift check, 26/10/26:** `ZR_PROG_DOWNLOAD` listing of SAPMZMMPREPROLE1_PHASEII (OCD/500,
+26.10.2026 09:58, full width) diffed include by include against the repo copy in
+`ovl/atc/sources/modpool/`: main, TOP, O01, I01, F01 **all identical** (whitespace only).
+Both downloads filed in `original/`. The repo O01 include had been an empty file; it is now
+filled from this download. Line numbers below are the **listing's own include line numbers**
+(repo include files are +1 because of their banner line). Locate by FORM/MODULE regardless.
 
 ## 1. Mapping received
 
@@ -23,15 +36,15 @@ snapshot-bound, locate by FORM/MODULE.
 
 | # | Include | FORM / MODULE | Snapshot line | Literal | What the code does with it | Change |
 |---|---|---|---|---|---|---|
-| 1 | MZMMPREPROLE1_PHASEIII01 | `MODULE validate_header_data INPUT` | 568–570 | `M:COMMON_USER_TOOLS` | `SELECT * FROM agr_users WHERE agr_name = … AND uname = requested user`. Empty and module ≠ SRM → `MESSAGE e091(zhelp)` (user is not an SAP user). **This is the gate on every CREATE / CROSSCO.** | Replace literal with `Z:S:BS:GENERAL_ACCESS:M:ALL` |
-| 2 | MZMMPREPROLE1_PHASEIIF01 | `FORM GRC_RISK_ANALYSIS` | 7247 | `M:COMMON_USER_TOOLS` | Clears role_name/role_type on the GRC bucket row for the common role | Replace literal |
-| 3 | MZMMPREPROLE1_PHASEIIF01 | `FORM ROLE_HELP` | 10057 | `M:COMMON_USER_TOOLS` | `LOOP AT it_agr WHERE agr_name NE …` — delimit-existing-roles list skips the common role | Replace literal |
-| 4 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA` | 8167–8174 | `D:FM_LOGS_OVL_ALL` | `SEARCH wa_roles-role_name FOR 'FM_LOGS'`; if CCODE = OVL the role appended is this literal (ELSE branch does the FFFFFFFF fund-centre substitution) | Replace literal with `Z:E:FM_LOGS_:M:ALL` |
-| 5 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA_ADDL` | 8454–8461 | `D:FM_LOGS_OVL_ALL` | Same logic for the CRC additional-roles path | Replace literal |
-| 6 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA` | 8234–8238 | `D:MM_DISPLAY_ALL` → `D:MM_OVL_DISPLAY_ALL`, `D:MM_DISPLAY_PM_PS_LIS_CIN` → `D:MM_OVL_DISPLAY_PM_PS_LIS_CIN` | If CCODE = OVL and the role from ZHELP_MMROLES is the ONGC display role, **swap it for the OVL variant** | See §3 — not a plain literal swap |
-| 7 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA_ADDL` | 8516–8527 | same pair | Same swap, done as a post-loop over IT_ROLES1 | See §3 |
+| 1 | MZMMPREPROLE1_PHASEIII01 | `MODULE validate_header_data INPUT` | 568 | `M:COMMON_USER_TOOLS` | `SELECT * FROM agr_users WHERE agr_name = … AND uname = requested user`. Empty and module ≠ SRM → `MESSAGE e091(zhelp)` (user is not an SAP user). **This is the gate on every CREATE / CROSSCO.** | Replace literal with `Z:S:BS:GENERAL_ACCESS:M:ALL` |
+| 2 | MZMMPREPROLE1_PHASEIIF01 | `FORM GRC_RISK_ANALYSIS` | 7246 | `M:COMMON_USER_TOOLS` | Clears role_name/role_type on the GRC bucket row for the common role | Replace literal |
+| 3 | MZMMPREPROLE1_PHASEIIF01 | `FORM ROLE_HELP` | 10056 | `M:COMMON_USER_TOOLS` | `LOOP AT it_agr WHERE agr_name NE …` — delimit-existing-roles list skips the common role | Replace literal |
+| 4 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA` | 8166–8173 | `D:FM_LOGS_OVL_ALL` | `SEARCH wa_roles-role_name FOR 'FM_LOGS'`; if CCODE = OVL the role appended is this literal (ELSE branch does the FFFFFFFF fund-centre substitution) | Replace literal with `Z:E:FM_LOGS_:M:ALL` |
+| 5 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA_ADDL` | 8453–8460 | `D:FM_LOGS_OVL_ALL` | Same logic for the CRC additional-roles path | Replace literal |
+| 6 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA` | 8233–8237 | `D:MM_DISPLAY_ALL` → `D:MM_OVL_DISPLAY_ALL`, `D:MM_DISPLAY_PM_PS_LIS_CIN` → `D:MM_OVL_DISPLAY_PM_PS_LIS_CIN` | If CCODE = OVL and the role from ZHELP_MMROLES is the ONGC display role, **swap it for the OVL variant** | See §3 — not a plain literal swap |
+| 7 | MZMMPREPROLE1_PHASEIIF01 | `FORM INSERT_DATA_ADDL` | 8515–8526 | same pair | Same swap, done as a post-loop over IT_ROLES1 | See §3 |
 
-Commented-out, leave alone: `FORM DELIMIT_ROLES` F01 11124; `MODULE user_command_100` I01 1013.
+Commented-out, leave alone: `FORM DELIMIT_ROLES` F01 11123; `MODULE user_command_100` I01 1012.
 
 ### Same literals in sister programs (NOT in Uday's mail — must move in step)
 
