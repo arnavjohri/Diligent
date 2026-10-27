@@ -117,3 +117,38 @@ journal entries (SAP's own comment on the account-type check: "only GL postings 
 enhanced for supporting supplier accounts"). Every place where SAP checks for that fails for
 the credit memo and needed its own enhancement: posting (092), opening (092 in two places),
 resubmit save (`AWTYP`), item list and item edit (`FinsPostingGLItem` G/L only).
+
+## Final state 27/10/26 - working end to end in DEV client 400
+
+Park DG in FB70 -> approver -> approve posts / reject -> correct header and lines (including the
+customer line) in the Verify app -> resubmit -> approver again.
+
+### Header fields our class writes at the first submit (`ZCL_CM_WORKFLOW`)
+
+| Table | Field | Value | Why |
+|---|---|---|---|
+| VBKPF | `XWFFR` | X | release via workflow required, as the team's GL class sets it |
+| VBKPF | `TCODE` | `FBDC_P001` (app code) | the Verify / Post app treats the document as its own |
+| VBKPF | `AWTYP` | `BKPFF` | the app's resubmit is saved: the accounting interface writes FI only for `BKPFF`; with `BKPF` (FB70) `FI_DOCUMENT_POST` stopped at `CHECK process` |
+| BKPF | `TCODE` | `FBDC_P001` | scenario view `C_GLJRNLENTRYTOBEVERIFIED` lists only documents with the app code - without it no Verify list entry and no data for the agent rule |
+| BKPF | `AWTYP` | `BKPFF` | same as VBKPF, keeps both headers consistent |
+
+`AWKEY` is unchanged (same format for both reference types).
+
+### Active enhancements (all implicit, all limited to DG + app code, each switched off in SE19)
+
+| Implementation | Class / method | Position | Standard limitation it lifts |
+|---|---|---|---|
+| `ZEI_FI_CM_APPR_POST` | `CL_FDC_ACCDOC_VER` `IF_FDC_ACCDOC_VER~POST` | start | posting step converts to the G/L model, 092 for a customer line - posts DG with `PRELIMINARY_POSTING_POST_ALL` |
+| `ZEI_FI_CM_APPR_READ` | `CL_FDC_ACCDOC_PARK_ACCESS` `READ` | end | opening in the app: 092 (account-type check in two places) |
+| `ZEI_FI_CM_APPR_ITM_LIST` | `CL_FAC_FINANCIALS_POST_DPC_EXT` `GLPOSTINGITEMSET_GET_ENTITYSET` | end | item list drops non-G/L lines after any change |
+| `ZEI_FI_CM_APPR_ITM_GET` | same class, `GLPOSTINGITEMSET_GET_ENTITY` | start | reading the customer line for a change: `FIN_ODATA_GL 017` |
+| `ZEI_FI_CM_APPR_ITM_UPD` | same class, `GLPOSTINGITEMSET_UPDATE_ENTITY` | start | saving the change to the customer line: `FIN_ODATA_GL 017` |
+
+Trigger chain (unchanged): BTE 00002218 -> `Z_FI_CM_APPR_PARK_EVENT` -> `Z_FI_CM_APPR_START_WF`
+(background task) -> `ZCL_CM_WORKFLOW` -> `CL_FDC_ACCDOC_VER` `SUBMITTED` -> `WS02800046`.
+The resubmit and the refresh of the workflow amounts are done by SAP's own `REDO` since the
+`AWTYP` change.
+
+To remove: `ZEI_FI_CM_APPR_REDO` (deactivated, obsolete) and our branch in the team's
+`ZEI_GL_WORKLFOW_INTR` (never proven on any path) - after the regression run.
