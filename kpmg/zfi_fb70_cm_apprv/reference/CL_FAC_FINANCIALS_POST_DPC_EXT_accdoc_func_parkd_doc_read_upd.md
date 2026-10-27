@@ -67,3 +67,24 @@ the method. For a parked-document update it calls `cl_fdc_accdoc_park_access=>ch
 crdat crtim )` and, for a real post, `cl_fdc_accdoc_ver_services=>get_approver_for_document`.
 Note: the earlier source scan for `129(fdc_posting_001)` missed this line - the scan results of that
 session are not proof of absence.
+
+## Item entity handling in `CL_FAC_FINANCIALS_POST_DPC_EXT` (class source, release 758, supplied 27/10/26)
+
+The full 29,370-line source was supplied as a text download and is not stored in the repo
+(standard SAP code). Relevant facts:
+
+- Entity `FinsPostingGLItem` / set `FinsPostingGLItems` is served by the `GLPOSTINGITEMSET_*`
+  methods. (`FINSPOSTINGGLI01_*` = CO-PA item, `FINSPOSTINGGLI02_*` = items to be cleared.)
+- `/IWBEP/IF_MGW_APPL_SRV_RUNTIME~PATCH_ENTITY`: own branches only for payment headers and
+  A/R-A/P worklist items; everything else goes to `super->patch_entity` (framework: GET_ENTITY,
+  merge, UPDATE_ENTITY).
+- `GLPOSTINGITEMSET_GET_ENTITYSET`: for `FinsPostingGLItem` and this service,
+  `DELETE lt_accdoc_itm_wa WHERE ( koart <> 'S' AND koart <> 'A' ) OR ux_mainind = 'X'`.
+  **This removes the customer line from the list after any change.**
+- `GLPOSTINGITEMSET_GET_ENTITY` and `GLPOSTINGITEMSET_UPDATE_ENTITY`: at the end,
+  `iv_entity_name = 'FinsPostingGLItem' AND er_entity-koart <> 'S' AND <> 'A'` -> message
+  `FIN_ODATA_GL 017` as technical exception. **A PATCH of the customer line therefore fails.**
+  UPDATE_ENTITY runs `accdoc_mod_entity_imp( item-update )` before that check; it clears `LIFNR`
+  for KOART D and keeps `KUNNR`.
+- `GET_EXPANDED_ENTITY` (`FinsPostingGLHeaders`, children ITEMS, ...) converts all items without
+  a KOART filter, which is why the customer line shows when the document is first opened.
