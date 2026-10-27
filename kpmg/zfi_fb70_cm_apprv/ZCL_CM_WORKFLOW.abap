@@ -1,7 +1,7 @@
 *----------------------------------------------------------------------*
 * Class       : ZCL_CM_WORKFLOW
 * Author      : Arnav Johri
-* Date        : 15.10.2026
+* Date        : 15.10.2026, changed 27.10.2026 (AWTYP BKPFF)
 * Description : Copy of ZCL_GL_WORKFLOW->START_WORKFLOW for a customer
 *               credit memo parked in FB70. Same code, except:
 *               - PRELIMINARY_POSTING_DOC_READ removed: the tables come
@@ -94,9 +94,36 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 * posting check (enhancement ZEI_GL_WORKLFOW_INTR) keys on the same code.
 * Decision Gaurav/Arnav 21/10/26: stay on the GL scenario with these
 * rewrites. Document not on the database yet -> no event (RETURN).
+*BOC By Arnav on 27/10/26
+* Reference type BKPFF as well, as on every document the Fiori app creates
+* (SE16 BKPF 27/10/26: app documents BKPFF, FB70 documents BKPF; AWKEY has
+* the same format in both). On a resubmit from the Verify app the
+* accounting interface processes the FI part only for BKPFF: with BKPF,
+* FI_DOCUMENT_POST stops at CHECK process EQ char_x and nothing is saved.
+    CONSTANTS lc_awtyp_interface TYPE bkpf-awtyp VALUE 'BKPFF'.
+
+*    UPDATE vbkpf
+*      SET xwffr = @abap_true,
+*          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+*      WHERE ausbk = @<fs_vbkpf>-ausbk
+*        AND belnr = @<fs_vbkpf>-belnr
+*        AND gjahr = @<fs_vbkpf>-gjahr.
+*    IF sy-subrc <> 0.
+*      RETURN.
+*    ENDIF.
+*
+*    UPDATE bkpf
+*      SET tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+*      WHERE bukrs = @<fs_vbkpf>-bukrs
+*        AND belnr = @<fs_vbkpf>-belnr
+*        AND gjahr = @<fs_vbkpf>-gjahr.
+*    IF sy-subrc <> 0.
+*      RETURN.
+*    ENDIF.
     UPDATE vbkpf
       SET xwffr = @abap_true,
-          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+          tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting,
+          awtyp = @lc_awtyp_interface
       WHERE ausbk = @<fs_vbkpf>-ausbk
         AND belnr = @<fs_vbkpf>-belnr
         AND gjahr = @<fs_vbkpf>-gjahr.
@@ -105,13 +132,15 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     ENDIF.
 
     UPDATE bkpf
-      SET tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting
+      SET tcode = @cl_fdc_posting_impl=>co_fdc_s_accdoc_hdr_tcode-gl_posting,
+          awtyp = @lc_awtyp_interface
       WHERE bukrs = @<fs_vbkpf>-bukrs
         AND belnr = @<fs_vbkpf>-belnr
         AND gjahr = @<fs_vbkpf>-gjahr.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
+*EOC By Arnav on 27/10/26
 
     IF lt_vbseg IS NOT INITIAL.
       SELECT saknr , ktoks FROM ska1 FOR ALL ENTRIES IN @lt_vbseg
