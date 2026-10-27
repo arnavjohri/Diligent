@@ -102,3 +102,18 @@ deactivating its implementation.
 - `ZEI_FI_CM_APPR_REDO` (object 7) is obsolete. It stays deactivated, and the implementation is
   deleted by hand after the regression.
 - Still open: changing any line in the app makes the customer line disappear (open point 0).
+
+## Why the JV mass upload works and the credit memo needs enhancements (27/10/26)
+
+| Property | JV from the mass upload | DG credit memo from FB70 |
+|---|---|---|
+| Line types | G/L only (`KOART` S) | customer line (`KOART` D) + G/L |
+| Created by | the app's posting interface | FB70 (FI directly) |
+| Reference type `AWTYP` | `BKPFF` | `BKPF` (rewritten to `BKPFF` by `ZCL_CM_WORKFLOW`) |
+| Transaction code | `FBDC_P001` natively | FB70 (rewritten to `FBDC_P001`) |
+
+The verification scenario and the Verify / Post General Journal Entries app are built for G/L
+journal entries (SAP's own comment on the account-type check: "only GL postings are allowed -
+enhanced for supporting supplier accounts"). Every place where SAP checks for that fails for
+the credit memo and needed its own enhancement: posting (092), opening (092 in two places),
+resubmit save (`AWTYP`), item list and item edit (`FinsPostingGLItem` G/L only).
