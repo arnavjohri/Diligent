@@ -92,3 +92,13 @@ deactivating its implementation.
    every requester.
 9. **Transport:** list every object and the FIBF entry for the target clients. Gaurav's
    sign-off on items 5–8 of the object table.
+
+## Update 27/10/26
+
+- `ZCL_CM_WORKFLOW` also rewrites `AWTYP` to `BKPFF` (app documents carry `BKPFF`, FB70 documents
+  `BKPF`). Without it the Verify app's resubmit was never written: `FI_DOCUMENT_POST` stopped at
+  `CHECK process EQ char_x`. With it, header changes are saved, and SAP's own resubmit completes
+  the Redo step and refreshes the workflow amounts. Open point 2 is closed by this.
+- `ZEI_FI_CM_APPR_REDO` (object 7) is obsolete. It stays deactivated, and the implementation is
+  deleted by hand after the regression.
+- Still open: changing any line in the app makes the customer line disappear (open point 0).
