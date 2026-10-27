@@ -35,20 +35,24 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_ITM_LIST.    "active version
 *BOC By Arnav on 27/10/26
 * ASSUMPTION: credit memo document type 'DG' (same constant as the other
 *             credit memo enhancements).
-* Types are taken from the method's own variables (LIKE), so no DDIC
-* type name is assumed.
+* Types are taken from the method's own variables (LIKE), except the item
+* list: ET_ENTITYSET is generic here (activation 27/10/26), so the item
+* type the class itself uses for G/L items is named
+* (FAC_S_ACCDOC_ITM_ODATA / FAC_T_ACCDOC_ITM_ODATA, as in
+* GLPOSTINGITEMSET_UPDATE_ENTITY).
   CONSTANTS lc_zcm_blart TYPE bkpf-blart VALUE 'DG'.
 
   DATA: lv_zcm_blart TYPE bkpf-blart,
         lv_zcm_tcode TYPE bkpf-tcode,
         ls_zcm_hdr   LIKE ls_accdoc_hdr_wa,
         lt_zcm_itm   LIKE lt_accdoc_itm_wa,
-        lt_zcm_ext   LIKE et_entityset,
+        lt_zcm_ext   TYPE fac_t_accdoc_itm_odata,
+        lt_zcm_all   TYPE STANDARD TABLE OF fac_s_accdoc_itm_odata WITH DEFAULT KEY,
         lv_zcm_err   LIKE lv_error_occurred,
         lt_zcm_msg   LIKE lt_message.
 
   CLEAR: lv_zcm_blart, lv_zcm_tcode, ls_zcm_hdr, lt_zcm_itm, lt_zcm_ext,
-         lv_zcm_err, lt_zcm_msg.
+         lt_zcm_all, lv_zcm_err, lt_zcm_msg.
 
   IF iv_entity_name = 'FinsPostingGLItem'
      AND lv_tmpty <> cl_fdc_tmp_doc_access=>co_key_types-recurrence
@@ -91,8 +95,11 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_ITM_LIST.    "active version
               iv_for_display    = lv_for_display
             CHANGING
               ct_fdc_accdoc_itm = lt_zcm_ext ).
-          APPEND LINES OF lt_zcm_ext TO et_entityset.
-          SORT et_entityset BY posnr.
+*         ET_ENTITYSET is generic in this method: merge in a typed copy
+          lt_zcm_all = et_entityset.
+          APPEND LINES OF lt_zcm_ext TO lt_zcm_all.
+          SORT lt_zcm_all BY posnr.
+          et_entityset = lt_zcm_all.
         ENDIF.
       ENDIF.
     ENDIF.
