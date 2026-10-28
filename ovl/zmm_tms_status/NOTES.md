@@ -30,3 +30,6 @@ one, goes at the folder root as `ZMM_TMS_STATUS.abap`.
   splitter. It is not part of any export; do not blame it for Excel problems.
 - `tabname = 'IST_DATA'` with no `ref_tabname`: all type information comes from the internal
   table at runtime. Any column whose type the export cannot map will fail silently.
+- `no_out` must be `space` or `'X'`, nothing else. The original passed `'0'` (constant `c_out`)
+  for every column: the grid still drew them, but Change Layout listed none as displayed and
+  the spreadsheet export wrote an empty workbook. Fixed 28/10/26.
