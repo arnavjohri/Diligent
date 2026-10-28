@@ -184,7 +184,7 @@ One folder per object. Every folder has:
 
 **Only ZIP-shippable objects have `src/` and `.abapgit.xml`** — today that is
 `kpmg/zpp_forecast_v2/`, `kpmg/zmm_po_budget/`, `kpmg/abapgit_pilot/`,
-`ovl/ztest_t001/`, `kpmg/zfi_tds_cl34/`. The rest hold loose `.abap` files and are paste-only. Never assume
+`ovl/ztest_t001/`, `kpmg/zfi_tds_cl34/`, `ovl/zfi_bank_reval/`. The rest hold loose `.abap` files and are paste-only. Never assume
 `<object>/src/` exists; check.
 
 `incoming/` is the drop folder for fresh SE80 downloads awaiting triage.

@@ -540,6 +540,7 @@ maintenance views/TMG, SNRO number ranges, SU21 auth objects, SCDO change docume
 | `kpmg/zpp_forecast_paints/` | ZIP — **imported in DEV on 19/10/26**, the first hand-written abapGit ZIP that pulled on this landscape. Its `src/` XML shapes (DOMA, DTEL, TABL, CLAS, PROG with PROGDIR `NAME, VARCL, SUBC, FIXPT, UCCHECK`, DEVC) are the proven ones to copy |
 | `kpmg/abapgit_pilot/`, `kpmg/zmm_po_budget/` (DDIC + message class) | ZIP |
 | `ovl/ztest_t001/` | pilot — **never actually imported successfully** |
+| `ovl/zfi_bank_reval/` | ZIP `ZFI_BANK_REVAL.zip` built 28/10/26 — DDIC shapes from the paints ZIP, plus the **first DDLS** (`DDLNAME, DDLANGUAGE, DDTEXT, SOURCE_TYPE`) through abapGit on this landscape; pull result pending |
 | `kpmg/zfi_tds_cl34/` | complete ZIP that **failed four imports**; shipped by paste |
 | `kpmg/zmm_po_budget/` overall | hybrid — DDIC + message class by ZIP; BAdI insert, SE54 event, screen module, TMG, SE93 by hand |
 | `kpmg/zmb5b/`, `kpmg/zmmims/`, `kpmg/zmm_me35k_release/`, `kpmg/zsd_scheme/`, `kpmg/zpp_forecast/`, `kpmg/zmm_po_budget_deferred/` | paste-only |

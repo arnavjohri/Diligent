@@ -51,7 +51,7 @@ Prompts: Fiscal Year + Period range as today (query variables), plus `P_RevalDat
 
 ## Objects, in activation order
 
-### 1. DDIC — `ZFI_BR_GLMAP` (SE11, by hand) + domain/data element + TMG
+### 1. DDIC — `ZFI_BR_GLMAP` + domain/data element `ZBR_PISHARE` (in the ZIP) + TMG (SE54, by hand)
 
 | Field | Key | Data element | Type | Meaning |
 |---|---|---|---|---|
@@ -59,7 +59,7 @@ Prompts: Fiscal Year + Period range as today (query variables), plus `P_RevalDat
 | `BUKRS` | X | `BUKRS` | CHAR 4 | Company code |
 | `SAKNR` | X | `SAKNR` | CHAR 10 | G/L account |
 | `ZPISHARE` | | **`ZBR_PISHARE`** (new; domain `ZBR_PISHARE` DEC 7, 4 decimals) | DEC 7.4 | PI share as a factor, 1.0000 = 100 % |
-| `KURST` | | `KURST` | CHAR 4 | Exchange rate type for the revaluation (CLT / M / TTA) |
+| `KURST` | | `KURST_CURR` (TCURR's own) | CHAR 4 | Exchange rate type for the revaluation (CLT / M / TTA) |
 | `ZPROJSECT` | | `TEXT40` | CHAR 40 | Project/Section (Excel col F) |
 | `ZBUSUNIT` | | `TEXT40` | CHAR 40 | Business Unit (Excel col G) |
 
@@ -73,7 +73,7 @@ come from the data elements, so `ZBR_PISHARE` needs short/medium/long texts
 Alternative considered and **not** recommended: hardcoding the 49 PI values in a CDS
 `CASE` on `GLAccount`. Every farm-in/out would then be a transport.
 
-### 2. `ZI_BR_BANKREVAL_ITM` — `ZI_BR_BANKREVAL_ITM.ddls.asddls` (folder root, 121 lines)
+### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (121 lines)
 
 Classic `define view`, SQL view `ZIBRBNKREVITM`. `I_GLAccountLineItemCube` left-outer
 joined to `skb1`, `t012k`, `zfi_br_glmap`. Adds `GLAccountCurrency`, house bank fields,
@@ -83,7 +83,7 @@ Every `I_GLAccountLineItemCube` element name used is one that appears in the gen
 query, so they are confirmed on this system. Table fields `skb1-waers/hbkid/hktid`,
 `t012k-bankn` are standard.
 
-### 3. `ZI_BR_BANKREVAL_CUBE` — `ZI_BR_BANKREVAL_CUBE.ddls.asddls` (folder root, 173 lines)
+### 3. `ZI_BR_BANKREVAL_CUBE` — `src/zi_br_bankreval_cube.ddls.asddls` (173 lines)
 
 Classic `define view`, `@Analytics.dataCategory: #CUBE`, SQL view `ZIBRBNKREVCUBE`,
 parameters `P_RevalDate : vdm_v_key_date` and `P_RevalCurrency : waers`. The exchange
@@ -151,12 +151,32 @@ cube can carry them as CDS measures (same pattern, one more object).
    the new query rather than typing it.
 5. `vdm_v_key_date` and `waers` exist (both already used by the generated query / standard).
 
-## How it ships
+## How it ships — abapGit ZIP `ZFI_BANK_REVAL.zip` (28/10/26)
 
-Paste-only in practice: DDIC in SE11 by hand (plus SE54 TMG), the two DDL sources pasted
-into ADT, the query rebuilt in the Fiori app and *Published*. abapGit ZIP would carry the
-DDIC + DDLS, but hand-written abapGit XML has not imported on this landscape
-(MEMORY §6) — do not promise it.
+`.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root, `src/`
+with 8 files: `package.devc.xml`, `zbr_pishare.doma.xml`, `zbr_pishare.dtel.xml`,
+`zfi_br_glmap.tabl.xml`, `zi_br_bankreval_itm.ddls.asddls` + `.ddls.xml`,
+`zi_br_bankreval_cube.ddls.asddls` + `.ddls.xml`. DOMA / DTEL / TABL / DEVC XML copied
+from the shapes that pulled on 19/10/26 (`kpmg/zpp_forecast_paints/src/`, MEMORY §6). The
+DDLS shape (`DDLNAME, DDLANGUAGE, DDTEXT, SOURCE_TYPE = V`) is abapGit's standard
+serialisation of `DDDDLSRCV`; it has **not** yet been pulled on this landscape — first DDLS
+through a ZIP here.
+
+Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_BANK_REVAL`** (new; the
+ZIP's `package.devc.xml` sets the package description, so do not point it at an existing
+package) → Import ZIP → Pull → transport request when asked. abapGit activates DDIC and
+DDLS together in dependency order (domain → data element → table → ITM → CUBE).
+
+If the pull fails on a DDLS with a CDS syntax error, the DDIC is already in; open the view
+in ADT, paste the error here, fix comes back as the one file. If it fails with
+`XML_FORMAT_ERROR` / `CX_XSLT_FORMAT_ERROR` before anything is created, the DDLS XML is the
+suspect (the DDIC shapes are proven): fall back to SE11 for the table (spec above) and ADT
+paste of the two `src/*.asddls` — same objects, same order.
+
+Still manual afterwards: SE54 TMG for `ZFI_BR_GLMAP` (and optional SE93 on SM30), the SM30
+rows, the query in the app. Re-zip after any change:
+
+    cd ovl/zfi_bank_reval && rm -f ZFI_BANK_REVAL.zip && zip -X ZFI_BANK_REVAL.zip .abapgit.xml src/*
 
 ## Do not
 
