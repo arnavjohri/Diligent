@@ -36,6 +36,11 @@
 // ASSUMPTION: the rate types in use are CLT, M and TTA (Excel col M). A
 //   fourth type needs one more WHEN branch here; until then its accounts
 //   show a blank rate.
+// 28/10/26: active and released for key-user apps (API State, C1), yet
+//   not listed as a data source in Custom Analytical Queries. The key-user
+//   catalogue classifies views by @ObjectModel.modelingPattern and
+//   @ObjectModel.supportedCapabilities (the generated ZZ9 query carries
+//   them); added here with #ANALYTICAL_CUBE / #ANALYTICAL_PROVIDER.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVCUBE'
 @AbapCatalog.compiler.compareFilter: true
@@ -44,8 +49,14 @@
 @EndUserText.label: 'Bank Revaluation - G/L line item cube'
 @VDM.viewType: #COMPOSITE
 @Analytics.dataCategory: #CUBE
+@ObjectModel.modelingPattern: #ANALYTICAL_CUBE
+@ObjectModel.supportedCapabilities: [ #ANALYTICAL_PROVIDER,
+                                      #CDS_MODELING_DATA_SOURCE,
+                                      #CDS_MODELING_ASSOCIATION_TARGET,
+                                      #SQL_DATA_SOURCE ]
 @ClientHandling.algorithm: #SESSION_VARIABLE
 @Metadata.ignorePropagatedAnnotations: true
+@Metadata.allowExtensions: true
 @ObjectModel.usageType.sizeCategory: #XXL
 @ObjectModel.usageType.serviceQuality: #D
 @ObjectModel.usageType.dataClass: #MIXED
