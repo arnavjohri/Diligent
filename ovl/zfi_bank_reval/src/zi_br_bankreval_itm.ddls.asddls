@@ -18,9 +18,11 @@
 //   amount. This is the SAP posting rule for foreign account currencies.
 // ASSUMPTION: ZFI_BR_GLMAP has no validity dates - one PI share per
 //   company code + G/L. Add DATAB/DATBI if shares must be historised.
-// ASSUMPTION: cast of the literal 1.0 to abap.curr(23,10) is accepted on
-//   this release. If activation rejects it, use abap.dec(23,10) instead;
-//   the cube's currency_conversion takes DEC amounts as well.
+// 28/10/26: first activation failed with "CAST 1.0 of type FLTP to type
+//   CURR is not possible" - in a DDIC-based view a literal with a decimal
+//   point is FLTP. The integer literal 1 is INT4 and casts to CURR.
+// ASSUMPTION: INT4 -> abap.curr(23,10) is accepted. If not, cast to
+//   abap.dec(23,10) instead; currency_conversion takes DEC amounts too.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVITM'
 @AbapCatalog.compiler.compareFilter: true
@@ -117,5 +119,5 @@ define view ZI_BR_BANKREVAL_ITM
       // One unit of the account currency, 10 decimals. The cube converts
       // it at the key date; the converted value is the exchange rate.
       @Semantics.amount.currencyCode: 'GLAccountCurrency'
-      cast( 1.0 as abap.curr(23,10) )  as UnitAmount
+      cast( 1 as abap.curr(23,10) )    as UnitAmount
 }
