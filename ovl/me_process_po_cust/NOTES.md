@@ -64,3 +64,24 @@ waiting for the first EPC-approved PO saved from the app. The GST pop-up at ~553
   session those abort the save with the text as the error.
 - Do not touch anything outside the validity block when the bypass is built: the rest of the
   method is the client's PO rulebook.
+
+## Udayan Dayal's two-PO test, 26/10/26 (mail via Vaibhav, forwarded 28/10/26)
+
+PO 5300000068 created in the GUI, 5300000069 in the Fiori app, same data, doc type "MM- SRV
+Board PO" (an `S*` type: the lines 344–346 error fired, and it is `S*`-only). Screenshots in
+`original/`. What the test established and what it did not:
+
+- The app showed the error of lines 344–346 and a warning "Validity period less than a week"
+  that is **not in `CHECK`** — it sits in another method of the implementation, together with
+  the defaulting Udayan describes (`KDATB`/`KDATE` taken from the custom Scheduled Work
+  Start/End dates while saving). That source is not on file.
+- No W523 in the popover, so both dates were filled when the check ran. The two messages fit
+  the moment after Scheduled Start was entered and before Scheduled End: both dates equal to the
+  start, so end < delivery date and period < 7 days. At Order the end date was 30.12.2026, the
+  rules passed, the PO saved. Fiori keeps the stale messages in the popover.
+- Not excluded: a raw `MESSAGE … TYPE 'E'` without `ch_failed` is collected but does not block
+  the app's save. One test decides it: a Fiori PO with Scheduled Work End earlier than the item
+  delivery date, then Order. If it saves, every rule that must hold in Fiori needs
+  `ch_failed = 'X'` and `mmpur_message`.
+- After approval (ME29N, classic release) the Fiori PO opens in SAP GUI for HTML. That is the
+  app's feature check, not this BAdI — see `ovl/zmm_purchdoc_cds_ext/ISSUES.md` #4.
