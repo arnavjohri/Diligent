@@ -29,11 +29,13 @@
 //   query. Which SAP currency type already holds USD (Global, Functional
 //   or Free-defined 1) is to be confirmed in FINSC_LEDGER / OB22; the two
 //   measures that do not apply can then be dropped.
-// ASSUMPTION: cast of the currency_conversion result to abap.dec(23,10)
-//   is accepted. If activation rejects it, remove the cast; the element
-//   is then CURR(23,10) and needs @Semantics.amount.currencyCode:
-//   'RevaluationCurrency' (the engine then shows 2 decimals - set the
-//   decimals in the query's Display tab).
+// 28/10/26: activation failed with "Function CURRENCY_CONVERSION: for
+//   parameter EXCHANGE_RATE_TYPE only expressions of type literal..." -
+//   on this release the rate type cannot be read from the row. It is now
+//   a CASE on ZFI_BR_GLMAP-KURST with one literal call per rate type.
+// ASSUMPTION: the rate types in use are CLT, M and TTA (Excel col M). A
+//   fourth type needs one more WHEN branch here; until then its accounts
+//   show a blank rate.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVCUBE'
 @AbapCatalog.compiler.compareFilter: true
@@ -137,16 +139,41 @@ define view ZI_BR_BANKREVAL_CUBE
 
       @DefaultAggregation: #MAX
       @EndUserText.label: 'Exchange Rate at Key Date'
-      cast( currency_conversion( amount             => Item.UnitAmount,
-                                 source_currency    => Item.GLAccountCurrency,
-                                 target_currency    => $parameters.P_RevalCurrency,
-                                 exchange_rate_type => Item.ExchangeRateType,
-                                 exchange_rate_date => $parameters.P_RevalDate,
-                                 round              => ' ',
-                                 decimal_shift      => ' ',
-                                 decimal_shift_back => ' ',
-                                 error_handling     => 'SET_TO_NULL' )
-            as abap.dec(23,10) )           as ExchangeRate,
+      case
+        when Item.ExchangeRateType = 'CLT'
+        then cast( currency_conversion( amount             => Item.UnitAmount,
+                                        source_currency    => Item.GLAccountCurrency,
+                                        target_currency    => $parameters.P_RevalCurrency,
+                                        exchange_rate_type => 'CLT',
+                                        exchange_rate_date => $parameters.P_RevalDate,
+                                        round              => ' ',
+                                        decimal_shift      => ' ',
+                                        decimal_shift_back => ' ',
+                                        error_handling     => 'SET_TO_NULL' )
+                   as abap.dec(23,10) )
+        when Item.ExchangeRateType = 'M'
+        then cast( currency_conversion( amount             => Item.UnitAmount,
+                                        source_currency    => Item.GLAccountCurrency,
+                                        target_currency    => $parameters.P_RevalCurrency,
+                                        exchange_rate_type => 'M',
+                                        exchange_rate_date => $parameters.P_RevalDate,
+                                        round              => ' ',
+                                        decimal_shift      => ' ',
+                                        decimal_shift_back => ' ',
+                                        error_handling     => 'SET_TO_NULL' )
+                   as abap.dec(23,10) )
+        when Item.ExchangeRateType = 'TTA'
+        then cast( currency_conversion( amount             => Item.UnitAmount,
+                                        source_currency    => Item.GLAccountCurrency,
+                                        target_currency    => $parameters.P_RevalCurrency,
+                                        exchange_rate_type => 'TTA',
+                                        exchange_rate_date => $parameters.P_RevalDate,
+                                        round              => ' ',
+                                        decimal_shift      => ' ',
+                                        decimal_shift_back => ' ',
+                                        error_handling     => 'SET_TO_NULL' )
+                   as abap.dec(23,10) )
+      end                                as ExchangeRate,
 
       @DefaultAggregation: #SUM
       @Semantics.amount.currencyCode: 'TransactionCurrency'
