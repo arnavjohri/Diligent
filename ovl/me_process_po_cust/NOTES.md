@@ -85,3 +85,38 @@ Board PO" (an `S*` type: the lines 344–346 error fired, and it is `S*`-only). 
   `ch_failed = 'X'` and `mmpur_message`.
 - After approval (ME29N, classic release) the Fiori PO opens in SAP GUI for HTML. That is the
   app's feature check, not this BAdI — see `ovl/zmm_purchdoc_cds_ext/ISSUES.md` #4.
+
+## Corrected object (28/10/26)
+
+`IF_EX_ME_PROCESS_PO_CUST_CHECK.abap` at the folder root is the whole method body, 6351 lines
+(original 6336). One change, lines 344–360: the "validity end before the latest delivery date"
+rule is a warning when `sy-tcode` is blank (the app, and every BAPI / RFC / batch caller) and
+an error otherwise. Everything else is byte-identical to the 27/10 paste — diff it against the
+system copy before pasting if anyone has touched the method since.
+
+Why a warning and not `ch_failed`: in the app the raw `MESSAGE E` showed on the first Order and
+the second Order saved (no re-check without a change, and the message never marked the document
+failed). A warning makes the first Order behave like the second, which is what the client wants
+since the dates are defaulted from the Scheduled Work dates anyway. In the GUI the user can
+still correct the validity end, so the error stays.
+
+## Approved PO opens in SAP GUI for HTML — what decides it, and the way to "Fiori only"
+
+Not this BAdI. SAP's `C_PurchaseOrderTP` carries `IsAdvancedPurchaseOrder` (line 315 of the copy
+in `ovl/zmm_purchdoc_cds_ext/original/`), filled at runtime by
+`CL_MM_PUR_PO_MAINTAIN_FEAT_CHK` (`CHECK_HEADER_FEATURES`, `CHECK_ITEM_FEATURES`) when the list
+is built. One failed feature marks the PO Advanced; the app then opens ME23N/ME22N in GUI for
+HTML and shows the Advanced marker in the list (SAP KBAs 2372209, 3777528, 2822661 — hosts not
+reachable from this session). Order of work:
+
+1. Which check fails: external breakpoint in the two methods, user = the tester, refresh the
+   list. The failing feature name is the whole diagnosis. Also: does 5300000068 (GUI-created,
+   also approved) switch? Yes → the release state trips it, not the creation path.
+2. Lead inside this method: on ME29N the client's `CHECK` rewrites the header at release —
+   `kalsm` to `ZIMP`/`ZIND` and `zzrelcode`, then `im_header->set_data`. If the failing feature
+   is pricing-procedure related, the client's own release step causes it.
+3. Remove the cause (config or data) if the feature is one SAP lists as unsupported by
+   configuration. Only as a last resort, and only after the app has been seen to display and
+   edit such a PO correctly: an implicit enhancement at the end of the failing check method
+   that clears the flag for that one feature. That overrides SAP's protection for the app and
+   needs the functional lead's sign-off; no code until step 1 names the feature.
