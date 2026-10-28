@@ -166,3 +166,31 @@ DDIC + DDLS, but hand-written abapGit XML has not imported on this landscape
   OB08 holds USD → INR.
 - Do not add `@Analytics.query` views to an OData V4 service binding (MEMORY §4.1); the
   app's generated query handles OData itself.
+
+## Handover — how the objects reach the functional consultant (added 28/10/26)
+
+Nothing in this folder is visible to FI until step 3. The chain is: table rows → cube
+active → query built on the cube in the app → published query run as a tile / in Excel.
+
+| Step | Who | Where | What |
+|---|---|---|---|
+| 1 | Arnav | SE11 / SE54 | `ZBR_PISHARE` domain + data element, `ZFI_BR_GLMAP`, TMG. Hand FI the SM30 transaction |
+| 2 | FI | SM30 `ZFI_BR_GLMAP` | One row per company code + G/L from the Excel: col B → `SAKNR`, col I → PI share, col M → rate type, col F → Project/Section, col G → Business Unit. 49 rows today; they own this list from now on |
+| 3 | Arnav | ADT | Activate `ZI_BR_BANKREVAL_ITM`, then `ZI_BR_BANKREVAL_CUBE`. Quick check in ADT Data Preview with `P_RevalDate` = a month end and `P_RevalCurrency` = `USD`: the rate column is filled for the mapped accounts |
+| 4 | FI (or Arnav with them) | Fiori *Custom Analytical Queries* → *New* | Data source: search `ZI_BR_BANKREVAL_CUBE` (it is listed because of `@Analytics.dataCategory: #CUBE`). Query name e.g. `ZZ1_BR_REPORT2`, label "Bank Revaluation" |
+| 5 | FI | *Field Selection* | Tick: Ledger, Company Code, G/L Account, Account Currency, Exchange Rate Type, Project/Section, Business Unit, Bank Account Number, G/L House Bank, Fiscal Year, Fiscal Period, Posting Date, Accounting Document; measures Balance in Account Currency, PI Share, Exchange Rate at Key Date, and the one USD amount (Global / Functional / Free-defined 1 — whichever is USD) |
+| 6 | FI | *Display* | Rows: Company Code, G/L Account (Display Hierarchy on, pick `H109/ONGC/BANK_REVAL`, key and text), Account Currency, Exchange Rate Type, Project/Section, Business Unit. Columns: the measures. *Add Calculated Measure* twice: **OVL Share** = `Balance in Account Currency * PI Share`; **USD Balance after revaluation** = `OVL Share * Exchange Rate at Key Date`. Decimals: rate 6, amounts 2. Totals off for PI Share and Exchange Rate |
+| 7 | FI | *Filters* | Parameters: `P_RevalDate` = User Input Value (the revaluation date), `P_RevalCurrency` = Fixed Value `USD`. Variables: Ledger (derived, leading), Company Code mandatory, Fiscal Year mandatory, Period range optional |
+| 8 | FI | *Preview* → *Publish* | Preview with Company Code, FY, key date 30.09.2026 → one row per bank G/L, columns as in the Excel. Publish generates `ZZ9_BR_REPORT2` |
+| 9 | FI / users | Run | Three ways to the same query: (a) *Query Browser* app → search the query → *Open* / *Create Tile* on the user's launchpad; (b) Excel via Analysis for Office, BW query `2CZZ9_BR_REPORT2`; (c) Fiori *Create Tile* from the query itself. The Excel sheet for Group Reporting is the export of (a) or (b) |
+
+Monthly use: enter company code, fiscal year, revaluation date; the balance is cumulative to
+that date (carry-forward included), the rate is OB08 on that date for each account's rate
+type. New bank account → FI adds a row in SM30 and the account to the hierarchy; nothing
+in ADT changes. PI share change → SM30 only.
+
+Authorisation: end users need the role that carries the *Query Browser* / tile plus the FI
+analytics objects they already have for the current query (the cube inherits the access
+control of `I_GLAccountLineItemCube`; the generated query runs privileged, as today).
+Building the query needs the analytics-specialist catalog the functional consultant
+already uses.
