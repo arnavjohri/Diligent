@@ -120,3 +120,30 @@ reachable from this session). Order of work:
    edit such a PO correctly: an implicit enhancement at the end of the failing check method
    that clears the flag for that one feature. That overrides SAP's protection for the app and
    needs the functional lead's sign-off; no code until step 1 names the feature.
+
+## Release from the app, 28/10/26 — why the GUI validations do not appear
+
+Everything below is read from the method; line numbers are of the corrected file (6351 lines).
+
+**Rules that can never fire in the app** — guarded by a transaction code, and `sy-tcode` is blank
+there: 1633/6163 pricing procedure `ZIMP`/`ZIND` derivation; 5265/5474 SRM (`MRCS`) price and
+tracking-number checks; 5555 SWO plant check; 5609/5687/5731 valuation type and import vs
+indigenous checks for plant `90R1`; **5837–5888 the ME29N release block** (`zzrelcode` from the
+last release code, `set_data`) — so a PO released from the app never gets its Final Release
+Code; 5890 `zznat_proc` mandatory (message commented out, inert); 5978 route check `MSDM`; 6007
+document date = today; 6194 GEM PO duplicate and vendor GST registration; 6283 industry type
+and Udyam number.
+
+**Rules that do fire in the app, but as raw `MESSAGE … TYPE 'E'`**: the release-member checks
+`e940` (CPA / TC member, lines ~1131–1280), collective number `e803` (~1020), `e517` (4978),
+tender release status `e321` (5017), vendor category vs industry (~259–280, `ch_failed` set),
+inspection type `877` (418, the one rule already raised with `mmpur_message`). Their
+`sy-ucomm = 'MERESET'`/`'MESAVE'` escapes are also blank in the app, so the stricter branch
+runs. The create/edit path of Manage Purchase Orders collects raw messages into its popover
+(seen 26/10); whether the approval path does is what the "PO data inconsistent" message number
+will tell.
+
+**Fix pattern once confirmed**: `mmpur_message_forced 'E' 'ZMM' '940' v1 v2 v3 v4` plus
+`ch_failed = 'X'` for every rule that must hold in the app; `OR sy-tcode IS INITIAL` on the
+guards of the rules the functional lead wants in the app as well; the two `POPUP_TO_CONFIRM`
+blocks stay GUI-only whatever is decided.
