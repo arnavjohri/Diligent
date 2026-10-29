@@ -1,0 +1,1539 @@
+----------------------------------------------------------------------------------------------------
+Main program     ZMM_TMS_STATUS                            Level 0    Page 1
+Object           ZMM_TMS_STATUS                            Lines 1533
+System           OCD / 500   User SAP_ABAP   28.10.2026 10:22:06
+----------------------------------------------------------------------------------------------------
+1      ***********************************************************************
+2      * Report     : ZMM_TMS_STATUS                                         *
+3      *                                                                     *
+4      * Title      : Tender Monitoring Status                               *
+5      *                                                                     *
+6      * Functional Specification No.: CR 30008847                           *
+7      *                                                                     *
+8      * Author     : S P YADAV                   Date : 11-Feb-2008         *
+9      *                                                                     *
+10     * Login Id   : CAB_SPYADAV                                            *
+11     *                                                                     *
+12     * Desciption : Development of a report which gives the information    *
+13     *              about the number of tender still pending for PO        *
+14     *              at different locations & reson for pending.            *
+15     *              This helps the managament to track the tender's        *
+16     *              current status.                                        *
+17     *                                                                     *
+18     * Transaction Code : ZMMTMSSTATUS                                     *
+19     *                                                                     *
+20     ***********************************************************************
+21     * CHANGE HISTORY                                                      *
+22     *                                                                     *
+23     * Mod Date    Changed by    Description                 Chng ID       *
+24     *                                                                     *
+25     * 07.02.2014  CAB_SPYADAV   Changes as per CR No.        001          *
+26     *                           30010328                                  *
+27     *                                                                     *
+28     * 04.07.2014  CAB_SPYADAV   Changes as per CR No.        002          *
+29     *                           30010728                                  *
+30     *                                                                     *
+31     *01.04.2015  CAB_SPYADAV  Changes as per CR No.30012147 <RD1K995870>  *
+32     *                        (lipsy)
+33     ***********************************************************************
+34
+35     REPORT  zmm_tms_status.
+36     TYPE-POOLS: slis.
+37     TABLES : zmm_pur_tender_d,
+38
+39       """"""""""""""""""""""""""""""""""""""""""""
+40       """"""""""""added by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+41       ZMM_PUR_TENDER_D_ST,
+42
+43       """"""""""""end of addition by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+44       """""""""""""""""""""""""""""""""""""""""""""""""""""
+45              zmm_tms.
+46
+47     TABLES : t001w,
+48              syst.
+49
+50     *types : begin of ty_data.   "for excluding fcode from PF status
+51     *        include structure zmm_tms.
+52     *types : NITDATE type ZMM_PUR_TENDER_D-NITDATE,
+53     *        EKGRP type ZMM_PUR_TENDER_D-EKGRP,
+54     *        TNDR_VAL type ZMM_PUR_TENDER_D-TNDR_VAL,
+55     *        BANFN type ZMM_PUR_TENDER_D-BANFN.
+56     *
+57     *types:  end of ty_data.
+58     DATA:lv_diff TYPE i,
+59
+60     lv_no_date TYPE i.
+61
+62     DATA : ist_zmm_tms TYPE STANDARD TABLE OF zmm_tms,
+63            wa_zmm_tms TYPE zmm_tms.
+64     DATA : ist_zmm_pur_tender_d TYPE STANDARD TABLE OF zmm_pur_tender_d,
+65           wa_zmm_pur_tender_d TYPE zmm_pur_tender_d.
+66     *data : ist_data type STANDARD TABLE OF ty_data,
+67     *       wa_data type ty_data.
+68
+69     DATA  g_repid LIKE sy-repid VALUE 'ZMM_TMS_STATUS'.
+70
+71
+72     TYPES :  BEGIN OF ty_data.
+73             INCLUDE STRUCTURE zmm_tms.
+74     TYPES : tdrdt TYPE zmm_pur_tender_d-tdrdt,                  "22052013 by Sudhir Sharma
+75             tdrsigner TYPE zmm_pur_tender_d-tdrsigner,
+76             nitdate TYPE zmm_pur_tender_d-nitdate,
+77             ekgrp TYPE zmm_pur_tender_d-ekgrp,
+78             tndr_val TYPE zmm_pur_tender_d-tndr_val,
+79             banfn TYPE zmm_pur_tender_d-banfn.
+80     TYPES : noa_po TYPE vtbbewe-atage. ""(15)  type c."
+81     TYPES : pb_noa TYPE vtbbewe-atage.
+82     TYPES : tbo_pb TYPE vtbbewe-atage.
+83     TYPES : nit_tbo TYPE vtbbewe-atage.
+84     TYPES : ind_nit TYPE vtbbewe-atage.
+85     TYPES : pr_po TYPE vtbbewe-atage.
+86     *types : noa_po(15)  type c. ""type VTBBEWE-ATAGE. ""(15)  type c."
+87     *types : pb_noa(15)  type c."" TYPE VTBBEWE-ATAGE.
+88     *types : tbo_pb(15)  type c."" TYPE VTBBEWE-ATAGE.
+89     *types : nit_tbo(15)  type c."" TYPE VTBBEWE-ATAGE.
+90     *types : ind_nit(15)  type c."" TYPE VTBBEWE-ATAGE.
+91     TYPES : ebeln TYPE eban-ebeln.
+92     TYPES: workdesc TYPE zmm_pur_tender_d_st-workdesc.
+93     TYPES :tcmem(50) TYPE c.
+94     TYPES :podate TYPE ekko-aedat.
+95     TYPES : tdrtxt TYPE zmm_pur_tender_d_st-tdrtxt.
+96     *+001 : Start
+97     TYPES : bsart     TYPE zmm_pur_trtyp-batxt,
+98             st_sel_dt TYPE zmm_pur_tender_d-st_sel_dt.
+99     *+001 : End
+100    *+001 : End
+101    TYPES : tdrsts   TYPE zmm_pur_tender_d_st-tdrsts,
+102            tdrstat(20),
+103            rel_stat_t(20).
+104    *+002 : End
+105    TYPES : END OF ty_data.
+106    DATA :ist_data TYPE STANDARD TABLE OF ty_data,
+107          wa_data TYPE  ty_data.
+108
+109    CONSTANTS:
+110    gc_formname_top_of_page TYPE slis_formname VALUE 'TOP_OF_PAGE',
+111    gc_formname_end_of_list TYPE slis_formname VALUE 'END_OF_LIST'.
+112
+113    DATA: gs_fieldcat TYPE slis_fieldcat_alv.
+114
+115    DATA: gt_fieldcat TYPE slis_t_fieldcat_alv,
+116          gs_layout   TYPE slis_layout_alv,
+117          gs_print    TYPE slis_print_alv,
+118          gt_sort     TYPE slis_t_sortinfo_alv,
+119          gt_sp_group TYPE slis_t_sp_group_alv,
+120          gt_events   TYPE slis_t_event,
+121          gt_events1  TYPE slis_t_event,
+122                 ist_listheader TYPE slis_t_listheader,
+123                 wa_listheader  TYPE slis_listheader.
+124
+125    DATA: gt_list_top_of_page TYPE slis_t_listheader.
+126
+127    DATA: gs_keyinfo  TYPE slis_keyinfo_alv.
+128    DATA : wa_fieldcat   TYPE slis_fieldcat_alv,
+129           wa_events     TYPE slis_alv_event,
+130           wa_layout     TYPE slis_layout_alv.
+131    * Internal table/Structure - ALV
+132    DATA : ist_listheader1 TYPE slis_t_listheader,
+133           ist_events2     TYPE slis_alv_event OCCURS 0,
+134           wa_listheader1  TYPE slis_listheader.
+135
+136    * Internal table - ALV
+137    DATA : ist_fcat       TYPE slis_fieldcat_alv OCCURS 0,
+138           ist_events1    TYPE slis_alv_event OCCURS 0   ,
+139           ist_fcat_lst   TYPE slis_fieldcat_alv OCCURS 0.
+140    DATA  g_comma TYPE c VALUE ','.
+141    DATA  g_lines TYPE i.
+142    SELECTION-SCREEN BEGIN OF BLOCK tms
+143                              WITH FRAME TITLE text-001.
+144
+145    SELECT-OPTIONS : s_submi  FOR zmm_pur_tender_d-submi MATCHCODE OBJECT zmm_pur_submi_h, ""21052013
+146
+147    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+148    """"""""""""added by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+149                 s_doc  for ZMM_PUR_TENDER_D_ST-BSART MATCHCODE OBJECT ZMM_PURTRTYP_H ,
+150                s_pr for  ZMM_PUR_TENDER_D-BANFN,
+151
+152    """"""""""""end of addition by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+153    """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+154                     s_tproc  FOR zmm_pur_tender_d-tndr_proc,
+155                     s_ttyp   FOR zmm_pur_tender_d-tnndr_typ,
+156                     s_tval   FOR zmm_pur_tender_d-tndr_val,
+157                     s_indntr FOR zmm_tms-indentor,
+158     p_wrkdsc FOR zmm_pur_tender_d-workdesc NO-EXTENSION NO INTERVALS.
+159
+160    SELECT-OPTIONS : s_tsign  FOR zmm_pur_tender_d-tdrsigner,
+161                     s_cpa    FOR zmm_tms-cpa,
+162                     s_ekgrp  FOR zmm_pur_tender_d-ekgrp,
+163    *                 s_werks  FOR t001w-werks,
+164    *                 s_index  FOR syst-index,
+165                     s_tdrdt  FOR zmm_pur_tender_d-erfdt.
+166    SELECTION-SCREEN END OF BLOCK tms.
+167
+168    START-OF-SELECTION.
+169
+170      IF NOT s_cpa[] IS INITIAL OR NOT s_indntr[] IS INITIAL.
+171        SELECT * FROM zmm_tms
+172          INTO CORRESPONDING FIELDS OF TABLE ist_zmm_tms
+173          WHERE submi IN s_submi
+174          AND indentor IN s_indntr
+175          AND cpa IN s_cpa.
+176
+177        IF NOT ist_zmm_tms[] IS INITIAL.
+178          SELECT * FROM zmm_pur_tender_d
+179            INTO CORRESPONDING FIELDS OF TABLE ist_zmm_pur_tender_d
+180          FOR ALL ENTRIES IN ist_zmm_tms
+181          WHERE submi = ist_zmm_tms-submi
+182            AND tdrdt IN s_tdrdt
+183            AND tdrsigner IN s_tsign
+184            AND ekgrp IN s_ekgrp
+185            AND tndr_proc IN s_tproc
+186            AND tnndr_typ IN s_ttyp
+187      """"""""""""""""""""""""""""""""""""""""""""""""""""""
+188       """"""""""""added by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+189
+190          and bsart  in s_doc
+191           and BANFN in s_pr
+192
+193      """"""""""""end of addition by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+194     """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+195            AND tndr_val IN s_tval .
+196        ELSE.
+197          MESSAGE e095(zmm).
+198        ENDIF.
+199      ELSE.
+200        SELECT * FROM zmm_pur_tender_d
+201          INTO CORRESPONDING FIELDS OF TABLE ist_zmm_pur_tender_d
+202    *    for all entries in ist_zmm_tms
+203    *    where submi = ist_zmm_tms-submi
+204          WHERE submi IN s_submi
+205          AND tdrdt IN s_tdrdt
+206          AND tdrsigner IN s_tsign
+207          AND ekgrp IN s_ekgrp
+208          AND tndr_proc IN s_tproc
+209          AND tnndr_typ IN s_ttyp
+210          """""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+211          """"""""""""added by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+212
+213          and bsart  in s_doc
+214           and BANFN in s_pr
+215
+216      """"""""""""end of addition by lipsy for doc type and pr no on 27.02.2015 RD1K995870
+217
+218          """"""""""""""""""""""""""""""""""""""""""""""""""""
+219          AND tndr_val IN s_tval
+220          AND workdesc IN p_wrkdsc.
+221
+222        IF NOT ist_zmm_pur_tender_d[] IS INITIAL.
+223          SELECT * FROM zmm_tms
+224            INTO CORRESPONDING FIELDS OF TABLE ist_zmm_tms
+225            FOR ALL ENTRIES IN ist_zmm_pur_tender_d
+226            WHERE submi = ist_zmm_pur_tender_d-submi
+227            AND indentor IN s_indntr
+228            AND cpa IN s_cpa.
+229        ELSE.
+230          MESSAGE e095(zmm).
+231        ENDIF.
+232      ENDIF.
+233      DATA: g_edays LIKE vtbbewe-atage,
+234            l_mem(8) TYPE c.
+235      CLEAR wa_zmm_pur_tender_d.
+236      LOOP AT ist_zmm_pur_tender_d INTO wa_zmm_pur_tender_d.
+237        CLEAR wa_data.
+238        CLEAR wa_zmm_tms.
+239        IF ( NOT s_indntr-low IS INITIAL OR NOT s_cpa-low IS INITIAL ) .
+240          READ TABLE ist_zmm_tms INTO wa_zmm_tms
+241          WITH KEY submi = wa_zmm_pur_tender_d-submi.
+242          IF sy-subrc = 0 .""and ( s_indntr-low is not initial or s_cpa-low is not initial ) .
+243
+244            MOVE-CORRESPONDING wa_zmm_pur_tender_d TO wa_data.
+245          ELSE.
+246            DELETE ist_zmm_pur_tender_d WHERE submi = wa_zmm_pur_tender_d-submi.
+247            CONTINUE.
+248          ENDIF.
+249        ELSE.
+250          MOVE-CORRESPONDING wa_zmm_pur_tender_d TO wa_data.
+251        ENDIF.
+252    *    if ( not s_indntr-low is initial or not s_cpa-low is initial ) .
+253        CLEAR wa_zmm_tms.
+254        READ TABLE ist_zmm_tms INTO wa_zmm_tms
+255        WITH KEY submi = wa_zmm_pur_tender_d-submi.
+256        IF sy-subrc = 0 .""and ( s_indntr-low is not initial or s_cpa-low is not initial ) .
+257          MOVE-CORRESPONDING wa_zmm_tms TO wa_data.
+258          IF NOT wa_zmm_tms-tc_member1_s IS INITIAL.
+259            CONCATENATE wa_zmm_tms-tc_member1_s '' INTO wa_data-tcmem .
+260          ELSE.
+261            IF NOT wa_zmm_tms-tc_member1 IS INITIAL.
+262              CONCATENATE wa_zmm_tms-tc_member1 '' INTO wa_data-tcmem .
+263            ENDIF.
+264          ENDIF.
+265          SHIFT wa_data-tcmem LEFT DELETING LEADING '0'.
+266          IF NOT wa_zmm_tms-tc_member2_s IS INITIAL.
+267            CLEAR l_mem.
+268            l_mem = wa_zmm_tms-tc_member2_s.
+269            SHIFT l_mem LEFT DELETING LEADING '0'.
+270            CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+271          ELSE.
+272            IF NOT wa_zmm_tms-tc_member2 IS INITIAL.
+273              CLEAR l_mem.
+274              l_mem = wa_zmm_tms-tc_member2.
+275              SHIFT l_mem LEFT DELETING LEADING '0'.
+276              CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+277            ENDIF.
+278          ENDIF.
+279
+280          IF NOT wa_zmm_tms-tc_member3_s IS INITIAL.
+281            CLEAR l_mem.
+282            l_mem = wa_zmm_tms-tc_member3_s.
+283            SHIFT l_mem LEFT DELETING LEADING '0'.
+284            CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+285          ELSE.
+286            IF NOT wa_zmm_tms-tc_member3 IS INITIAL.
+287              CLEAR l_mem.
+288              l_mem = wa_zmm_tms-tc_member3.
+289              SHIFT l_mem LEFT DELETING LEADING '0'.
+290              CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+291            ENDIF.
+292          ENDIF.
+293
+294          IF NOT wa_zmm_tms-tc_member4_s IS INITIAL.
+295            CLEAR l_mem.
+296            l_mem = wa_zmm_tms-tc_member4_s.
+297            SHIFT l_mem LEFT DELETING LEADING '0'.
+298            CONCATENATE wa_data-tcmem l_mem INTO wa_data-tcmem SEPARATED BY g_comma.
+299          ELSE.
+300            IF NOT wa_zmm_tms-tc_member4 IS INITIAL.
+301              CLEAR l_mem.
+302              l_mem = wa_zmm_tms-tc_member4.
+303              SHIFT l_mem LEFT DELETING LEADING '0'.
+304              CONCATENATE wa_data-tcmem l_mem INTO wa_data-tcmem SEPARATED BY g_comma.
+305            ENDIF.
+306          ENDIF.
+307
+308          IF NOT wa_zmm_tms-tc_member5_s IS INITIAL.
+309            CLEAR l_mem.
+310            l_mem = wa_zmm_tms-tc_member5_s.
+311            SHIFT l_mem LEFT DELETING LEADING '0'.
+312            CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+313          ELSE.
+314            IF NOT wa_zmm_tms-tc_member5 IS INITIAL.
+315              CLEAR l_mem.
+316              l_mem = wa_zmm_tms-tc_member5.
+317              SHIFT l_mem LEFT DELETING LEADING '0'.
+318              CONCATENATE wa_data-tcmem l_mem  INTO wa_data-tcmem SEPARATED BY g_comma.
+319            ENDIF.
+320          ENDIF.
+321        ENDIF.
+322    *    endif.
+323
+324
+325
+326        PERFORM cal_diff USING  wa_data-loi_1_act_dt wa_data-po_issue_act_dt
+327                         CHANGING wa_data-noa_po.""g_EDAYS.
+328    *    wa_data-noa_po = g_EDAYS.
+329        PERFORM cal_diff USING  wa_data-pr_bid_op_act_dt wa_data-loi_1_act_dt
+330                         CHANGING wa_data-pb_noa.
+331    *    wa_data-pb_noa = g_EDAYS.
+332        PERFORM cal_diff USING  wa_data-tend_op_act_dt wa_data-pr_bid_op_act_dt
+333                       CHANGING wa_data-tbo_pb.
+334    *    wa_data-tbo_pb = g_EDAYS.
+335
+336    *+001 : Start - Calculation of Days from NIT to TBO
+337        IF wa_data-nitdate IS INITIAL.
+338
+339          IF wa_data-st_sel_dt IS INITIAL.
+340            PERFORM cal_diff USING  wa_data-tdrdt wa_data-tend_op_act_dt
+341                             CHANGING wa_data-nit_tbo.
+342          ELSE.
+343            PERFORM cal_diff USING  wa_data-st_sel_dt wa_data-tend_op_act_dt
+344                       CHANGING wa_data-nit_tbo.
+345          ENDIF.
+346        ELSE.
+347    *+001 : End
+348          PERFORM cal_diff USING  wa_data-nitdate wa_data-tend_op_act_dt
+349                   CHANGING wa_data-nit_tbo.
+350        ENDIF. "+001
+351
+352    *    wa_data-nit_tbo = g_EDAYS.
+353
+354    *-002 : Start
+355    **+001 : Start - Calculation of Days from Indent to NIT
+356    *    IF wa_data-nitdate IS INITIAL.
+357    *
+358    *      IF wa_data-st_sel_dt IS INITIAL.
+359    *        PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-tdrdt
+360    *                         CHANGING wa_data-ind_nit.
+361    *      ELSE.
+362    *        PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-st_sel_dt
+363    *                         CHANGING wa_data-ind_nit.
+364    *      ENDIF.
+365    *    ELSE.
+366    **+001 : End
+367    *      PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-nitdate
+368    *                       CHANGING wa_data-ind_nit.
+369    *    ENDIF.                                                       "+001
+370    *-002 : End
+371
+372    *    wa_data-nit_tbo = g_EDAYS.
+373    *-002 : Start
+374    *    PERFORM cal_diff USING  wa_data-pr_ff_rel_dt wa_data-po_ff_rel_dt
+375    *                     CHANGING wa_data-pr_po.
+376    *-002 : End
+377    *wa_data-ind_nit = g_EDAYS.
+378
+379    " Code Remediation changes S4 2025_1_A Conversion **BEGIN OF CHANGE BY SAP_ABAP 05.06.2026  FOR ATC
+380    *    SELECT SINGLE ebeln FROM eban
+381    *      INTO wa_data-ebeln
+382    *      WHERE banfn = wa_zmm_pur_tender_d-banfn.
+383     SELECT EBELN FROM EBAN   UP TO 1 ROWS INTO WA_DATA-EBELN WHERE BANFN =
+384    WA_ZMM_PUR_TENDER_D-BANFN  ORDER BY  BANFN BNFPO .   ENDSELECT.
+385    " Code Remediation changes S4 2025_1_A Conversion * *END OF CHANGE BY SAP_ABAP 05.06.2026 FOR ATC
+386        SELECT SINGLE aedat FROM ekko
+387          INTO wa_data-podate
+388          WHERE ebeln = wa_data-ebeln.
+389
+390    *+001 : Start
+391        SELECT SINGLE batxt FROM zmm_pur_trtyp INTO wa_data-bsart
+392             WHERE bsart = wa_data-bsart.
+393    *+001 : End
+394
+395    *+002 : To derive 1st Final PO Release Date : Start
+396        IF wa_data-po_ff_rel_dt IS INITIAL AND
+397           NOT wa_data-ebeln IS INITIAL.
+398
+399          PERFORM read_change_doc IN PROGRAM sapmzmmtms
+400                                  USING 'EINKBELEG'
+401                                        wa_data-ebeln
+402                                        'FRGKE'
+403                                  CHANGING wa_data-po_ff_rel_dt.
+404
+405        ENDIF.
+406
+407    *To derive 1st Final PR Release Date
+408        IF wa_data-pr_ff_rel_dt IS INITIAL AND
+409           NOT wa_zmm_pur_tender_d-banfn IS INITIAL.
+410
+411          PERFORM read_change_doc IN PROGRAM sapmzmmtms
+412                                 USING 'BANF'
+413                                        wa_zmm_pur_tender_d-banfn
+414                                        'FRGKZ'
+415                                  CHANGING wa_data-pr_ff_rel_dt.
+416        ENDIF.
+417
+418    *+002 : Days from PR to PO Release - Start
+419        PERFORM cal_diff USING  wa_data-pr_ff_rel_dt wa_data-po_ff_rel_dt
+420                         CHANGING wa_data-pr_po.
+421
+422    * Calculation of Days from Indent to NIT
+423        IF wa_data-pr_rcpt_dt IS INITIAL.
+424
+425          IF NOT wa_data-pr_ff_rel_dt IS INITIAL.
+426
+427            IF NOT wa_data-nitdate IS INITIAL.
+428
+429              PERFORM cal_diff USING  wa_data-pr_ff_rel_dt wa_data-nitdate
+430                               CHANGING wa_data-ind_nit.
+431
+432            ELSEIF NOT wa_data-st_sel_dt IS INITIAL.
+433
+434              PERFORM cal_diff USING  wa_data-pr_ff_rel_dt wa_data-st_sel_dt
+435                               CHANGING wa_data-ind_nit.
+436
+437            ELSEIF NOT wa_data-tdrdt IS INITIAL.
+438
+439              PERFORM cal_diff USING  wa_data-pr_ff_rel_dt wa_data-tdrdt
+440                               CHANGING wa_data-ind_nit.
+441
+442            ENDIF.
+443
+444          ENDIF.
+445
+446        ELSE.
+447
+448          IF NOT wa_data-nitdate IS INITIAL.
+449
+450            PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-nitdate
+451                             CHANGING wa_data-ind_nit.
+452
+453          ELSEIF NOT wa_data-st_sel_dt IS INITIAL.
+454
+455            PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-st_sel_dt
+456                             CHANGING wa_data-ind_nit.
+457
+458          ELSEIF NOT wa_data-tdrdt IS INITIAL.
+459
+460            PERFORM cal_diff USING  wa_data-pr_rcpt_dt wa_data-tdrdt
+461                             CHANGING wa_data-ind_nit.
+462
+463          ENDIF.
+464
+465        ENDIF.
+466    *+002 : End
+467
+468    * Get Tender Status text
+469        PERFORM read_text USING    'ZTDRSTS'
+470                                    wa_data-tdrsts
+471                           CHANGING wa_data-tdrstat.
+472
+473    * Get Tender release status
+474        IF wa_data-rel_stat = 'X'.
+475          wa_data-rel_stat_t = text-059.
+476        ELSE.
+477          CLEAR wa_data-rel_stat_t.
+478        ENDIF.
+479    *+002 : End
+480
+481        APPEND wa_data TO ist_data.
+482
+483      ENDLOOP.
+484
+485
+486    END-OF-SELECTION.
+487    *  g_repid = sy-repid.
+488    *  PERFORM get_summaries_data.                               "-003
+489      PERFORM reuse_alv_grid_display.
+490
+491    *&---------------------------------------------------------------------*
+492    *&      Form  REUSE_ALV_GRID_DISPLAY
+493    *&---------------------------------------------------------------------*
+494    *       text
+495    *----------------------------------------------------------------------*
+496    *  -->  p1        text
+497    *  <--  p2        text
+498    *----------------------------------------------------------------------*
+499    FORM reuse_alv_grid_display .
+500      IF NOT ist_data[] IS INITIAL.
+501        DESCRIBE TABLE ist_data LINES g_lines.
+502        PERFORM e01_fieldcat_init  USING gt_fieldcat[].
+503        PERFORM e05_layout_build USING gs_layout.
+504        PERFORM e03_eventtab_build USING gt_events[].
+505        PERFORM e04_comment_build  USING gt_list_top_of_page[].
+506    *  PERFORM e06_t_sort_build   USING gt_sort[].
+507        PERFORM display_alv_grid.
+508      ELSE.
+509        MESSAGE e095(zmm).
+510      ENDIF.
+511    ENDFORM.                    " REUSE_ALV_GRID_DISPLAY
+512    *&---------------------------------------------------------------------*
+513    *&      Form  E01_FIELDCAT_INIT
+514    *&---------------------------------------------------------------------*
+515    *       text
+516    *----------------------------------------------------------------------*
+517    *      -->P_GT_FIELDCAT[]  text
+518    *----------------------------------------------------------------------*
+519    FORM e01_fieldcat_init USING e01_lt_fieldcat TYPE slis_t_fieldcat_alv.
+520      CONSTANTS : c_key      VALUE 'X',
+521                  c_no_check VALUE space ,
+522                  c_no_hot   VALUE space,
+523                  c_no_input VALUE ' ',
+524                  c_out      VALUE '0',
+525                  c_row_pos1 VALUE  '1',
+526                  c_row_pos2 VALUE  '1'.
+527      DATA g_col(3) TYPE n.
+528      REFRESH : gt_fieldcat.
+529      g_col = 1.
+530      PERFORM append_fldcat USING 'SUBMI' 'IST_DATA' ' ' c_key text-027 c_no_check 'X' c_no_input c_out g_col '' CHANGING gt_fieldcat.
+531
+532    *+001 : Start
+533      g_col = g_col + 1.
+534      PERFORM append_fldcat USING 'BSART' 'IST_DATA' '' '' text-056 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+535    *+001 : End
+536    * Begin of <> on 22052013 CR 30009229
+537      g_col = g_col + 1.
+538      PERFORM append_fldcat USING 'TDRDT' 'IST_DATA' '' '' text-054 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+539
+540    *+002 : Start
+541      g_col = g_col + 1.
+542      PERFORM append_fldcat USING 'REL_STAT_T'
+543                                  'IST_DATA'
+544                                   ''
+545                                   ''
+546                                   text-060
+547                                   c_no_check
+548                                   c_no_hot
+549                                   c_no_input
+550                                   c_out g_col
+551                                   ''
+552                            CHANGING gt_fieldcat.
+553
+554      g_col = g_col + 1.
+555      PERFORM append_fldcat USING 'TDRSTAT'
+556                                  'IST_DATA'
+557                                   ''
+558                                   ''
+559                                   text-061
+560                                   c_no_check
+561                                   c_no_hot
+562                                   c_no_input
+563                                   c_out g_col
+564                                   ''
+565                            CHANGING gt_fieldcat.
+566    *+002 : End
+567
+568      g_col = g_col + 1.
+569      PERFORM append_fldcat USING 'TDRSIGNER' 'IST_DATA' '' '' text-055 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+570
+571    * End of  <>
+572      g_col = g_col + 1.
+573      PERFORM append_fldcat USING 'WORKDESC' 'IST_DATA' '' '' text-050 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+574
+575      g_col = g_col + 1.
+576    *-002 : Start
+577    *  PERFORM append_fldcat USING 'BANFN' 'IST_DATA' '' '' text-025 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+578    *-002 : End
+579
+580    *+002 : Start
+581      PERFORM append_fldcat USING 'BANFN'
+582                                  'IST_DATA'
+583                                  ''
+584                                  ''
+585                                  text-025
+586                                  c_no_check
+587                                  'X'
+588                                  c_no_input
+589                                  c_out
+590                                  g_col
+591                                  ''
+592                              CHANGING gt_fieldcat.
+593
+594      g_col = g_col + 1.
+595      PERFORM append_fldcat USING 'PR_FF_REL_DT'
+596                                  'IST_DATA'
+597                                  ' ' ''
+598                                  text-058
+599                                  c_no_check
+600                                  c_no_hot
+601                                  c_no_input
+602                                  c_out g_col
+603                                  ''
+604                            CHANGING gt_fieldcat.
+605    *+002 : End
+606
+607      g_col = g_col + 1.
+608      PERFORM append_fldcat USING 'PR_RCPT_DT' 'IST_DATA' '' '' text-026 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+609
+610      g_col = g_col + 1.
+611      PERFORM append_fldcat USING 'TNDR_VAL' 'IST_DATA' '' '' text-024 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+612
+613      g_col = g_col + 1.
+614      PERFORM append_fldcat USING 'INDENTOR' 'IST_DATA' '' '' text-023 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+615
+616      g_col = g_col + 1.
+617      PERFORM append_fldcat USING 'EKGRP' 'IST_DATA' '' '' text-022 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+618
+619
+620      g_col = g_col + 1.
+621      PERFORM append_fldcat USING 'CPA' 'IST_DATA' '' '' text-020 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+622
+623      g_col = g_col + 1.
+624      PERFORM append_fldcat USING 'TCMEM' 'IST_DATA' '' '' text-021 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+625
+626      g_col = g_col + 1.
+627      PERFORM append_fldcat USING 'TC_MET_ACT_DT' 'IST_DATA' '' '' text-019 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+628
+629      g_col = g_col + 1.
+630      PERFORM append_fldcat USING 'NITDATE' 'IST_DATA' '' '' text-018 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+631
+632    **********added by cab_dns ***************
+633      g_col = g_col + 1.
+634      PERFORM append_fldcat USING 'TEND_OP_SCH_DT' 'IST_DATA' '' '' text-064 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+635    *********end of code by cab_dns 03082015********
+636      g_col = g_col + 1.
+637      PERFORM append_fldcat USING 'TEND_OP_ACT_DT' 'IST_DATA' '' '' text-015 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+638
+639      g_col = g_col + 1.
+640      PERFORM append_fldcat USING 'TBID_EVAL_ACT_DT' 'IST_DATA' '' '' text-011 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+641
+642      g_col = g_col + 1.
+643      PERFORM append_fldcat USING 'FTC_RCPT_ACT_DT' 'IST_DATA' '' '' text-012 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+644
+645
+646      g_col = g_col + 1.
+647      PERFORM append_fldcat USING  'TC1_ACT_DT' 'IST_DATA' '' '' text-007 c_no_check c_no_hot c_no_input c_out  g_col '28' CHANGING gt_fieldcat.
+648
+649    *  *********** added by cab_dns *********
+650       g_col = g_col + 1.
+651      PERFORM append_fldcat USING  'PR_BID_OP_SCH_DT' 'IST_DATA' '' '' text-065 c_no_check c_no_hot c_no_input c_out  g_col '28' CHANGING gt_fieldcat.
+652
+653    *  *********** end of code by cab_dns 03082015
+654      g_col = g_col + 1.
+655      PERFORM append_fldcat USING 'PR_BID_OP_ACT_DT' 'IST_DATA' '' '' text-005 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+656
+657      g_col = g_col + 1.
+658      PERFORM append_fldcat USING  'CS_VETT_DT' 'IST_DATA' '' '' text-004 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+659
+660      g_col = g_col + 1.
+661      PERFORM append_fldcat USING 'TBID_EVAL_ACT_DT' 'IST_DATA' '' '' text-009 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+662
+663
+664      g_col = g_col + 1.
+665      PERFORM append_fldcat USING 'CLARIF2_L_ACT_DT' 'IST_DATA' '' '' text-010 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+666
+667      g_col = g_col + 1.
+668      PERFORM append_fldcat USING  'APRV_AWRD_ACT_DT' 'IST_DATA' '' '' text-006 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+669
+670
+671    *NOA dt.
+672      g_col = g_col + 1.
+673      PERFORM append_fldcat USING 'LOI_1_ACT_DT' 'IST_DATA' '' '' text-036 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+674
+675    *EMD release dt.
+676      g_col = g_col + 1.
+677      PERFORM append_fldcat USING 'EMD_REL_SB_DT' 'IST_DATA' '' '' text-035 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+678
+679
+680    *PO dt.
+681      g_col = g_col + 1.
+682    * PERFORM append_fldcat USING 'PODATE' 'IST_DATA' ' ' '' text-033 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat. "-002
+683    *+002 : Start
+684      PERFORM append_fldcat USING 'PO_FF_REL_DT'
+685                                  'IST_DATA'
+686                                  ' ' ''
+687                                  text-057
+688                                  c_no_check
+689                                  c_no_hot
+690                                  c_no_input
+691                                  c_out g_col
+692                                  ''
+693                            CHANGING gt_fieldcat.
+694    *+002 : End
+695    *
+696    *PO Agreement No.
+697      g_col = g_col + 1.
+698    *-002 : Start
+699    *  PERFORM append_fldcat USING 'EBELN' 'IST_DATA' ' ' '' text-034 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+700    *-002 : End
+701
+702    *+002 : Start
+703      PERFORM append_fldcat USING 'EBELN'
+704                                  'IST_DATA'
+705                                  ' '
+706                                  ''
+707                                  text-034
+708                                  c_no_check
+709                                  'X'
+710                                  c_no_input
+711                                  c_out
+712                                  g_col
+713                                  ''
+714                            CHANGING gt_fieldcat.
+715    *+002 : End
+716
+717    *No. of  days from indent to NIT
+718      g_col = g_col + 1.
+719      PERFORM append_fldcat USING 'IND_NIT' 'IST_DATA' ' ' '' text-032 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+720
+721    *No. of  days from NIT to TBO
+722      g_col = g_col + 1.
+723      PERFORM append_fldcat USING 'NIT_TBO' 'IST_DATA' ' ' '' text-031 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+724
+725    *No. of  days from TBO to Price Bid opening
+726      g_col = g_col + 1.
+727      PERFORM append_fldcat USING 'TBO_PB' 'IST_DATA' ' ' '' text-030 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+728
+729    *No. of  days from Price Bid TO PO
+730      g_col = g_col + 1.
+731      PERFORM append_fldcat USING 'PB_NOA' 'IST_DATA' ' ' '' text-029 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+732
+733    *No. of  days from NOA TO PO
+734      g_col = g_col + 1.
+735      PERFORM append_fldcat USING 'NOA_PO' 'IST_DATA' ' ' '' text-028 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+736
+737    *No. of  days from PR TO PO
+738      g_col = g_col + 1.
+739      PERFORM append_fldcat USING 'PR_PO' 'IST_DATA' ' ' '' text-051 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+740
+741    *Remarks
+742      g_col = g_col + 1.
+743      PERFORM append_fldcat USING 'TDRTXT' 'IST_DATA' ' ' '' text-053 c_no_check c_no_hot c_no_input c_out g_col '' CHANGING gt_fieldcat.
+744    **
+745    **
+746    **
+747    ***  g_col = g_col + 1.
+748    ***  PERFORM append_fldcat USING 'PR_BID_OP_ACT_DT' 'IST_DATA' ' '
+749    ***  '' text-017 c_no_check c_no_hot c_no_input c_out
+750    ***  c_row_pos2 g_col '' CHANGING gt_fieldcat.
+751    **
+752    **
+753    ***  g_col = g_col + 1.
+754    ***  PERFORM append_fldcat USING 'FTC_RCPT_ACT_DT' 'IST_DATA' ' '
+755    ***  '' text-021 c_no_check c_no_hot c_no_input c_out
+756    ***  c_row_pos2 g_col '' CHANGING gt_fieldcat.
+757
+758    ENDFORM.                    " E01_FIELDCAT_INIT
+759    *&---------------------------------------------------------------------*
+760    *&      Form  E05_LAYOUT_BUILD
+761    *&---------------------------------------------------------------------*
+762    *       text
+763    *----------------------------------------------------------------------*
+764    *      -->P_GS_LAYOUT  text
+765    *----------------------------------------------------------------------*
+766    FORM e05_layout_build USING e05_ls_layout TYPE slis_layout_alv.
+767
+768      gs_layout-zebra             = 'X'.
+769      gs_layout-colwidth_optimize = 'X'.
+770      gs_layout-detail_popup      = 'X'.
+771      gs_layout-no_vline          = ' '.
+772      gs_layout-reprep            = 'X'.
+773      gs_layout-expand_all        = 'X'.
+774      gs_layout-no_scrolling      = ''.
+775    ENDFORM.                    " E05_LAYOUT_BUILD
+776    *&---------------------------------------------------------------------*
+777    *&      Form  E03_EVENTTAB_BUILD
+778    *&---------------------------------------------------------------------*
+779    *       text
+780    *----------------------------------------------------------------------*
+781    *      -->P_GT_EVENTS[]  text
+782    *----------------------------------------------------------------------*
+783    FORM e03_eventtab_build USING e03_lt_events TYPE slis_t_event.
+784      g_repid = sy-repid.
+785
+786      wa_events-name = 'USER_COMMAND'.
+787      wa_events-form =  'PROCESS_USER_COMMAND'.
+788      APPEND wa_events TO ist_events1.
+789      CLEAR wa_events.
+790
+791      wa_events-name = slis_ev_top_of_page.
+792      wa_events-form =  'TOP_OF_PAGE'.
+793      APPEND wa_events TO ist_events1.
+794      CLEAR wa_events.
+795
+796      wa_events-name = 'USER_COMMAND'.
+797      wa_events-form =  'PROCESS_USER_COMMAND'.
+798      APPEND wa_events TO ist_events2.
+799      CLEAR wa_events.
+800
+801      wa_events-name = slis_ev_top_of_page.
+802      wa_events-form =  'TOP_OF_PAGE1'.
+803      APPEND wa_events TO ist_events2.
+804      CLEAR wa_events.
+805    *  DATA: ls_event TYPE slis_alv_event.
+806    *
+807    *  CALL FUNCTION 'REUSE_ALV_EVENTS_GET'
+808    *    EXPORTING
+809    *      i_list_type = 0
+810    *    IMPORTING
+811    *      et_events   = e03_lt_events.
+812    *  READ TABLE e03_lt_events WITH KEY name =  slis_ev_top_of_page
+813    *                           INTO ls_event.
+814    *  IF sy-subrc = 0.
+815    *    MOVE gc_formname_top_of_page TO ls_event-form.
+816    *    APPEND ls_event TO e03_lt_events.
+817    *    CLEAR: ls_event.
+818    *    ls_event-name = slis_ev_end_of_list.
+819    *    ls_event-form = gc_formname_end_of_list.
+820    *    APPEND ls_event TO e03_lt_events.
+821    *    MOVE 'TOP_OF_PAGE' TO ls_event-form.
+822    *    ls_event-name = slis_ev_top_of_page.
+823    *    APPEND ls_event TO e03_lt_events.
+824    *    MOVE 'END_OF_LIST' TO ls_event-form.
+825    *    ls_event-name = slis_ev_end_of_list .
+826    *    APPEND ls_event TO e03_lt_events.
+827    *  ENDIF.
+828    *
+829    ** g_repid = sy-repid.
+830    **
+831    **  wa_events-name = slis_ev_top_of_page.
+832    **  wa_events-form =  'TOP_OF_PAGE'.
+833    **  append wa_events to ist_events.
+834    ***  wa_events-name = slis_ev_user_command.
+835    ***  wa_events-form = 'USER_COMMAND'.
+836    ***  append wa_events to
+837    ENDFORM.                    " E03_EVENTTAB_BUILD
+838    *&---------------------------------------------------------------------*
+839    *&      Form  E04_COMMENT_BUILD
+840    *&---------------------------------------------------------------------*
+841    *       text
+842    *----------------------------------------------------------------------*
+843    *      -->P_GT_LIST_TOP_OF_PAGE[]  text
+844    *----------------------------------------------------------------------*
+845    FORM e04_comment_build USING e04_lt_top_of_page TYPE slis_t_listheader.
+846      DATA: ls_line TYPE slis_listheader.
+847      DATA : l_rptdt LIKE sy-datum,
+848             l_text(60).
+849
+850    *Report Heading
+851    *  CLEAR ls_line.
+852    *  ls_line-typ  = 'H'.
+853    *  ls_line-info = text-001.
+854    *  APPEND ls_line TO e04_lt_top_of_page.
+855
+856    **Report Date
+857      CLEAR : ls_line,
+858              l_rptdt.
+859      WRITE sy-datum TO l_rptdt DD/MM/YY.
+860      ls_line-typ  = 'H'.
+861      ls_line-key  = text-002.
+862      ls_line-info = text-002.
+863      APPEND ls_line TO e04_lt_top_of_page.
+864
+865      CLEAR ls_line.
+866      ls_line-typ  = 'H'.
+867      ls_line-info = text-003.
+868      APPEND ls_line TO e04_lt_top_of_page.
+869    *
+870    ** Company Code
+871    *  CLEAR : ls_line,
+872    *          l_text.
+873    *  LOOP AT s_bukrs[] INTO wa_bukrs.
+874    *    READ TABLE lt_butxt INTO wa_butxt WITH KEY bukrs = wa_bukrs-low.
+875    *    CONCATENATE wa_bukrs-low wa_butxt-g_butxt INTO l_text SEPARATED BY space.
+876    *    ls_line-typ  = 'S'.
+877    *    ls_line-key  = text-101.
+878    *    ls_line-info = l_text.
+879    *    APPEND ls_line TO e04_lt_top_of_page.
+880    *  ENDLOOP.
+881    **Verification Category
+882    *  CLEAR : ls_line,
+883    *          l_text.
+884    *  CONCATENATE p_eigkz t097t-eigtx INTO l_text SEPARATED BY space.
+885    *  ls_line-typ  = 'S'.
+886    *  ls_line-key  = text-103.
+887    *  ls_line-info = l_text.
+888    *  APPEND ls_line TO e04_lt_top_of_page.
+889    **Cut Off Amount
+890    *  CLEAR ls_line.
+891    *  ls_line-typ  = 'S'.
+892    *  ls_line-key  = text-118.
+893    *  ls_line-info = p_kansw1.
+894    *  APPEND ls_line TO e04_lt_top_of_page.
+895    *
+896    *  CLEAR ls_line.
+897    *  ls_line-typ  = 'S'.
+898    *  ls_line-key  = text-119.
+899    *  ls_line-info = p_kansw2.
+900    *  APPEND ls_line TO e04_lt_top_of_page.
+901    *
+902    **Fiscal year
+903    *  CLEAR ls_line.
+904    *  ls_line-typ  = 'S'.
+905    *  ls_line-key  = text-105.
+906    *  ls_line-info = p_gjahr.
+907    *  APPEND ls_line TO e04_lt_top_of_page.
+908    **Report Date
+909    *  CLEAR : ls_line,
+910    *          l_rptdt.
+911    *  WRITE p_repd TO l_rptdt DD/MM/YY.
+912    *  ls_line-typ  = 'S'.
+913    *  ls_line-key  = text-106.
+914    *  ls_line-info = l_rptdt.
+915    *  APPEND ls_line TO e04_lt_top_of_page.
+916    **User Name & Run Date
+917    *  CLEAR : ls_line,
+918    *          l_text.
+919    *  WRITE sy-datum TO l_rptdt DD/MM/YY.
+920    *  CONCATENATE sy-uname l_rptdt INTO l_text SEPARATED BY text-137.
+921    *  ls_line-typ  = 'S'.
+922    *  ls_line-key  = text-111.
+923    *  ls_line-info = l_text.
+924    *  APPEND ls_line TO e04_lt_top_of_page.
+925
+926    ENDFORM.                    " E04_COMMENT_BUILD
+927    *&---------------------------------------------------------------------*
+928    *&      Form  E06_T_SORT_BUILD
+929    *&---------------------------------------------------------------------*
+930    *       text
+931    *----------------------------------------------------------------------*
+932    *      -->P_GT_SORT[]  text
+933    *----------------------------------------------------------------------*
+934    FORM e06_t_sort_build USING e06_lt_sort TYPE slis_t_sortinfo_alv.
+935      DATA: ls_sort TYPE slis_sortinfo_alv.
+936
+937      CLEAR ls_sort.
+938      ls_sort-fieldname = 'SUBMI'.
+939      ls_sort-up        = 'X'.
+940      ls_sort-group     = '*'.
+941      APPEND ls_sort TO e06_lt_sort.
+942    ENDFORM.                    " E06_T_SORT_BUILD
+943    *&---------------------------------------------------------------------*
+944    *&      Form  DISPLAY_ALV_GRID
+945    *&---------------------------------------------------------------------*
+946    *       text
+947    *----------------------------------------------------------------------*
+948    *  -->  p1        text
+949    *  <--  p2        text
+950    *----------------------------------------------------------------------*
+951    FORM display_alv_grid .
+952      DATA : l_title TYPE lvc_title.
+953      g_repid = sy-repid.
+954      gs_layout-colwidth_optimize = 'X'.
+955      CONCATENATE text-h01 '' INTO l_title
+956                                               SEPARATED BY space.
+957      CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+958        EXPORTING
+959          i_callback_program      = g_repid
+960          i_grid_title            = l_title
+961    *     i_callback_top_of_page  = 'TOP-OF-PAGE'
+962    **      i_callback_pf_status_set = 'SET_ALV_STATUS'
+963    *     i_callback_user_command = 'ALV_USER_COMMAND'
+964          is_layout               = gs_layout
+965          it_fieldcat             = gt_fieldcat[]
+966          it_sort                 = gt_sort[]
+967          it_events               = ist_events1
+968        TABLES
+969          t_outtab                = ist_data.
+970    ENDFORM.                    " DISPLAY_ALV_GRID
+971    *&---------------------------------------------------------------------*
+972    *&      Form  alv_user_command
+973    *&---------------------------------------------------------------------*
+974    *       text
+975    *----------------------------------------------------------------------*
+976    *      -->R_UCOMM      text
+977    *      -->RS_SELFIELD  text
+978    *----------------------------------------------------------------------*
+979    FORM alv_user_command USING  r_ucomm LIKE sy-ucomm
+980
+981                  rs_selfield TYPE slis_selfield .
+982
+983      IF rs_selfield-fieldname = 'SUBMI'.
+984        CALL TRANSACTION 'ZMMTDR3' AND SKIP FIRST SCREEN .
+985      ENDIF.
+986
+987
+988    ENDFORM.                    "alv_user_command
+989
+990    *&---------------------------------------------------------------------*
+991    *&      Form  APPEND_FLDCAT
+992    *&---------------------------------------------------------------------*
+993    *       text
+994    *----------------------------------------------------------------------*
+995    *      -->P_0246   text
+996    *      -->P_0247   text
+997    *      -->P_0248   text
+998    *      -->P_C_KEY  text
+999    *      -->P_TEXT_122  text
+1000   *      -->P_C_NO_CHECK  text
+1001   *      -->P_C_NO_HOT  text
+1002   *      -->P_C_NO_INPUT  text
+1003   *      -->P_C_OUT  text
+1004   *      -->P_C_ROW_POS2  text
+1005   *      -->P_0256   text
+1006   *      <--P_GT_FIELDCAT  text
+1007   *----------------------------------------------------------------------*
+1008   FORM append_fldcat USING par_fldname par_tabname
+1009
+1010
+1011   par_reftabname par_key par_seltext par_checkbox par_hotspot par_input
+1012   par_no_out par_col_pos par_len
+1013   CHANGING pit_fldcat TYPE slis_t_fieldcat_alv.
+1014
+1015     CLEAR gs_fieldcat.
+1016     gs_fieldcat-tabname     = par_tabname.
+1017     gs_fieldcat-fieldname   = par_fldname  .
+1018     gs_fieldcat-ref_tabname = par_reftabname.
+1019     gs_fieldcat-key         = par_key .
+1020     gs_fieldcat-seltext_l   = par_seltext.
+1021     gs_fieldcat-checkbox    = par_checkbox.
+1022     gs_fieldcat-hotspot     = par_hotspot .
+1023     gs_fieldcat-input       = par_input.
+1024     gs_fieldcat-no_out      = par_no_out.
+1025     gs_fieldcat-col_pos     = par_col_pos.
+1026     gs_fieldcat-outputlen   = par_len.
+1027     APPEND gs_fieldcat TO pit_fldcat.
+1028
+1029   ENDFORM.                    " APPEND_FLDCAT
+1030
+1031   *---------------------------------------------------------------------*
+1032   *       FORM top_of_page                                              *
+1033   *---------------------------------------------------------------------*
+1034   * To set Header with ONGC Logo
+1035   *---------------------------------------------------------------------*
+1036   FORM top_of_page.
+1037     REFRESH : ist_listheader.
+1038
+1039     PERFORM set_top_of_page.
+1040
+1041     CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+1042       EXPORTING
+1043         it_list_commentary = ist_listheader
+1044         i_logo             = 'ZONGC'.
+1045
+1046   ENDFORM.                    "top_of_page
+1047   *&---------------------------------------------------------------------*
+1048   *&      Form  SET_TOP_OF_PAGE
+1049   *&---------------------------------------------------------------------*
+1050   *       text
+1051   *----------------------------------------------------------------------*
+1052   *  -->  p1        text
+1053   *  <--  p2        text
+1054   *----------------------------------------------------------------------*
+1055   FORM set_top_of_page .
+1056     DATA: ls_line TYPE slis_listheader.
+1057     DATA : l_rptdt LIKE sy-datum,
+1058            l_text(60).
+1059     DATA : l_txt(80).
+1060     DATA : l_txt2(80).
+1061     DATA : l_dt_low(10),
+1062            l_dt_hg(10).
+1063   *Report Heading
+1064   *  CLEAR ls_line.
+1065   *  ls_line-typ  = 'H'.
+1066   *  ls_line-info = text-001.
+1067   *  APPEND ls_line TO e04_lt_top_of_page.
+1068
+1069
+1070     wa_listheader-typ = 'H'.
+1071     wa_listheader-info = text-037.
+1072     APPEND wa_listheader TO ist_listheader.
+1073     CLEAR wa_listheader.
+1074
+1075   **Report Date
+1076     DATA : l_date(25) TYPE c.
+1077     wa_listheader-typ    = 'H'.
+1078     wa_listheader-info   = text-h01.
+1079     APPEND wa_listheader TO ist_listheader.
+1080     CLEAR : wa_listheader.
+1081
+1082     IF NOT  s_submi[] IS INITIAL.
+1083       IF NOT s_submi-low  IS INITIAL AND
+1084                 s_submi-high IS INITIAL.
+1085
+1086         wa_listheader-typ = 'S'.
+1087   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1088         CONCATENATE ':' s_submi-low INTO l_txt SEPARATED BY space.
+1089
+1090         wa_listheader-key  = text-049.
+1091         wa_listheader-info = l_txt.
+1092
+1093         APPEND wa_listheader TO ist_listheader.
+1094         CLEAR wa_listheader.
+1095
+1096       ELSEIF NOT ( s_submi-low  IS INITIAL AND
+1097                    s_submi-high IS INITIAL ).
+1098
+1099         wa_listheader-typ = 'S'.
+1100   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1101   *                                                   SEPARATED BY space.
+1102
+1103         CONCATENATE ':' s_submi-low 'to' s_submi-high INTO l_txt
+1104                                            SEPARATED BY space.
+1105         wa_listheader-key  = text-049.
+1106         wa_listheader-info = l_txt.
+1107
+1108         APPEND wa_listheader TO ist_listheader.
+1109         CLEAR wa_listheader.
+1110
+1111       ENDIF.
+1112     ENDIF.
+1113
+1114     IF NOT  s_tproc[] IS INITIAL.
+1115       IF NOT s_tproc-low  IS INITIAL AND
+1116                 s_tproc-high IS INITIAL.
+1117
+1118         wa_listheader-typ = 'S'.
+1119   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1120         CONCATENATE ':' s_tproc-low INTO l_txt SEPARATED BY space.
+1121
+1122         wa_listheader-key  = text-038.
+1123         wa_listheader-info = l_txt.
+1124
+1125         APPEND wa_listheader TO ist_listheader.
+1126         CLEAR wa_listheader.
+1127
+1128       ELSEIF NOT ( s_tproc-low  IS INITIAL AND
+1129                    s_tproc-high IS INITIAL ).
+1130
+1131         wa_listheader-typ = 'S'.
+1132   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1133   *                                                   SEPARATED BY space.
+1134
+1135         CONCATENATE ':' s_tproc-low 'to' s_tproc-high INTO l_txt
+1136                                            SEPARATED BY space.
+1137         wa_listheader-key  = text-038.
+1138         wa_listheader-info = l_txt.
+1139
+1140         APPEND wa_listheader TO ist_listheader.
+1141         CLEAR wa_listheader.
+1142
+1143       ENDIF.
+1144     ENDIF.
+1145
+1146     IF NOT  s_ttyp[] IS INITIAL.
+1147       IF NOT s_ttyp-low  IS INITIAL AND
+1148                 s_ttyp-high IS INITIAL.
+1149
+1150         wa_listheader-typ = 'S'.
+1151   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1152         CONCATENATE ':' s_ttyp-low INTO l_txt SEPARATED BY space.
+1153
+1154         wa_listheader-key  = text-046.
+1155         wa_listheader-info = l_txt.
+1156
+1157         APPEND wa_listheader TO ist_listheader.
+1158         CLEAR wa_listheader.
+1159
+1160       ELSEIF NOT ( s_ttyp-low  IS INITIAL AND
+1161                    s_ttyp-high IS INITIAL ).
+1162
+1163         wa_listheader-typ = 'S'.
+1164   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1165   *                                                   SEPARATED BY space.
+1166
+1167         CONCATENATE ':' s_ttyp-low 'to' s_ttyp-high INTO l_txt
+1168                                            SEPARATED BY space.
+1169         wa_listheader-key  = text-046.
+1170         wa_listheader-info = l_txt.
+1171
+1172         APPEND wa_listheader TO ist_listheader.
+1173         CLEAR wa_listheader.
+1174
+1175       ENDIF.
+1176     ENDIF.
+1177   *Tender value s_tval
+1178     IF NOT s_tval[] IS INITIAL.
+1179       IF NOT s_tval-low  IS INITIAL AND
+1180                 s_tval-high IS INITIAL.
+1181
+1182         wa_listheader-typ = 'S'.
+1183   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1184   *      CONCATENATE ':' s_tval-low INTO l_txt SEPARATED BY space.
+1185         l_txt = s_tval-low.
+1186         wa_listheader-key  = text-047.
+1187         wa_listheader-info = l_txt.
+1188
+1189         APPEND wa_listheader TO ist_listheader.
+1190         CLEAR wa_listheader.
+1191
+1192       ELSEIF NOT ( s_tval-low  IS INITIAL AND
+1193                    s_tval-high IS INITIAL ).
+1194
+1195         wa_listheader-typ = 'S'.
+1196   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1197   *                                                   SEPARATED BY space.
+1198         l_txt = s_tval-low.
+1199         l_txt2 = s_tval-high.
+1200         CONCATENATE ':' l_txt 'to' l_txt2 INTO l_txt
+1201                                            SEPARATED BY space.
+1202
+1203
+1204         wa_listheader-key  = text-047.
+1205         wa_listheader-info = l_txt.
+1206
+1207         APPEND wa_listheader TO ist_listheader.
+1208         CLEAR wa_listheader.
+1209
+1210       ENDIF.
+1211     ENDIF.
+1212
+1213   *Descof work p_wrkdsc
+1214     IF NOT p_wrkdsc IS INITIAL.
+1215       wa_listheader-typ = 'S'.
+1216       l_txt = p_wrkdsc.
+1217       wa_listheader-key  = text-039.
+1218       wa_listheader-info = l_txt.
+1219
+1220       APPEND wa_listheader TO ist_listheader.
+1221       CLEAR wa_listheader.
+1222     ENDIF.
+1223
+1224   *Signer s_tsign
+1225     IF NOT s_tsign[] IS INITIAL.
+1226       IF NOT s_tsign-low  IS INITIAL AND
+1227                 s_tsign-high IS INITIAL.
+1228
+1229         wa_listheader-typ = 'S'.
+1230   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1231   *      CONCATENATE ':' s_tval-low INTO l_txt SEPARATED BY space.
+1232         l_txt = s_tsign-low.
+1233         wa_listheader-key  = text-045.
+1234         wa_listheader-info = l_txt.
+1235
+1236         APPEND wa_listheader TO ist_listheader.
+1237         CLEAR wa_listheader.
+1238
+1239       ELSEIF NOT ( s_tsign-low  IS INITIAL AND
+1240                    s_tsign-high IS INITIAL ).
+1241
+1242         wa_listheader-typ = 'S'.
+1243   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1244   *                                                   SEPARATED BY space.
+1245         l_txt = s_tsign-low.
+1246         l_txt2 = s_tsign-high.
+1247         CONCATENATE ':' l_txt 'to' l_txt2 INTO l_txt
+1248                                            SEPARATED BY space.
+1249
+1250
+1251         wa_listheader-key  = text-045.
+1252         wa_listheader-info = l_txt.
+1253
+1254         APPEND wa_listheader TO ist_listheader.
+1255         CLEAR wa_listheader.
+1256
+1257       ENDIF.
+1258     ENDIF.
+1259   *CPA s_cpa
+1260
+1261   *Indenter s_indntr
+1262     IF NOT s_indntr[] IS INITIAL.
+1263       IF NOT s_indntr-low  IS INITIAL AND
+1264                 s_indntr-high IS INITIAL.
+1265
+1266         wa_listheader-typ = 'S'.
+1267   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1268   *      CONCATENATE ':' s_tval-low INTO l_txt SEPARATED BY space.
+1269         l_txt = s_indntr-low.
+1270         wa_listheader-key  = text-042.
+1271         wa_listheader-info = l_txt.
+1272
+1273         APPEND wa_listheader TO ist_listheader.
+1274         CLEAR wa_listheader.
+1275
+1276       ELSEIF NOT ( s_indntr-low  IS INITIAL AND
+1277                    s_indntr-high IS INITIAL ).
+1278
+1279         wa_listheader-typ = 'S'.
+1280   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1281   *                                                   SEPARATED BY space.
+1282         l_txt = s_indntr-low.
+1283         l_txt2 = s_indntr-high.
+1284         CONCATENATE ':' l_txt 'to' l_txt2 INTO l_txt
+1285                                            SEPARATED BY space.
+1286
+1287
+1288         wa_listheader-key  = text-042.
+1289         wa_listheader-info = l_txt.
+1290
+1291         APPEND wa_listheader TO ist_listheader.
+1292         CLEAR wa_listheader.
+1293
+1294       ENDIF.
+1295     ENDIF.
+1296
+1297   * Purchase group  s_ekgrp
+1298     IF NOT s_ekgrp[] IS INITIAL.
+1299       IF NOT s_ekgrp-low  IS INITIAL AND
+1300                 s_ekgrp-high IS INITIAL.
+1301
+1302         wa_listheader-typ = 'S'.
+1303   *      CONCATENATE text-067 s_ekgrp-low INTO l_txt SEPARATED BY space.
+1304   *      CONCATENATE ':' s_tval-low INTO l_txt SEPARATED BY space.
+1305         l_txt = s_ekgrp-low.
+1306         wa_listheader-key  = text-041.
+1307         wa_listheader-info = l_txt.
+1308
+1309         APPEND wa_listheader TO ist_listheader.
+1310         CLEAR wa_listheader.
+1311
+1312       ELSEIF NOT ( s_ekgrp-low  IS INITIAL AND
+1313                    s_ekgrp-high IS INITIAL ).
+1314
+1315         wa_listheader-typ = 'S'.
+1316   *      CONCATENATE text-067 s_ekgrp-low 'to' s_ekgrp-high INTO l_txt
+1317   *                                                   SEPARATED BY space.
+1318         l_txt = s_ekgrp-low.
+1319         l_txt2 = s_ekgrp-high.
+1320         CONCATENATE ':' l_txt 'to' l_txt2 INTO l_txt
+1321                                            SEPARATED BY space.
+1322
+1323
+1324         wa_listheader-key  = text-041.
+1325         wa_listheader-info = l_txt.
+1326
+1327         APPEND wa_listheader TO ist_listheader.
+1328         CLEAR wa_listheader.
+1329
+1330       ENDIF.
+1331     ENDIF.
+1332
+1333   *Tender date
+1334     IF NOT s_tdrdt[] IS INITIAL.
+1335
+1336       IF NOT s_tdrdt-low  IS INITIAL AND
+1337              s_tdrdt-high IS INITIAL.
+1338
+1339         WRITE s_tdrdt-low TO l_dt_low DD/MM/YYYY.
+1340
+1341         wa_listheader-typ = 'S'.
+1342
+1343   *      CONCATENATE text-069 l_dt_low INTO l_txt SEPARATED BY space.
+1344         CONCATENATE ':' l_dt_low INTO l_txt SEPARATED BY space.
+1345
+1346         wa_listheader-key  = text-043.
+1347         wa_listheader-info = l_txt.
+1348
+1349         APPEND wa_listheader TO ist_listheader.
+1350         CLEAR wa_listheader.
+1351
+1352       ELSEIF NOT ( s_tdrdt-low  IS INITIAL AND
+1353                    s_tdrdt-high IS INITIAL ).
+1354
+1355         WRITE s_tdrdt-low  TO l_dt_low DD/MM/YYYY.
+1356         WRITE s_tdrdt-high TO l_dt_hg DD/MM/YYYY.
+1357
+1358         wa_listheader-typ = 'S'.
+1359
+1360         wa_listheader-key  = text-043.
+1361
+1362   *      CONCATENATE text-069 l_dt_low 'to' l_dt_hg INTO l_txt
+1363   *                                                 SEPARATED BY space.
+1364         CONCATENATE ':' l_dt_low 'to' l_dt_hg INTO l_txt
+1365                                       SEPARATED BY space.
+1366         wa_listheader-info = l_txt.
+1367
+1368         APPEND wa_listheader TO ist_listheader.
+1369         CLEAR wa_listheader.
+1370
+1371       ENDIF.
+1372     ENDIF.
+1373
+1374     wa_listheader-typ = 'S'.
+1375     wa_listheader-key  = text-052.
+1376     wa_listheader-info = g_lines.
+1377
+1378     APPEND wa_listheader TO ist_listheader.
+1379     CLEAR wa_listheader.
+1380   ENDFORM.                    " SET_TOP_OF_PAGE
+1381   *&---------------------------------------------------------------------*
+1382   *&      Form  CAL_DIFF
+1383   *&---------------------------------------------------------------------*
+1384   *       text
+1385   *----------------------------------------------------------------------*
+1386   *      -->P_WA_DATA_PO_ISSUE_ACT_DT  text
+1387   *      -->P_WA_DATA_LOI_1_ACT_DT  text
+1388   *      <--P_LV_DIFF  text
+1389   *----------------------------------------------------------------------*
+1390   FORM cal_diff  USING    p_wa_data_po_issue_act_dt
+1391                           p_wa_data_loi_1_act_dt
+1392                  CHANGING p_lv_diff.
+1393     CLEAR p_lv_diff.
+1394   *  clear lv_diff.
+1395   *  CALL FUNCTION 'DAYS_BETWEEN_TWO_DATES'
+1396   *    EXPORTING
+1397   *      i_datum_bis             = P_WA_DATA_LOI_1_ACT_DT
+1398   *      i_datum_von             = P_WA_DATA_PO_ISSUE_ACT_DT
+1399   *    IMPORTING
+1400   *      e_tage                  = lv_diff
+1401   *    EXCEPTIONS
+1402   *      days_method_not_defined = 1
+1403   *      OTHERS                  = 2.
+1404   *
+1405   **  IF sy-subrc <> 0.
+1406   **
+1407   **    WRITE:/ 'Error'.
+1408   **
+1409   **  ELSE.
+1410   **
+1411   **    WRITE:/ lv_diff.
+1412   **
+1413   **  ENDIF.
+1414   *
+1415   *
+1416   *
+1417   *  if lv_diff < 0.
+1418   *
+1419   *    lv_diff = lv_diff * -1.
+1420   *
+1421   *  endif.
+1422   *
+1423   * lv_no_date = lv_diff.
+1424   *
+1425   **  lv_no_date = lv_diff - 1.
+1426   *P_LV_DIFF = lv_no_date.
+1427
+1428     DATA: edays   LIKE vtbbewe-atage,
+1429           emonths LIKE vtbbewe-atage,
+1430           eyears  LIKE vtbbewe-atage.
+1431
+1432     CALL FUNCTION 'FIMA_DAYS_AND_MONTHS_AND_YEARS'
+1433       EXPORTING
+1434         i_date_from = p_wa_data_po_issue_act_dt
+1435         i_date_to   = p_wa_data_loi_1_act_dt
+1436       IMPORTING
+1437         e_days      = edays
+1438         e_months    = emonths
+1439         e_years     = eyears.
+1440
+1441     p_lv_diff = edays.
+1442
+1443   ENDFORM.                    " CAL_DIFF
+1444
+1445   *&---------------------------------------------------------------------*
+1446   *&      Form  process_user_command
+1447   *&---------------------------------------------------------------------*
+1448   *       text
+1449   *----------------------------------------------------------------------*
+1450   *      -->P_UCOMM    text
+1451   *      -->P_SELFIELD text
+1452   *----------------------------------------------------------------------*
+1453   FORM process_user_command USING p_ucomm     LIKE sy-ucomm
+1454                                   p_selfield TYPE slis_selfield.
+1455
+1456     DATA : l_f1(5).
+1457     DATA : l_ebeln TYPE ekko-ebeln.
+1458
+1459     MOVE p_selfield-fieldname TO l_f1.
+1460
+1461     IF l_f1 = text-048 .
+1462       SET PARAMETER ID 'ZTMS' FIELD p_selfield-value.
+1463
+1464       CALL TRANSACTION 'ZMMTMSDISP' AND SKIP FIRST SCREEN.
+1465
+1466   *+002 : Start : hot link PR/PO
+1467     ELSEIF l_f1 = text-062. "Purchase Order
+1468
+1469       MOVE p_selfield-value TO l_ebeln.
+1470
+1471       IF p_selfield-value+0(1) = '9'. "Contract
+1472
+1473         CALL FUNCTION 'ME_DISPLAY_PURCHASE_DOCUMENT'
+1474           EXPORTING
+1475             i_ebeln              = l_ebeln
+1476           EXCEPTIONS
+1477             not_found            = 1
+1478             no_authority         = 2
+1479             invalid_call         = 3
+1480             preview_not_possible = 4
+1481             OTHERS               = 5.
+1482         IF sy-subrc <> 0.
+1483           MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+1484                   WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+1485         ENDIF.
+1486
+1487       ELSE.
+1488
+1489         SET PARAMETER ID 'BES' FIELD p_selfield-value.
+1490
+1491         CALL TRANSACTION 'ME23N'.
+1492
+1493       ENDIF.
+1494
+1495     ELSEIF l_f1 = text-063.         "Purchase requisition
+1496
+1497       SET PARAMETER ID 'BAN' FIELD p_selfield-value.
+1498
+1499       CALL TRANSACTION 'ME53N'.
+1500
+1501   *+002 : End
+1502     ENDIF.
+1503   ENDFORM.                    "process_user_command
+1504
+1505   *&---------------------------------------------------------------------*
+1506   *&      Form  READ_TEXT
+1507   *&---------------------------------------------------------------------*
+1508   *  To domain text
+1509   *----------------------------------------------------------------------*
+1510   *      -->P_DNAME Domain name
+1511   *      -->P_PROC  Domain value
+1512   *      <--P_text  Domain text
+1513   *----------------------------------------------------------------------*
+1514   FORM read_text  USING    p_dname
+1515                            p_proc
+1516                   CHANGING p_text.
+1517
+1518     DATA : wa_dd07v TYPE dd07v,
+1519            l_value  TYPE dd07l-domvalue_l.
+1520
+1521     MOVE p_proc TO l_value.
+1522
+1523     CALL FUNCTION 'DD_DOMVALUE_TEXT_GET'
+1524       EXPORTING
+1525         domname  = p_dname
+1526         value    = l_value
+1527         langu    = sy-langu
+1528       IMPORTING
+1529         dd07v_wa = wa_dd07v.
+1530
+1531     MOVE wa_dd07v-ddtext TO p_text.
+1532
+1533   ENDFORM.                    " READ_TEXT
+*--- End of ZMM_TMS_STATUS - 1533 lines ---
