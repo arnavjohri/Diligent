@@ -31,4 +31,4 @@ QAS comments are wrong or empty: SSU_SPO "12.5" (PRD: CPP power black-out text);
 RUS_SK1 "к добыче:"; operator remarks on MMR_BA3, RUS_IEC, COL_CPO block-level are not carried
 (COL_CPO QAS has its own well-status text instead).
 
-Causes are CPI mapping / source report, not ZCL_ZPRA_DAILY_PROD_DPC_EXT.
+Causes are in the source file (values, units, blocks, comments), not in ZCL_ZPRA_DAILY_PROD_DPC_EXT; the interface passes values as received.
