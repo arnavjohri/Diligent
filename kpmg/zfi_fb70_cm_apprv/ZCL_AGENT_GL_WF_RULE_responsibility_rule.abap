@@ -276,15 +276,16 @@
 * level 2 / 3 (approved by the previous level), to the initiator and the
 * agent determined above. Credit memos only; the JV upload is untouched.
 * Not sent on the final-approver auto-approve branch (ls_lst_appr set).
-* Duplicate guard (this rule runs more than once per level) and the
-* COMMIT are inside Z_CM_WF_MAIL_SEND, which runs in its own task like
-* Z_JV_MASSGL_WF above.
+* The COMMIT is inside Z_CM_WF_MAIL_SEND, which runs in its own task like
+* Z_JV_MASSGL_WF above. Duplicate guard below via SWW_WI2OBJ.
 * ASSUMPTION: credit memo document type 'DG', same constant as the BTE
 *   module and the POST enhancement.
-      DATA: lv_cm_blart TYPE blart,
-            lv_cm_kind  TYPE char1,
-            lv_cm_level TYPE numc2,
-            lv_cm_task  TYPE char32.
+      DATA: lv_cm_blart  TYPE blart,
+            lv_cm_kind   TYPE char1,
+            lv_cm_level  TYPE numc2,
+            lv_cm_task   TYPE char32,
+            lv_cm_instid TYPE sibfboriid,
+            lv_cm_wicnt  TYPE i.
 
       IF <fs_agent> IS NOT INITIAL AND lv_appr_lvl > 0 AND ls_lst_appr IS INITIAL.
         SELECT SINGLE blart
@@ -293,7 +294,19 @@
             AND belnr = @lv_belnr
             AND gjahr = @lv_gjahr
           INTO @lv_cm_blart.
-        IF sy-subrc = 0 AND lv_cm_blart = 'DG'.
+
+* Duplicate guard without a Z table: the Verify work items already created
+* for this document. First determination of level n sees n-1 of them; a
+* re-determination, forward or restart sees n and sends nothing.
+        CONCATENATE lv_belnr lv_bukrs lv_gjahr INTO lv_cm_instid.
+        CONDENSE lv_cm_instid.
+        SELECT COUNT( * )
+          FROM sww_wi2obj
+          WHERE instid     = @lv_cm_instid
+            AND wi_rh_task = 'TS02800035'
+          INTO @lv_cm_wicnt.
+
+        IF sy-subrc = 0 AND lv_cm_blart = 'DG' AND lv_cm_wicnt < lv_appr_lvl.
           lv_cm_level = lv_appr_lvl.
           IF lv_appr_lvl = 1.
             lv_cm_kind = zcl_cm_workflow=>gc_mail_parked.

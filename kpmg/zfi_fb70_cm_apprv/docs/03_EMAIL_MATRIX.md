@@ -23,7 +23,7 @@ Nothing in this needs a functional consultant: no SWNCONFIG, no Manage Workflows
 
 | # | Object | Type | Ships by | Status |
 |---|---|---|---|---|
-| 1 | `ZCM_WF_MAIL_LOG` | transparent table (SE11) | build sheet below | to create |
+| 1 | `ZCM_WF_MAIL_LOG` | transparent table (SE11) | build sheet below | **dropped 30/10/26, delete it**; guard is now SWW_WI2OBJ in the rule |
 | 2 | `ZCL_CM_WORKFLOW->SEND_MAIL` (static, in the existing class per Arnav) | method | `ZCL_CM_WORKFLOW.abap` (whole class, source-based) | activated 30/10/26 |
 | 3 | `Z_CM_WF_MAIL_SEND` | RFC FM, FG `ZFI_CM_APPR` | `Z_CM_WF_MAIL_SEND.abap` | activated 30/10/26 (client 400) |
 | 4 | patch in `ZCL_AGENT_GL_WF_RULE->responsibility_rule` (team-owned) | `ZCL_AGENT_GL_WF_RULE_responsibility_rule.abap`, sheet `05_AGENT_RULE_PATCH.md` | paste | activated, P proven 30/10/26 |

@@ -12,6 +12,8 @@
 *                 R rejected         initiator
 *               SEND_MAIL does not COMMIT; the caller (RFC FM
 *               Z_CM_WF_MAIL_SEND) commits or rolls back on EV_SENT.
+*               No log table (30/10/26): duplicate guard is in the
+*               agent rule via SWW_WI2OBJ.
 * Create via  : ADT or SE24 source-based, paste whole file.
 *----------------------------------------------------------------------*
 CLASS zcl_cm_workflow DEFINITION
@@ -367,7 +369,6 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     DATA: lt_rcpt    TYPE STANDARD TABLE OF ty_rcpt,
           ls_rcpt    TYPE ty_rcpt,
           ls_doc     TYPE ty_doc,
-          ls_log     TYPE zcm_wf_mail_log,
           lv_usnam   TYPE usnam,
           lv_persnr  TYPE ad_persnum,
           lv_addrnr  TYPE ad_addrnum,
@@ -443,36 +444,16 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       ls_doc-apr_name = user_name( ls_doc-approver ).
     ENDIF.
 
-* Duplicate guard: one row per mail, no COMMIT here (caller's LUW).
-    ls_log-mandt   = sy-mandt.
-    ls_log-bukrs   = iv_bukrs.
-    ls_log-belnr   = iv_belnr.
-    ls_log-gjahr   = iv_gjahr.
-    ls_log-mkind   = iv_kind.
-    IF iv_kind = gc_mail_parked OR iv_kind = gc_mail_approval.
-      ls_log-mlevel = iv_level.
-      ls_log-agent  = iv_approver.
-    ENDIF.
-    ls_log-sent_by = sy-uname.
-    ls_log-sent_on = sy-datum.
-    ls_log-sent_at = sy-uzeit.
-
-    INSERT zcm_wf_mail_log FROM @ls_log.
-    IF sy-subrc <> 0.
-      ev_msg = |Mail { iv_kind } level { iv_level } for { iv_belnr } already sent - skipped|.
-      RETURN.
-    ENDIF.
-
 * Subject and body per kind
     CASE iv_kind.
       WHEN gc_mail_parked.
-        lv_purpose = |Level 1 approval needed|.
+        lv_purpose = |Level 1 approval|.
         lv_html    = body_parked( ls_doc ).
       WHEN gc_mail_approval.
-        lv_purpose = |Level { iv_level } approval needed|.
+        lv_purpose = |Level { iv_level } approval|.
         lv_html    = body_approval( ls_doc ).
       WHEN gc_mail_final.
-        lv_purpose = |Final approval confirmation|.
+        lv_purpose = |Final approval|.
         lv_html    = body_final( ls_doc ).
       WHEN gc_mail_reject.
         lv_purpose = |Rejected|.
@@ -481,7 +462,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
         ev_msg = |Unknown mail kind { iv_kind }|.
         RETURN.
     ENDCASE.
-    lv_subject = |Credit Memo { iv_belnr } / { iv_bukrs } / { iv_gjahr } - { lv_purpose }|.
+* Subject within 50 characters (SO_OBJ_DES), so SOST and mail clients show it whole
+    lv_subject = |CM { iv_belnr } { iv_bukrs } { iv_gjahr } - { lv_purpose }|.
 
 * Recipients: initiator always; approver for P and A
     CLEAR ls_rcpt.
@@ -543,11 +525,6 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
           lo_rcpt = cl_cam_address_bcs=>create_internet_address( i_address_string = ls_rcpt-smtp
                                                                  i_address_name   = ls_rcpt-name ).
           lo_send->add_recipient( i_recipient = lo_rcpt ).
-          IF ls_log-rcpts IS INITIAL.
-            ls_log-rcpts = ls_rcpt-smtp.
-          ELSE.
-            ls_log-rcpts = |{ ls_log-rcpts },{ ls_rcpt-smtp }|.
-          ENDIF.
         ENDLOOP.
 
         lo_send->set_send_immediately( abap_true ).
@@ -559,9 +536,6 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     ENDTRY.
 
     IF ev_sent = abap_true.
-      UPDATE zcm_wf_mail_log SET rcpts = @ls_log-rcpts
-        WHERE bukrs  = @ls_log-bukrs  AND belnr = @ls_log-belnr AND gjahr = @ls_log-gjahr
-          AND mkind  = @ls_log-mkind  AND mlevel = @ls_log-mlevel AND agent = @ls_log-agent.
       IF lv_missing IS NOT INITIAL.
         ev_msg = |Sent; no e-mail address in SU01 for { lv_missing }|.
       ENDIF.
