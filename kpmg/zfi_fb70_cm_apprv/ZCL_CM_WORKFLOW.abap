@@ -516,11 +516,15 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     lt_body = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
 
-* Sender = the initiator's SAP user (30/10/26: the runtime user SAP_WFRT
-*   has no address and BCS refused the send). Initiator needs one in SU01.
+* Sender = fixed AP mailbox (Arnav 30/10/26). SAP_WFRT has no SU01 address
+*   and the initiator's address was replaced by SCOT anyway.
+* ASSUMPTION: hardcoded for DEV; move to ZGLBPARAM before go-live.
     TRY.
         lo_send = cl_bcs=>create_persistent( ).
-        lo_send->set_sender( i_sender = cl_sapuser_bcs=>create( ls_doc-initiator ) ).
+        lo_send->set_sender(
+          i_sender = cl_cam_address_bcs=>create_internet_address(
+                       i_address_string = 'PALAccountsPayable@pal.com.ph'
+                       i_address_name   = 'PAL Accounts Payable' ) ).
         lo_doc  = cl_document_bcs=>create_document( i_type    = 'HTM'
                                                     i_text    = lt_body
                                                     i_subject = CONV so_obj_des( lv_subject ) ).
