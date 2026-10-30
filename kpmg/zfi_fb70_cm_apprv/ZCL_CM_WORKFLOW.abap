@@ -663,22 +663,34 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
   ENDMETHOD.
 
 
-* FLP base URL per system from STVARV ZCM_WF_FLP_URL (the FLP host is a
-* web dispatcher, not derivable in ABAP); client and language from sy.
-* No work item ID: the rule runs before the Verify work item exists, so
-* the link opens My Inbox, not the task detail.
+* FLP URL from cl_http_server=>get_location: protocol, host and port of
+* this system for the FLP path, external host taken from HTTPURLLOC
+* (standard SM30 table, Basis) when maintained. Client and language
+* from sy. No work item ID: the rule runs before the Verify work item
+* exists, so the link opens My Inbox, not the task detail.
   METHOD inbox_link.
-    DATA: lv_base  TYPE tvarvc-low,
+    DATA: lv_host  TYPE string,
+          lv_port  TYPE string,
+          lv_prot  TYPE string,
           lv_laiso TYPE laiso,
           lv_url   TYPE string.
 
     CLEAR rv_html.
-    SELECT SINGLE low FROM tvarvc
-      WHERE name = 'ZCM_WF_FLP_URL' AND type = 'P' AND numb = '0000'
-      INTO @lv_base.
-    IF sy-subrc <> 0 OR lv_base IS INITIAL.
+    cl_http_server=>get_location(
+      EXPORTING
+        protocol     = 'HTTPS'
+        application  = '/sap/bc/ui2/flp'
+      IMPORTING
+        host         = lv_host
+        port         = lv_port
+        out_protocol = lv_prot ).
+    IF lv_host IS INITIAL.
       RETURN.
     ENDIF.
+    IF lv_prot IS INITIAL.
+      lv_prot = 'https'.
+    ENDIF.
+    lv_prot = to_lower( lv_prot ).
 
     CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
       EXPORTING
@@ -686,7 +698,11 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       IMPORTING
         output = lv_laiso.
 
-    lv_url  = |{ lv_base }?sap-client={ sy-mandt }&sap-language={ lv_laiso }|.
+    lv_url = |{ lv_prot }://{ lv_host }|.
+    IF lv_port IS NOT INITIAL AND lv_port <> '443' AND lv_port <> '80'.
+      lv_url = |{ lv_url }:{ lv_port }|.
+    ENDIF.
+    lv_url  = |{ lv_url }/sap/bc/ui2/flp?sap-client={ sy-mandt }&sap-language={ lv_laiso }|.
     lv_url  = |{ lv_url }#WorkflowTask-displayInbox?allItems=true|.
     rv_html = |<p><a href="{ lv_url }">Open My Inbox</a></p>|.
   ENDMETHOD.

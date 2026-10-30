@@ -66,15 +66,13 @@ agent sends nothing.
 - Mails are sent immediately (`set_send_immediately`), through SCOT. SCOT must have an SMTP
   node for `*` — check in SOST that mails leave DEV.
 
-## STVARV parameter for the My Inbox link (30/10/26)
+## My Inbox link (30/10/26)
 
-STVARV (or SM30 on TVARVC), tab Parameters, per system and client:
+Built in `INBOX_LINK` from `cl_http_server=>get_location` (protocol, host, port for
+`/sap/bc/ui2/flp`), plus `sap-client` = sy-mandt, `sap-language` = ISO code of sy-langu and the
+intent `#WorkflowTask-displayInbox?allItems=true`. No custom table.
 
-| Name | Value |
-|---|---|
-| ZCM_WF_FLP_URL | `https://fiorid.pla.hec.ondemand.com/sap/bc/ui2/flp` (DEV; QA and PRD get their own host) |
-
-The class appends `?sap-client=<sy-mandt>&sap-language=<EN>#WorkflowTask-displayInbox?allItems=true`.
-No parameter, no link; the mail is sent without it. The work item ID cannot be in the link
-because the agent rule runs before the Verify work item exists.
-
+The external host (`fiorid.pla.hec.ondemand.com`) is a web dispatcher; ABAP only knows it
+through the standard table **HTTPURLLOC** (SM30, Basis). Without an entry the link carries the
+application server host. Ask Basis for one row per system: protocol HTTPS, application `/sap/bc/ui2/flp*` (or `*`), host `fiorid.pla.hec.ondemand.com`, port 443.
+The work item ID is not in the link: the agent rule runs before the Verify work item exists.
