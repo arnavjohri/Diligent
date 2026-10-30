@@ -60,6 +60,8 @@ CLASS zcl_cm_workflow DEFINITION
              wrbtr     TYPE wrbtr,
              initiator TYPE syuname,
              approver  TYPE syuname,
+             ini_name  TYPE ad_namtext,
+             apr_name  TYPE ad_namtext,
              level     TYPE numc2,
            END OF ty_doc.
 
@@ -104,6 +106,10 @@ CLASS zcl_cm_workflow DEFINITION
       IMPORTING iv_text        TYPE string
                 is_doc         TYPE ty_doc
       RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS user_name
+      IMPORTING iv_uname       TYPE syuname
+      RETURNING VALUE(rv_name) TYPE ad_namtext.
 *EOC By Arnav on 30/10/26
 ENDCLASS.
 
@@ -429,6 +435,10 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     ELSE.
       ls_doc-initiator = lv_usnam.
     ENDIF.
+    ls_doc-ini_name = user_name( ls_doc-initiator ).
+    IF ls_doc-approver IS NOT INITIAL.
+      ls_doc-apr_name = user_name( ls_doc-approver ).
+    ENDIF.
 
 * Duplicate guard: one row per mail, no COMMIT here (caller's LUW).
     ls_log-mandt   = sy-mandt.
@@ -516,17 +526,10 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     lt_body = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
 
-* Sender = fixed AP mailbox (Arnav 30/10/26). SAP_WFRT has no SU01 address
-*   and the initiator's address was replaced by SCOT anyway.
-* ASSUMPTION: hardcoded for DEV; move to ZGLBPARAM before go-live.
+* Sender = default (executing user); SCOT replaces it with the node's
+*   default address, which is what the client wants (Arnav 30/10/26).
     TRY.
         lo_send = cl_bcs=>create_persistent( ).
-        lo_send->set_sender(
-          i_sender = cl_cam_address_bcs=>create_internet_address(
-                       i_address_string = 'PALAccountsPayable@pal.com.ph'
-                       i_address_name   = 'PAL Accounts Payable' ) ).
-        lo_send->set_status_attributes( i_requested_status = 'N'
-                                        i_status_mail      = 'N' ).
         lo_doc  = cl_document_bcs=>create_document( i_type    = 'HTM'
                                                     i_text    = lt_body
                                                     i_subject = CONV so_obj_des( lv_subject ) ).
@@ -569,10 +572,10 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     DATA lv_text TYPE string.
 
     lv_text = |<p>Dear User,</p>|.
-    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been parked by <b>{ is_doc-initiator }</b> |.
+    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been parked by <b>{ is_doc-ini_name }</b> |.
     lv_text = |{ lv_text }and requires <b>Level 1 approval</b>.</p>|.
     IF is_doc-approver IS NOT INITIAL.
-      lv_text = |{ lv_text }<p>Level 1 approver: <b>{ is_doc-approver }</b>.|.
+      lv_text = |{ lv_text }<p>Level 1 approver: <b>{ is_doc-apr_name }</b>.|.
       lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
     ENDIF.
 
@@ -590,7 +593,7 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been <b>approved at Level { lv_prev }</b> |.
     lv_text = |{ lv_text }and now requires <b>Level { is_doc-level } approval</b>.</p>|.
     IF is_doc-approver IS NOT INITIAL.
-      lv_text = |{ lv_text }<p>Level { is_doc-level } approver: <b>{ is_doc-approver }</b>.|.
+      lv_text = |{ lv_text }<p>Level { is_doc-level } approver: <b>{ is_doc-apr_name }</b>.|.
       lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
     ENDIF.
 
@@ -619,7 +622,7 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       lv_text = |{ lv_text } at Level { is_doc-level }|.
     ENDIF.
     IF is_doc-approver IS NOT INITIAL.
-      lv_text = |{ lv_text } by <b>{ is_doc-approver }</b>|.
+      lv_text = |{ lv_text } by <b>{ is_doc-apr_name }</b>|.
     ENDIF.
     lv_text = |{ lv_text }.</p>|.
     lv_text = |{ lv_text }<p>Please correct the document and resubmit it, or withdraw it.</p>|.
@@ -638,15 +641,26 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     rv_html = |<table border="1" cellpadding="4" cellspacing="0">|.
     rv_html = |{ rv_html }<tr><td>Company code</td><td>{ is_doc-bukrs }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Document</td><td>{ is_doc-belnr } / { is_doc-gjahr }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Document type</td><td>{ is_doc-blart }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Document number</td><td>{ is_doc-belnr }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Fiscal year</td><td>{ is_doc-gjahr }</td></tr>|.
     rv_html = |{ rv_html }<tr><td>Document date</td><td>{ lv_date_c }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Customer</td><td>{ is_doc-kunnr ALPHA = OUT } { is_doc-name1 }</td></tr>|.
     rv_html = |{ rv_html }<tr><td>Amount</td><td>{ lv_amt_c } { is_doc-waers }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Reference</td><td>{ is_doc-xblnr }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Header text</td><td>{ is_doc-bktxt }</td></tr>|.
-    rv_html = |{ rv_html }<tr><td>Initiator</td><td>{ is_doc-initiator }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Initiator</td><td>{ is_doc-ini_name }</td></tr>|.
     rv_html = |{ rv_html }</table>|.
+  ENDMETHOD.
+
+
+  METHOD user_name.
+    DATA lv_persnr TYPE ad_persnum.
+
+    CLEAR rv_name.
+    SELECT SINGLE persnumber FROM usr21 WHERE bname = @iv_uname INTO @lv_persnr.
+    IF sy-subrc = 0 AND lv_persnr IS NOT INITIAL.
+      SELECT SINGLE name_text FROM adrp WHERE persnumber = @lv_persnr INTO @rv_name.
+    ENDIF.
+    IF rv_name IS INITIAL.
+      rv_name = iv_uname.
+    ENDIF.
   ENDMETHOD.
 
 
