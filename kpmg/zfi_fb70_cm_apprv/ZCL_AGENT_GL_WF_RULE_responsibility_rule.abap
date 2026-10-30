@@ -280,12 +280,19 @@
 * Z_JV_MASSGL_WF above. Duplicate guard below via SWW_WI2OBJ.
 * ASSUMPTION: credit memo document type 'DG', same constant as the BTE
 *   module and the POST enhancement.
+      TYPES: BEGIN OF ty_cm_open,
+               wi_cd TYPE swwwihead-wi_cd,
+               wi_ct TYPE swwwihead-wi_ct,
+             END OF ty_cm_open.
       DATA: lv_cm_blart  TYPE blart,
             lv_cm_kind   TYPE char1,
             lv_cm_level  TYPE numc2,
             lv_cm_task   TYPE char32,
             lv_cm_instid TYPE sibfboriid,
-            lv_cm_wicnt  TYPE i.
+            lv_cm_wicnt  TYPE i,
+            lv_cm_age    TYPE i,
+            lt_cm_open   TYPE STANDARD TABLE OF ty_cm_open,
+            ls_cm_open   TYPE ty_cm_open.
 
       IF <fs_agent> IS NOT INITIAL AND lv_appr_lvl > 0 AND ls_lst_appr IS INITIAL.
         SELECT SINGLE blart
@@ -296,19 +303,34 @@
           INTO @lv_cm_blart.
 
 * Duplicate guard without a Z table: open Verify work items of this
-* document. First determination of any level sees none (earlier ones are
-* completed, the new one not yet created) and sends; a re-determination,
-* forward or restart sees the open one and sends nothing. After a reject
-* and resubmit the count is 0 again, so the parked mail goes once more.
+* document older than 2 minutes. First determination of any level sees
+* none (earlier ones completed, the new one just created) and sends; a
+* re-determination, forward or restart sees the older open one and sends
+* nothing. After a reject and resubmit the count is 0 again.
         CONCATENATE lv_belnr lv_bukrs lv_gjahr INTO lv_cm_instid.
         CONDENSE lv_cm_instid.
-        SELECT COUNT( * )
+        SELECT h~wi_cd, h~wi_ct
           FROM sww_wi2obj AS o
           INNER JOIN swwwihead AS h ON h~wi_id = o~wi_id
           WHERE o~instid     = @lv_cm_instid
             AND o~wi_rh_task = 'TS02800035'
             AND h~wi_stat NOT IN ( 'COMPLETED', 'CANCELLED' )
-          INTO @lv_cm_wicnt.
+          INTO TABLE @lt_cm_open.
+
+* The work item this call resolves agents for is already in the table
+* (confirmed 30/10/26), so open items younger than 2 minutes are ignored.
+* Anything older is an existing item being re-determined: no mail.
+        CLEAR lv_cm_wicnt.
+        LOOP AT lt_cm_open INTO ls_cm_open.
+          IF ls_cm_open-wi_cd < sy-datum.
+            lv_cm_wicnt = lv_cm_wicnt + 1.
+          ELSE.
+            lv_cm_age = sy-uzeit - ls_cm_open-wi_ct.
+            IF lv_cm_age > 120.
+              lv_cm_wicnt = lv_cm_wicnt + 1.
+            ENDIF.
+          ENDIF.
+        ENDLOOP.
 
         IF lv_cm_blart = 'DG' AND lv_cm_wicnt = 0.
           lv_cm_level = lv_appr_lvl.
