@@ -19,6 +19,12 @@ pasted into SE24. Tables are built by hand in SE11 from the build sheet.
 
 Nothing here is SE80-downloaded original code; there is no `original/` folder.
 
+## Email notifications (30/10/26)
+
+FS matrix mapped in `docs/03_EMAIL_MATRIX.md`. Sending is `ZCL_CM_WORKFLOW=>SEND_MAIL`
+(`docs/04_SEND_MAIL_SE24.md`), dedup table `ZCM_WF_MAIL_LOG`, RFC FM `Z_CM_WF_MAIL_SEND` next,
+then the three call-point patches. All code, no SWNCONFIG.
+
 ## Where it stands (23/10/26)
 
 Working end to end in DEV client 400 on the GL verification scenario: park -> approve -> post,
