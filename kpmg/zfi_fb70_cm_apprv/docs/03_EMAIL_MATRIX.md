@@ -4,7 +4,7 @@ Requirement (FS, received 30/10/26): mail at each stage.
 
 | Trigger / status | Recipients | Purpose | Where the mail is sent from | Kind |
 |---|---|---|---|---|
-| CM parked | Initiator, Manager (L1 agent) | Level 1 approval needed | `responsibility_rule` of the agent BAdI, level `001`, after `<fs_agent>` is final | `A`, level 1 |
+| CM parked | Initiator, Manager (L1 agent) | Level 1 approval needed | `responsibility_rule` of the agent BAdI, level `001`, after `<fs_agent>` is final | `P`, level 1 |
 | Approved by Level 1 | Initiator, AVP (L2 agent) | Level 2 approval needed | same rule, level `002` | `A`, level 2 |
 | Approved by Level 2 | Initiator, SVP-CFO (L3 agent) | Level 3 approval needed | same rule, level `003` | `A`, level 3 |
 | Approved by Level 3 | Initiator | Final approval confirmation | `ZEI_FI_CM_APPR_POST`, after `PRELIMINARY_POSTING_POST_ALL` returns clean | `F` |
@@ -24,7 +24,7 @@ Nothing in this needs a functional consultant: no SWNCONFIG, no Manage Workflows
 | # | Object | Type | Ships by | Status |
 |---|---|---|---|---|
 | 1 | `ZCM_WF_MAIL_LOG` | transparent table (SE11) | build sheet below | to create |
-| 2 | `ZCL_CM_WORKFLOW->SEND_MAIL` (static, in the existing class per Arnav) | method | `ZCL_CM_WORKFLOW_SEND_MAIL.abap` + sheet `04_SEND_MAIL_SE24.md` | delivered 30/10/26 |
+| 2 | `ZCL_CM_WORKFLOW->SEND_MAIL` (static, in the existing class per Arnav) | method | `ZCL_CM_WORKFLOW.abap` (whole class, source-based) | delivered 30/10/26 |
 | 3 | `Z_CM_WF_MAIL_SEND` | RFC FM, FG `ZFI_CM_APPR` | paste | next |
 | 4 | patch in `responsibility_rule` (agent BAdI class, team-owned) | patch sheet | paste | after 3 |
 | 5 | patch in `ZEI_FI_CM_APPR_POST` | enhancement | paste | after 3 |
@@ -42,9 +42,9 @@ buffering off.
 | BUKRS | X | BUKRS | |
 | BELNR | X | BELNR_D | |
 | GJAHR | X | GJAHR | |
-| MKIND | X | CHAR1 | A = approval needed, F = final, R = rejected |
-| MLEVEL | X | NUMC2 | approval level, 00 for F and R |
-| AGENT | X | SYUNAME | approver user for A, blank for F and R |
+| MKIND | X | CHAR1 | P = parked (L1), A = approval needed (L2/L3), F = final, R = rejected |
+| MLEVEL | X | NUMC2 | approval level for P/A, 00 for F and R |
+| AGENT | X | SYUNAME | approver user for P/A, blank for F and R |
 | SENT_BY | | SYUNAME | |
 | SENT_ON | | SYDATUM | |
 | SENT_AT | | SYUZEIT | |

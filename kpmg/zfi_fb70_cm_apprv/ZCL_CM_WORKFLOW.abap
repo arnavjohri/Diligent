@@ -2,16 +2,16 @@
 * Class       : ZCL_CM_WORKFLOW
 * Author      : Arnav Johri
 * Date        : 15.10.2026, changed 27.10.2026 (AWTYP BKPFF),
-*               30.10.2026 (SEND_MAIL)
+*               30.10.2026 (SEND_MAIL + one body builder per mail kind)
 * Description : Copy of ZCL_GL_WORKFLOW->START_WORKFLOW for a customer
-*               credit memo parked in FB70. Same code, except:
-*               - PRELIMINARY_POSTING_DOC_READ removed: the tables come
-*                 in from BTE 00002218 (IT_VBKPF, IT_VBSEG, IT_VBSEC);
-*               - PRELIMINARY_POSTING_DOC_WRITE replaced by UPDATEs of
-*                 XWFFR and TCODE on VBKPF and TCODE on BKPF (no VBSET
-*                 from the BTE; TCODE rewrite needed by the GL scenario);
-*               - the status SELECT at the end removed: it runs before
-*                 the caller's COMMIT WORK and would always give 'E'.
+*               credit memo parked in FB70, plus the approval mails of
+*               the FS matrix (30/10/26):
+*                 P parked           initiator + L1 approver
+*                 A approved by n-1  initiator + level n approver
+*                 F final approval   initiator
+*                 R rejected         initiator
+*               SEND_MAIL does not COMMIT; the caller (RFC FM
+*               Z_CM_WF_MAIL_SEND) commits or rolls back on EV_SENT.
 * Create via  : ADT or SE24 source-based, paste whole file.
 *----------------------------------------------------------------------*
 CLASS zcl_cm_workflow DEFINITION
@@ -40,13 +40,28 @@ CLASS zcl_cm_workflow DEFINITION
         ev_status    TYPE char1.
 
 *BOC By Arnav on 30/10/26
-* Mail for the CM approval matrix (FS 30/10/26). Static so that the
-* RFC FM Z_CM_WF_MAIL_SEND, the agent rule patch and the POST / reject
-* enhancements can call it without an instance. No COMMIT inside: the
-* caller commits (send) or rolls back (ev_sent = abap_false).
-    CONSTANTS: gc_mail_approval TYPE char1 VALUE 'A',   " level n approval needed
-               gc_mail_final    TYPE char1 VALUE 'F',   " final approval confirmation
-               gc_mail_reject   TYPE char1 VALUE 'R'.   " rejected
+    CONSTANTS: gc_mail_parked   TYPE char1 VALUE 'P',
+               gc_mail_approval TYPE char1 VALUE 'A',
+               gc_mail_final    TYPE char1 VALUE 'F',
+               gc_mail_reject   TYPE char1 VALUE 'R'.
+
+    TYPES: BEGIN OF ty_doc,
+             bukrs     TYPE bukrs,
+             belnr     TYPE belnr_d,
+             gjahr     TYPE gjahr,
+             blart     TYPE blart,
+             bldat     TYPE bldat,
+             budat     TYPE budat,
+             waers     TYPE waers,
+             xblnr     TYPE xblnr1,
+             bktxt     TYPE bktxt,
+             kunnr     TYPE kunnr,
+             name1     TYPE name1_gp,
+             wrbtr     TYPE wrbtr,
+             initiator TYPE syuname,
+             approver  TYPE syuname,
+             level     TYPE numc2,
+           END OF ty_doc.
 
     CLASS-METHODS send_mail
       IMPORTING
@@ -64,6 +79,32 @@ CLASS zcl_cm_workflow DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+*BOC By Arnav on 30/10/26
+    CLASS-METHODS body_parked
+      IMPORTING is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS body_approval
+      IMPORTING is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS body_final
+      IMPORTING is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS body_reject
+      IMPORTING is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS doc_table
+      IMPORTING is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+
+    CLASS-METHODS wrap_html
+      IMPORTING iv_text        TYPE string
+                is_doc         TYPE ty_doc
+      RETURNING VALUE(rv_html) TYPE string.
+*EOC By Arnav on 30/10/26
 ENDCLASS.
 
 
@@ -111,13 +152,6 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-* Release flag on the parked header (was PRELIMINARY_POSTING_DOC_WRITE;
-* no VBSET from the BTE, so only the flag is written) plus the Fiori app
-* transaction code on both headers: the GL verification scenario's views
-* filter on BKPF-TCODE in (FBDC_P001, FBDC_P050, FBDC_P051), and its
-* posting check (enhancement ZEI_GL_WORKLFOW_INTR) keys on the same code.
-* Decision Gaurav/Arnav 21/10/26: stay on the GL scenario with these
-* rewrites. Document not on the database yet -> no event (RETURN).
 *BOC By Arnav on 27/10/26
 * Reference type BKPFF as well, as on every document the Fiori app creates
 * (SE16 BKPF 27/10/26: app documents BKPFF, FB70 documents BKPF; AWKEY has
@@ -313,74 +347,54 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
               it_companycode.
   ENDMETHOD.
 
-  METHOD send_mail.
 *BOC By Arnav on 30/10/26
-* Mail per the CM approval matrix:
-*   A  initiator + approver of iv_level   "Level n approval needed"
-*   F  initiator                          "Final approval confirmation"
-*   R  initiator                          "Rejected"
-* One row in ZCM_WF_MAIL_LOG per mail; the INSERT is the duplicate guard,
-* so a second call for the same document / kind / level / agent sends
-* nothing (the agent rule runs more than once per level).
-* ASSUMPTION: addresses from the SAP user master (USR21 -> ADR6), not from
-*   PA0105 0010. A user without an address in SU01 is reported in EV_MSG.
-* ASSUMPTION: the parked header is read with AUSBK = IV_BUKRS; cross-
-*   company credit memos are not in scope.
-* ASSUMPTION: amount shown is the customer line in document currency
-*   (VBSEGD-WRBTR while parked, BSEG-WRBTR KOART D once posted).
-* ASSUMPTION: the sender is the executing user (WF-BATCH from the rule).
-*   WF-BATCH needs an e-mail address in SU01, else BCS refuses to send.
+  METHOD send_mail.
     TYPES: BEGIN OF ty_rcpt,
              uname TYPE syuname,
              smtp  TYPE ad_smtpadr,
              name  TYPE ad_namtext,
            END OF ty_rcpt.
 
-    DATA: lt_rcpt      TYPE STANDARD TABLE OF ty_rcpt,
-          ls_rcpt      TYPE ty_rcpt,
-          ls_log       TYPE zcm_wf_mail_log,
-          lv_initiator TYPE syuname,
-          lv_blart     TYPE blart,
-          lv_bldat     TYPE bldat,
-          lv_budat     TYPE budat,
-          lv_waers     TYPE waers,
-          lv_xblnr     TYPE xblnr1,
-          lv_bktxt     TYPE bktxt,
-          lv_usnam     TYPE usnam,
-          lv_kunnr     TYPE kunnr,
-          lv_wrbtr     TYPE wrbtr,
-          lv_name1     TYPE name1_gp,
-          lv_persnr    TYPE ad_persnum,
-          lv_addrnr    TYPE ad_addrnum,
-          lv_amt_c     TYPE c LENGTH 24,
-          lv_date_c    TYPE c LENGTH 10,
-          lv_purpose   TYPE string,
-          lv_subject   TYPE string,
-          lv_html      TYPE string,
-          lv_missing   TYPE string,
-          lt_body      TYPE soli_tab,
-          lo_send      TYPE REF TO cl_bcs,
-          lo_doc       TYPE REF TO cl_document_bcs,
-          lo_rcpt      TYPE REF TO if_recipient_bcs,
-          lo_bcs_ex    TYPE REF TO cx_bcs.
+    DATA: lt_rcpt    TYPE STANDARD TABLE OF ty_rcpt,
+          ls_rcpt    TYPE ty_rcpt,
+          ls_doc     TYPE ty_doc,
+          ls_log     TYPE zcm_wf_mail_log,
+          lv_usnam   TYPE usnam,
+          lv_persnr  TYPE ad_persnum,
+          lv_addrnr  TYPE ad_addrnum,
+          lv_purpose TYPE string,
+          lv_subject TYPE string,
+          lv_html    TYPE string,
+          lv_missing TYPE string,
+          lt_body    TYPE soli_tab,
+          lo_send    TYPE REF TO cl_bcs,
+          lo_doc     TYPE REF TO cl_document_bcs,
+          lo_rcpt    TYPE REF TO if_recipient_bcs,
+          lo_bcs_ex  TYPE REF TO cx_bcs.
 
     CLEAR: ev_sent, ev_msg.
 
-* 1. Document header: parked (VBKPF) first, posted (BKPF) once the
-*    parked tables are gone after PRELIMINARY_POSTING_POST_ALL.
+    ls_doc-bukrs    = iv_bukrs.
+    ls_doc-belnr    = iv_belnr.
+    ls_doc-gjahr    = iv_gjahr.
+    ls_doc-level    = iv_level.
+    ls_doc-approver = iv_approver.
+
+* ASSUMPTION: parked header read with AUSBK = IV_BUKRS (no cross-company).
     SELECT SINGLE blart, bldat, budat, waers, xblnr, bktxt, usnam
       FROM vbkpf
       WHERE ausbk = @iv_bukrs
         AND belnr = @iv_belnr
         AND gjahr = @iv_gjahr
-      INTO ( @lv_blart, @lv_bldat, @lv_budat, @lv_waers, @lv_xblnr, @lv_bktxt, @lv_usnam ).
+      INTO ( @ls_doc-blart, @ls_doc-bldat, @ls_doc-budat, @ls_doc-waers,
+             @ls_doc-xblnr, @ls_doc-bktxt, @lv_usnam ).
     IF sy-subrc = 0.
       SELECT kunnr, wrbtr
         FROM vbsegd
         WHERE ausbk = @iv_bukrs
           AND belnr = @iv_belnr
           AND gjahr = @iv_gjahr
-        INTO ( @lv_kunnr, @lv_wrbtr )
+        INTO ( @ls_doc-kunnr, @ls_doc-wrbtr )
         UP TO 1 ROWS.
       ENDSELECT.
     ELSE.
@@ -389,7 +403,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
         WHERE bukrs = @iv_bukrs
           AND belnr = @iv_belnr
           AND gjahr = @iv_gjahr
-        INTO ( @lv_blart, @lv_bldat, @lv_budat, @lv_waers, @lv_xblnr, @lv_bktxt, @lv_usnam ).
+        INTO ( @ls_doc-blart, @ls_doc-bldat, @ls_doc-budat, @ls_doc-waers,
+               @ls_doc-xblnr, @ls_doc-bktxt, @lv_usnam ).
       IF sy-subrc <> 0.
         ev_msg = |Document { iv_bukrs } { iv_belnr } { iv_gjahr } not found (VBKPF / BKPF)|.
         RETURN.
@@ -400,28 +415,28 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
           AND belnr = @iv_belnr
           AND gjahr = @iv_gjahr
           AND koart = 'D'
-        INTO ( @lv_kunnr, @lv_wrbtr )
+        INTO ( @ls_doc-kunnr, @ls_doc-wrbtr )
         UP TO 1 ROWS.
       ENDSELECT.
     ENDIF.
 
-    IF lv_kunnr IS NOT INITIAL.
-      SELECT SINGLE name1 FROM kna1 WHERE kunnr = @lv_kunnr INTO @lv_name1.
+    IF ls_doc-kunnr IS NOT INITIAL.
+      SELECT SINGLE name1 FROM kna1 WHERE kunnr = @ls_doc-kunnr INTO @ls_doc-name1.
     ENDIF.
 
     IF iv_initiator IS NOT INITIAL.
-      lv_initiator = iv_initiator.
+      ls_doc-initiator = iv_initiator.
     ELSE.
-      lv_initiator = lv_usnam.
+      ls_doc-initiator = lv_usnam.
     ENDIF.
 
-* 2. Duplicate guard - one row per mail. No COMMIT here.
+* Duplicate guard: one row per mail, no COMMIT here (caller's LUW).
     ls_log-mandt   = sy-mandt.
     ls_log-bukrs   = iv_bukrs.
     ls_log-belnr   = iv_belnr.
     ls_log-gjahr   = iv_gjahr.
     ls_log-mkind   = iv_kind.
-    IF iv_kind = gc_mail_approval.
+    IF iv_kind = gc_mail_parked OR iv_kind = gc_mail_approval.
       ls_log-mlevel = iv_level.
       ls_log-agent  = iv_approver.
     ENDIF.
@@ -435,16 +450,38 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-* 3. Recipients: initiator always, approver for kind A.
+* Subject and body per kind
+    CASE iv_kind.
+      WHEN gc_mail_parked.
+        lv_purpose = |Level 1 approval needed|.
+        lv_html    = body_parked( ls_doc ).
+      WHEN gc_mail_approval.
+        lv_purpose = |Level { iv_level } approval needed|.
+        lv_html    = body_approval( ls_doc ).
+      WHEN gc_mail_final.
+        lv_purpose = |Final approval confirmation|.
+        lv_html    = body_final( ls_doc ).
+      WHEN gc_mail_reject.
+        lv_purpose = |Rejected|.
+        lv_html    = body_reject( ls_doc ).
+      WHEN OTHERS.
+        ev_msg = |Unknown mail kind { iv_kind }|.
+        RETURN.
+    ENDCASE.
+    lv_subject = |Credit Memo { iv_belnr } / { iv_bukrs } / { iv_gjahr } - { lv_purpose }|.
+
+* Recipients: initiator always; approver for P and A
     CLEAR ls_rcpt.
-    ls_rcpt-uname = lv_initiator.
+    ls_rcpt-uname = ls_doc-initiator.
     APPEND ls_rcpt TO lt_rcpt.
-    IF iv_kind = gc_mail_approval AND iv_approver IS NOT INITIAL AND iv_approver <> lv_initiator.
+    IF ( iv_kind = gc_mail_parked OR iv_kind = gc_mail_approval )
+       AND iv_approver IS NOT INITIAL AND iv_approver <> ls_doc-initiator.
       CLEAR ls_rcpt.
       ls_rcpt-uname = iv_approver.
       APPEND ls_rcpt TO lt_rcpt.
     ENDIF.
 
+* ASSUMPTION: addresses from the SAP user master (USR21 -> ADR6).
     LOOP AT lt_rcpt ASSIGNING FIELD-SYMBOL(<ls_rcpt>).
       CLEAR: lv_persnr, lv_addrnr.
       SELECT SINGLE persnumber, addrnumber
@@ -477,56 +514,10 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-* 4. Subject and body.
-    CASE iv_kind.
-      WHEN gc_mail_approval.
-        lv_purpose = |Level { iv_level } approval needed|.
-      WHEN gc_mail_final.
-        lv_purpose = |Final approval confirmation|.
-      WHEN gc_mail_reject.
-        lv_purpose = |Rejected|.
-      WHEN OTHERS.
-        ev_msg = |Unknown mail kind { iv_kind }|.
-        RETURN.
-    ENDCASE.
-    lv_subject = |Credit Memo { iv_belnr } / { iv_bukrs } / { iv_gjahr } - { lv_purpose }|.
-
-    WRITE lv_wrbtr TO lv_amt_c CURRENCY lv_waers.
-    CONDENSE lv_amt_c.
-    WRITE lv_bldat TO lv_date_c DD/MM/YYYY.
-
-    lv_html = |<html><body style="font-family:Arial;font-size:10pt">|.
-    lv_html = |{ lv_html }<p>Dear User,</p>|.
-    CASE iv_kind.
-      WHEN gc_mail_approval.
-        lv_html = |{ lv_html }<p>The credit memo below is waiting for level { iv_level } approval.|.
-        IF iv_approver IS NOT INITIAL.
-          lv_html = |{ lv_html } Approver: <b>{ iv_approver }</b>.|.
-        ENDIF.
-        lv_html = |{ lv_html } Please process it in My Inbox.</p>|.
-      WHEN gc_mail_final.
-        lv_html = |{ lv_html }<p>The credit memo below has received final approval and is posted.</p>|.
-      WHEN gc_mail_reject.
-        lv_html = |{ lv_html }<p>The credit memo below has been <b>rejected</b>. |.
-        lv_html = |{ lv_html }Please correct and resubmit it, or withdraw it.</p>|.
-    ENDCASE.
-    lv_html = |{ lv_html }<table border="1" cellpadding="4" cellspacing="0">|.
-    lv_html = |{ lv_html }<tr><td>Company code</td><td>{ iv_bukrs }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Document</td><td>{ iv_belnr } / { iv_gjahr }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Document type</td><td>{ lv_blart }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Document date</td><td>{ lv_date_c }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Customer</td><td>{ lv_kunnr ALPHA = OUT } { lv_name1 }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Amount</td><td>{ lv_amt_c } { lv_waers }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Reference</td><td>{ lv_xblnr }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Header text</td><td>{ lv_bktxt }</td></tr>|.
-    lv_html = |{ lv_html }<tr><td>Initiator</td><td>{ lv_initiator }</td></tr>|.
-    lv_html = |{ lv_html }</table>|.
-    lv_html = |{ lv_html }<p>This is an automated mail from the Credit Memo approval workflow.</p>|.
-    lv_html = |{ lv_html }</body></html>|.
-
     lt_body = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
 
-* 5. Send. Delivered on the caller's COMMIT WORK.
+* ASSUMPTION: sender = executing user (WF-BATCH from the agent rule);
+*   it needs an e-mail address in SU01, else BCS refuses the send.
     TRY.
         lo_send = cl_bcs=>create_persistent( ).
         lo_doc  = cl_document_bcs=>create_document( i_type    = 'HTM'
@@ -564,7 +555,101 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     ELSE.
       ev_msg = |BCS send( ) returned false for { iv_belnr }|.
     ENDIF.
-*EOC By Arnav on 30/10/26
   ENDMETHOD.
+
+
+  METHOD body_parked.
+    DATA lv_text TYPE string.
+
+    lv_text = |<p>Dear User,</p>|.
+    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been parked by <b>{ is_doc-initiator }</b> |.
+    lv_text = |{ lv_text }and requires <b>Level 1 approval</b>.</p>|.
+    IF is_doc-approver IS NOT INITIAL.
+      lv_text = |{ lv_text }<p>Level 1 approver: <b>{ is_doc-approver }</b>.|.
+      lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
+    ENDIF.
+
+    rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
+  ENDMETHOD.
+
+
+  METHOD body_approval.
+    DATA: lv_text TYPE string,
+          lv_prev TYPE i.
+
+    lv_prev = is_doc-level - 1.
+
+    lv_text = |<p>Dear User,</p>|.
+    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been <b>approved at Level { lv_prev }</b> |.
+    lv_text = |{ lv_text }and now requires <b>Level { is_doc-level } approval</b>.</p>|.
+    IF is_doc-approver IS NOT INITIAL.
+      lv_text = |{ lv_text }<p>Level { is_doc-level } approver: <b>{ is_doc-approver }</b>.|.
+      lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
+    ENDIF.
+
+    rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
+  ENDMETHOD.
+
+
+  METHOD body_final.
+    DATA lv_text TYPE string.
+
+    lv_text = |<p>Dear User,</p>|.
+    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has received <b>final approval</b> |.
+    lv_text = |{ lv_text }and has been posted in company code { is_doc-bukrs }.</p>|.
+    lv_text = |{ lv_text }<p>No further action is required.</p>|.
+
+    rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
+  ENDMETHOD.
+
+
+  METHOD body_reject.
+    DATA lv_text TYPE string.
+
+    lv_text = |<p>Dear User,</p>|.
+    lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been <b>rejected</b>|.
+    IF is_doc-level IS NOT INITIAL.
+      lv_text = |{ lv_text } at Level { is_doc-level }|.
+    ENDIF.
+    IF is_doc-approver IS NOT INITIAL.
+      lv_text = |{ lv_text } by <b>{ is_doc-approver }</b>|.
+    ENDIF.
+    lv_text = |{ lv_text }.</p>|.
+    lv_text = |{ lv_text }<p>Please correct the document and resubmit it, or withdraw it.</p>|.
+
+    rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
+  ENDMETHOD.
+
+
+  METHOD doc_table.
+    DATA: lv_amt_c  TYPE c LENGTH 24,
+          lv_date_c TYPE c LENGTH 10.
+
+    WRITE is_doc-wrbtr TO lv_amt_c CURRENCY is_doc-waers.
+    CONDENSE lv_amt_c.
+    WRITE is_doc-bldat TO lv_date_c DD/MM/YYYY.
+
+    rv_html = |<table border="1" cellpadding="4" cellspacing="0">|.
+    rv_html = |{ rv_html }<tr><td>Company code</td><td>{ is_doc-bukrs }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Document</td><td>{ is_doc-belnr } / { is_doc-gjahr }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Document type</td><td>{ is_doc-blart }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Document date</td><td>{ lv_date_c }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Customer</td><td>{ is_doc-kunnr ALPHA = OUT } { is_doc-name1 }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Amount</td><td>{ lv_amt_c } { is_doc-waers }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Reference</td><td>{ is_doc-xblnr }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Header text</td><td>{ is_doc-bktxt }</td></tr>|.
+    rv_html = |{ rv_html }<tr><td>Initiator</td><td>{ is_doc-initiator }</td></tr>|.
+    rv_html = |{ rv_html }</table>|.
+  ENDMETHOD.
+
+
+  METHOD wrap_html.
+    rv_html = |<html><body style="font-family:Arial;font-size:10pt">|.
+    rv_html = |{ rv_html }{ iv_text }|.
+    rv_html = |{ rv_html }{ doc_table( is_doc ) }|.
+    rv_html = |{ rv_html }<p>This is an automated mail from the Credit Memo approval workflow.</p>|.
+    rv_html = |{ rv_html }</body></html>|.
+  ENDMETHOD.
+*EOC By Arnav on 30/10/26
 
 ENDCLASS.
