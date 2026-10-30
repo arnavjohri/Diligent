@@ -65,3 +65,16 @@ agent sends nothing.
   SVP-CFO are not resolved from HR. The approver's own name from `ADRP` is in the body.
 - Mails are sent immediately (`set_send_immediately`), through SCOT. SCOT must have an SMTP
   node for `*` — check in SOST that mails leave DEV.
+
+## STVARV parameter for the My Inbox link (30/10/26)
+
+STVARV (or SM30 on TVARVC), tab Parameters, per system and client:
+
+| Name | Value |
+|---|---|
+| ZCM_WF_FLP_URL | `https://fiorid.pla.hec.ondemand.com/sap/bc/ui2/flp` (DEV; QA and PRD get their own host) |
+
+The class appends `?sap-client=<sy-mandt>&sap-language=<EN>#WorkflowTask-displayInbox?allItems=true`.
+No parameter, no link; the mail is sent without it. The work item ID cannot be in the link
+because the agent rule runs before the Verify work item exists.
+

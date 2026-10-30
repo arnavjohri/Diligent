@@ -110,6 +110,9 @@ CLASS zcl_cm_workflow DEFINITION
     CLASS-METHODS user_name
       IMPORTING iv_uname       TYPE syuname
       RETURNING VALUE(rv_name) TYPE ad_namtext.
+
+    CLASS-METHODS inbox_link
+      RETURNING VALUE(rv_html) TYPE string.
 *EOC By Arnav on 30/10/26
 ENDCLASS.
 
@@ -575,6 +578,7 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been parked by <b>{ is_doc-ini_name }</b> |.
     lv_text = |{ lv_text }and requires <b>your approval</b>.</p>|.
     lv_text = |{ lv_text }<p>Please review and approve or reject the document in My Inbox.</p>|.
+    lv_text = |{ lv_text }{ inbox_link( ) }|.
 
     rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
   ENDMETHOD.
@@ -590,6 +594,7 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been <b>approved at Level { lv_prev }</b> |.
     lv_text = |{ lv_text }and now requires <b>your approval</b>.</p>|.
     lv_text = |{ lv_text }<p>Please review and approve or reject the document in My Inbox.</p>|.
+    lv_text = |{ lv_text }{ inbox_link( ) }|.
 
     rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
   ENDMETHOD.
@@ -655,6 +660,35 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     IF rv_name IS INITIAL.
       rv_name = iv_uname.
     ENDIF.
+  ENDMETHOD.
+
+
+* FLP base URL per system from STVARV ZCM_WF_FLP_URL (the FLP host is a
+* web dispatcher, not derivable in ABAP); client and language from sy.
+* No work item ID: the rule runs before the Verify work item exists, so
+* the link opens My Inbox, not the task detail.
+  METHOD inbox_link.
+    DATA: lv_base  TYPE tvarvc-low,
+          lv_laiso TYPE laiso,
+          lv_url   TYPE string.
+
+    CLEAR rv_html.
+    SELECT SINGLE low FROM tvarvc
+      WHERE name = 'ZCM_WF_FLP_URL' AND type = 'P' AND numb = '0000'
+      INTO @lv_base.
+    IF sy-subrc <> 0 OR lv_base IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = sy-langu
+      IMPORTING
+        output = lv_laiso.
+
+    lv_url  = |{ lv_base }?sap-client={ sy-mandt }&sap-language={ lv_laiso }|.
+    lv_url  = |{ lv_url }#WorkflowTask-displayInbox?allItems=true|.
+    rv_html = |<p><a href="{ lv_url }">Open My Inbox</a></p>|.
   ENDMETHOD.
 
 
