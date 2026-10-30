@@ -525,6 +525,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
           i_sender = cl_cam_address_bcs=>create_internet_address(
                        i_address_string = 'PALAccountsPayable@pal.com.ph'
                        i_address_name   = 'PAL Accounts Payable' ) ).
+        lo_send->set_status_attributes( i_requested_status = 'N'
+                                        i_status_mail      = 'N' ).
         lo_doc  = cl_document_bcs=>create_document( i_type    = 'HTM'
                                                     i_text    = lt_body
                                                     i_subject = CONV so_obj_des( lv_subject ) ).
