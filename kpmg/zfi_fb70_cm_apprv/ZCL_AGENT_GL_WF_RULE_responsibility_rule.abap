@@ -295,18 +295,22 @@
             AND gjahr = @lv_gjahr
           INTO @lv_cm_blart.
 
-* Duplicate guard without a Z table: the Verify work items already created
-* for this document. First determination of level n sees n-1 of them; a
-* re-determination, forward or restart sees n and sends nothing.
+* Duplicate guard without a Z table: open Verify work items of this
+* document. First determination of any level sees none (earlier ones are
+* completed, the new one not yet created) and sends; a re-determination,
+* forward or restart sees the open one and sends nothing. After a reject
+* and resubmit the count is 0 again, so the parked mail goes once more.
         CONCATENATE lv_belnr lv_bukrs lv_gjahr INTO lv_cm_instid.
         CONDENSE lv_cm_instid.
         SELECT COUNT( * )
-          FROM sww_wi2obj
-          WHERE instid     = @lv_cm_instid
-            AND wi_rh_task = 'TS02800035'
+          FROM sww_wi2obj AS o
+          INNER JOIN swwwihead AS h ON h~wi_id = o~wi_id
+          WHERE o~instid     = @lv_cm_instid
+            AND o~wi_rh_task = 'TS02800035'
+            AND h~wi_stat NOT IN ( 'COMPLETED', 'CANCELLED' )
           INTO @lv_cm_wicnt.
 
-        IF sy-subrc = 0 AND lv_cm_blart = 'DG' AND lv_cm_wicnt < lv_appr_lvl.
+        IF lv_cm_blart = 'DG' AND lv_cm_wicnt = 0.
           lv_cm_level = lv_appr_lvl.
           IF lv_appr_lvl = 1.
             lv_cm_kind = zcl_cm_workflow=>gc_mail_parked.
