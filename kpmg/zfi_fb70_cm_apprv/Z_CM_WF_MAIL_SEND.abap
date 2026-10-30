@@ -12,7 +12,7 @@
 *               Import: IV_BUKRS BUKRS, IV_BELNR BELNR_D, IV_GJAHR GJAHR,
 *                       IV_KIND CHAR1, IV_LEVEL NUMC2 opt,
 *                       IV_APPROVER SYUNAME opt, IV_INITIATOR SYUNAME opt
-*               Export: EV_SENT ABAP_BOOL, EV_MSG STRING
+*               Export: EV_SENT BOOLE_D (RFC takes DDIC types only), EV_MSG STRING
 *               All "Pass Value" (mandatory for RFC).
 *----------------------------------------------------------------------*
 FUNCTION z_cm_wf_mail_send.
@@ -27,7 +27,7 @@ FUNCTION z_cm_wf_mail_send.
 *"     VALUE(IV_APPROVER) TYPE  SYUNAME OPTIONAL
 *"     VALUE(IV_INITIATOR) TYPE  SYUNAME OPTIONAL
 *"  EXPORTING
-*"     VALUE(EV_SENT) TYPE  ABAP_BOOL
+*"     VALUE(EV_SENT) TYPE  BOOLE_D
 *"     VALUE(EV_MSG) TYPE  STRING
 *"----------------------------------------------------------------------
 
