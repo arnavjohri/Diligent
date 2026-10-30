@@ -573,11 +573,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     lv_text = |<p>Dear User,</p>|.
     lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been parked by <b>{ is_doc-ini_name }</b> |.
-    lv_text = |{ lv_text }and requires <b>Level 1 approval</b>.</p>|.
-    IF is_doc-approver IS NOT INITIAL.
-      lv_text = |{ lv_text }<p>Level 1 approver: <b>{ is_doc-apr_name }</b>.|.
-      lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
-    ENDIF.
+    lv_text = |{ lv_text }and requires <b>your approval</b>.</p>|.
+    lv_text = |{ lv_text }<p>Please review and approve or reject the document in My Inbox.</p>|.
 
     rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
   ENDMETHOD.
@@ -591,11 +588,8 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     lv_text = |<p>Dear User,</p>|.
     lv_text = |{ lv_text }<p>Credit Memo <b>{ is_doc-belnr }</b> has been <b>approved at Level { lv_prev }</b> |.
-    lv_text = |{ lv_text }and now requires <b>Level { is_doc-level } approval</b>.</p>|.
-    IF is_doc-approver IS NOT INITIAL.
-      lv_text = |{ lv_text }<p>Level { is_doc-level } approver: <b>{ is_doc-apr_name }</b>.|.
-      lv_text = |{ lv_text } Please review and approve or reject the document in My Inbox.</p>|.
-    ENDIF.
+    lv_text = |{ lv_text }and now requires <b>your approval</b>.</p>|.
+    lv_text = |{ lv_text }<p>Please review and approve or reject the document in My Inbox.</p>|.
 
     rv_html = wrap_html( iv_text = lv_text is_doc = is_doc ).
   ENDMETHOD.
