@@ -352,7 +352,7 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
     TYPES: BEGIN OF ty_rcpt,
              uname TYPE syuname,
              smtp  TYPE ad_smtpadr,
-             name  TYPE ad_namtext,
+             name  TYPE ad_smtpadr,
            END OF ty_rcpt.
 
     DATA: lt_rcpt    TYPE STANDARD TABLE OF ty_rcpt,
