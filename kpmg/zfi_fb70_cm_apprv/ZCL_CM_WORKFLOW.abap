@@ -516,10 +516,11 @@ CLASS zcl_cm_workflow IMPLEMENTATION.
 
     lt_body = cl_bcs_convert=>string_to_soli( iv_string = lv_html ).
 
-* ASSUMPTION: sender = executing user (WF-BATCH from the agent rule);
-*   it needs an e-mail address in SU01, else BCS refuses the send.
+* Sender = the initiator's SAP user (30/10/26: the runtime user SAP_WFRT
+*   has no address and BCS refused the send). Initiator needs one in SU01.
     TRY.
         lo_send = cl_bcs=>create_persistent( ).
+        lo_send->set_sender( i_sender = cl_sapuser_bcs=>create( ls_doc-initiator ) ).
         lo_doc  = cl_document_bcs=>create_document( i_type    = 'HTM'
                                                     i_text    = lt_body
                                                     i_subject = CONV so_obj_des( lv_subject ) ).
