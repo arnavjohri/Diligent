@@ -43,7 +43,10 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
         lv_zcm_wfstat TYPE c LENGTH 20,
         lv_zcm_blart  TYPE blart,
         lv_zcm_bstat  TYPE vbkpf-bstat,
-        lv_zcm_apply  TYPE abap_bool.
+        lv_zcm_apply  TYPE abap_bool,
+        lv_zcm_usnam  TYPE usnam,                     "Changes by Arnav on 30/10/26
+        lv_zcm_sent   TYPE abap_bool,                 "Changes by Arnav on 30/10/26
+        lv_zcm_msgtx  TYPE string.                    "Changes by Arnav on 30/10/26
 
 * Entry conditions, read from the scenario's own inbox view (the view
 * ZCL_GL_WORKFLOW checks after the raise). All required, else the
@@ -125,6 +128,14 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
                                      attr3 = sy-msgv3 attr4 = sy-msgv4 ).
     ENDIF.
 
+*   Initiator for the final-approval mail, read while the parked header
+*   still exists (PRELIMINARY_POSTING_POST_ALL removes it)
+    SELECT SINGLE usnam FROM vbkpf                    "Changes by Arnav on 30/10/26
+      WHERE ausbk = @me->ausbk
+        AND belnr = @me->belnr
+        AND gjahr = @me->gjahr
+      INTO @lv_zcm_usnam.
+
 *   Post the parked document (as FIPP method POST / FBV0)
     CLEAR: lt_zcm_vbkpf, lt_zcm_msg, ls_zcm_vbkpf, ls_zcm_msg.
     ls_zcm_vbkpf-belnr = me->belnr.
@@ -157,6 +168,19 @@ ENHANCEMENT 1  ZEI_FI_CM_APPR_POST.    "active version
         is_je_key = ls_zcm_key
         iv_status = if_fdc_je_wf_list_db=>gc_wf_status-posted ).
       COMMIT WORK.
+
+*     Final approval confirmation to the initiator (FS 30/10/26, kind F).
+*     Own LUW inside the FM; the posting is already committed above.
+      CALL FUNCTION 'Z_CM_WF_MAIL_SEND'                "Changes by Arnav on 30/10/26
+        EXPORTING
+          iv_bukrs     = me->ausbk
+          iv_belnr     = me->belnr
+          iv_gjahr     = me->gjahr
+          iv_kind      = zcl_cm_workflow=>gc_mail_final
+          iv_initiator = lv_zcm_usnam
+        IMPORTING
+          ev_sent      = lv_zcm_sent
+          ev_msg       = lv_zcm_msgtx.
       RETURN.
     ENDIF.
 

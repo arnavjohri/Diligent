@@ -27,7 +27,7 @@ Nothing in this needs a functional consultant: no SWNCONFIG, no Manage Workflows
 | 2 | `ZCL_CM_WORKFLOW->SEND_MAIL` (static, in the existing class per Arnav) | method | `ZCL_CM_WORKFLOW.abap` (whole class, source-based) | activated 30/10/26 |
 | 3 | `Z_CM_WF_MAIL_SEND` | RFC FM, FG `ZFI_CM_APPR` | `Z_CM_WF_MAIL_SEND.abap` | activated 30/10/26 (client 400) |
 | 4 | patch in `ZCL_AGENT_GL_WF_RULE->responsibility_rule` (team-owned) | `ZCL_AGENT_GL_WF_RULE_responsibility_rule.abap`, sheet `05_AGENT_RULE_PATCH.md` | paste | delivered 30/10/26 |
-| 5 | patch in `ZEI_FI_CM_APPR_POST` | enhancement | paste | after 3 |
+| 5 | patch in `ZEI_FI_CM_APPR_POST` (kind F after the posted COMMIT) | enhancement | `ZEI_FI_CM_APPR_POST.abap` | delivered 30/10/26 |
 | 6 | `ZEI_FI_CM_APPR_REJ` on the reject method | enhancement | paste | after method name confirmed |
 
 ## Build sheet 1 — `ZCM_WF_MAIL_LOG` (SE11)
