@@ -216,3 +216,72 @@ splitting.
 - SE16 `FINSC_001A_REP`, `FINSC_LD_CMP`, `TKA02`/`TKA01` for the company codes → §4.3.
 - SE16 `T030`: `KTOPL` of OVL, `KTOSL = 'BIL'` → the retained-earnings account(s).
 - SE16 `JVAONACDOCAACTIV` → activation year per company code.
+
+---
+
+## 6. OVL design, agreed in chat 02/11/26 — upload from the recon Excel, post to ACDOCA
+
+Flow: `ZFI_ACDOCA_JVSO1_RECON` → ALV export → reviewer adds cost centres, checks signs →
+upload report reads the file → test run ALV → update run inserts into ACDOCA 0L → recon
+re-run shows zero. Decisions taken: no RTCUR in the key (transaction currency = local, TSL and
+WSL = HSL, as an `" ASSUMPTION:` in the code); cost centre comes from the Excel; dedicated
+document type `ZJ` proposed.
+
+### 6.1 Excel template (one sheet, headings in row 1 as the recon exports them)
+
+| # | Column | ACDOCA | Mandatory | Checked against |
+|---|---|---|---|---|
+| 1 | Company Code | RBUKRS | yes | T001 |
+| 2 | Fiscal Year | GJAHR, RYEAR | yes | 4 digits |
+| 3 | Posting Period | POPER | yes | 001–016 (000 only if carry forward is decided) |
+| 4 | G/L Account | RACCT | yes | SKB1, ALPHA conversion |
+| 5 | Joint Venture | VNAME | blank = offset row | T8JV |
+| 6 | Equity Group | EGRUP | blank allowed | JVA equity group master |
+| 7 | Recovery Indicator | RECID | blank allowed | JVA recovery indicator master |
+| 8 | Cost Center | RCNTR | optional | CSKS valid on posting date |
+| 9 | Order | AUFNR | optional | AUFK |
+| 10 | WBS Element | PS_POSID → PS_PSP_PNR | optional | PRPS by external ID |
+| 11 | Profit Center | PRCTR | optional | CEPC; else from CSKS of the cost centre |
+| 12 | Amount Local Currency | HSL (TSL, WSL copied) | yes | debit +, credit − |
+| 13 | Amount Group Currency | KSL | yes | same sign |
+| 14 | Line Text | SGTXT | optional | defaulted if blank |
+
+Sign: the Excel carries the amount as it should land in ACDOCA. The recon's `*_DIFF` columns
+are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to the recon.
+
+### 6.2 Derived by the program
+
+| Field | Source |
+|---|---|
+| PERIV, KTOPL, RHCUR | T001 |
+| RKCUR | an existing ACDOCA 0L line of the company code |
+| KOKRS | TKA02 |
+| BUDAT, BLDAT | year + period + PERIV via period-to-date FM; 013–016 take 012's date |
+| FISCYEARPER | GJAHR && POPER |
+| GLACCOUNT_TYPE | SKA1 |
+| KOART | SKB1-MITKZ A/D/K; M for T030 KTOSL BSX accounts; else S |
+| PRCTR / SEGMENT | Excel, else CSKS of the cost centre / CEPC |
+| PS_PSP_PNR, PS_PRJ_PNR, PS_PSPID | PRPS, PROJ |
+| DRCRK | sign of HSL |
+| RTCUR, RWCUR | = RHCUR |
+| BELNR, DOCLN | own scheme, one document per company code / year / period |
+| USNAM, TIMESTAMP | sy-uname, UTC now |
+
+### 6.3 Manual input / decisions — posting without them goes wrong
+
+| Item | Why | Who |
+|---|---|---|
+| BSTAT, MIG_SOURCE, VORGN, AWTYP, SDM_VERSION, BTTYPE | mark the line as having no FI document; wrong → FI consistency checks or GR data release misbehave. Take from SE16H on an existing ACDOCA-only line (BELNR `CC001NVFLO`) | Arnav |
+| Document type `ZJ` in OBA7 | must exist before the first update run; undo filters on it | FI functional, customizing TR |
+| Posting date first or last day of period | GR reporting date | GR / FI functional |
+| Group currency key = currency of the Excel KSL | otherwise KSL is in the wrong currency | FI functional |
+| PRCTR / SEGMENT rule for lines without cost centre | GR consolidates by segment / profit centre | GR functional |
+| RMVCT on balance sheet accounts | GR movements; recon does not carry it | GR functional: column or FS-item default |
+| Account nets to zero per company code / year / period | otherwise the 0L account balance changes; program refuses the file | reviewer |
+| Period final in JVA before upload | later JVSO1 changes make the alignment stale | GR / JVA functional |
+| Scope and client approval for a direct ACDOCA write | same point as `ZFI_ACDOCA_VNAME_UPD` | client |
+
+### 6.4 File-level checks in the upload
+Net zero per company code / year / period / account in HSL and KSL; duplicate upload of a
+period already posted by this program is a hard stop unless the undo ran first; rows with all
+amounts zero are skipped; every master-data check in 6.1 fails the file, not the row.
