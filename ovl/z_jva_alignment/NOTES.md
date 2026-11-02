@@ -248,8 +248,9 @@ sheet accounts or only retained earnings.
 | 10 | WBS Element | PS_POSID → PS_PSP_PNR | optional | PRPS by external ID |
 | 11 | Profit Center | PRCTR | optional | CEPC; else from CSKS of the cost centre |
 | 12 | Amount Local Currency | HSL (TSL, WSL copied) | yes | debit +, credit − |
-| 13 | Amount Group Currency | KSL | yes | same sign |
-| 14 | Line Text | SGTXT | optional | defaulted if blank |
+| 13 | Amount Group Currency | KSL | yes | same sign, in the company code's RKCUR |
+| 14 | Amount 3rd Currency | OSL | when the company code has ROCUR | blank otherwise |
+| 15 | Line Text | SGTXT | optional | defaulted if blank |
 
 Sign: the Excel carries the amount as it should land in ACDOCA. The recon's `*_DIFF` columns
 are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to the recon.
@@ -277,9 +278,9 @@ are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to 
 | Item | Why | Who |
 |---|---|---|
 | BSTAT, MIG_SOURCE, VORGN, AWTYP, SDM_VERSION, BTTYPE | mark the line as having no FI document; wrong → FI consistency checks or GR data release misbehave. Take from SE16H on an existing ACDOCA-only line (BELNR `CC001NVFLO`) | Arnav |
-| Document type `ZJ` in OBA7 | must exist before the first update run; undo filters on it | FI functional, customizing TR |
+| ~~Document type `ZJ` in OBA7~~ | decided: hardcoded, no OBA7 (6.6) | — |
 | ~~Posting date first or last day of period~~ | decided: last day of the period | — |
-| Group currency key = currency of the Excel KSL | otherwise KSL is in the wrong currency | FI functional |
+| ~~Group currency key = currency of the Excel KSL~~ | RKCUR differs per company code (BML INR, OSL USD); read per company code from existing lines, recon already sums per company code | — |
 | ~~PRCTR / SEGMENT rule for lines without cost centre~~ | decided: profit centre is an Excel column | — |
 | RMVCT on balance sheet accounts | GR movements; recon does not carry it | GR functional: column or FS-item default |
 | Account nets to zero per company code / year / period | otherwise the 0L account balance changes; program refuses the file | reviewer |
@@ -300,3 +301,20 @@ the recon's KSL and the Excel group-currency column are USD; SDM_VERSION reads a
 needed, with technical names: BSTAT, MIG_SOURCE, VORGN, BTTYPE, AWTYP, AWREF, AWORG, LINETYPE,
 XSPLITMOD, SDM_VERSION, RKCUR, ROCUR, USNAM for one such line. These AS91 lines are a reference
 for "ACDOCA line without BKPF", not a template to copy wholesale.
+
+### 6.6 Decisions 02/11/26, evening (SE16H screenshot of CA001J0000 with technical names)
+
+Screenshot evidence: VORGN, BTTYPE, AWORG, AWREF, BSTAT, LINETYPE, XSPLITMOD, USNAM **blank**;
+AWTYP `AS91`; SDM_VERSION `05`; MIG_SOURCE `A`; **RKCUR differs per company code** (BML INR,
+OSL USD — the "USD for both" in 6.5 was wrong, it came from the heading-less paste); OSL has
+ROCUR `INR` (third currency), BML none. CBTTYPE, SDM_VERSION, RFCCUR, FCSL all exist on OCQ.
+
+| Decision | Value |
+|---|---|
+| Document type | `ZJ`, **hardcoded constant, not maintained in OBA7**. Works: the INSERT does not check T003; only the type text is missing in reports. Check SE16 T003 `BLART = ZJ` is empty first |
+| Order / WBS columns | in the Excel, optional, validated only when filled |
+| Period 000 | upload accepts it from day one (posting date = first day of FY, all accounts, net-zero check). Recon support for 000 via the totals view is step 2, after 001–016 are proven on one company code; re-running the balance carry forward after alignment may make it unnecessary |
+| Third currency | add optional Excel column *Amount 3rd Currency* → OSL, and the OSL sum to the recon. Mandatory when the company code's lines carry ROCUR, must be blank otherwise |
+| Marker fields | mirror the migrated lines: BSTAT, VORGN, BTTYPE, LINETYPE, XSPLITMOD blank; SDM_VERSION `05`; AWTYP `ZJVA` (our tag, as AS91 is theirs); AWREF = our BELNR; MIG_SOURCE `U` pending the domain check; USNAM/TIMESTAMP filled. One constants block |
+| Open check | SE11 ACDOCA → MIG_SOURCE → domain value range: meaning of `U` |
+| Verification | DEV: one company code, one period, update run, GR data release, lines visible in ACDOCU |
