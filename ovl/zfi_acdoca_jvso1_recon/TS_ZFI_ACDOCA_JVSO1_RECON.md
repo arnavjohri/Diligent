@@ -4,11 +4,11 @@
 
 | Item | Value |
 |---|---|
-| Version | 1.1 (1.0 on 19.10.2026; 1.1 drops the transaction-currency comparison) |
+| Version | 1.2 (1.0 on 19.10.2026; 1.1 drops the transaction-currency comparison; 1.2 adds the third currency and the amount-to-post columns) |
 | Author | Arnav Johri, Diligent Global |
-| Date | 21.10.2026 |
+| Date | 02.11.2026 |
 | Project / system | OVL · OCQ/500 |
-| Related FS | None — requirement received in chat, 19/10/2026, amended 21/10/2026 |
+| Related FS | None — requirement received in chat, 19/10/2026, amended 21/10/2026 and 02/11/2026 (output becomes the input of the ACDOCA alignment upload, `ovl/z_jva_alignment/NOTES.md` §6) |
 | Transport | TBD |
 
 ## 2. Purpose / background
@@ -47,27 +47,31 @@ Source: `ovl/zfi_acdoca_jvso1_recon/ZFI_ACDOCA_JVSO1_RECON.abap` (367 lines).
 Anchor: `CONVERT DATE p_cutdt TIME lv_midnight`.
 Converts the cut-off date at 00:00:00 UTC into a `TIMESTAMPL`. Two SELECTs on ACDOCA,
 both with `rldnr = '0L'`, the three select-options and `timestamp < cut-off`:
-1. `GROUP BY rbukrs, gjahr, poper, vname, egrup, racct, recid` with `SUM( hsl )` and
-   `SUM( ksl )` into `gt_acd_sum`.
+1. `GROUP BY rbukrs, gjahr, poper, vname, egrup, racct, recid` with `SUM( hsl )`,
+   `SUM( ksl )` and, since v1.2, `SUM( osl )` into `gt_acd_sum`.
 2. `SELECT DISTINCT rbukrs, gjahr, belnr` into `gt_docs` — the FI document keys handed to JVSO1.
 Empty result → caller issues *No ACDOCA line items (ledger 0L) before the cut-off for this
 selection* (type S, displayed as W) and stops.
 
 ### 4.3 FORM read_jvso1
 Anchor: `FOR ALL ENTRIES IN @gt_docs`.
-Guarded by `IF gt_docs IS NOT INITIAL`. Reads JVSO1 with `rldnr = '4A'`, `rrcty = '0'`,
-`rvers = '001'`, `rbukrs = gt_docs-rbukrs`, `ryear = gt_docs-gjahr`,
-`reffidoc = gt_docs-belnr`, `poper IN s_poper`. Field list carries `docnr` and `docln` so
-FOR ALL ENTRIES cannot drop identical lines. Amount fields: `hsl`, `ksl`.
+Guarded by `IF gt_docs IS NOT INITIAL`. Reads JVSO1 with `rldnr IN ('4A', '4C')` (v1.2;
+was `= '4A'`), `rrcty = '0'`, `rvers = '001'`, `rbukrs = gt_docs-rbukrs`,
+`ryear = gt_docs-gjahr`, `reffidoc = gt_docs-belnr`, `poper IN s_poper`. Field list starts
+with `rldnr` (v1.2) and carries `docnr` and `docln` so FOR ALL ENTRIES cannot drop identical
+lines. Amount fields: `hsl`, `ksl`.
 
 ### 4.4 FORM build_output / FORM get_sum_row
 Anchor: `LOOP AT gt_acd_sum ASSIGNING FIELD-SYMBOL(<ls_acd>)`.
 Both sides are added into `gt_sum` (sorted, unique key RBUKRS GJAHR POPER VNAME EGRUP RACCT
 RECID) via `get_sum_row`, which returns a reference to the row and creates it with zero
 amounts when absent. JVSO1 fields are mapped RBUKRS→RBUKRS, RYEAR→GJAHR, POPER→POPER,
-RJVNAM→VNAME, REGROU→EGRUP, RACCT→RACCT, RRECIN→RECID. Then per row:
-`hsl_diff = hsl_acd − hsl_jv`, `ksl_diff = ksl_acd − ksl_jv`, `diff = 'X'` when either is
-non-zero. `gt_out` is the standard-table copy for the ALV. Status message: rows and rows with
+RJVNAM→VNAME, REGROU→EGRUP, RACCT→RACCT, RRECIN→RECID. v1.2: a 4A line adds to `hsl_jv` /
+`ksl_jv`; a 4C line adds to `osl_jv` from its `KSL` (or `HSL` when constant `GC_OSL_COL` is
+`'HSL'` — see query 12). Then per row:
+`hsl_diff = hsl_acd − hsl_jv`, `ksl_diff = ksl_acd − ksl_jv`, `osl_diff = osl_acd − osl_jv`,
+`hsl_post = hsl_jv − hsl_acd`, `ksl_post = ksl_jv − ksl_acd`, `osl_post = osl_jv − osl_acd`,
+`diff = 'X'` when any difference is non-zero. `gt_out` is the standard-table copy for the ALV. Status message: rows and rows with
 differences; when no JVSO1 line was found the message says so (displayed as W) and the list
 is still shown.
 
@@ -85,7 +89,9 @@ headings.
 | Company Code, Fiscal Year, Period, Joint Venture, Equity Group, Account, Recovery Indicator | grouping key |
 | ACDOCA Local Amt / JVSO1 Local Amt / Difference Local | HSL both sides, ACDOCA − JVSO1 |
 | ACDOCA Group Amt / JVSO1 Group Amt / Difference Group | KSL both sides, ACDOCA − JVSO1 |
-| Difference exists | X when either difference ≠ 0 — filter on it to see only mismatches |
+| ACDOCA 3rd Curr Amt / JVSO1 3rd Curr Amt / Difference 3rd Curr | v1.2: ACDOCA OSL vs JVSO1 4C amount, ACDOCA − JVSO1; zero on both sides for company codes without a third currency |
+| To Post Local Amt / To Post Group Amt / To Post 3rd Curr Amt | v1.2: JVSO1 − ACDOCA — the amount the alignment upload inserts into 0L for this key, debit positive |
+| Difference exists | X when any difference ≠ 0 — filter on it to see only mismatches |
 
 ## 5. Requirement mapping
 
@@ -98,6 +104,7 @@ headings.
 | JVSO1 ledger 4A, record type 0, version 1 | §4.3 constants `gc_rldnr_jv`, `gc_rrcty`, `gc_rvers` |
 | Compare HSL, KSL and show the difference (WSL withdrawn 21/10/2026) | §4.4 `*_diff` columns, §4.6 |
 | Totals by venture, equity group, account, recovery indicator, year, period | §4.4 key of `gt_sum` (plus company code — Query 5) |
+| 02/11/2026: amount with the posting sign and third currency, for the ACDOCA alignment upload | §4.2 `SUM( osl )`, §4.3 ledger 4C, §4.4 `*_post` columns, §4.6 |
 
 ## 6. Test scenarios
 
@@ -109,9 +116,12 @@ headings.
 | 4 | Cut-off date earlier than the first posting of the year | *No ACDOCA line items ... before the cut-off* warning, no list | |
 | 5 | Cut-off 27.09.2026 vs 28.09.2026, same period | Second run includes the 27.09 postings; the delta equals those documents' totals | |
 | 6 | Period range 1–12 for a large company code, background | Completes; row count in the spool status line | |
+| 7 | v1.2: company code OSL (ROCUR INR), one period | *ACDOCA 3rd Curr Amt* non-zero; *JVSO1 3rd Curr Amt* of the same order of magnitude. Zero or unrelated → query 12, flip `GC_OSL_COL` | |
+| 8 | v1.2: company code without third currency (e.g. BML), one period | Both 3rd-currency columns zero on every row; `Diff` unchanged from v1.1 | |
+| 9 | v1.2: any row with `Diff = X` | *To Post* = −*Difference* in every currency; summed over an account the *To Post* columns equal the account's 4A − 0L total | |
 
 ## 7. Open points
 See `ASSUMPTIONS_AND_QUERIES.md` — items 1 (REFFIDOC vs DOCNR), 4 (time zone), 8 (period
-filter on JVSO1), 9 (authorisation), 10 (ledger 4C) change behaviour if answered differently;
-the rest are confirmations. Items 2 and 6 were closed on 21/10/2026 with the removal of the
+filter on JVSO1), 9 (authorisation), 10 (ledger 4C) and 12 (which 4C column is the third
+currency) change behaviour if answered differently; the rest are confirmations. Items 2 and 6 were closed on 21/10/2026 with the removal of the
 transaction-currency comparison.

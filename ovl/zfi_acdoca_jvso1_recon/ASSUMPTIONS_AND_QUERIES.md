@@ -1,6 +1,6 @@
 # ZFI_ACDOCA_JVSO1_RECON — Assumptions and Queries
 
-Project OVL · requirement received in chat on 19/10/2026 · prepared 19/10/2026 · updated 21/10/2026
+Project OVL · requirement received in chat on 19/10/2026 · prepared 19/10/2026 · updated 21/10/2026, 02/11/2026
 
 Requirement as received: *selection screen with company code, fiscal year and period as
 select-options; fetch ACDOCA entries (ledger 0L, TIMESTAMP date part before 27/09/2026); pass
@@ -24,8 +24,10 @@ arrives, and what breaks if that assumption is wrong.
 | 7 | Scope of ACDOCA lines: all ledger 0L lines of the company code / year / period, or only JVA-relevant lines (venture filled)? | "acdoca entries to be fetched" | All lines. Lines without a venture appear with blank venture and no JVSO1 counterpart, i.e. as a difference. | If only JVA lines are wanted, add `AND vname <> @space` to both ACDOCA SELECTs. |
 | 8 | Period filter on JVSO1: applied to `JVSO1-POPER` as well as to `ACDOCA-POPER`? | "period select option" | Yes, both sides, so the populations match. | If a JV line can sit in a different period from its FI line, those lines drop out of the JVSO1 side. Remove `AND poper IN @s_poper` from `FORM read_jvso1` to let the document match alone decide. |
 | 9 | Authorisation check (`F_BKPF_BUK`, activity 03, per company code)? | not stated | None — same decision as `ZFI_ACDOCA_VNAME_UPD` (16/10/26). | Restrict by SE38 authorisation group / role, or add the check in `AT SELECTION-SCREEN`. |
-| 10 | Ledger `4C` (3rd/4th JV currency): read it too? | "ledger 4a" | Only `4A`. KSL (group currency) is carried in `4A`. | If group currency is in `4C` on this system, the JVSO1 KSL column is zero — widen the ledger filter to `4A`/`4C` as `ZOCV_OVL_TRANSFER` does. |
+| 10 | Ledger `4C` (3rd/4th JV currency): read it too? | "ledger 4a" | **Updated 02/11/2026:** `4C` is read for the third currency (ACDOCA OSL). KSL (group currency) still comes from `4A`. | If group currency is in `4C` on this system, the JVSO1 KSL column is zero — swap the ledgers in `build_output`. |
 | 11 | Target system and release | not stated | OCQ/500, older S/4. Syntax kept at 7.40 level (no `+=`, no `FIELDS`, no `FINAL`). | None expected. |
+| 12 | Which JVSO1 `4C` column carries the third currency (INR for company code OSL, whose ACDOCA lines have ROCUR INR)? | 02/11/2026: upload needs OSL | `4C-KSL`, constant `GC_OSL_COL = 'KSL'` — the only working code seen (`Z_JVA_ALIGNMENT`) reads `e~ksl` from 4C. Company codes without ROCUR show zero on both sides. | If the first run on OSL shows *JVSO1 3C* zero or unrelated to *ACDOCA 3C*: set `GC_OSL_COL = 'HSL'`. Verify with one document: SE16 JVSO1 `RLDNR 4C`, `RBUKRS OSL`, `REFFIDOC = <BELNR>` — compare HSL and KSL with that line's ACDOCA OSL. |
+| 13 | Sign of the *amount to post* columns | upload design, 02/11/2026 | JVSO1 − ACDOCA, so a positive value is a debit to insert into 0L. The `*_DIFF` columns keep ACDOCA − JVSO1 for the reviewer. | If the upload is built to flip the sign itself, drop the three columns — nothing else depends on them. |
 
 Volume note (no question): ACDOCA totals are built on the database; JVSO1 lines are read at
 line level (aggregates are not allowed with FOR ALL ENTRIES). A full year for a large company

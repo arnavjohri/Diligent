@@ -8,8 +8,11 @@ line items in JVSO1 for the same FI documents, with the difference in local (HSL
 
 Requirement arrived in chat on 19/10/26 (no FSD). 21/10/26: transaction-currency comparison
 (ACDOCA WSL vs JVSO1 TSL) **removed** on Arnav's instruction — one grouping key can hold
-several transaction currencies, so that total is meaningless. Open questions are in
-`ASSUMPTIONS_AND_QUERIES.md`; the TS is `TS_ZFI_ACDOCA_JVSO1_RECON.md`.
+several transaction currencies, so that total is meaningless. **02/11/26:** the ALV export is
+now the input file of the ACDOCA alignment upload (`ovl/z_jva_alignment/NOTES.md` §6): three
+*amount to post* columns (JVSO1 − ACDOCA, the posting sign) and the third currency (ACDOCA OSL
+vs JV ledger 4C) were added. Open questions are in `ASSUMPTIONS_AND_QUERIES.md`; the TS is
+`TS_ZFI_ACDOCA_JVSO1_RECON.md`.
 
 ## Shipping method
 Paste-only. SE38, type 1 executable, no includes, no screen, no GUI status.
@@ -26,14 +29,17 @@ P_CUTDT Created before (ACDOCA time stamp).
    `TIMESTAMP < cut-off date 00:00:00 UTC`): one `GROUP BY` SELECT gives the HSL/KSL totals
    per grouping key on the database; a second `SELECT DISTINCT` gives the FI document keys
    (RBUKRS, GJAHR, BELNR) of the same lines.
-2. **JVSO1** (`RLDNR 4A`, `RRCTY 0`, `RVERS 001`, period from the screen): `FOR ALL ENTRIES`
+2. **JVSO1** (`RLDNR 4A` **and `4C`** since 02/11/26, `RRCTY 0`, `RVERS 001`, period from the
+   screen): `FOR ALL ENTRIES`
    on those document keys with `RBUKRS = RBUKRS`, `RYEAR = GJAHR`, **`REFFIDOC = BELNR`** —
    the FI-document join SAP's own `CL_JVA_MIG_CORRECT_ACDOCA` uses (see
    `ovl/rgjv_update_acc_data_in_acdoca/NOTES.md` §2). DOCNR/DOCLN are in the field list only
    so FAE cannot collapse two identical lines.
 3. Both sides are added into one sorted table keyed RBUKRS, GJAHR, POPER, VNAME, EGRUP,
-   RACCT, RECID (JVSO1: RBUKRS, RYEAR, POPER, RJVNAM, REGROU, RACCT, RRECIN). Difference =
-   ACDOCA − JVSO1 for HSL and KSL; `Diff` = `X` when either differs.
+   RACCT, RECID (JVSO1: RBUKRS, RYEAR, POPER, RJVNAM, REGROU, RACCT, RRECIN). 4A lines feed
+   HSL/KSL, 4C lines feed OSL (column per `GC_OSL_COL`, default `KSL`). Difference =
+   ACDOCA − JVSO1 for HSL, KSL and OSL; **amount to post** = JVSO1 − ACDOCA per currency;
+   `Diff` = `X` when any difference is non-zero.
 4. `CL_SALV_TABLE` full-screen grid, headings set in code. Status message gives row count and
    number of rows with differences. No ACDOCA data → warning, no list. ACDOCA data but no
    JVSO1 lines → list is shown (JVSO1 columns zero) with a warning in the status line.
@@ -50,4 +56,12 @@ P_CUTDT Created before (ACDOCA time stamp).
 - JVSO1 lines are read at line level (aggregate functions are not allowed with FAE). A full
   year over all periods for a large company code should run in background (F9).
 - No authority check in the code (same decision as `ZFI_ACDOCA_VNAME_UPD`, 16/10/26).
-- Ledger `4C` (3rd/4th JV currency) is not read; KSL comes from `4A`.
+- Ledger `4C` is read since 02/11/26 for the **third currency only**; KSL still comes from `4A`.
+  Which 4C column holds the third currency is an ASSUMPTION (`GC_OSL_COL = 'KSL'`, after the
+  reference program `Z_JVA_ALIGNMENT`). First run on an OSL-type company code (ROCUR set) tells:
+  JVSO1 3C zero or unrelated to ACDOCA 3C → change the constant to `'HSL'`, one line.
+- The *amount to post* columns carry the sign the upload posts (debit +, credit −). The
+  blank-venture row of an account is the offset; per account they net to the account's
+  0L-vs-4A difference, which the upload checks must be zero.
+- 02/11/26 change was built on the repo copy without a fresh SE80 download — diff against OCQ
+  before pasting.
