@@ -225,7 +225,12 @@ Flow: `ZFI_ACDOCA_JVSO1_RECON` → ALV export → reviewer adds cost centres, ch
 upload report reads the file → test run ALV → update run inserts into ACDOCA 0L → recon
 re-run shows zero. Decisions taken: no RTCUR in the key (transaction currency = local, TSL and
 WSL = HSL, as an `" ASSUMPTION:` in the code); cost centre comes from the Excel; dedicated
-document type `ZJ` proposed.
+document type `ZJ` proposed. **Decided 02/11/26 (later in the day):** posting date = last day
+of the period (013–016 = last day of period 012; period 000 = first day of the fiscal year,
+to be confirmed); profit centre is an Excel column, not derived; **period 000 is in scope** —
+for it the recon's JV side must come from the totals view (`*VT` columns), not from JVSO1 line
+items, because carry-forward balances have no FI document. Open: period 000 for all balance
+sheet accounts or only retained earnings.
 
 ### 6.1 Excel template (one sheet, headings in row 1 as the recon exports them)
 
@@ -256,11 +261,11 @@ are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to 
 | PERIV, KTOPL, RHCUR | T001 |
 | RKCUR | an existing ACDOCA 0L line of the company code |
 | KOKRS | TKA02 |
-| BUDAT, BLDAT | year + period + PERIV via period-to-date FM; 013–016 take 012's date |
+| BUDAT, BLDAT | last day of the period from year + period + PERIV; 013–016 = last day of 012; 000 = first day of the fiscal year (tbc) |
 | FISCYEARPER | GJAHR && POPER |
 | GLACCOUNT_TYPE | SKA1 |
 | KOART | SKB1-MITKZ A/D/K; M for T030 KTOSL BSX accounts; else S |
-| PRCTR / SEGMENT | Excel, else CSKS of the cost centre / CEPC |
+| PRCTR / SEGMENT | PRCTR from the Excel (decided 02/11/26); SEGMENT from CEPC of that profit centre |
 | PS_PSP_PNR, PS_PRJ_PNR, PS_PSPID | PRPS, PROJ |
 | DRCRK | sign of HSL |
 | RTCUR, RWCUR | = RHCUR |
@@ -273,9 +278,9 @@ are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to 
 |---|---|---|
 | BSTAT, MIG_SOURCE, VORGN, AWTYP, SDM_VERSION, BTTYPE | mark the line as having no FI document; wrong → FI consistency checks or GR data release misbehave. Take from SE16H on an existing ACDOCA-only line (BELNR `CC001NVFLO`) | Arnav |
 | Document type `ZJ` in OBA7 | must exist before the first update run; undo filters on it | FI functional, customizing TR |
-| Posting date first or last day of period | GR reporting date | GR / FI functional |
+| ~~Posting date first or last day of period~~ | decided: last day of the period | — |
 | Group currency key = currency of the Excel KSL | otherwise KSL is in the wrong currency | FI functional |
-| PRCTR / SEGMENT rule for lines without cost centre | GR consolidates by segment / profit centre | GR functional |
+| ~~PRCTR / SEGMENT rule for lines without cost centre~~ | decided: profit centre is an Excel column | — |
 | RMVCT on balance sheet accounts | GR movements; recon does not carry it | GR functional: column or FS-item default |
 | Account nets to zero per company code / year / period | otherwise the 0L account balance changes; program refuses the file | reviewer |
 | Period final in JVA before upload | later JVSO1 changes make the alignment stale | GR / JVA functional |
@@ -285,3 +290,13 @@ are ACDOCA − JVSO1, the opposite sign → add two "amount to post" columns to 
 Net zero per company code / year / period / account in HSL and KSL; duplicate upload of a
 period already posted by this program is a hard stop unless the undo ran first; rows with all
 amounts zero are skipped; every master-data check in 6.1 fails the file, not the row.
+
+### 6.5 Marker-field evidence, 02/11/26
+SE16H rows for BELNR `CA001J0000` (OSL 2017, OVL 2004) were pasted **without headings** — not
+mappable positionally; positions differ between the two company codes. Readable with confidence:
+legacy asset takeover lines (TCODE AS91, BSCHL 70, asset transaction type 100), created by the
+migration on 25.05.2026 10:20:18; no BLART, no BUZEI; **RKCUR = USD for both OSL and OVL**, so
+the recon's KSL and the Excel group-currency column are USD; SDM_VERSION reads as `05`. Still
+needed, with technical names: BSTAT, MIG_SOURCE, VORGN, BTTYPE, AWTYP, AWREF, AWORG, LINETYPE,
+XSPLITMOD, SDM_VERSION, RKCUR, ROCUR, USNAM for one such line. These AS91 lines are a reference
+for "ACDOCA line without BKPF", not a template to copy wholesale.
