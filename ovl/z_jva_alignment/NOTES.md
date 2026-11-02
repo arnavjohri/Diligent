@@ -234,6 +234,11 @@ sheet accounts or only retained earnings.
 
 ### 6.1 Excel template (one sheet, headings in row 1 as the recon exports them)
 
+**Column order changed when the upload was built (02/11/26, evening):** amounts are columns
+8–10 and the optional cost objects / text follow as 11–15, so a recon ALV layout with the key
+and the three *To Post* columns exports straight into columns 1–10. Authoritative layout:
+`ovl/zfi_acdoca_jva_align/NOTES.md`. The table below is the earlier draft order.
+
 | # | Column | ACDOCA | Mandatory | Checked against |
 |---|---|---|---|---|
 | 1 | Company Code | RBUKRS | yes | T001 |
@@ -318,3 +323,7 @@ ROCUR `INR` (third currency), BML none. CBTTYPE, SDM_VERSION, RFCCUR, FCSL all e
 | Marker fields | mirror the migrated lines: BSTAT, VORGN, BTTYPE, LINETYPE, XSPLITMOD blank; SDM_VERSION `05`; AWTYP `ZJVA` (our tag, as AS91 is theirs); AWREF = our BELNR; MIG_SOURCE `U` pending the domain check; USNAM/TIMESTAMP filled. One constants block |
 | Open check | SE11 ACDOCA → MIG_SOURCE → domain value range: meaning of `U` |
 | Verification | DEV: one company code, one period, update run, GR data release, lines visible in ACDOCU |
+
+### 6.7 Built 02/11/26
+Object 2 is `ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1542 lines, paste-only).
+Object 1, the recon change, was activated on OCQ on 02/11/26.
