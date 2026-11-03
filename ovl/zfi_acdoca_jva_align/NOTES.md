@@ -13,8 +13,8 @@ sign-off before anything beyond DEV, one company code and one period first, undo
 
 ## Shipping method
 Paste-only. SE38, type 1 executable, no includes, no screen, no GUI status. Source:
-`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1542 lines, 02/11/26). No `original/` —
-new object. Built without a system; first activation on OCQ pending.
+`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1613 lines, 03/11/26). No `original/` —
+new object. 03/11/26: first syntax check on OCQ fixed (see ISSUES.md); activation pending.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
 Text symbols: `B01` Mode · `B02` Upload · `B03` Undo selection · `B04` Processing.
@@ -32,7 +32,7 @@ P_TEST Test run (no database update).
 | 4 | Joint Venture | VNAME | blank = offset row | T8JV (BUKRS, JVNAME) |
 | 5 | Equity Group | EGRUP | blank allowed | T8JG (BUKRS, VNAME, EGRUP); needs a venture |
 | 6 | G/L Account | RACCT | yes | SKA1 + SKB1, leading zeros added |
-| 7 | Recovery Indicator | RECID | blank allowed | T8JJ (BUKRS, JVNAME, RECIN); needs a venture |
+| 7 | Recovery Indicator | RECID | blank allowed | `JV_JVSO1_ACDOCA`: posted with that venture in that year on ledger 4A (T8JJ columns unconfirmed on OCQ); needs a venture |
 | 8 | Amount Local Currency | HSL (TSL, WSL copied) | yes | number, debit +, credit − |
 | 9 | Amount Group Currency | KSL | yes | number, in the company code's RKCUR |
 | 10 | Amount 3rd Currency | OSL | when the company code's 0L lines carry ROCUR | must be blank otherwise |
@@ -83,6 +83,8 @@ RFAREA, RBUSA.
 ## Assumptions (grep `ASSUMPTION` in the source)
 - Marker constants (`gc_blart ZJ` not in OBA7, `gc_awtyp ZJVA`, `gc_mig_source U`,
   `gc_sdm_version 05`) — one constants block; `U` pending the MIG_SOURCE domain check.
+- Recovery indicator validated against posted JV lines (`JV_JVSO1_ACDOCA`), not against the
+  master table T8JJ, whose column names are not confirmed on OCQ.
 - Currency keys copied from existing 0L lines, not from configuration.
 - Transaction currency = local currency (no RTCUR in the recon key).
 - .xlsx only, first worksheet, row 1 headings.

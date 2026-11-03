@@ -49,6 +49,8 @@
 *&
 *& CHANGE HISTORY
 *&   02.11.2026  Arnav Johri  <TR>  Initial development
+*&   03.11.2026  Arnav Johri  <TR>  Activation fixes: messages built before PERFORM, T8JV VNAME,
+*&                                  recovery indicator checked on JV_JVSO1_ACDOCA instead of T8JJ
 *&---------------------------------------------------------------------*
 REPORT zfi_acdoca_jva_align.
 
@@ -158,12 +160,22 @@ TYPES:
   BEGIN OF ty_bsx,
     ktopl TYPE t030-ktopl,
     konts TYPE t030-konts,
-  END OF ty_bsx.
+  END OF ty_bsx,
+
+  " Recovery indicator check results, cached per combination
+  BEGIN OF ty_recid,
+    rbukrs TYPE acdoca-rbukrs,
+    gjahr  TYPE acdoca-gjahr,
+    vname  TYPE acdoca-vname,
+    recid  TYPE acdoca-recid,
+    ok     TYPE abap_bool,
+  END OF ty_recid.
 
 *----------------------------------------------------------------------*
 * Constants
 *----------------------------------------------------------------------*
 CONSTANTS: gc_rldnr       TYPE acdoca-rldnr       VALUE '0L',      " leading ledger
+           gc_rldnr_jv    TYPE jvso1-rldnr        VALUE '4A',      " JV ledger (line-item view)
            gc_rrcty       TYPE acdoca-rrcty       VALUE '0',       " record type actual
            gc_bsx         TYPE t030-ktosl         VALUE 'BSX',     " stock accounts -> KOART M
            gc_max_cols    TYPE i                  VALUE 15.        " Excel columns read
@@ -196,7 +208,8 @@ DATA: gv_bukrs TYPE acdoca-rbukrs,
       gt_cc    TYPE SORTED TABLE OF ty_cc  WITH UNIQUE KEY rbukrs,
       gt_doc   TYPE SORTED TABLE OF ty_doc WITH UNIQUE KEY rbukrs gjahr poper,
       gt_bsx   TYPE SORTED TABLE OF ty_bsx WITH UNIQUE KEY ktopl konts,
-      gt_bsx_k TYPE SORTED TABLE OF t030-ktopl WITH UNIQUE KEY table_line.
+      gt_bsx_k TYPE SORTED TABLE OF t030-ktopl WITH UNIQUE KEY table_line,
+      gt_recid TYPE SORTED TABLE OF ty_recid WITH UNIQUE KEY rbukrs gjahr vname recid.
 
 *----------------------------------------------------------------------*
 * Selection screen
@@ -411,6 +424,7 @@ FORM parse_row USING    is_row  TYPE ty_row
                CHANGING cs_line TYPE ty_line.
   DATA: ls_cc   TYPE ty_cc,
         lv_text TYPE string,
+        lv_msg  TYPE string,
         lv_c40  TYPE c LENGTH 40,
         lv_int  TYPE i,
         lv_ok   TYPE abap_bool.
@@ -475,8 +489,8 @@ FORM parse_row USING    is_row  TYPE ty_row
   PERFORM period_date USING cs_line-gjahr cs_line-poper ls_cc-periv
                       CHANGING cs_line-budat lv_ok.
   IF lv_ok = abap_false.
-    PERFORM add_err USING |Posting date for period { cs_line-poper } not determined (FYV { ls_cc-periv })|
-                    CHANGING cs_line.
+    lv_msg = |Posting date for period { cs_line-poper } not determined (FYV { ls_cc-periv })|.
+    PERFORM add_err USING lv_msg CHANGING cs_line.
     RETURN.
   ENDIF.
 
@@ -499,8 +513,8 @@ FORM parse_row USING    is_row  TYPE ty_row
     PERFORM add_err USING 'Amount 3rd currency is not a number' CHANGING cs_line.
   ENDIF.
   IF ls_cc-rocur IS INITIAL AND cs_line-osl <> 0.
-    PERFORM add_err USING |Company code { cs_line-rbukrs } has no third currency - column 10 must be empty|
-                    CHANGING cs_line.
+    lv_msg = |Company code { cs_line-rbukrs } has no third currency - column 10 must be empty|.
+    PERFORM add_err USING lv_msg CHANGING cs_line.
   ENDIF.
 
   " --- line text
@@ -685,7 +699,8 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM check_account USING    is_cc   TYPE ty_cc
                    CHANGING cs_line TYPE ty_line.
-  DATA lv_mitkz TYPE skb1-mitkz.
+  DATA: lv_mitkz TYPE skb1-mitkz,
+        lv_msg   TYPE string.
 
   SELECT SINGLE glaccount_type
     FROM ska1
@@ -693,8 +708,8 @@ FORM check_account USING    is_cc   TYPE ty_cc
       AND saknr = @cs_line-racct
     INTO @cs_line-glaccount_type.
   IF sy-subrc <> 0.
-    PERFORM add_err USING |G/L account { cs_line-racct } not in chart of accounts { is_cc-ktopl }|
-                    CHANGING cs_line.
+    lv_msg = |G/L account { cs_line-racct } not in chart of accounts { is_cc-ktopl }|.
+    PERFORM add_err USING lv_msg CHANGING cs_line.
     RETURN.
   ENDIF.
 
@@ -704,8 +719,8 @@ FORM check_account USING    is_cc   TYPE ty_cc
       AND saknr = @cs_line-racct
     INTO @lv_mitkz.
   IF sy-subrc <> 0.
-    PERFORM add_err USING |G/L account { cs_line-racct } not created in company code { cs_line-rbukrs }|
-                    CHANGING cs_line.
+    lv_msg = |G/L account { cs_line-racct } not created in company code { cs_line-rbukrs }|.
+    PERFORM add_err USING lv_msg CHANGING cs_line.
     RETURN.
   ENDIF.
 
@@ -747,15 +762,17 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form CHECK_JVA_FIELDS
 *&   Joint venture (T8JV), equity group (T8JG), recovery indicator
-*&   (T8JJ). All three may be blank - that is the offset row of an
-*&   account. Equity group or recovery indicator without a venture is
-*&   rejected.
+*&   (against the JV line items, see CHECK_RECID). All three may be
+*&   blank - that is the offset row of an account. Equity group or
+*&   recovery indicator without a venture is rejected.
 *&---------------------------------------------------------------------*
 FORM check_jva_fields USING    is_row  TYPE ty_row
                                is_cc   TYPE ty_cc
                       CHANGING cs_line TYPE ty_line.
   DATA: lv_text TYPE string,
-        lv_chk  TYPE c LENGTH 6.
+        lv_msg  TYPE string,
+        lv_chk  TYPE c LENGTH 6,
+        lv_ok   TYPE abap_bool.
 
   " --- joint venture
   lv_text = to_upper( condense( is_row-vname ) ).
@@ -763,14 +780,14 @@ FORM check_jva_fields USING    is_row  TYPE ty_row
     PERFORM add_err USING 'Joint venture longer than 6 characters' CHANGING cs_line.
   ELSEIF lv_text IS NOT INITIAL.
     cs_line-vname = lv_text.
-    SELECT SINGLE jvname
+    SELECT SINGLE vname
       FROM t8jv
-      WHERE bukrs  = @cs_line-rbukrs
-        AND jvname = @cs_line-vname
+      WHERE bukrs = @cs_line-rbukrs
+        AND vname = @cs_line-vname
       INTO @lv_chk.
     IF sy-subrc <> 0.
-      PERFORM add_err USING |Joint venture { cs_line-vname } not defined for company code { cs_line-rbukrs }|
-                      CHANGING cs_line.
+      lv_msg = |Joint venture { cs_line-vname } not defined for company code { cs_line-rbukrs }|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 
@@ -790,8 +807,8 @@ FORM check_jva_fields USING    is_row  TYPE ty_row
           AND egrup = @cs_line-egrup
         INTO @lv_chk.
       IF sy-subrc <> 0.
-        PERFORM add_err USING |Equity group { cs_line-egrup } not defined for venture { cs_line-vname }|
-                        CHANGING cs_line.
+        lv_msg = |Equity group { cs_line-egrup } not defined for venture { cs_line-vname }|.
+        PERFORM add_err USING lv_msg CHANGING cs_line.
       ENDIF.
     ENDIF.
   ENDIF.
@@ -805,18 +822,68 @@ FORM check_jva_fields USING    is_row  TYPE ty_row
     IF cs_line-vname IS INITIAL.
       PERFORM add_err USING 'Recovery indicator given without a joint venture' CHANGING cs_line.
     ELSE.
-      SELECT SINGLE recin
-        FROM t8jj
-        WHERE bukrs  = @cs_line-rbukrs
-          AND jvname = @cs_line-vname
-          AND recin  = @cs_line-recid
-        INTO @lv_chk.
-      IF sy-subrc <> 0.
-        PERFORM add_err USING |Recovery indicator { cs_line-recid } not defined for venture { cs_line-vname }|
-                        CHANGING cs_line.
+      PERFORM check_recid USING cs_line-rbukrs cs_line-gjahr cs_line-vname cs_line-recid
+                          CHANGING lv_ok.
+      IF lv_ok = abap_false.
+        lv_msg = |Recovery indicator { cs_line-recid } never posted with venture { cs_line-vname }| &&
+                 | in { cs_line-gjahr } (JV ledger)|.
+        PERFORM add_err USING lv_msg CHANGING cs_line.
       ENDIF.
     ENDIF.
   ENDIF.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form CHECK_RECID
+*&   Recovery indicator must have been posted with this venture in this
+*&   fiscal year on the JV ledger. Read from the JV line-item view, one
+*&   database access per combination.
+*&---------------------------------------------------------------------*
+*----------------------------------------------------------------------*
+* ASSUMPTION: the recovery indicator master table T8JJ is not read -
+*   its column names are not confirmed on OCQ (RECIN / JVNAME rejected
+*   at activation 03/11/26). JV_JVSO1_ACDOCA with RBUKRS, RYEAR, RJVNAM,
+*   RRECIN, RLDNR is the view the active ZFI_JV_TB reads, so those names
+*   are safe. Alignment rows come from the recon, i.e. from posted JV
+*   data, so "posted in that year" is the right test. Replace with T8JJ
+*   once SE11 gives its fields, if a master-data check is preferred.
+*----------------------------------------------------------------------*
+FORM check_recid USING    iv_bukrs TYPE acdoca-rbukrs
+                          iv_gjahr TYPE acdoca-gjahr
+                          iv_vname TYPE acdoca-vname
+                          iv_recid TYPE acdoca-recid
+                 CHANGING cv_ok    TYPE abap_bool.
+  DATA: ls_recid TYPE ty_recid,
+        lv_chk   TYPE jvso1-rrecin.
+
+  READ TABLE gt_recid INTO ls_recid
+       WITH TABLE KEY rbukrs = iv_bukrs gjahr = iv_gjahr vname = iv_vname recid = iv_recid.
+  IF sy-subrc = 0.
+    cv_ok = ls_recid-ok.
+    RETURN.
+  ENDIF.
+
+  CLEAR ls_recid.
+  ls_recid-rbukrs = iv_bukrs.
+  ls_recid-gjahr  = iv_gjahr.
+  ls_recid-vname  = iv_vname.
+  ls_recid-recid  = iv_recid.
+
+  SELECT rrecin
+    FROM jv_jvso1_acdoca
+    WHERE rldnr  = @gc_rldnr_jv
+      AND rbukrs = @iv_bukrs
+      AND ryear  = @iv_gjahr
+      AND rjvnam = @iv_vname
+      AND rrecin = @iv_recid
+    INTO @lv_chk
+    UP TO 1 ROWS.
+  ENDSELECT.
+  IF sy-subrc = 0.
+    ls_recid-ok = abap_true.
+  ENDIF.
+  INSERT ls_recid INTO TABLE gt_recid.
+  cv_ok = ls_recid-ok.
 ENDFORM.
 
 *&---------------------------------------------------------------------*
@@ -830,6 +897,7 @@ FORM check_cost_objects USING    is_row  TYPE ty_row
                                  is_cc   TYPE ty_cc
                         CHANGING cs_line TYPE ty_line.
   DATA: lv_text     TYPE string,
+        lv_msg      TYPE string,
         lv_c40      TYPE c LENGTH 40,
         lv_prctr_cc TYPE csks-prctr,
         lv_aufnr    TYPE aufk-aufnr,
@@ -854,8 +922,8 @@ FORM check_cost_objects USING    is_row  TYPE ty_row
         AND datab <= @cs_line-budat
       INTO @lv_prctr_cc.
     IF sy-subrc <> 0.
-      PERFORM add_err USING |Cost center { cs_line-rcntr } invalid in { is_cc-kokrs } on { cs_line-budat DATE = USER }|
-                      CHANGING cs_line.
+      lv_msg = |Cost center { cs_line-rcntr } invalid in { is_cc-kokrs } on { cs_line-budat DATE = USER }|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 
@@ -875,7 +943,8 @@ FORM check_cost_objects USING    is_row  TYPE ty_row
       WHERE aufnr = @cs_line-aufnr
       INTO @lv_aufnr.
     IF sy-subrc <> 0.
-      PERFORM add_err USING |Order { cs_line-aufnr } does not exist (AUFK)| CHANGING cs_line.
+      lv_msg = |Order { cs_line-aufnr } does not exist (AUFK)|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 
@@ -886,7 +955,8 @@ FORM check_cost_objects USING    is_row  TYPE ty_row
   ELSEIF lv_text IS NOT INITIAL.
     PERFORM find_wbs USING lv_text CHANGING cs_line lv_ok.
     IF lv_ok = abap_false.
-      PERFORM add_err USING |WBS element { lv_text } not found (PRPS)| CHANGING cs_line.
+      lv_msg = |WBS element { lv_text } not found (PRPS)|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 
@@ -914,8 +984,8 @@ FORM check_cost_objects USING    is_row  TYPE ty_row
         AND datab <= @cs_line-budat
       INTO @cs_line-segment.
     IF sy-subrc <> 0.
-      PERFORM add_err USING |Profit ctr { cs_line-prctr } invalid in { is_cc-kokrs } on { cs_line-budat DATE = USER }|
-                      CHANGING cs_line.
+      lv_msg = |Profit ctr { cs_line-prctr } invalid in { is_cc-kokrs } on { cs_line-budat DATE = USER }|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 ENDFORM.
@@ -1095,15 +1165,16 @@ FORM file_checks.
         AND belnr  = @lv_belnr
       INTO @lv_cnt.
     IF lv_cnt > 0.
-      PERFORM err_document USING <ls_docs>-rbukrs <ls_docs>-gjahr <ls_docs>-poper
-        |Document { lv_belnr } already exists for { <ls_docs>-rbukrs } { <ls_docs>-gjahr } - run the undo first|.
+      lv_msg = |Document { lv_belnr } already exists for { <ls_docs>-rbukrs } { <ls_docs>-gjahr }| &&
+               | - run the undo first|.
+      PERFORM err_document USING <ls_docs>-rbukrs <ls_docs>-gjahr <ls_docs>-poper lv_msg.
     ENDIF.
 
     READ TABLE gt_cc INTO ls_cc WITH TABLE KEY rbukrs = <ls_docs>-rbukrs.
     IF sy-subrc = 0 AND ls_cc-rocur IS NOT INITIAL AND
        <ls_docs>-any_hsl = abap_true AND <ls_docs>-any_osl = abap_false.
-      PERFORM err_document USING <ls_docs>-rbukrs <ls_docs>-gjahr <ls_docs>-poper
-        |Company code { <ls_docs>-rbukrs } has third currency { ls_cc-rocur } - column 10 is empty|.
+      lv_msg = |Company code { <ls_docs>-rbukrs } has third currency { ls_cc-rocur } - column 10 is empty|.
+      PERFORM err_document USING <ls_docs>-rbukrs <ls_docs>-gjahr <ls_docs>-poper lv_msg.
     ENDIF.
   ENDLOOP.
 
