@@ -87,12 +87,13 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
   grouping handles it.
 - Venture from BSEG, not ACDOCA ledger 0L: on this landscape 0L venture is incomplete
   (`ovl/zfi_acdoca_jva_align`), and a JIB line has the venture explicitly on BSEG.
-- Shape, if it joins the existing dashboard: classic `define view` with parameters named
-  `P_DateFrom` / `P_DateTo` (the Overview Page hands filter values to cards by parameter
-  NAME — see `ovl/zpra_dpr/dashboard/README.md`), `@OData.publish: true` → OData V2 service,
-  same pattern as `ovl/zpra_dpr/zdpr_rap/ZDPR_Q_DASH_FILTER.ddls.asddls`.
-  MEMORY.md §4.1 applies (no `year()`/`month()`, no `@Semantics.*` in view entities,
-  parameters typed with data elements, `CASE` not in `GROUP BY` → helper view).
+- **Not part of the DPR Overview Page** (Arnav, 03/11/26: "a different requirement"). The
+  Management Dashboard is its own consumer, still to be named (Fiori app, SAC, or ABAP
+  report). The DPR parameter names (`P_DateFrom` / `P_DateTo`) are therefore not binding;
+  the ZDPR views remain the pattern for a classic `define view` + `@OData.publish: true`
+  on this release. MEMORY.md §4.1 applies to any CDS written for it (no `year()`/`month()`,
+  no `@Semantics.*` in view entities, parameters typed with data elements, `CASE` not in
+  `GROUP BY` → helper view).
 
 ## Open questions (03/11/26)
 1. `JM` is the set value (confirmed 03/11/26). Exclusive to JIBs, and used by every JIB
@@ -103,6 +104,8 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 5. "Date" = CPUDT (entered) — confirmed by Arnav's wording "last creation date"; the
    requester's sample dates should be checked against that reading.
 6. Company code OVL only, or every company code with ventures?
+7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
+   type (CDS view with OData service vs. a report).
 
 ## Shipping
 New CDS objects by ADT paste (no SE80 baseline, so no `original/`). Nothing built yet.
