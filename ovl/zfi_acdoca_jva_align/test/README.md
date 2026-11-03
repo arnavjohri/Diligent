@@ -3,7 +3,7 @@
 | File | What |
 |---|---|
 | `recon_OVL_2022_001_diff_rows.txt` | `ZFI_ACDOCA_JVSO1_RECON` output for OVL 2022 001, the 172 rows with Diff = X, as pasted by Arnav. Whitespace-separated, SAP amount format |
-| `build_testfile.py` | parses the rows, checks net-zero per account, writes the upload workbook. `python3 -I build_testfile.py <rows.txt> <out.xlsx>` |
+| `build_testfile.py` | parses the rows, checks net-zero per account, writes the upload workbook **in Excel's own package layout** (relative relationship targets, shared strings). `python3 -I build_testfile.py <rows.txt> <out.xlsx>` |
 | `ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001.xlsx` | the upload file: 15 columns, 172 data rows, amounts = recon *To Post* columns, cost objects blank |
 
 ## Pre-check result (script output)
@@ -34,3 +34,11 @@ company code's 0L lines of the year, a venture is not required.
 Possible first-run surprises and what they mean: *Company code OVL has third currency … column 10
 is empty* → OVL's 0L lines carry a ROCUR after all; tell me the value. *Equity group … not
 defined for venture …* → T8JG does not hold that venture / group pair; tell me which.
+
+## 03/11/26, first upload attempt on OCD: *Unable to load worksheet*
+Raised by SAP's `CL_FDT_XL_SPREADSHEET`, not by the program (the program's own messages are
+different). Cause: the first workbook came from openpyxl, whose package differs from an
+Excel-saved one — the worksheet relationship target is absolute (`/xl/worksheets/sheet1.xml`)
+and text cells are inline strings. The builder now writes the package the way Excel does; the
+file read back cleanly with 172 rows, sums zero. Fallback for any other generated .xlsx: open it
+in Excel and *Save As* .xlsx — Excel rewrites the package.
