@@ -52,9 +52,11 @@ BKPF carries no venture. BSEG-VNAME on the line items does (join on BUKRS, BELNR
   Z customizing table rather than hardcoding `'JM'`; the set is what the upload uses.
 
 ### Checks on PRD before anything is built (display only)
-1. `GS03` → set `ZJVNONOPJIB_DOCTYP_MON` → value should be `JM`. Also look for a provision
-   set (`_MON` has a JIB-provision mode, memory ID `ZJIB_PROV`): if provisions post under JM
-   too they would show as "Uploaded".
+1. **Done 03/11/26 (GS03 screenshot):** set `ZJVNONOPJIB_DOCTYP_MON`, "Set for NonOP JIB
+   upload-DocType-Monthly", table BKPF, field BLART, one line: `JM`. So every monthly JIB
+   posted by the upload carries JM. Still open: is there a provision set (`_MON` has a
+   JIB-provision mode, memory ID `ZJIB_PROV`)? If provisions post under JM too they would
+   show as "Uploaded".
 2. `SE16N BKPF`: BUKRS `OVL`, BLART `JM`, GJAHR `2026` → every row should be a JIB
    (XBLNR / BKTXT / USNAM / TCODE tell). Any non-JIB row means JM is not exclusive.
 3. `SE16N BKPF`: BUKRS `OVL`, XBLNR `*JIB*`, BLART ≠ `JM` → any row means JIBs also go
@@ -93,7 +95,8 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
   parameters typed with data elements, `CASE` not in `GROUP BY` → helper view).
 
 ## Open questions (03/11/26)
-1. Is `JM` the set value, exclusive to JIBs, and used by every JIB (checks 1–3 above)?
+1. `JM` is the set value (confirmed 03/11/26). Exclusive to JIBs, and used by every JIB
+   including hand-parked ones (checks 2–3 above)? Still open.
 2. Which document type do JIB **provisions** use?
 3. Quarter / year period: "Uploaded" when every month is posted, or when any is?
 4. Business Unit mapping: Z table (recommended) or hardcoded CASE on the venture prefix?
