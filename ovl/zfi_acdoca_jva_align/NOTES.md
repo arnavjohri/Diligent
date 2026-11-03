@@ -13,7 +13,7 @@ sign-off before anything beyond DEV, one company code and one period first, undo
 
 ## Shipping method
 Paste-only. SE38, type 1 executable, no includes, no screen, no GUI status. Source:
-`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1756 lines, 03/11/26). No `original/` —
+`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1793 lines, 03/11/26). No `original/` —
 new object. 03/11/26: first syntax check on OCQ fixed (see ISSUES.md); activation pending.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
@@ -78,8 +78,10 @@ AWREF = BELNR, AWORG = BUKRS+GJAHR, BELNR, DOCLN, FISCYEARPER, BUDAT = BLDAT, PE
 KOKRS, KOART, GLACCOUNT_TYPE, PS_PSP_PNR, PS_PRJ_PNR, PS_PSPID, SEGMENT, RTCUR = RWCUR = RHCUR
 = T001 currency, RKCUR / ROCUR / RFCCUR as on existing lines, TSL = WSL = HSL, FCSL = the
 amount whose currency equals RFCCUR, DRCRK from the sign of HSL (KSL when HSL is zero),
-MIG_SOURCE U, SDM_VERSION 05, USNAM, TIMESTAMP. Left blank on purpose, as on the migrated
-ACDOCA-only lines seen on OCQ: BSTAT, VORGN, BTTYPE, LINETYPE, XSPLITMOD, BUZEI, RMVCT, RASSC,
+**BSCHL** by account type and side (S 40/50, D 01/11, K 21/31, A 70/75, M 89/99),
+**BTTYPE = CBTTYPE = RFBU** (both added 03/11/26 on Arnav's instruction, as in the reference
+program), MIG_SOURCE U, SDM_VERSION 05, USNAM, TIMESTAMP. Left blank on purpose, as on the
+migrated ACDOCA-only lines seen on OCQ: BSTAT, VORGN, LINETYPE, XSPLITMOD, BUZEI, RMVCT, RASSC,
 RFAREA, RBUSA.
 
 ## Assumptions (grep `ASSUMPTION` in the source)
@@ -115,3 +117,9 @@ RFAREA, RBUSA.
 
 ## Test cases
 `test/README.md` — case 1: OVL 2022 001, 172 rows, net-zero verified offline, expected results per step.
+
+## Test log
+- 03/11/26, OCD: one-account file (30434, 2 rows) posted as `ZJVA000001`; recon with cut-off
+  04.11.2026 shows zero on both rows. First confirmed end-to-end run. Those two lines were
+  written **before** BSCHL / BTTYPE / CBTTYPE were added — undo and re-post if the lines must be
+  uniform.

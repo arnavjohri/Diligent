@@ -61,8 +61,9 @@ is posted, every valid row shows *Not posted - file has errors*.
 ### 4.5 ACDOCA line
 Field by field in NOTES.md. Key: RLDNR 0L, RBUKRS, GJAHR, BELNR `ZJVA000` + period, DOCLN
 1..n. Markers: BLART ZJ, AWTYP ZJVA, AWREF = BELNR, AWORG = BUKRS+GJAHR, MIG_SOURCE U,
-SDM_VERSION 05, USNAM, TIMESTAMP. Amounts: HSL/KSL/OSL from the file, TSL = WSL = HSL, FCSL by
-RFCCUR match, DRCRK from the sign.
+SDM_VERSION 05, USNAM, TIMESTAMP, BTTYPE = CBTTYPE = RFBU, BSCHL by account type and side
+(S 40/50, D 01/11, K 21/31, A 70/75, M 89/99). Amounts: HSL/KSL/OSL from the file, TSL = WSL =
+HSL, FCSL by RFCCUR match, DRCRK from the sign.
 
 ### 4.6 Database update
 `INSERT acdoca FROM TABLE @lt ACCEPTING DUPLICATE KEYS` per document; `COMMIT WORK` on

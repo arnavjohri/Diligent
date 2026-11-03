@@ -25,7 +25,9 @@
 *&   date (last day of the period; 013-016 = last day of 012; 000 =
 *&   first day of the fiscal year), account type (SKB1 / T030 BSX), G/L
 *&   account type (SKA1), segment (CEPC), WBS internal numbers (PRPS /
-*&   PROJ), document number, line number, user and time stamp.
+*&   PROJ), document number, line number, posting key (40/50, 01/11,
+*&   21/31, 70/75, 89/99 by account type and side), business
+*&   transaction type RFBU, user and time stamp.
 *&
 *&   Test run (default) validates and lists what would be posted.
 *&   Update run inserts with a COMMIT per document; a rejected insert is
@@ -52,7 +54,8 @@
 *&   03.11.2026  Arnav Johri  <TR>  Activation fixes: messages built before PERFORM, T8JV VNAME;
 *&                                  recovery indicator / equity group without venture accepted when
 *&                                  the value exists on ledger 0L (T8JJ columns unconfirmed);
-*&                                  second file reader TEXT_CONVERT_XLS_TO_SAP + read diagnostics
+*&                                  second file reader TEXT_CONVERT_XLS_TO_SAP + read diagnostics;
+*&                                  posting key per line, BTTYPE / CBTTYPE RFBU (Arnav, 03/11/26)
 *&---------------------------------------------------------------------*
 REPORT zfi_acdoca_jva_align.
 
@@ -123,6 +126,8 @@ TYPES:
     segment        TYPE acdoca-segment,
     belnr          TYPE acdoca-belnr,
     docln          TYPE acdoca-docln,
+    bschl          TYPE acdoca-bschl,
+    drcrk          TYPE acdoca-drcrk,
     budat          TYPE acdoca-budat,
     sgtxt          TYPE acdoca-sgtxt,
     message        TYPE bapi_msg,
@@ -199,6 +204,7 @@ TYPES:
 *----------------------------------------------------------------------*
 CONSTANTS: gc_rldnr       TYPE acdoca-rldnr       VALUE '0L',      " leading ledger
            gc_rrcty       TYPE acdoca-rrcty       VALUE '0',       " record type actual
+           gc_bttype      TYPE acdoca-bttype      VALUE 'RFBU',    " business transaction type (FI posting)
            gc_bsx         TYPE t030-ktosl         VALUE 'BSX',     " stock accounts -> KOART M
            gc_max_cols    TYPE i                  VALUE 15.        " Excel columns read
 *----------------------------------------------------------------------*
@@ -1375,7 +1381,40 @@ FORM assign_documents.
     <ls_doc>-lines  = <ls_doc>-lines + 1.
     <ls_line>-belnr = <ls_doc>-belnr.
     <ls_line>-docln = <ls_doc>-lines.
+    PERFORM debit_credit USING <ls_line>-hsl <ls_line>-ksl <ls_line>-koart
+                         CHANGING <ls_line>-drcrk <ls_line>-bschl.
   ENDLOOP.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form DEBIT_CREDIT
+*&   Debit/credit indicator from the sign of the local amount (group
+*&   amount when local is zero), and the standard posting key for the
+*&   account type: S 40/50, D 01/11, K 21/31, A 70/75, M 89/99.
+*&---------------------------------------------------------------------*
+FORM debit_credit USING    iv_hsl   TYPE acdoca-hsl
+                           iv_ksl   TYPE acdoca-ksl
+                           iv_koart TYPE acdoca-koart
+                  CHANGING cv_drcrk TYPE acdoca-drcrk
+                           cv_bschl TYPE acdoca-bschl.
+  IF iv_hsl < 0 OR ( iv_hsl = 0 AND iv_ksl < 0 ).
+    cv_drcrk = 'H'.
+  ELSE.
+    cv_drcrk = 'S'.
+  ENDIF.
+
+  CASE iv_koart.
+    WHEN 'D'.
+      IF cv_drcrk = 'S'. cv_bschl = '01'. ELSE. cv_bschl = '11'. ENDIF.
+    WHEN 'K'.
+      IF cv_drcrk = 'S'. cv_bschl = '21'. ELSE. cv_bschl = '31'. ENDIF.
+    WHEN 'A'.
+      IF cv_drcrk = 'S'. cv_bschl = '70'. ELSE. cv_bschl = '75'. ENDIF.
+    WHEN 'M'.
+      IF cv_drcrk = 'S'. cv_bschl = '89'. ELSE. cv_bschl = '99'. ENDIF.
+    WHEN OTHERS.
+      IF cv_drcrk = 'S'. cv_bschl = '40'. ELSE. cv_bschl = '50'. ENDIF.
+  ENDCASE.
 ENDFORM.
 
 *&---------------------------------------------------------------------*
@@ -1491,6 +1530,10 @@ FORM build_acdoca_line USING    is_line TYPE ty_line
   cs_acd-periv       = is_cc-periv.
   cs_acd-ktopl       = is_cc-ktopl.
   cs_acd-kokrs       = is_cc-kokrs.
+  cs_acd-bttype      = gc_bttype.
+  cs_acd-cbttype     = gc_bttype.
+  cs_acd-bschl       = is_line-bschl.
+  cs_acd-drcrk       = is_line-drcrk.
 
   " account and assignments
   cs_acd-racct          = is_line-racct.
@@ -1535,12 +1578,6 @@ FORM build_acdoca_line USING    is_line TYPE ty_line
     ELSEIF is_cc-rfccur = is_cc-rocur.
       cs_acd-fcsl = is_line-osl.
     ENDIF.
-  ENDIF.
-
-  IF is_line-hsl < 0 OR ( is_line-hsl = 0 AND is_line-ksl < 0 ).
-    cs_acd-drcrk = 'H'.
-  ELSE.
-    cs_acd-drcrk = 'S'.
   ENDIF.
 
   " markers and audit
