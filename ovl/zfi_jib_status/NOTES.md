@@ -57,8 +57,9 @@ BKPF carries no venture. BSEG-VNAME on the line items does (join on BUKRS, BELNR
    posted by the upload carries JM. Still open: is there a provision set (`_MON` has a
    JIB-provision mode, memory ID `ZJIB_PROV`)? If provisions post under JM too they would
    show as "Uploaded".
-2. `SE16N BKPF`: BUKRS `OVL`, BLART `JM`, GJAHR `2026` → every row should be a JIB
-   (XBLNR / BKTXT / USNAM / TCODE tell). Any non-JIB row means JM is not exclusive.
+2. **Done 03/11/26:** SE16N BKPF OVL / JM, 2016–2018 pasted — every row is a JIB
+   (AREA 1, AIOC, VN 06.1, SATYPEV, A1/A3, RC8-POSES), TCODE FBVB or ZJV_NOP_JIBUPLD_MON(C).
+   Six of them are reversed (STBLG filled), hence the `stblg = ''` filter in view 1.
 3. `SE16N BKPF`: BUKRS `OVL`, XBLNR `*JIB*`, BLART ≠ `JM` → any row means JIBs also go
    through another document type and BLART alone misses them.
 4. `SE16N T003T`: BLART `JM`, SPRAS `EN` → the configured description.
@@ -107,5 +108,28 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
    type (CDS view with OData service vs. a report).
 
+## Objects (decided 03/11/26 — consumer is a Fiori tile built in Custom Analytical Queries)
+
+Three classic `define view`s, pasted in ADT one at a time, loose files in this folder:
+
+| # | Object | SQL view | What | File | Status |
+|---|---|---|---|---|---|
+| 1 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | BKPF (JM, not reversed) ⋈ BSEG, grouped by company code / venture / GJAHR / MONAT: `max(cpudt)` LastEntryDate, `max(budat)`, `count(distinct belnr)` JibDocuments, JibPosted (= 1) | `ZI_JIB_DOC_AGG.ddls.asddls` | delivered 03/11/26, awaiting activation |
+| 2 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | `select distinct bukrs, gjahr, monat from bkpf` (MONAT 01–12): every period with any posting, so a period with no JIB at all still shows every venture as Pending | — | next |
+| 3 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | T8JV ⋈ T8JVT (bukrs, vname — the active selects use no SPRAS) ⋈ `ZI_JIB_PERIOD` on bukrs (the cross join), LEFT OUTER JOIN view 1 on all four keys. Status and counts via `coalesce( x, cast( 0 as abap.int4 ) )` (proven in `ZDPR_C_TARGET_CUBE`); no `IS NULL`, no CASE on joined columns. Characteristics: CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture, JointVentureName, VentureType (T8JV-VTYPE; active cash-call code filters `'2'`), BusinessUnit (CASE on `substring(vname,1,2)`: AA/SD → MENA & CIS BU, MM → AP BU, else OTHER — ASSUMPTION until the list arrives), FiscalYear, FiscalPeriod, FiscalPeriodName (literal CASE 01→Apr … 12→Mar), FiscalQuarter, JibStatus, LastEntryDate, LastPostingDate. Measures: JibDocuments (SUM), JibPosted (SUM, 0/1), JibPending (SUM, 1 − JibPosted), Ventures (SUM, 1). Header set copied from `ZI_TR_BANKACCT_CUBE`; after activation ADT → API State → **Use in Key User Apps (C1)**, then `RSRTS_ODP_DIS` on `2CZIJIBSTATUSCUBE` | — | after 2 |
+
+Decisions behind the shape:
+- `JM` is a literal in view 1, not a SETLEAF join on the GS01 set: if the set is ever changed,
+  the JM history must not vanish from the dashboard.
+- No BSTAT filter: parked documents have no BSEG lines, so the inner join already drops them,
+  and the upload-posted headers carry **BSTAT `Z`** in PRD (column mapping of the SE16N dump,
+  03/11/26; meaning of `Z` on domain BSTAT still to be read in SE11). Reversed documents go
+  through `stblg = ''`; the reversal documents carry STBLG too, so both sides drop.
+- Period = GJAHR / MONAT of the posting (FY variant April–March: MONAT 1 = April). The header
+  text month is unreliable (1017004699: period 11/2017, text "For Jan'18").
+- Only JM rows were pulled from PRD (BLART filter), so "JIBs under another type" (check 3) is
+  unproven; Arnav's call 03/11/26: JM is enough.
+
 ## Shipping
-New CDS objects by ADT paste (no SE80 baseline, so no `original/`). Nothing built yet.
+ADT paste, one DDL source at a time (no SE80 baseline, so no `original/`). The cube needs the
+manual C1 release before CAQ lists it (MEMORY.md §4.1).
