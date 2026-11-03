@@ -35,7 +35,19 @@
 //   03.11.2026  Arnav Johri  <TR>  Initial development
 //   03.11.2026  Arnav Johri  <TR>  Business Unit per venture (was: by
 //                                  prefix); VenturePrefix dropped
+//   03.11.2026  Arnav Johri  <TR>  ProjectName and labels as in the
+//                                  workbook; PeriodStartDate for a
+//                                  date-range filter
 //----------------------------------------------------------------------
+// ASSUMPTION: ProjectName is the workbook's text per venture (ACG,
+//   Block 5A, A1 Myanmar, A3 Myanmar), not the T8JVT description, which
+//   is still exposed as SAP Venture Name. The requirement asked for the
+//   names "as mentioned in Excel".
+// ASSUMPTION: Date = BKPF-CPUDT, the day the JIB document was entered
+//   in the system (a JIB uploaded today shows today's date). For a
+//   document parked on one day and posted with FBV0 on a later day the
+//   field may hold the parking day - to be confirmed on one such
+//   document in PRD.
 // ASSUMPTION: Business Unit is the requirement's fixed attribute per
 //   venture ("shall be a freezed input"): AA2002 ACG and SD2002 Block 5A
 //   are MENA & CIS BU, MM2002 A1 and MM2012 A3 are AP BU. A venture
@@ -79,7 +91,7 @@ define view ZI_JIB_STATUS_CUBE
       @ObjectModel.foreignKey.association: '_CompanyCode'
       @EndUserText.label: 'Company Code'
   key Venture.CompanyCode,
-      @ObjectModel.text.element: ['JointVentureName']
+      @ObjectModel.text.element: ['ProjectName']
       @EndUserText.label: 'JV Code'
   key Venture.JointVenture,
       @EndUserText.label: 'Fiscal Year'
@@ -87,8 +99,16 @@ define view ZI_JIB_STATUS_CUBE
       @EndUserText.label: 'Posting Period'
   key Period.FiscalPeriod,
 
-      // -- venture attributes ---------------------------------------------
+      // -- venture attributes, texts as in the requirement workbook -------
       @EndUserText.label: 'Project Name'
+      case Venture.JointVenture
+        when 'AA2002' then 'ACG'
+        when 'SD2002' then 'Block 5A'
+        when 'MM2002' then 'A1, Myanmar'
+        when 'MM2012' then 'A3, Myanmar'
+        else               'OTHER'
+      end                                              as ProjectName,
+      @EndUserText.label: 'SAP Venture Name'
       Venture.JointVentureName,
       @EndUserText.label: 'Venture Type'
       Venture.VentureType,
@@ -102,6 +122,8 @@ define view ZI_JIB_STATUS_CUBE
       end                                              as BusinessUnit,
 
       // -- period attributes (fiscal year variant April-March) -----------
+      @EndUserText.label: 'Period Start Date'
+      Period.PeriodStartDate,
       @EndUserText.label: 'Period Month'
       case Period.FiscalPeriod
         when '01' then 'Apr'
@@ -133,12 +155,12 @@ define view ZI_JIB_STATUS_CUBE
       end                                              as FiscalQuarter,
 
       // -- JIB status ------------------------------------------------------
-      @EndUserText.label: 'JIB Posting Status'
+      @EndUserText.label: 'Status'
       case Jib.JibPosted
         when 1 then 'Uploaded'
         else        'Pending'
       end                                              as JibStatus,
-      @EndUserText.label: 'Date (Last JIB Entry)'
+      @EndUserText.label: 'Date'
       Jib.LastEntryDate,
       @EndUserText.label: 'Last JIB Posting Date'
       Jib.LastPostingDate,
