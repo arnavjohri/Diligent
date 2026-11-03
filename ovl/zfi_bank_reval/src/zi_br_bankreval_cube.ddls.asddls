@@ -44,6 +44,11 @@
 // 03/11/26: GLAccountLongName (SKAT TXT50, via the ITM) added as a plain
 //   dimension, so the description is an exportable column of its own
 //   next to the key + text display of GLAccount.
+// 03/11/26: Analytics warning "Association of field GLACCOUNT ignored:
+//   Association for field CHARTOFACCOUNTS is inconsistent". The G/L
+//   dimension is keyed by chart of accounts + account, so the engine
+//   needs ChartOfAccounts linked to its own dimension as well, or it
+//   drops the G/L texts and hierarchy. _ChartOfAccounts added.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVCUBE'
 @AbapCatalog.compiler.compareFilter: true
@@ -79,6 +84,10 @@ define view ZI_BR_BANKREVAL_CUBE
   association [0..1] to I_GLAccountInChartOfAccounts as _GLAccountInChartOfAccounts
     on  $projection.ChartOfAccounts = _GLAccountInChartOfAccounts.ChartOfAccounts
     and $projection.GLAccount       = _GLAccountInChartOfAccounts.GLAccount
+  //BOC By Arnav on 03/11/26 - chart of accounts dimension
+  association [0..1] to I_ChartOfAccounts            as _ChartOfAccounts
+    on $projection.ChartOfAccounts = _ChartOfAccounts.ChartOfAccounts
+  //EOC By Arnav on 03/11/26 - chart of accounts dimension
 {
       // -- dimensions ------------------------------------------------
       @ObjectModel.foreignKey.association: '_Ledger'
@@ -89,6 +98,9 @@ define view ZI_BR_BANKREVAL_CUBE
   key Item.AccountingDocument,
   key Item.LedgerGLLineItem,
 
+      //BOC By Arnav on 03/11/26 - chart of accounts dimension
+      @ObjectModel.foreignKey.association: '_ChartOfAccounts'
+      //EOC By Arnav on 03/11/26 - chart of accounts dimension
       Item.ChartOfAccounts,
       @ObjectModel.foreignKey.association: '_GLAccountInChartOfAccounts'
       Item.GLAccount,
@@ -212,6 +224,9 @@ define view ZI_BR_BANKREVAL_CUBE
       // -- associations: texts and the G/L account hierarchy -------------
       _Ledger,
       _CompanyCode,
+      //BOC By Arnav on 03/11/26 - chart of accounts dimension
+      _ChartOfAccounts,
+      //EOC By Arnav on 03/11/26 - chart of accounts dimension
       _GLAccountInChartOfAccounts
 }
 where
