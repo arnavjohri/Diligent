@@ -28,6 +28,17 @@ So the columns go into a **custom cube**, and the query is **re-created** in the
 that cube (a new ID, e.g. `ZZ1_BR_REPORT2`; fields re-selected — far fewer than the 247
 now selected; hierarchy re-picked).
 
+## Status 03/11/26
+
+All four CDS objects active on OCD (`ZFI_BR_GLMAP`, `ZI_BR_HOUSEBANKACCT` v2, `ZI_BR_BANKREVAL_ITM` v4,
+`ZI_BR_BANKREVAL_CUBE` released for key-user apps), 48 mapping rows loaded for company code OVL,
+query built in the app on the cube: PI share, rate type, exchange rate, house bank and bank account
+number all show. Open: TR number to be noted; SE54 maintenance view for `ZFI_BR_GLMAP`; FI to confirm
+which currency type is USD (Global / Functional / Free-defined 1) so the other two measures can go;
+optional removal of the two line-item fields `HouseBank` / `HouseBankAccount` from the cube (Arnav said
+yes on 03/11/26, parked while the house bank issue was open — one cube activation, query must drop the
+field first).
+
 ## Column map — Excel → source
 
 | Excel col | Heading | Source in the cube |
