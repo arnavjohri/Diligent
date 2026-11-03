@@ -49,8 +49,9 @@
 *&
 *& CHANGE HISTORY
 *&   02.11.2026  Arnav Johri  <TR>  Initial development
-*&   03.11.2026  Arnav Johri  <TR>  Activation fixes: messages built before PERFORM, T8JV VNAME,
-*&                                  recovery indicator checked on JV_JVSO1_ACDOCA instead of T8JJ
+*&   03.11.2026  Arnav Johri  <TR>  Activation fixes: messages built before PERFORM, T8JV VNAME;
+*&                                  recovery indicator / equity group without venture accepted when
+*&                                  the value exists on ledger 0L (T8JJ columns unconfirmed)
 *&---------------------------------------------------------------------*
 REPORT zfi_acdoca_jva_align.
 
@@ -162,20 +163,19 @@ TYPES:
     konts TYPE t030-konts,
   END OF ty_bsx,
 
-  " Recovery indicator check results, cached per combination
-  BEGIN OF ty_recid,
+  " Results of the "value exists on ledger 0L" checks, cached per value
+  BEGIN OF ty_ledgchk,
     rbukrs TYPE acdoca-rbukrs,
     gjahr  TYPE acdoca-gjahr,
-    vname  TYPE acdoca-vname,
-    recid  TYPE acdoca-recid,
+    field  TYPE c LENGTH 5,
+    value  TYPE c LENGTH 3,
     ok     TYPE abap_bool,
-  END OF ty_recid.
+  END OF ty_ledgchk.
 
 *----------------------------------------------------------------------*
 * Constants
 *----------------------------------------------------------------------*
 CONSTANTS: gc_rldnr       TYPE acdoca-rldnr       VALUE '0L',      " leading ledger
-           gc_rldnr_jv    TYPE jvso1-rldnr        VALUE '4A',      " JV ledger (line-item view)
            gc_rrcty       TYPE acdoca-rrcty       VALUE '0',       " record type actual
            gc_bsx         TYPE t030-ktosl         VALUE 'BSX',     " stock accounts -> KOART M
            gc_max_cols    TYPE i                  VALUE 15.        " Excel columns read
@@ -209,7 +209,7 @@ DATA: gv_bukrs TYPE acdoca-rbukrs,
       gt_doc   TYPE SORTED TABLE OF ty_doc WITH UNIQUE KEY rbukrs gjahr poper,
       gt_bsx   TYPE SORTED TABLE OF ty_bsx WITH UNIQUE KEY ktopl konts,
       gt_bsx_k TYPE SORTED TABLE OF t030-ktopl WITH UNIQUE KEY table_line,
-      gt_recid TYPE SORTED TABLE OF ty_recid WITH UNIQUE KEY rbukrs gjahr vname recid.
+      gt_ledg  TYPE SORTED TABLE OF ty_ledgchk WITH UNIQUE KEY rbukrs gjahr field value.
 
 *----------------------------------------------------------------------*
 * Selection screen
@@ -761,10 +761,10 @@ ENDFORM.
 
 *&---------------------------------------------------------------------*
 *& Form CHECK_JVA_FIELDS
-*&   Joint venture (T8JV), equity group (T8JG), recovery indicator
-*&   (against the JV line items, see CHECK_RECID). All three may be
-*&   blank - that is the offset row of an account. Equity group or
-*&   recovery indicator without a venture is rejected.
+*&   Joint venture (T8JV); equity group (T8JG when a venture is given,
+*&   else "exists on ledger 0L"); recovery indicator ("exists on ledger
+*&   0L" - OVL carries indicators such as CP on lines without a venture,
+*&   so no venture is required). All three may be blank.
 *&---------------------------------------------------------------------*
 FORM check_jva_fields USING    is_row  TYPE ty_row
                                is_cc   TYPE ty_cc
@@ -798,7 +798,12 @@ FORM check_jva_fields USING    is_row  TYPE ty_row
   ELSEIF lv_text IS NOT INITIAL.
     cs_line-egrup = lv_text.
     IF cs_line-vname IS INITIAL.
-      PERFORM add_err USING 'Equity group given without a joint venture' CHANGING cs_line.
+      PERFORM check_on_ledger USING cs_line-rbukrs cs_line-gjahr 'EGRUP' cs_line-egrup
+                              CHANGING lv_ok.
+      IF lv_ok = abap_false.
+        lv_msg = |Equity group { cs_line-egrup } not on any ledger 0L line of { cs_line-rbukrs } { cs_line-gjahr }|.
+        PERFORM add_err USING lv_msg CHANGING cs_line.
+      ENDIF.
     ELSE.
       SELECT SINGLE egrup
         FROM t8jg
@@ -819,71 +824,87 @@ FORM check_jva_fields USING    is_row  TYPE ty_row
     PERFORM add_err USING 'Recovery indicator longer than 2 characters' CHANGING cs_line.
   ELSEIF lv_text IS NOT INITIAL.
     cs_line-recid = lv_text.
-    IF cs_line-vname IS INITIAL.
-      PERFORM add_err USING 'Recovery indicator given without a joint venture' CHANGING cs_line.
-    ELSE.
-      PERFORM check_recid USING cs_line-rbukrs cs_line-gjahr cs_line-vname cs_line-recid
-                          CHANGING lv_ok.
-      IF lv_ok = abap_false.
-        lv_msg = |Recovery indicator { cs_line-recid } never posted with venture { cs_line-vname }| &&
-                 | in { cs_line-gjahr } (JV ledger)|.
-        PERFORM add_err USING lv_msg CHANGING cs_line.
-      ENDIF.
+    PERFORM check_on_ledger USING cs_line-rbukrs cs_line-gjahr 'RECID' cs_line-recid
+                            CHANGING lv_ok.
+    IF lv_ok = abap_false.
+      lv_msg = |Recovery indicator { cs_line-recid } not on any ledger 0L line of { cs_line-rbukrs } { cs_line-gjahr }|.
+      PERFORM add_err USING lv_msg CHANGING cs_line.
     ENDIF.
   ENDIF.
 ENDFORM.
 
 *&---------------------------------------------------------------------*
-*& Form CHECK_RECID
-*&   Recovery indicator must have been posted with this venture in this
-*&   fiscal year on the JV ledger. Read from the JV line-item view, one
-*&   database access per combination.
+*& Form CHECK_ON_LEDGER
+*&   A recovery indicator or equity group is accepted when it already
+*&   occurs on a ledger 0L line of the company code and fiscal year.
+*&   One database access per value, cached.
 *&---------------------------------------------------------------------*
 *----------------------------------------------------------------------*
-* ASSUMPTION: the recovery indicator master table T8JJ is not read -
-*   its column names are not confirmed on OCQ (RECIN / JVNAME rejected
-*   at activation 03/11/26). JV_JVSO1_ACDOCA with RBUKRS, RYEAR, RJVNAM,
-*   RRECIN, RLDNR is the view the active ZFI_JV_TB reads, so those names
-*   are safe. Alignment rows come from the recon, i.e. from posted JV
-*   data, so "posted in that year" is the right test. Replace with T8JJ
-*   once SE11 gives its fields, if a master-data check is preferred.
+* ASSUMPTION: the JVA master tables for recovery indicators are not
+*   read - T8JJ's column names are not confirmed on OCQ (RECIN / JVNAME
+*   rejected at activation 03/11/26). The upload rows come from the recon,
+*   i.e. from values already posted, so "exists on 0L in that year" is a
+*   sufficient typo check and uses only confirmed ACDOCA field names.
+*   Replace with the master table once SE11 gives its fields.
 *----------------------------------------------------------------------*
-FORM check_recid USING    iv_bukrs TYPE acdoca-rbukrs
-                          iv_gjahr TYPE acdoca-gjahr
-                          iv_vname TYPE acdoca-vname
-                          iv_recid TYPE acdoca-recid
-                 CHANGING cv_ok    TYPE abap_bool.
-  DATA: ls_recid TYPE ty_recid,
-        lv_chk   TYPE jvso1-rrecin.
+FORM check_on_ledger USING    iv_bukrs TYPE acdoca-rbukrs
+                              iv_gjahr TYPE acdoca-gjahr
+                              iv_field TYPE csequence
+                              iv_value TYPE csequence
+                     CHANGING cv_ok    TYPE abap_bool.
+  DATA: ls_chk   TYPE ty_ledgchk,
+        lv_recid TYPE acdoca-recid,
+        lv_egrup TYPE acdoca-egrup,
+        lv_found TYPE abap_bool.
 
-  READ TABLE gt_recid INTO ls_recid
-       WITH TABLE KEY rbukrs = iv_bukrs gjahr = iv_gjahr vname = iv_vname recid = iv_recid.
+  CLEAR ls_chk.
+  ls_chk-rbukrs = iv_bukrs.
+  ls_chk-gjahr  = iv_gjahr.
+  ls_chk-field  = iv_field.
+  ls_chk-value  = iv_value.
+
+  READ TABLE gt_ledg INTO ls_chk
+       WITH TABLE KEY rbukrs = ls_chk-rbukrs gjahr = ls_chk-gjahr
+                      field  = ls_chk-field  value = ls_chk-value.
   IF sy-subrc = 0.
-    cv_ok = ls_recid-ok.
+    cv_ok = ls_chk-ok.
     RETURN.
   ENDIF.
 
-  CLEAR ls_recid.
-  ls_recid-rbukrs = iv_bukrs.
-  ls_recid-gjahr  = iv_gjahr.
-  ls_recid-vname  = iv_vname.
-  ls_recid-recid  = iv_recid.
+  CASE ls_chk-field.
+    WHEN 'RECID'.
+      lv_recid = iv_value.
+      SELECT recid
+        FROM acdoca
+        WHERE rldnr  = @gc_rldnr
+          AND rbukrs = @iv_bukrs
+          AND gjahr  = @iv_gjahr
+          AND recid  = @lv_recid
+        INTO @lv_recid
+        UP TO 1 ROWS.
+      ENDSELECT.
+      IF sy-subrc = 0.
+        lv_found = abap_true.
+      ENDIF.
+    WHEN 'EGRUP'.
+      lv_egrup = iv_value.
+      SELECT egrup
+        FROM acdoca
+        WHERE rldnr  = @gc_rldnr
+          AND rbukrs = @iv_bukrs
+          AND gjahr  = @iv_gjahr
+          AND egrup  = @lv_egrup
+        INTO @lv_egrup
+        UP TO 1 ROWS.
+      ENDSELECT.
+      IF sy-subrc = 0.
+        lv_found = abap_true.
+      ENDIF.
+  ENDCASE.
 
-  SELECT rrecin
-    FROM jv_jvso1_acdoca
-    WHERE rldnr  = @gc_rldnr_jv
-      AND rbukrs = @iv_bukrs
-      AND ryear  = @iv_gjahr
-      AND rjvnam = @iv_vname
-      AND rrecin = @iv_recid
-    INTO @lv_chk
-    UP TO 1 ROWS.
-  ENDSELECT.
-  IF sy-subrc = 0.
-    ls_recid-ok = abap_true.
-  ENDIF.
-  INSERT ls_recid INTO TABLE gt_recid.
-  cv_ok = ls_recid-ok.
+  ls_chk-ok = lv_found.
+  INSERT ls_chk INTO TABLE gt_ledg.
+  cv_ok = ls_chk-ok.
 ENDFORM.
 
 *&---------------------------------------------------------------------*

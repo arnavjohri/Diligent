@@ -13,7 +13,7 @@ sign-off before anything beyond DEV, one company code and one period first, undo
 
 ## Shipping method
 Paste-only. SE38, type 1 executable, no includes, no screen, no GUI status. Source:
-`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1613 lines, 03/11/26). No `original/` —
+`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1634 lines, 03/11/26). No `original/` —
 new object. 03/11/26: first syntax check on OCQ fixed (see ISSUES.md); activation pending.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
@@ -30,9 +30,9 @@ P_TEST Test run (no database update).
 | 2 | Fiscal Year | GJAHR, RYEAR | yes | 4 digits |
 | 3 | Posting Period | POPER | yes | 0–16 (0 = carry-forward, posting date = first day of FY) |
 | 4 | Joint Venture | VNAME | blank = offset row | T8JV (BUKRS, JVNAME) |
-| 5 | Equity Group | EGRUP | blank allowed | T8JG (BUKRS, VNAME, EGRUP); needs a venture |
+| 5 | Equity Group | EGRUP | blank allowed | T8JG (BUKRS, VNAME, EGRUP) when a venture is given; else must exist on a 0L line of the company code / year |
 | 6 | G/L Account | RACCT | yes | SKA1 + SKB1, leading zeros added |
-| 7 | Recovery Indicator | RECID | blank allowed | `JV_JVSO1_ACDOCA`: posted with that venture in that year on ledger 4A (T8JJ columns unconfirmed on OCQ); needs a venture |
+| 7 | Recovery Indicator | RECID | blank allowed, with or without a venture | must exist on a 0L line of the company code / year (T8JJ columns unconfirmed on OCQ) |
 | 8 | Amount Local Currency | HSL (TSL, WSL copied) | yes | number, debit +, credit − |
 | 9 | Amount Group Currency | KSL | yes | number, in the company code's RKCUR |
 | 10 | Amount 3rd Currency | OSL | when the company code's 0L lines carry ROCUR | must be blank otherwise |
@@ -83,8 +83,9 @@ RFAREA, RBUSA.
 ## Assumptions (grep `ASSUMPTION` in the source)
 - Marker constants (`gc_blart ZJ` not in OBA7, `gc_awtyp ZJVA`, `gc_mig_source U`,
   `gc_sdm_version 05`) — one constants block; `U` pending the MIG_SOURCE domain check.
-- Recovery indicator validated against posted JV lines (`JV_JVSO1_ACDOCA`), not against the
-  master table T8JJ, whose column names are not confirmed on OCQ.
+- Recovery indicator (always) and equity group (when no venture is given) are validated as
+  "exists on a 0L line of the company code / year", not against T8JJ, whose column names are
+  not confirmed on OCQ. OVL data has RI without venture (test case 1, 11 rows).
 - Currency keys copied from existing 0L lines, not from configuration.
 - Transaction currency = local currency (no RTCUR in the recon key).
 - .xlsx only, first worksheet, row 1 headings.
@@ -108,3 +109,6 @@ RFAREA, RBUSA.
 4. Recon again with a later cut-off: differences for that period should be zero.
 5. GR data release (functional) — the lines must reach ACDOCU.
 6. Anything wrong → Undo for that company code / year / period, correct the file, repeat.
+
+## Test cases
+`test/README.md` — case 1: OVL 2022 001, 172 rows, net-zero verified offline, expected results per step.

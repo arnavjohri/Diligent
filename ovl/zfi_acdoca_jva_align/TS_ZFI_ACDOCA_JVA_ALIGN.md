@@ -43,13 +43,15 @@ See NOTES.md — 15 columns by position, columns 1–10 = recon key + *To Post* 
 
 ### 4.3 Processing — FORMs in call order
 `read_file` → `parse_rows` / `parse_row` (`get_company`, `period_date`, `check_account` +
-`read_bsx_accounts`, `check_jva_fields`, `check_cost_objects` + `find_wbs`, `parse_amount`)
+`read_bsx_accounts`, `check_jva_fields` + `check_on_ledger`, `check_cost_objects` + `find_wbs`,
+`parse_amount`)
 → `file_checks` (+ `err_document`) → `assign_documents` → `post_or_test` (`build_acdoca_line`,
 `set_doc_status`) → `display_result` (`set_col_text`, `hide_col`). Undo: `undo_alignment`.
 
 ### 4.4 Validation rules
 Row: company code (T001, TKA02), year 4 digits, period 0–16, account (SKA1, SKB1), venture
-(T8JV), equity group (T8JG, needs venture), recovery indicator (T8JJ, needs venture), cost
+(T8JV), equity group (T8JG with venture, else exists on 0L), recovery indicator (exists on 0L,
+venture not required), cost
 centre (CSKS valid on posting date), order (AUFK), WBS (PRPS/PROJ), profit centre (CEPC valid
 on posting date), amounts numeric, 3rd-currency amount only where the company code has ROCUR.
 File: no existing document `ZJVA000ppp` for the company code / year; company codes with ROCUR
