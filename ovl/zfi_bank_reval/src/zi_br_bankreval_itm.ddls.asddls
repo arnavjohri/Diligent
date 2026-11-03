@@ -31,6 +31,9 @@
 // ASSUMPTION: one house bank account (T012K row) per G/L account and
 //   company code. A G/L used by two account IDs would double the lines
 //   of that account - check SE16 T012K, BUKRS OVL, duplicates in HKONT.
+// 03/11/26 (v4): still blank with the direct T012K join. The house bank
+//   now comes through ZI_BR_HOUSEBANKACCT, which pads T012K-HKONT to
+//   10 digits, so the join holds whether the zeros are stored or not.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVITM'
 @AbapCatalog.compiler.compareFilter: true
@@ -48,8 +51,11 @@ define view ZI_BR_BANKREVAL_ITM
     //  left outer join t012k        as BankAcct on  BankAcct.bukrs = AcctCoCd.bukrs
     //                                           and BankAcct.hbkid = AcctCoCd.hbkid
     //                                           and BankAcct.hktid = AcctCoCd.hktid
-    left outer join t012k        as BankAcct on  BankAcct.bukrs = Item.CompanyCode
-                                             and BankAcct.hkont = Item.GLAccount
+    //  left outer join t012k        as BankAcct on  BankAcct.bukrs = Item.CompanyCode
+    //                                           and BankAcct.hkont = Item.GLAccount
+    left outer join ZI_BR_HOUSEBANKACCT as BankAcct
+                                             on  BankAcct.CompanyCode = Item.CompanyCode
+                                             and BankAcct.GLAccount   = Item.GLAccount
     //EOC By Arnav on 03/11/26
     left outer join zfi_br_glmap as Map      on  Map.bukrs = Item.CompanyCode
                                              and Map.saknr = Item.GLAccount
@@ -89,10 +95,13 @@ define view ZI_BR_BANKREVAL_ITM
       //BOC By Arnav on 03/11/26
       //  AcctCoCd.hbkid                   as GLHouseBank,
       //  AcctCoCd.hktid                   as GLHouseBankAccount,
-      BankAcct.hbkid                   as GLHouseBank,
-      BankAcct.hktid                   as GLHouseBankAccount,
+      //  BankAcct.hbkid                   as GLHouseBank,
+      //  BankAcct.hktid                   as GLHouseBankAccount,
+      //  BankAcct.bankn                   as BankAccountNumber,
+      BankAcct.HouseBank               as GLHouseBank,
+      BankAcct.HouseBankAccount        as GLHouseBankAccount,
+      BankAcct.BankAccountNumber       as BankAccountNumber,
       //EOC By Arnav on 03/11/26
-      BankAcct.bankn                   as BankAccountNumber,
 
       // -- mapping table ZFI_BR_GLMAP --------------------------------
       Map.zpishare                     as PIShare,

@@ -73,7 +73,11 @@ come from the data elements, so `ZBR_PISHARE` needs short/medium/long texts
 Alternative considered and **not** recommended: hardcoding the 49 PI values in a CDS
 `CASE` on `GLAccount`. Every farm-in/out would then be a transport.
 
-### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (121 lines)
+### 1b. `ZI_BR_HOUSEBANKACCT` — `src/zi_br_housebankacct.ddls.asddls` (03/11/26)
+
+Helper on T012K: keys company code, house bank, account ID; `lpad(hkont, 10, '0')` as `GLAccount`, bank account number, currency. Exists only so the ITM can join T012K on the G/L account regardless of how HKONT was stored. Activate before the ITM.
+
+### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (147 lines, v4)
 
 Classic `define view`, SQL view `ZIBRBNKREVITM`. `I_GLAccountLineItemCube` left-outer
 joined to `skb1`, `t012k`, `zfi_br_glmap`. Adds `GLAccountCurrency`, house bank fields,
