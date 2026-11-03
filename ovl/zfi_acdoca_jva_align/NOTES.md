@@ -13,7 +13,7 @@ sign-off before anything beyond DEV, one company code and one period first, undo
 
 ## Shipping method
 Paste-only. SE38, type 1 executable, no includes, no screen, no GUI status. Source:
-`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1634 lines, 03/11/26). No `original/` —
+`ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap` (1756 lines, 03/11/26). No `original/` —
 new object. 03/11/26: first syntax check on OCQ fixed (see ISSUES.md); activation pending.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
@@ -48,7 +48,9 @@ Blank rows are ignored; rows with all three amounts zero are listed as *Skipped*
 
 ## Behaviour
 1. **Read** — `cl_gui_frontend_services=>gui_upload` binary, `cl_fdt_xl_spreadsheet`, first
-   worksheet, cells by position (same pattern as `kpmg/zpp_forecast_v2` upload).
+   worksheet, cells by position (same pattern as `kpmg/zpp_forecast_v2` upload). If that yields
+   no data rows, `TEXT_CONVERT_XLS_TO_SAP` reads the file through Excel on the PC (dialog only;
+   the reader OVL's other uploads use). The zero-row message names what each reader returned.
 2. **Row checks** (FORM `parse_row`) — key fields, then company code context (FORM
    `get_company`: T001 fiscal year variant / chart / local currency, TKA02 controlling area,
    RKCUR / ROCUR / RFCCUR from a `SELECT DISTINCT` on the company code's existing 0L lines of
@@ -88,7 +90,8 @@ RFAREA, RBUSA.
   not confirmed on OCQ. OVL data has RI without venture (test case 1, 11 rows).
 - Currency keys copied from existing 0L lines, not from configuration.
 - Transaction currency = local currency (no RTCUR in the recon key).
-- .xlsx only, first worksheet, row 1 headings.
+- .xlsx only, first worksheet, row 1 headings. Keep headings plain words (letters, digits,
+  underscore) — the spreadsheet class turns them into ABAP component names.
 
 ## Gotchas
 - `SELECT` inside the row loop for every master-data check — intentional, a file has hundreds

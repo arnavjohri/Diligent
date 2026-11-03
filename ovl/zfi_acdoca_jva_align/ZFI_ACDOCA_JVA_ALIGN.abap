@@ -51,9 +51,12 @@
 *&   02.11.2026  Arnav Johri  <TR>  Initial development
 *&   03.11.2026  Arnav Johri  <TR>  Activation fixes: messages built before PERFORM, T8JV VNAME;
 *&                                  recovery indicator / equity group without venture accepted when
-*&                                  the value exists on ledger 0L (T8JJ columns unconfirmed)
+*&                                  the value exists on ledger 0L (T8JJ columns unconfirmed);
+*&                                  second file reader TEXT_CONVERT_XLS_TO_SAP + read diagnostics
 *&---------------------------------------------------------------------*
 REPORT zfi_acdoca_jva_align.
+
+TYPE-POOLS truxs.
 
 *----------------------------------------------------------------------*
 * Types
@@ -78,6 +81,25 @@ TYPES:
     prctr TYPE string,
     sgtxt TYPE string,
   END OF ty_row,
+
+  " One Excel row as TEXT_CONVERT_XLS_TO_SAP delivers it (cell texts by column position)
+  BEGIN OF ty_xraw,
+    f01 TYPE c LENGTH 60,
+    f02 TYPE c LENGTH 60,
+    f03 TYPE c LENGTH 60,
+    f04 TYPE c LENGTH 60,
+    f05 TYPE c LENGTH 60,
+    f06 TYPE c LENGTH 60,
+    f07 TYPE c LENGTH 60,
+    f08 TYPE c LENGTH 60,
+    f09 TYPE c LENGTH 60,
+    f10 TYPE c LENGTH 60,
+    f11 TYPE c LENGTH 60,
+    f12 TYPE c LENGTH 60,
+    f13 TYPE c LENGTH 60,
+    f14 TYPE c LENGTH 60,
+    f15 TYPE c LENGTH 60,
+  END OF ty_xraw,
 
   " One validated, typed row - also the output list
   BEGIN OF ty_line,
@@ -209,7 +231,9 @@ DATA: gv_bukrs TYPE acdoca-rbukrs,
       gt_doc   TYPE SORTED TABLE OF ty_doc WITH UNIQUE KEY rbukrs gjahr poper,
       gt_bsx   TYPE SORTED TABLE OF ty_bsx WITH UNIQUE KEY ktopl konts,
       gt_bsx_k TYPE SORTED TABLE OF t030-ktopl WITH UNIQUE KEY table_line,
-      gt_ledg  TYPE SORTED TABLE OF ty_ledgchk WITH UNIQUE KEY rbukrs gjahr field value.
+      gt_ledg  TYPE SORTED TABLE OF ty_ledgchk WITH UNIQUE KEY rbukrs gjahr field value,
+      gv_diag1 TYPE string,                 " what the spreadsheet class returned
+      gv_diag2 TYPE string.                 " what the Excel/OLE reader returned
 
 *----------------------------------------------------------------------*
 * Selection screen
@@ -255,7 +279,7 @@ START-OF-SELECTION.
 
   PERFORM read_file.
   IF gt_row IS INITIAL.
-    MESSAGE 'The file has no data rows below the heading' TYPE 'S' DISPLAY LIKE 'W'.
+    MESSAGE |No data rows below the heading ({ gv_diag1 }; { gv_diag2 })| TYPE 'S' DISPLAY LIKE 'W'.
     RETURN.
   ENDIF.
 
@@ -295,28 +319,49 @@ ENDFORM.
 
 *&---------------------------------------------------------------------*
 *& Form READ_FILE
+*&   First the server-side parser CL_FDT_XL_SPREADSHEET (no Excel
+*&   needed). If it delivers no data rows, the file is read a second
+*&   time through Excel on the PC (TEXT_CONVERT_XLS_TO_SAP, the reader
+*&   OVL's other upload programs use). Both leave a diagnosis string.
+*&---------------------------------------------------------------------*
+FORM read_file.
+  PERFORM read_file_class.
+  IF gt_row IS INITIAL.
+    PERFORM read_file_ole.
+  ELSE.
+    gv_diag2 = 'Excel/OLE reader not needed'.
+  ENDIF.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form READ_FILE_CLASS
 *&   Upload the .xlsx as binary and parse the first worksheet with
 *&   CL_FDT_XL_SPREADSHEET. Columns are taken by position (1..15); the
 *&   heading row is consumed by the class and is not a data row.
 *&---------------------------------------------------------------------*
-FORM read_file.
-  DATA: lv_name TYPE string,
-        lt_bin  TYPE solix_tab,
-        lv_len  TYPE i,
-        lv_xstr TYPE xstring,
-        lt_ws   TYPE if_fdt_doc_spreadsheet=>t_worksheet_names,
-        lv_ws   TYPE string,
-        lo_xl   TYPE REF TO cl_fdt_xl_spreadsheet,
-        lr_data TYPE REF TO data,
-        ls_row  TYPE ty_row,
-        lv_ix   TYPE i,
-        lv_val  TYPE string.
+FORM read_file_class.
+  DATA: lv_name  TYPE string,
+        lt_bin   TYPE solix_tab,
+        lv_len   TYPE i,
+        lv_xstr  TYPE xstring,
+        lt_ws    TYPE if_fdt_doc_spreadsheet=>t_worksheet_names,
+        lv_ws    TYPE string,
+        lo_xl    TYPE REF TO cl_fdt_xl_spreadsheet,
+        lr_data  TYPE REF TO data,
+        lo_tdesc TYPE REF TO cl_abap_tabledescr,
+        lo_sdesc TYPE REF TO cl_abap_structdescr,
+        ls_comp  TYPE abap_compdescr,
+        lv_comps TYPE i,
+        ls_row   TYPE ty_row,
+        lv_ix    TYPE i,
+        lv_val   TYPE string.
 
   FIELD-SYMBOLS: <lt_tab>  TYPE STANDARD TABLE,
                  <ls_xrow> TYPE any,
                  <lv_cell> TYPE any.
 
-  lv_name = p_file.
+  gv_diag1 = 'class: not run'.
+  lv_name  = p_file.
 
   cl_gui_frontend_services=>gui_upload(
     EXPORTING  filename        = lv_name
@@ -327,7 +372,7 @@ FORM read_file.
                file_read_error = 2
                OTHERS          = 3 ).
   IF sy-subrc <> 0 OR lv_len = 0.
-    MESSAGE |File { lv_name } could not be read| TYPE 'S' DISPLAY LIKE 'E'.
+    gv_diag1 = |class: file { lv_name } could not be read from the PC|.
     RETURN.
   ENDIF.
 
@@ -346,22 +391,34 @@ FORM read_file.
         IMPORTING worksheet_names = lt_ws ).
       READ TABLE lt_ws INTO lv_ws INDEX 1.
       IF sy-subrc <> 0.
-        MESSAGE 'The workbook has no worksheet' TYPE 'S' DISPLAY LIKE 'E'.
+        gv_diag1 = 'class: workbook has no worksheet'.
         RETURN.
       ENDIF.
       lr_data = lo_xl->if_fdt_doc_spreadsheet~get_itab_from_worksheet( lv_ws ).
-    CATCH cx_root.
-      MESSAGE 'The file is not a readable .xlsx workbook' TYPE 'S' DISPLAY LIKE 'E'.
+    CATCH cx_root INTO DATA(lx_xl).
+      gv_diag1 = |class: exception { lx_xl->get_text( ) }|.
       RETURN.
   ENDTRY.
 
   IF lr_data IS NOT BOUND.
+    gv_diag1 = |class: worksheet { lv_ws } returned no table|.
     RETURN.
   ENDIF.
   ASSIGN lr_data->* TO <lt_tab>.
   IF <lt_tab> IS NOT ASSIGNED.
+    gv_diag1 = |class: worksheet { lv_ws } table not assignable|.
     RETURN.
   ENDIF.
+
+  " how the class saw the sheet - columns and first column name
+  TRY.
+      lo_tdesc ?= cl_abap_typedescr=>describe_by_data( <lt_tab> ).
+      lo_sdesc ?= lo_tdesc->get_table_line_type( ).
+      lv_comps = lines( lo_sdesc->components ).
+      READ TABLE lo_sdesc->components INTO ls_comp INDEX 1.
+    CATCH cx_root.
+      CLEAR: lv_comps, ls_comp.
+  ENDTRY.
 
   LOOP AT <lt_tab> ASSIGNING <ls_xrow>.
     CLEAR ls_row.
@@ -374,25 +431,62 @@ FORM read_file.
         EXIT.                             " sheet has fewer columns - rest blank
       ENDIF.
       lv_val = <lv_cell>.
-      CASE lv_ix.
-        WHEN 1.  ls_row-bukrs = lv_val.
-        WHEN 2.  ls_row-gjahr = lv_val.
-        WHEN 3.  ls_row-poper = lv_val.
-        WHEN 4.  ls_row-vname = lv_val.
-        WHEN 5.  ls_row-egrup = lv_val.
-        WHEN 6.  ls_row-racct = lv_val.
-        WHEN 7.  ls_row-recid = lv_val.
-        WHEN 8.  ls_row-hsl   = lv_val.
-        WHEN 9.  ls_row-ksl   = lv_val.
-        WHEN 10. ls_row-osl   = lv_val.
-        WHEN 11. ls_row-kostl = lv_val.
-        WHEN 12. ls_row-aufnr = lv_val.
-        WHEN 13. ls_row-posid = lv_val.
-        WHEN 14. ls_row-prctr = lv_val.
-        WHEN 15. ls_row-sgtxt = lv_val.
-      ENDCASE.
+      PERFORM set_raw_cell USING lv_ix lv_val CHANGING ls_row.
     ENDDO.
-    " Completely empty rows (trailing rows of the sheet) are ignored
+    IF ls_row-bukrs IS INITIAL AND ls_row-gjahr IS INITIAL AND ls_row-poper IS INITIAL AND
+       ls_row-racct IS INITIAL AND ls_row-hsl   IS INITIAL AND ls_row-ksl   IS INITIAL AND
+       ls_row-osl   IS INITIAL.
+      CONTINUE.                           " completely empty row
+    ENDIF.
+    APPEND ls_row TO gt_row.
+  ENDLOOP.
+
+  gv_diag1 = |class: worksheet { lv_ws }, { lines( <lt_tab> ) } rows, { lv_comps } columns| &&
+             |, first column { ls_comp-name }, { lines( gt_row ) } data rows kept|.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form READ_FILE_OLE
+*&   Second reader: TEXT_CONVERT_XLS_TO_SAP opens the file in Excel on
+*&   the PC and copies the cell texts, heading row skipped. Dialog only.
+*&---------------------------------------------------------------------*
+FORM read_file_ole.
+  DATA: lt_raw  TYPE truxs_t_text_data,
+        lt_x    TYPE STANDARD TABLE OF ty_xraw WITH DEFAULT KEY,
+        ls_row  TYPE ty_row,
+        lv_val  TYPE string,
+        lv_ix   TYPE i.
+
+  FIELD-SYMBOLS: <ls_x>   TYPE ty_xraw,
+                 <lv_cel> TYPE any.
+
+  CALL FUNCTION 'TEXT_CONVERT_XLS_TO_SAP'
+    EXPORTING
+      i_line_header        = 'X'
+      i_tab_raw_data       = lt_raw
+      i_filename           = p_file
+    TABLES
+      i_tab_converted_data = lt_x
+    EXCEPTIONS
+      conversion_failed    = 1
+      OTHERS               = 2.
+  IF sy-subrc <> 0.
+    gv_diag2 = |Excel/OLE reader failed ({ sy-msgid } { sy-msgno } { sy-msgv1 })|.
+    RETURN.
+  ENDIF.
+
+  LOOP AT lt_x ASSIGNING <ls_x>.
+    CLEAR ls_row.
+    ls_row-rowno = sy-tabix + 1.
+    DO gc_max_cols TIMES.
+      lv_ix = sy-index.
+      ASSIGN COMPONENT lv_ix OF STRUCTURE <ls_x> TO <lv_cel>.
+      IF sy-subrc <> 0.
+        EXIT.
+      ENDIF.
+      lv_val = <lv_cel>.
+      PERFORM set_raw_cell USING lv_ix lv_val CHANGING ls_row.
+    ENDDO.
     IF ls_row-bukrs IS INITIAL AND ls_row-gjahr IS INITIAL AND ls_row-poper IS INITIAL AND
        ls_row-racct IS INITIAL AND ls_row-hsl   IS INITIAL AND ls_row-ksl   IS INITIAL AND
        ls_row-osl   IS INITIAL.
@@ -400,6 +494,34 @@ FORM read_file.
     ENDIF.
     APPEND ls_row TO gt_row.
   ENDLOOP.
+
+  gv_diag2 = |Excel/OLE reader: { lines( lt_x ) } rows, { lines( gt_row ) } data rows kept|.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form SET_RAW_CELL
+*&   Column position -> raw row field.
+*&---------------------------------------------------------------------*
+FORM set_raw_cell USING    iv_ix  TYPE i
+                           iv_val TYPE string
+                  CHANGING cs_row TYPE ty_row.
+  CASE iv_ix.
+    WHEN 1.  cs_row-bukrs = iv_val.
+    WHEN 2.  cs_row-gjahr = iv_val.
+    WHEN 3.  cs_row-poper = iv_val.
+    WHEN 4.  cs_row-vname = iv_val.
+    WHEN 5.  cs_row-egrup = iv_val.
+    WHEN 6.  cs_row-racct = iv_val.
+    WHEN 7.  cs_row-recid = iv_val.
+    WHEN 8.  cs_row-hsl   = iv_val.
+    WHEN 9.  cs_row-ksl   = iv_val.
+    WHEN 10. cs_row-osl   = iv_val.
+    WHEN 11. cs_row-kostl = iv_val.
+    WHEN 12. cs_row-aufnr = iv_val.
+    WHEN 13. cs_row-posid = iv_val.
+    WHEN 14. cs_row-prctr = iv_val.
+    WHEN 15. cs_row-sgtxt = iv_val.
+  ENDCASE.
 ENDFORM.
 
 *&---------------------------------------------------------------------*

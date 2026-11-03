@@ -42,3 +42,13 @@ Excel-saved one — the worksheet relationship target is absolute (`/xl/workshee
 and text cells are inline strings. The builder now writes the package the way Excel does; the
 file read back cleanly with 172 rows, sums zero. Fallback for any other generated .xlsx: open it
 in Excel and *Save As* .xlsx — Excel rewrites the package.
+
+## 03/11/26, second attempt: *The file has no data rows below the heading*
+The package now loads, but `CL_FDT_XL_SPREADSHEET` handed back no data rows. Two suspects: the
+hand-built package, or the heading texts ("G/L Account", "Amount 3rd Currency"), which the class
+converts into ABAP component names. Done in response: (1) the test file now has plain headings
+(`COMPANY_CODE` … `LINE_TEXT`); (2) the program reports what the class returned (rows, columns,
+first column name) and, when that is nothing, reads the file a second time through Excel on the
+PC with `TEXT_CONVERT_XLS_TO_SAP`, the reader OVL's other uploads use. The status message now
+names both results, e.g. `class: worksheet Upload, 0 rows, 15 columns, first column
+COMPANY_CODE, 0 data rows kept; Excel/OLE reader: 172 rows, 172 data rows kept`.

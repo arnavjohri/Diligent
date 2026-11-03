@@ -63,9 +63,11 @@ print('distinct recovery indicators:', sorted({r['recid'] for r in post if r['re
 import zipfile
 from xml.sax.saxutils import escape
 
-hdr = ['Company Code', 'Fiscal Year', 'Posting Period', 'Joint Venture', 'Equity Group', 'G/L Account',
-       'Recovery Indicator', 'Amount Local Currency', 'Amount Group Currency', 'Amount 3rd Currency',
-       'Cost Center', 'Order', 'WBS Element', 'Profit Center', 'Line Text']
+# Headings are plain words (letters, digits, underscore, starting with a letter): CL_FDT_XL_SPREADSHEET
+# turns row 1 into ABAP component names, so "G/L Account" or "Amount 3rd Currency" are a risk.
+hdr = ['COMPANY_CODE', 'FISCAL_YEAR', 'POSTING_PERIOD', 'JOINT_VENTURE', 'EQUITY_GROUP', 'GL_ACCOUNT',
+       'RECOVERY_INDICATOR', 'AMOUNT_LOCAL', 'AMOUNT_GROUP', 'AMOUNT_THIRD',
+       'COST_CENTER', 'ORDER_NUMBER', 'WBS_ELEMENT', 'PROFIT_CENTER', 'LINE_TEXT']
 post.sort(key=lambda r: (r['racct'], r['vname'], r['egrup'], r['recid']))
 
 def col(i):
