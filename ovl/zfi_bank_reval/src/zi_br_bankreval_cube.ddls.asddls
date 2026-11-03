@@ -41,6 +41,9 @@
 //   catalogue classifies views by @ObjectModel.modelingPattern and
 //   @ObjectModel.supportedCapabilities (the generated ZZ9 query carries
 //   them); added here with #ANALYTICAL_CUBE / #ANALYTICAL_PROVIDER.
+// 03/11/26: GLAccountLongName (SKAT TXT50, via the ITM) added as a plain
+//   dimension, so the description is an exportable column of its own
+//   next to the key + text display of GLAccount.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVCUBE'
 @AbapCatalog.compiler.compareFilter: true
@@ -89,6 +92,10 @@ define view ZI_BR_BANKREVAL_CUBE
       Item.ChartOfAccounts,
       @ObjectModel.foreignKey.association: '_GLAccountInChartOfAccounts'
       Item.GLAccount,
+      //BOC By Arnav on 03/11/26 - G/L description
+      @EndUserText.label: 'G/L Account Description'
+      Item.GLAccountLongName,
+      //EOC By Arnav on 03/11/26 - G/L description
       Item.ProfitCenter,
       Item.Segment,
       Item.JointVenture,

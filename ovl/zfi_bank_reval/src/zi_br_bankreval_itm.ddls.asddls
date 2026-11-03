@@ -34,6 +34,9 @@
 // 03/11/26 (v4): still blank with the direct T012K join. The house bank
 //   now comes through ZI_BR_HOUSEBANKACCT, which pads T012K-HKONT to
 //   10 digits, so the join holds whether the zeros are stored or not.
+// 03/11/26 (v5): G/L description wanted as its own column (Excel col C).
+//   SKAT joined on chart of accounts + G/L account in the logon language;
+//   TXT50 exposed as GLAccountLongName.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVITM'
 @AbapCatalog.compiler.compareFilter: true
@@ -59,6 +62,11 @@ define view ZI_BR_BANKREVAL_ITM
     //EOC By Arnav on 03/11/26
     left outer join zfi_br_glmap as Map      on  Map.bukrs = Item.CompanyCode
                                              and Map.saknr = Item.GLAccount
+    //BOC By Arnav on 03/11/26 - G/L description
+    left outer join skat         as AcctText on  AcctText.ktopl = Item.ChartOfAccounts
+                                             and AcctText.saknr = Item.GLAccount
+                                             and AcctText.spras = $session.system_language
+    //EOC By Arnav on 03/11/26 - G/L description
 {
   key Item.Ledger,
   key Item.CompanyCode,
@@ -69,6 +77,9 @@ define view ZI_BR_BANKREVAL_ITM
       // -- G/L account and organisation ------------------------------
       Item.ChartOfAccounts,
       Item.GLAccount,
+      //BOC By Arnav on 03/11/26 - G/L description
+      AcctText.txt50                   as GLAccountLongName,
+      //EOC By Arnav on 03/11/26 - G/L description
       Item.ProfitCenter,
       Item.Segment,
       Item.JointVenture,
