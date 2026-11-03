@@ -61,3 +61,7 @@ DOCLN 1 and 2; recon for OVL 2022 001 with cut-off = tomorrow shows account 3043
 difference on both rows. **Before the full 172-row file: run Undo for OVL / 2022 / 001** —
 the document `ZJVA000001` already exists after this test and the full file would be rejected
 (and would double-post the two rows if it were not).
+
+Arnav's upload path on the SAP GUI machine (remote desktop, local C: drive mapped):
+`\\tsclient\C\Users\ArnavJohri\Downloads\ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001.xlsx` — the one-account
+file goes in the same folder as `ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001_acct30434.xlsx`.
