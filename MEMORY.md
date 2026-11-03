@@ -546,6 +546,7 @@ maintenance views/TMG, SNRO number ranges, SU21 auth objects, SCDO change docume
 | `kpmg/abapgit_pilot/`, `kpmg/zmm_po_budget/` (DDIC + message class) | ZIP |
 | `ovl/ztest_t001/` | pilot — **never actually imported successfully** |
 | `ovl/zfi_bank_reval/` | ZIP `ZFI_BANK_REVAL.zip` **pulled 28/10/26** on OCD (package `SUPPORT_OCD`): DOMA, DTEL, TABL and the **first two DDLS** through abapGit on this landscape all deserialised — the DDLS shape `DDLNAME, DDLANGUAGE, DDTEXT, SOURCE_TYPE = V` is proven. The pull stopped on a CDS activation error (FLTP literal, §4.1), fixed by ADT paste |
+| `ovl/zfi_tr_bankacct/` | ZIP `ZFI_TR_BANKACCT.zip` built 03/11/26 from the same DOMA / DTEL / TABL / DDLS shapes as `zfi_bank_reval` (values blanked and diffed, element for element). **Not yet imported.** Foreign keys deliberately left out of the XML — SE11 step after import |
 | `kpmg/zfi_tds_cl34/` | complete ZIP that **failed four imports**; shipped by paste |
 | `kpmg/zmm_po_budget/` overall | hybrid — DDIC + message class by ZIP; BAdI insert, SE54 event, screen module, TMG, SE93 by hand |
 | `kpmg/zmb5b/`, `kpmg/zmmims/`, `kpmg/zmm_me35k_release/`, `kpmg/zsd_scheme/`, `kpmg/zpp_forecast/`, `kpmg/zmm_po_budget_deferred/` | paste-only |
