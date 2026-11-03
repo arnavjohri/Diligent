@@ -108,6 +108,74 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
    type (CDS view with OData service vs. a report).
 
+## Objects — all four in `ZFI_JIB_STATUS.zip` (03/11/26, consumer: Custom Analytical Queries)
+
+Four classic `define view`s in `src/`, one abapGit ZIP, package **`ZFI_JIB_STATUS`** (new).
+No table, no domain, no data element — on purpose: the treasury ZIP (`ovl/zfi_tr_bankacct`,
+03/11/26) created both DDL sources and not the table, so this set carries only what has pulled
+cleanly on this landscape (DDLS shape of 28/10 and 03/11, DEVC).
+
+| # | Object | SQL view | What | Lines |
+|---|---|---|---|---|
+| 1 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | BKPF (JM, `stblg = ''`) ⋈ BSEG (`vname <> ''`), GROUP BY company code / venture / GJAHR / MONAT: `max(cpudt)` LastEntryDate, `max(budat)` LastPostingDate, `count(distinct belnr)` JibDocuments, `count(distinct bukrs)` JibPosted (= 1 on every row) | 85 |
+| 2 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | `select distinct bukrs, gjahr, monat from bkpf`, MONAT 01–12: every period with any FI posting, so a period with no JIB yet still shows every venture as Pending | 47 |
+| 3 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname (the join the active programs use), `max(vtext)` under GROUP BY bukrs, vname, vtype — one row per venture even if T8JVT has a language key | 54 |
+| 4 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 3 ⋈ 2 on company code (the cross join), LEFT OUTER JOIN 1 on all four keys. Keys CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture (text element JointVentureName), FiscalYear, FiscalPeriod. Characteristics: JointVentureName, VentureType, VenturePrefix, BusinessUnit (CASE on prefix), PeriodMonth (CASE 01→Apr … 12→Mar), FiscalQuarter, JibStatus (`case Jib.JibPosted when 1 'Uploaded' else 'Pending'` — NULL on the outer join falls into ELSE), LastEntryDate, LastPostingDate. Measures (INT4, SUM): JibDocuments, JibPosted, JibPending, Ventures. Header set = `ZI_TR_BANKACCT_CUBE` | 165 |
+
+Decisions behind the shape:
+- `JM` is a literal in view 1, not a SETLEAF join on the GS01 set: if the set is ever changed,
+  the JM history must not vanish from the dashboard.
+- No BSTAT filter: parked documents have no BSEG lines, so the inner join already drops them,
+  and the upload-posted headers carry **BSTAT `Z`** in PRD (column mapping of the SE16N dump,
+  03/11/26; meaning of `Z` on domain BSTAT still to be read in SE11). Reversed documents go
+  through `stblg = ''`; the reversal documents carry STBLG too, so both sides drop.
+- Period = GJAHR / MONAT of the posting (FY variant April–March: MONAT 1 = April). The header
+  text month is unreliable (1017004699: period 11/2017, text "For Jan'18").
+- Only JM rows were pulled from PRD (BLART filter), so "JIBs under another type" (check 3) is
+  unproven; Arnav's call 03/11/26: JM is enough.
+- No `IS NULL`, no arithmetic in a CASE condition, no literal column in a GROUP BY view, no
+  `$session` variable, no `concat` — every construct used is one that activated here before
+  (`select distinct`, `count( distinct )`, `coalesce( x, cast( 0 as … ) )`, simple `CASE` on a
+  field or `substring()`, `max()` on CHAR).
+- Business Unit: CASE on the venture prefix from the four workbook examples only (AA, SD →
+  MENA & CIS BU; MM → AP BU; else OTHER). VenturePrefix is exposed so the unmapped prefixes are
+  visible. Replace the CASE when the requester's venture → BU list arrives.
+
+## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
+
+`.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
+with 9 files: `package.devc.xml`, four `*.ddls.asddls` + four `*.ddls.xml`. Built with
+`zip -X ZFI_JIB_STATUS.zip .abapgit.xml src/*`; XML well-formed, UTF-8, no BOM, LF; DDLNAME
+= view name = file name checked by script.
+
+Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_JIB_STATUS`** (new; the
+ZIP's `package.devc.xml` sets the description, so do not point it at an existing package) →
+Import ZIP → Pull → transport request when asked. abapGit activates the four DDL sources in
+dependency order (1, 2, 3, then the cube). If the pull stops on a DDLS with a syntax error,
+open it in ADT, paste the error here, the fix comes back as that one file and a rebuilt ZIP.
+
+After the pull, by hand:
+1. ADT → Data Preview on `ZI_JIB_STATUS_CUBE`: OVL rows, JibStatus Uploaded with a date for
+   AA2002-style ventures in past periods, Pending without one.
+2. ADT → right-click `ZI_JIB_STATUS_CUBE` → Properties → API State → Add Release State →
+   **Use in Key User Apps (C1)** → Finish. Without this the CAQ app does not list it.
+3. `RSRTS_ODP_DIS` → `2CZIJIBSTATUSCUBE` opens without errors.
+4. GR consultant: Custom Analytical Queries → New → data source `ZI_JIB_STATUS_CUBE` (search
+   without `*`). Rows: JV Code, Project Name, Business Unit, JIB Posting Status, Date (Last
+   JIB Entry); filters Fiscal Year, Posting Period / Fiscal Quarter, Business Unit.
+
+## Open questions (03/11/26)
+1. `JM` is the set value (confirmed 03/11/26). Exclusive to JIBs, and used by every JIB
+   including hand-parked ones (checks 2–3 above)? Still open.
+2. Which document type do JIB **provisions** use?
+3. Quarter / year period: "Uploaded" when every month is posted, or when any is?
+4. Business Unit mapping: Z table (recommended) or hardcoded CASE on the venture prefix?
+5. "Date" = CPUDT (entered) — confirmed by Arnav's wording "last creation date"; the
+   requester's sample dates should be checked against that reading.
+6. Company code OVL only, or every company code with ventures?
+7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
+   type (CDS view with OData service vs. a report).
+
 ## Objects (decided 03/11/26 — consumer is a Fiori tile built in Custom Analytical Queries)
 
 Three classic `define view`s, pasted in ADT one at a time, loose files in this folder:

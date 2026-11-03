@@ -7,10 +7,11 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 1 of 3 for the Management Dashboard card "JIB Status". The
-//   others are ZI_JIB_PERIOD (venture x period frame) and
-//   ZI_JIB_STATUS_CUBE, the cube the functional consultant picks in the
-//   Fiori app Custom Analytical Queries.
+//   Object 1 of 4 for the Management Dashboard card "JIB Status". The
+//   others are ZI_JIB_PERIOD (periods with postings), ZI_JIB_VENTURE
+//   (venture master with text) and ZI_JIB_STATUS_CUBE, the cube the
+//   functional consultant picks in Custom Analytical Queries. All four
+//   ship together in ZFI_JIB_STATUS.zip (package ZFI_JIB_STATUS).
 //   One row per company code / joint venture / fiscal year / posting
 //   period: how many JIB documents were posted for that venture in that
 //   period and when the last one was entered (BKPF-CPUDT - the
