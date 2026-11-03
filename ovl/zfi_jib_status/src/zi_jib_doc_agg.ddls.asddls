@@ -23,8 +23,12 @@
 //   a JIB, whether uploaded by the program or parked and posted with
 //   FBV0 (TCODE FBVB).
 //   The venture is not on the header. It comes from the line items
-//   (BSEG-VNAME), so a document that bills several ventures counts once
-//   for each of them, and header lines without a venture are ignored.
+//   (BSEG-VNAME). Checked on two PRD documents (03/11/26): 1016003288,
+//   AIOC JIB October 2016, 158 lines, and 1017001506, Vietnam 06.1 JIB
+//   July 2017, 31 lines - every line carries the venture, the vendor
+//   line (posting key 31, JV-AIOC / JV-BP) included, and each document
+//   carries exactly one venture. So one JIB = one row per venture here,
+//   and no JIB is lost for want of a venture.
 //   Excluded: reversed documents (STBLG filled - a reversed JIB has to
 //   be posted again) and parked documents (they have no BSEG lines, so
 //   the inner join drops them; no BSTAT filter is needed, and none is

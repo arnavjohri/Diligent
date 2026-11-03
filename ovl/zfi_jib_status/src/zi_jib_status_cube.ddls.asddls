@@ -33,13 +33,14 @@
 //
 // CHANGE HISTORY
 //   03.11.2026  Arnav Johri  <TR>  Initial development
+//   03.11.2026  Arnav Johri  <TR>  Business Unit per venture (was: by
+//                                  prefix); VenturePrefix dropped
 //----------------------------------------------------------------------
-// ASSUMPTION: Business Unit is derived from the first two characters
-//   of the venture code, from the four examples in the requirement
-//   (AA2002 ACG and SD2002 Block 5A are MENA & CIS BU, MM2002 A1 and
-//   MM2012 A3 are AP BU). Every other prefix shows OTHER until the
-//   requester's venture -> BU list arrives; VenturePrefix is exposed so
-//   the unmapped prefixes are visible in the query.
+// ASSUMPTION: Business Unit is the requirement's fixed attribute per
+//   venture ("shall be a freezed input"): AA2002 ACG and SD2002 Block 5A
+//   are MENA & CIS BU, MM2002 A1 and MM2012 A3 are AP BU. A venture
+//   outside the list (none reach the cube today - ZI_JIB_VENTURE scopes
+//   it) would show OTHER.
 // ASSUMPTION: fiscal year variant April-March for every company code
 //   (OVL: posting period 1 = April, confirmed on the PRD sample).
 //   PeriodMonth and FiscalQuarter are literal CASEs on that variant.
@@ -91,14 +92,13 @@ define view ZI_JIB_STATUS_CUBE
       Venture.JointVentureName,
       @EndUserText.label: 'Venture Type'
       Venture.VentureType,
-      @EndUserText.label: 'Venture Prefix'
-      substring( Venture.JointVenture, 1, 2 )          as VenturePrefix,
       @EndUserText.label: 'Business Unit'
-      case substring( Venture.JointVenture, 1, 2 )
-        when 'AA' then 'MENA & CIS BU'
-        when 'SD' then 'MENA & CIS BU'
-        when 'MM' then 'AP BU'
-        else           'OTHER'
+      case Venture.JointVenture
+        when 'AA2002' then 'MENA & CIS BU'
+        when 'SD2002' then 'MENA & CIS BU'
+        when 'MM2002' then 'AP BU'
+        when 'MM2012' then 'AP BU'
+        else               'OTHER'
       end                                              as BusinessUnit,
 
       // -- period attributes (fiscal year variant April-March) -----------

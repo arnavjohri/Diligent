@@ -120,8 +120,8 @@ repo points at an existing package, and a DEVC file in the ZIP would overwrite i
 |---|---|---|---|---|
 | 1 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | BKPF (JM, `stblg = ''`) ⋈ BSEG (`vname <> ''`), GROUP BY company code / venture / GJAHR / MONAT: `max(cpudt)` LastEntryDate, `max(budat)` LastPostingDate, `count(distinct belnr)` JibDocuments, `count(distinct bukrs)` JibPosted (= 1 on every row) | 85 |
 | 2 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | `select distinct bukrs, gjahr, monat from bkpf`, MONAT 01–12: every period with any FI posting, so a period with no JIB yet still shows every venture as Pending | 47 |
-| 3 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname (the join the active programs use), `max(vtext)` under GROUP BY bukrs, vname, vtype — one row per venture even if T8JVT has a language key | 54 |
-| 4 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 3 ⋈ 2 on company code (the cross join), LEFT OUTER JOIN 1 on all four keys. Keys CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture (text element JointVentureName), FiscalYear, FiscalPeriod. Characteristics: JointVentureName, VentureType, VenturePrefix, BusinessUnit (CASE on prefix), PeriodMonth (CASE 01→Apr … 12→Mar), FiscalQuarter, JibStatus (`case Jib.JibPosted when 1 'Uploaded' else 'Pending'` — NULL on the outer join falls into ELSE), LastEntryDate, LastPostingDate. Measures (INT4, SUM): JibDocuments, JibPosted, JibPending, Ventures. Header set = `ZI_TR_BANKACCT_CUBE` | 165 |
+| 3 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname (the join the active programs use), `max(vtext)` under GROUP BY bukrs, vname, vtype — one row per venture even if T8JVT has a language key. **WHERE vname = AA2002 / SD2002 / MM2002 / MM2012** | 66 |
+| 4 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 3 ⋈ 2 on company code (the cross join), LEFT OUTER JOIN 1 on all four keys. Keys CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture (text element JointVentureName), FiscalYear, FiscalPeriod. Characteristics: JointVentureName, VentureType, BusinessUnit (CASE per venture), PeriodMonth (CASE 01→Apr … 12→Mar), FiscalQuarter, JibStatus (`case Jib.JibPosted when 1 'Uploaded' else 'Pending'` — NULL on the outer join falls into ELSE), LastEntryDate, LastPostingDate. Measures (INT4, SUM): JibDocuments, JibPosted, JibPending, Ventures. Header set = `ZI_TR_BANKACCT_CUBE` | 165 |
 
 Decisions behind the shape:
 - `JM` is a literal in view 1, not a SETLEAF join on the GS01 set: if the set is ever changed,
@@ -138,9 +138,18 @@ Decisions behind the shape:
   `$session` variable, no `concat` — every construct used is one that activated here before
   (`select distinct`, `count( distinct )`, `coalesce( x, cast( 0 as … ) )`, simple `CASE` on a
   field or `substring()`, `max()` on CHAR).
-- Business Unit: CASE on the venture prefix from the four workbook examples only (AA, SD →
-  MENA & CIS BU; MM → AP BU; else OTHER). VenturePrefix is exposed so the unmapped prefixes are
-  visible. Replace the CASE when the requester's venture → BU list arrives.
+- **Scope = the four ventures** (Arnav, 03/11/26: "it only happens for those 4 ventures").
+  `ZI_JIB_VENTURE` keeps AA2002, SD2002, MM2002, MM2012 only; Business Unit is a CASE per
+  venture in the cube (AA2002, SD2002 → MENA & CIS BU; MM2002, MM2012 → AP BU). A fifth
+  venture = one OR line in the view and one WHEN in the cube. Nothing in BKPF/BSEG marks a
+  venture as in or out of scope, so the list cannot be derived.
+- **What two full PRD documents showed (03/11/26, BSEG by position):** 1016003288 (AIOC JIB
+  Oct 2016, 158 lines, venture AA2002) and 1017001506 (Vietnam 06.1 JIB Jul 2017, 31 lines,
+  venture VN2012, vendor JV-BP). Every line carries VNAME, the vendor line (PK 31) included,
+  with RECID CP on the vendor line and NB on the cost lines, EGRUP NP1. One venture per
+  document. ZUONR also holds the venture code on the cost lines. So `count(distinct belnr)`
+  per venture is exact and no JIB is dropped for want of a venture. VN2012 is a structurally
+  normal JIB that is simply outside today's list — the "non-valid" example.
 
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
