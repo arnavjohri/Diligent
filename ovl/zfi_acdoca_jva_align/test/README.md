@@ -52,3 +52,12 @@ first column name) and, when that is nothing, reads the file a second time throu
 PC with `TEXT_CONVERT_XLS_TO_SAP`, the reader OVL's other uploads use. The status message now
 names both results, e.g. `class: worksheet Upload, 0 rows, 15 columns, first column
 COMPANY_CODE, 0 data rows kept; Excel/OLE reader: 172 rows, 172 data rows kept`.
+
+## Test case 1a — one account first (03/11/26)
+`ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001_acct30434.xlsx`: the two rows of account 30434 only
+(BD1112 / NE1 / NB −431.25 LC −6.05 GC, and the blank-venture offset +431.25 / +6.05).
+Expected: test run 2 rows *Test - would be posted*; update run document `ZJVA000001` with
+DOCLN 1 and 2; recon for OVL 2022 001 with cut-off = tomorrow shows account 30434 with zero
+difference on both rows. **Before the full 172-row file: run Undo for OVL / 2022 / 001** —
+the document `ZJVA000001` already exists after this test and the full file would be rejected
+(and would double-post the two rows if it were not).
