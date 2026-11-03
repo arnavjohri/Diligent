@@ -28,13 +28,24 @@ So the columns go into a **custom cube**, and the query is **re-created** in the
 that cube (a new ID, e.g. `ZZ1_BR_REPORT2`; fields re-selected — far fewer than the 247
 now selected; hierarchy re-picked).
 
+## Status 03/11/26
+
+All four CDS objects active on OCD (`ZFI_BR_GLMAP`, `ZI_BR_HOUSEBANKACCT` v2, `ZI_BR_BANKREVAL_ITM` v4,
+`ZI_BR_BANKREVAL_CUBE` released for key-user apps), 48 mapping rows loaded for company code OVL,
+query built in the app on the cube: PI share, rate type, exchange rate, house bank and bank account
+number all show. Open: TR number to be noted; SE54 maintenance view for `ZFI_BR_GLMAP`; FI to confirm
+which currency type is USD (Global / Functional / Free-defined 1) so the other two measures can go;
+optional removal of the two line-item fields `HouseBank` / `HouseBankAccount` from the cube (Arnav said
+yes on 03/11/26, parked while the house bank issue was open — one cube activation, query must drop the
+field first).
+
 ## Column map — Excel → source
 
 | Excel col | Heading | Source in the cube |
 |---|---|---|
 | B/C | GL Code / GL Description | `GLAccount` with `_GLAccountInChartOfAccounts` (key + text, hierarchy) |
-| D | Account No | `BankAccountNumber` = T012K-BANKN via SKB1-HBKID/HKTID (blank until house banks exist — Excel says "To be created") |
-| E | House Bank | `GLHouseBank` / `GLHouseBankAccount` = SKB1-HBKID / HKTID |
+| D | Account No | `BankAccountNumber` = T012K-BANKN, T012K joined on BUKRS + HKONT = G/L account (blank until the house bank account exists — Excel says "To be created") |
+| E | House Bank | `GLHouseBank` / `GLHouseBankAccount` = T012K-HBKID / HKTID (03/11/26; SKB1-HBKID/HKTID are not maintained on S/4) |
 | F | Project/Section | `ProjectSection` — mapping table (text; replace by an SAP org element if one maps) |
 | G | Business Unit | `BusinessUnit` — mapping table ("fixed element" per the Excel) |
 | H | Account Currency | `GLAccountCurrency` = SKB1-WAERS |
@@ -73,7 +84,11 @@ come from the data elements, so `ZBR_PISHARE` needs short/medium/long texts
 Alternative considered and **not** recommended: hardcoding the 49 PI values in a CDS
 `CASE` on `GLAccount`. Every farm-in/out would then be a transport.
 
-### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (121 lines)
+### 1b. `ZI_BR_HOUSEBANKACCT` — `src/zi_br_housebankacct.ddls.asddls` (03/11/26)
+
+Helper on **`V_T012K_BAM`** (the compatibility view T012K is redirected to; a CDS `select from t012k` reads the physical table with only the legacy ECC rows, 03/11/26): keys company code, house bank, account ID; `lpad(hkont, 10, '0')` as `GLAccount`, bank account number, currency. Activate before the ITM.
+
+### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (147 lines, v4)
 
 Classic `define view`, SQL view `ZIBRBNKREVITM`. `I_GLAccountLineItemCube` left-outer
 joined to `skb1`, `t012k`, `zfi_br_glmap`. Adds `GLAccountCurrency`, house bank fields,

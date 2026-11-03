@@ -23,6 +23,17 @@
 //   point is FLTP. The integer literal 1 is INT4 and casts to CURR.
 // ASSUMPTION: INT4 -> abap.curr(23,10) is accepted. If not, cast to
 //   abap.dec(23,10) instead; currency_conversion takes DEC amounts too.
+// 03/11/26: house bank / account number came back blank. SKB1-HBKID /
+//   HKTID (FS00, Create/bank/interest tab) are not maintained on S/4 -
+//   the G/L to house bank account link is T012K-HKONT, written by the
+//   connectivity path in Manage Bank Accounts. T012K is now joined on
+//   company code + G/L account; SKB1 stays for the account currency.
+// ASSUMPTION: one house bank account (T012K row) per G/L account and
+//   company code. A G/L used by two account IDs would double the lines
+//   of that account - check SE16 T012K, BUKRS OVL, duplicates in HKONT.
+// 03/11/26 (v4): still blank with the direct T012K join. The house bank
+//   now comes through ZI_BR_HOUSEBANKACCT, which pads T012K-HKONT to
+//   10 digits, so the join holds whether the zeros are stored or not.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVITM'
 @AbapCatalog.compiler.compareFilter: true
@@ -36,9 +47,16 @@ define view ZI_BR_BANKREVAL_ITM
   as select from I_GLAccountLineItemCube as Item
     left outer join skb1         as AcctCoCd on  AcctCoCd.bukrs = Item.CompanyCode
                                              and AcctCoCd.saknr = Item.GLAccount
-    left outer join t012k        as BankAcct on  BankAcct.bukrs = AcctCoCd.bukrs
-                                             and BankAcct.hbkid = AcctCoCd.hbkid
-                                             and BankAcct.hktid = AcctCoCd.hktid
+    //BOC By Arnav on 03/11/26
+    //  left outer join t012k        as BankAcct on  BankAcct.bukrs = AcctCoCd.bukrs
+    //                                           and BankAcct.hbkid = AcctCoCd.hbkid
+    //                                           and BankAcct.hktid = AcctCoCd.hktid
+    //  left outer join t012k        as BankAcct on  BankAcct.bukrs = Item.CompanyCode
+    //                                           and BankAcct.hkont = Item.GLAccount
+    left outer join ZI_BR_HOUSEBANKACCT as BankAcct
+                                             on  BankAcct.CompanyCode = Item.CompanyCode
+                                             and BankAcct.GLAccount   = Item.GLAccount
+    //EOC By Arnav on 03/11/26
     left outer join zfi_br_glmap as Map      on  Map.bukrs = Item.CompanyCode
                                              and Map.saknr = Item.GLAccount
 {
@@ -74,9 +92,16 @@ define view ZI_BR_BANKREVAL_ITM
       // -- account master (SKB1 / T012K) -----------------------------
       @Semantics.currencyCode: true
       AcctCoCd.waers                   as GLAccountCurrency,
-      AcctCoCd.hbkid                   as GLHouseBank,
-      AcctCoCd.hktid                   as GLHouseBankAccount,
-      BankAcct.bankn                   as BankAccountNumber,
+      //BOC By Arnav on 03/11/26
+      //  AcctCoCd.hbkid                   as GLHouseBank,
+      //  AcctCoCd.hktid                   as GLHouseBankAccount,
+      //  BankAcct.hbkid                   as GLHouseBank,
+      //  BankAcct.hktid                   as GLHouseBankAccount,
+      //  BankAcct.bankn                   as BankAccountNumber,
+      BankAcct.HouseBank               as GLHouseBank,
+      BankAcct.HouseBankAccount        as GLHouseBankAccount,
+      BankAcct.BankAccountNumber       as BankAccountNumber,
+      //EOC By Arnav on 03/11/26
 
       // -- mapping table ZFI_BR_GLMAP --------------------------------
       Map.zpishare                     as PIShare,
