@@ -110,10 +110,11 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 
 ## Objects — all four in `ZFI_JIB_STATUS.zip` (03/11/26, consumer: Custom Analytical Queries)
 
-Four classic `define view`s in `src/`, one abapGit ZIP, package **`ZFI_JIB_STATUS`** (new).
-No table, no domain, no data element — on purpose: the treasury ZIP (`ovl/zfi_tr_bankacct`,
+Four classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**
+(Arnav, 03/11/26). No table, no domain, no data element — on purpose: the treasury ZIP (`ovl/zfi_tr_bankacct`,
 03/11/26) created both DDL sources and not the table, so this set carries only what has pulled
-cleanly on this landscape (DDLS shape of 28/10 and 03/11, DEVC).
+cleanly on this landscape (DDLS shape of 28/10 and 03/11). No `package.devc.xml` either: the
+repo points at an existing package, and a DEVC file in the ZIP would overwrite its description.
 
 | # | Object | SQL view | What | Lines |
 |---|---|---|---|---|
@@ -144,13 +145,12 @@ Decisions behind the shape:
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
 `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
-with 9 files: `package.devc.xml`, four `*.ddls.asddls` + four `*.ddls.xml`. Built with
+with 8 files: four `*.ddls.asddls` + four `*.ddls.xml`. No DEVC file (existing package). Built with
 `zip -X ZFI_JIB_STATUS.zip .abapgit.xml src/*`; XML well-formed, UTF-8, no BOM, LF; DDLNAME
 = view name = file name checked by script.
 
-Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_JIB_STATUS`** (new; the
-ZIP's `package.devc.xml` sets the description, so do not point it at an existing package) →
-Import ZIP → Pull → transport request when asked. abapGit activates the four DDL sources in
+Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_OTH`** (existing; nothing
+in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the four DDL sources in
 dependency order (1, 2, 3, then the cube). If the pull stops on a DDLS with a syntax error,
 open it in ADT, paste the error here, the fix comes back as that one file and a rebuilt ZIP.
 

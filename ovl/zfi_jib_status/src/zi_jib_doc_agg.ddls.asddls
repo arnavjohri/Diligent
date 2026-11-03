@@ -11,7 +11,7 @@
 //   others are ZI_JIB_PERIOD (periods with postings), ZI_JIB_VENTURE
 //   (venture master with text) and ZI_JIB_STATUS_CUBE, the cube the
 //   functional consultant picks in Custom Analytical Queries. All four
-//   ship together in ZFI_JIB_STATUS.zip (package ZFI_JIB_STATUS).
+//   ship together in ZFI_JIB_STATUS.zip, into package ZFI_OTH.
 //   One row per company code / joint venture / fiscal year / posting
 //   period: how many JIB documents were posted for that venture in that
 //   period and when the last one was entered (BKPF-CPUDT - the
