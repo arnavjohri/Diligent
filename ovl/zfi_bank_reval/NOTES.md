@@ -33,8 +33,8 @@ now selected; hierarchy re-picked).
 | Excel col | Heading | Source in the cube |
 |---|---|---|
 | B/C | GL Code / GL Description | `GLAccount` with `_GLAccountInChartOfAccounts` (key + text, hierarchy) |
-| D | Account No | `BankAccountNumber` = T012K-BANKN via SKB1-HBKID/HKTID (blank until house banks exist — Excel says "To be created") |
-| E | House Bank | `GLHouseBank` / `GLHouseBankAccount` = SKB1-HBKID / HKTID |
+| D | Account No | `BankAccountNumber` = T012K-BANKN, T012K joined on BUKRS + HKONT = G/L account (blank until the house bank account exists — Excel says "To be created") |
+| E | House Bank | `GLHouseBank` / `GLHouseBankAccount` = T012K-HBKID / HKTID (03/11/26; SKB1-HBKID/HKTID are not maintained on S/4) |
 | F | Project/Section | `ProjectSection` — mapping table (text; replace by an SAP org element if one maps) |
 | G | Business Unit | `BusinessUnit` — mapping table ("fixed element" per the Excel) |
 | H | Account Currency | `GLAccountCurrency` = SKB1-WAERS |
