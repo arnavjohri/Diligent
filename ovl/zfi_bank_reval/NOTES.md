@@ -75,7 +75,7 @@ Alternative considered and **not** recommended: hardcoding the 49 PI values in a
 
 ### 1b. `ZI_BR_HOUSEBANKACCT` — `src/zi_br_housebankacct.ddls.asddls` (03/11/26)
 
-Helper on T012K: keys company code, house bank, account ID; `lpad(hkont, 10, '0')` as `GLAccount`, bank account number, currency. Exists only so the ITM can join T012K on the G/L account regardless of how HKONT was stored. Activate before the ITM.
+Helper on **`V_T012K_BAM`** (the compatibility view T012K is redirected to; a CDS `select from t012k` reads the physical table with only the legacy ECC rows, 03/11/26): keys company code, house bank, account ID; `lpad(hkont, 10, '0')` as `GLAccount`, bank account number, currency. Activate before the ITM.
 
 ### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (147 lines, v4)
 
