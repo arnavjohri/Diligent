@@ -1,89 +1,100 @@
 //----------------------------------------------------------------------
 // Object    : ZI_JIB_DOC_AGG (DDL source, classic view)
-// Title     : JIB postings per joint venture and fiscal period
+// Title     : Latest JIB entry per venture and window (year, quarter,
+//             month)
 // Project   : OVL                                   Module: FI-JVA
 // Source    : Management_Dashboard_-_JIB_Status_-_Final.xlsx
 // Author    : Arnav Johri                            Date: 03.11.2026
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 1 of 4 for the Management Dashboard card "JIB Status". The
-//   others are ZI_JIB_PERIOD (periods with postings), ZI_JIB_VENTURE
-//   (venture master with text) and ZI_JIB_STATUS_CUBE, the cube the
-//   functional consultant picks in Custom Analytical Queries. All four
-//   ship together in ZFI_JIB_STATUS.zip, into package ZFI_OTH.
-//   One row per company code / joint venture / fiscal year / posting
-//   period: how many JIB documents were posted for that venture in that
-//   period and when the last one was entered (BKPF-CPUDT - the
-//   "creation date" the dashboard shows next to "Uploaded").
-//   A JIB document is a BKPF header of document type JM: the type the
-//   non-operated JIB upload (ZJV_NOP_JIBUPLD_MON / _MONC, GS01 set
-//   ZJVNONOPJIB_DOCTYP_MON) stamps, and the only type JIBs are posted
-//   under. SE16N BKPF OVL / JM over 2016-2018 (03/11/26): every row is
-//   a JIB, whether uploaded by the program or parked and posted with
-//   FBV0 (TCODE FBVB).
-//   The venture is not on the header. It comes from the line items
-//   (BSEG-VNAME). Checked on two PRD documents (03/11/26): 1016003288,
-//   AIOC JIB October 2016, 158 lines, and 1017001506, Vietnam 06.1 JIB
-//   July 2017, 31 lines - every line carries the venture, the vendor
-//   line (posting key 31, JV-AIOC / JV-BP) included, and each document
-//   carries exactly one venture. So one JIB = one row per venture here,
-//   and no JIB is lost for want of a venture.
-//   Excluded: reversed documents (STBLG filled - a reversed JIB has to
-//   be posted again) and parked documents (they have no BSEG lines, so
-//   the inner join drops them; no BSTAT filter is needed, and none is
-//   used because upload-posted headers carry BSTAT 'Z' in PRD).
+//   Object 3 of 6 for the Management Dashboard card "JIB Status". The
+//   JIB documents of ZI_JIB_DOC aggregated per company code / joint
+//   venture at three granularities of the ENTRY date, in one UNION ALL:
+//     Y  per fiscal year of entry            (quarter, period blank)
+//     Q  per fiscal year + quarter of entry  (period blank)
+//     M  per fiscal year + quarter + period of entry
+//   Each row carries the latest entry date in the window, the latest
+//   posting date, the number of JIB documents and JibPosted = 1. So a
+//   query filtered on one granularity and one window gets one row per
+//   venture with its last posting in that window - "if they enter 2026
+//   and the last posting was done in period 1, show that" (Arnav,
+//   04/11/26) - instead of one row per month.
+//   Same shape as ZDPR_P_PERF_AGG (literal key column + GROUP BY in
+//   each UNION ALL branch), which is active on this system.
 //
 // CHANGE HISTORY
-//   03.11.2026  Arnav Johri  <TR>  Initial development
+//   03.11.2026  Arnav Johri  <TR>  Initial development (per posting
+//                                  period, from BKPF/BSEG directly)
+//   04.11.2026  Arnav Johri  <TR>  Rebuilt on ZI_JIB_DOC: entry-date
+//                                  windows, three granularities
 //----------------------------------------------------------------------
-// ASSUMPTION: document type JM is a literal here, deliberately not read
-//   from the GS01 set: if the upload is ever switched to another type,
-//   the history posted as JM must stay visible. Add the new type as a
-//   second value in the WHERE at that point.
-// ASSUMPTION: XBLNR / BKTXT ("AIOC JIB", "For April ,26") are typed by
-//   the user in the upload file and are not used as criteria.
-// ASSUMPTION: the period a JIB belongs to is its posting period
-//   (GJAHR / MONAT), not the month named in the header text. The two
-//   differ in PRD (1017004699: period 11/2017, text "For Jan'18").
-// ASSUMPTION: JibPosted = count( distinct bukrs ) is 1 on every row (a
-//   group has exactly one company code). The cube turns it into the
-//   0 / 1 indicator "JIB posted" through coalesce( ..., 0 ) after the
-//   left outer join, without a CASE on a joined column.
+// ASSUMPTION: JibPosted = count( distinct CompanyCode ) is 1 on every
+//   row (a group has exactly one company code). The cube turns it into
+//   the 0 / 1 indicator through coalesce( ..., 0 ) after the left outer
+//   join, without a CASE on a joined column.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIJIBDOCAGG'
 @AbapCatalog.compiler.compareFilter: true
 @AbapCatalog.preserveKey: true
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'JIB postings per venture and period'
+@EndUserText.label: 'Latest JIB entry per venture and window'
 @VDM.viewType: #BASIC
 @ClientHandling.algorithm: #SESSION_VARIABLE
 @Metadata.ignorePropagatedAnnotations: true
 define view ZI_JIB_DOC_AGG
-  as select from bkpf as Doc
-    inner join   bseg as Item on  Item.bukrs = Doc.bukrs
-                              and Item.belnr = Doc.belnr
-                              and Item.gjahr = Doc.gjahr
+  as select from ZI_JIB_DOC as Doc
 {
-      @EndUserText.label: 'Company Code'
-  key Doc.bukrs                      as CompanyCode,
-      @EndUserText.label: 'Joint Venture'
-  key Item.vname                     as JointVenture,
-      @EndUserText.label: 'Fiscal Year'
-  key Doc.gjahr                      as FiscalYear,
-      @EndUserText.label: 'Posting Period'
-  key Doc.monat                      as FiscalPeriod,
+      // -- Y: per fiscal year of entry -----------------------------------
+  key Doc.CompanyCode,
+  key Doc.JointVenture,
+  key cast( 'Y' as abap.char( 1 ) )          as Granularity,
+  key Doc.EntryFiscalYear                    as FiscalYear,
+  key cast( ' ' as abap.char( 2 ) )          as FiscalQuarter,
+  key cast( ' ' as abap.char( 2 ) )          as FiscalPeriod,
 
-      @EndUserText.label: 'Last JIB Entry Date'
-      max( Doc.cpudt )               as LastEntryDate,
-      @EndUserText.label: 'Last JIB Posting Date'
-      max( Doc.budat )               as LastPostingDate,
-      @EndUserText.label: 'JIB Documents'
-      count( distinct Doc.belnr )    as JibDocuments,
-      @EndUserText.label: 'JIB Posted'
-      count( distinct Doc.bukrs )    as JibPosted
+      max( Doc.EntryDate )                   as LastEntryDate,
+      max( Doc.PostingDate )                 as LastPostingDate,
+      count( distinct Doc.AccountingDocument ) as JibDocuments,
+      count( distinct Doc.CompanyCode )      as JibPosted
 }
-where Doc.blart  = 'JM'
-  and Doc.stblg  = ''
-  and Item.vname <> ''
-group by Doc.bukrs, Item.vname, Doc.gjahr, Doc.monat
+group by Doc.CompanyCode, Doc.JointVenture, Doc.EntryFiscalYear
+
+union all
+
+  select from ZI_JIB_DOC as Doc
+{
+      // -- Q: per fiscal year and quarter of entry -----------------------
+  key Doc.CompanyCode,
+  key Doc.JointVenture,
+  key cast( 'Q' as abap.char( 1 ) )          as Granularity,
+  key Doc.EntryFiscalYear                    as FiscalYear,
+  key Doc.EntryFiscalQuarter                 as FiscalQuarter,
+  key cast( ' ' as abap.char( 2 ) )          as FiscalPeriod,
+
+      max( Doc.EntryDate )                   as LastEntryDate,
+      max( Doc.PostingDate )                 as LastPostingDate,
+      count( distinct Doc.AccountingDocument ) as JibDocuments,
+      count( distinct Doc.CompanyCode )      as JibPosted
+}
+group by Doc.CompanyCode, Doc.JointVenture, Doc.EntryFiscalYear, Doc.EntryFiscalQuarter
+
+union all
+
+  select from ZI_JIB_DOC as Doc
+{
+      // -- M: per fiscal year, quarter and period of entry ---------------
+  key Doc.CompanyCode,
+  key Doc.JointVenture,
+  key cast( 'M' as abap.char( 1 ) )          as Granularity,
+  key Doc.EntryFiscalYear                    as FiscalYear,
+  key Doc.EntryFiscalQuarter                 as FiscalQuarter,
+  key Doc.EntryFiscalPeriod                  as FiscalPeriod,
+
+      max( Doc.EntryDate )                   as LastEntryDate,
+      max( Doc.PostingDate )                 as LastPostingDate,
+      count( distinct Doc.AccountingDocument ) as JibDocuments,
+      count( distinct Doc.CompanyCode )      as JibPosted
+}
+group by Doc.CompanyCode, Doc.JointVenture, Doc.EntryFiscalYear, Doc.EntryFiscalQuarter,
+         Doc.EntryFiscalPeriod

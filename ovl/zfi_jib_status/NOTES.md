@@ -108,71 +108,85 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
    type (CDS view with OData service vs. a report).
 
-## Objects — all four in `ZFI_JIB_STATUS.zip` (03/11/26, consumer: Custom Analytical Queries)
+## Objects — all six in `ZFI_JIB_STATUS.zip` (04/11/26, consumer: Custom Analytical Queries)
 
-Four classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**
-(Arnav, 03/11/26). No table, no domain, no data element — on purpose: the treasury ZIP (`ovl/zfi_tr_bankacct`,
-03/11/26) created both DDL sources and not the table, so this set carries only what has pulled
-cleanly on this landscape (DDLS shape of 28/10 and 03/11). No `package.devc.xml` either: the
-repo points at an existing package, and a DEVC file in the ZIP would overwrite its description.
+Six classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**.
+No table, no domain, no data element, no `package.devc.xml` — on purpose (the treasury ZIP
+created both DDL sources and not the table; a DEVC file would overwrite the package text).
+
+**Model (04/11/26).** The window a JIB falls in is decided by its **entry date** (BKPF-CPUDT),
+not its posting period, and the cube has one row per venture per *window* at three
+granularities — fiscal year (Y), fiscal quarter (Q), month (M) of entry — each row carrying
+the latest entry in that window. A query filters Granularity + the window and gets exactly one
+row per venture: "if they enter 2026 and the last posting was done in period 1, show that, not
+Pending for the other months" (Arnav, 04/11/26). Fiscal year variant April–March throughout.
 
 | # | Object | SQL view | What | Lines |
 |---|---|---|---|---|
-| 1 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | BKPF (JM, `stblg = ''`) ⋈ BSEG (`vname <> ''`), GROUP BY company code / venture / GJAHR / MONAT: `max(cpudt)` LastEntryDate, `max(budat)` LastPostingDate, `count(distinct belnr)` JibDocuments, `count(distinct bukrs)` JibPosted (= 1 on every row) | 89 |
-| 2 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | `select distinct bukrs, gjahr, monat from bkpf`, MONAT 01–12: every period with any FI posting, so a period with no JIB yet still shows every venture as Pending. **PeriodStartDate** = 1 April of GJAHR + (MONAT − 1) months (literal CASE, `dats_add_months`), for a date-range filter in the query | 95 |
-| 3 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname (the join the active programs use), `max(vtext)` under GROUP BY bukrs, vname, vtype — one row per venture even if T8JVT has a language key. **WHERE vname = AA2002 / SD2002 / MM2002 / MM2012** | 63 |
-| 4 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 3 ⋈ 2 on company code (the cross join), LEFT OUTER JOIN 1 on all four keys. Keys CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture (text element JointVentureName), FiscalYear, FiscalPeriod. Characteristics: ProjectName (CASE per venture, workbook text — the text element of JV Code), JointVentureName (T8JVT, 'SAP Venture Name'), VentureType, BusinessUnit (CASE per venture), PeriodStartDate, PeriodMonth (CASE 01→Apr … 12→Mar), FiscalQuarter, JibStatus labelled **Status** (`case Jib.JibPosted when 1 'Uploaded' else 'Pending'` — NULL on the outer join falls into ELSE), LastEntryDate labelled **Date** (BKPF-CPUDT, the day the JIB was entered), LastPostingDate. Measures (INT4, SUM): JibDocuments, JibPosted, JibPending, Ventures. Header set = `ZI_TR_BANKACCT_CUBE` | 165 |
+| 1 | `ZI_JIB_ENTRY` | `ZIJIBENTRY` | every BKPF header with the fiscal year / quarter / period of its **entry date** (CPUDT − 3 months → fiscal year; literal CASE on the calendar month → period and quarter) and the first day of the entry month / quarter / fiscal year (`dats_add_months`, `concat`, `cast … as abap.dats`, the `ZDPR_P_ASOF` shapes) | 140 |
+| 2 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` ZI_JIB_ENTRY ⋈ BSEG, document type JM, `stblg = ''`, `vname <> ''`: one row per JIB document and venture with its entry-date window | 72 |
+| 3 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | UNION ALL of three GROUP BYs on ZI_JIB_DOC — per venture and entry fiscal year (Y), + quarter (Q), + period (M): `max(EntryDate)` LastEntryDate, `max(PostingDate)`, `count(distinct document)`, JibPosted = 1. Literal key `Granularity` cast as in the active `ZDPR_P_PERF_AGG`; blank quarter / period on the coarser rows as `cast( ' ' as abap.char(2) )` | 100 |
+| 4 | `ZI_JIB_WINDOW` | `ZIJIBWINDOW` | UNION ALL of three `select distinct` on ZI_JIB_ENTRY: every company code / entry window (Y, Q, M) in which any FI document was entered, with PeriodStartDate = first day of the window. Period '00' (initial CPUDT) excluded | 77 |
+| 5 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname, `max(vtext)` under GROUP BY — **WHERE vname = AA2002 / SD2002 / MM2002 / MM2012** | 63 |
+| 6 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 5 ⋈ 4 on company code, LEFT OUTER JOIN 3 on company code, venture, Granularity, FiscalYear, FiscalQuarter, FiscalPeriod. Keys: CompanyCode (`_CompanyCode` → `I_CompanyCode`), JointVenture (text element ProjectName), Granularity (text element GranularityText), FiscalYear, FiscalQuarter, FiscalPeriod. Characteristics: GranularityText, PeriodStartDate, PeriodMonth, ProjectName (workbook text), JointVentureName ('SAP Venture Name'), VentureType, BusinessUnit, JibStatus (**Status**: `case Jib.JibPosted when 1 'Uploaded' else 'Pending'`), LastEntryDate (**Date** = CPUDT of the latest JIB in the window), LastPostingDate. Measures (INT4, SUM): JibDocuments, JibPosted, JibPending, Ventures. Header set = `ZI_TR_BANKACCT_CUBE` | 190 |
+
+`ZI_JIB_PERIOD` (posting-period frame of 03/11/26) is **gone from `src/`**. On the next pull
+abapGit offers it for deletion; letting it delete is fine (nothing references it), or deselect
+it and delete by hand later — object deletion is a manual decision.
 
 Decisions behind the shape:
-- `JM` is a literal in view 1, not a SETLEAF join on the GS01 set: if the set is ever changed,
-  the JM history must not vanish from the dashboard.
+- `JM` is a literal in `ZI_JIB_DOC`, not a SETLEAF join on the GS01 set: if the set is ever
+  changed, the JM history must not vanish from the dashboard.
 - No BSTAT filter: parked documents have no BSEG lines, so the inner join already drops them,
   and the upload-posted headers carry **BSTAT `Z`** in PRD (column mapping of the SE16N dump,
   03/11/26; meaning of `Z` on domain BSTAT still to be read in SE11). Reversed documents go
   through `stblg = ''`; the reversal documents carry STBLG too, so both sides drop.
-- Period = GJAHR / MONAT of the posting (FY variant April–March: MONAT 1 = April). The header
-  text month is unreliable (1017004699: period 11/2017, text "For Jan'18").
+- **Window = entry date**, Date = entry date. The posting period and the header text month play
+  no part (1017004699: period 11/2017, text "For Jan'18").
 - Only JM rows were pulled from PRD (BLART filter), so "JIBs under another type" (check 3) is
   unproven; Arnav's call 03/11/26: JM is enough.
-- No `IS NULL`, no arithmetic in a CASE condition, no literal column in a GROUP BY view, no
-  `$session` variable, no `concat` — every construct used is one that activated here before
-  (`select distinct`, `count( distinct )`, `coalesce( x, cast( 0 as … ) )`, simple `CASE` on a
-  field or `substring()`, `max()` on CHAR).
-- **Scope = the four ventures** (Arnav, 03/11/26: "it only happens for those 4 ventures").
-  `ZI_JIB_VENTURE` keeps AA2002, SD2002, MM2002, MM2012 only; Business Unit is a CASE per
-  venture in the cube (AA2002, SD2002 → MENA & CIS BU; MM2002, MM2012 → AP BU). A fifth
-  venture = one OR line in the view and one WHEN in the cube. Nothing in BKPF/BSEG marks a
-  venture as in or out of scope, so the list cannot be derived.
+- No `IS NULL`, no arithmetic in a CASE condition, no `$session` variable — every construct is
+  one that activated here before (`select distinct`, `count( distinct )`, `coalesce( x, cast( 0
+  as … ) )`, simple `CASE` on a field or `substring()`, `max()` on CHAR, `union all` with a
+  literal key and GROUP BY per branch, `dats_add_months( d, n, 'INITIAL' )`, `concat`,
+  `cast … as abap.char / abap.numc / abap.dats`). The CHAR → DATS cast is the least-proven
+  piece (`ZDPR_P_ASOF` is "written", not confirmed active); if `ZI_JIB_ENTRY` fails, it is that.
+- **Scope = the four ventures** (Arnav, 03/11/26). `ZI_JIB_VENTURE` keeps AA2002, SD2002,
+  MM2002, MM2012; ProjectName and Business Unit are CASEs per venture in the cube with the
+  workbook's texts. A fifth venture = one OR line in the view and two WHENs in the cube.
+  Nothing in BKPF/BSEG marks a venture as in or out of scope, so the list cannot be derived.
 - **What two full PRD documents showed (03/11/26, BSEG by position):** 1016003288 (AIOC JIB
   Oct 2016, 158 lines, venture AA2002) and 1017001506 (Vietnam 06.1 JIB Jul 2017, 31 lines,
   venture VN2012, vendor JV-BP). Every line carries VNAME, the vendor line (PK 31) included,
   with RECID CP on the vendor line and NB on the cost lines, EGRUP NP1. One venture per
-  document. ZUONR also holds the venture code on the cost lines. So `count(distinct belnr)`
+  document. ZUONR also holds the venture code on the cost lines. So `count(distinct document)`
   per venture is exact and no JIB is dropped for want of a venture. VN2012 is a structurally
   normal JIB that is simply outside today's list — the "non-valid" example.
 
-The four workbook columns, as the query shows them: **JV Code** (JointVenture), **Project Name**
-(ProjectName: ACG / Block 5A / A1, Myanmar / A3, Myanmar), **Business Unit**, **Status**
-(Uploaded / Pending for the period), **Date** (last entry date of a JIB in the period, blank
-when Pending). Filters: Fiscal Year + Posting Period or Fiscal Quarter, or a range on Period
-Start Date. One row per venture per period; over a multi-period range the query shows one line
-per period, and the measures give "x of n uploaded" per venture or Business Unit.
+**How the query uses it.** Always filter **Granularity**: `Y` + Fiscal Year → one row per
+venture with its last JIB entered in that fiscal year; `Q` + Fiscal Year + Fiscal Quarter → the
+same for the quarter; `M` + Fiscal Year + Fiscal Period → the same for the month. Or a range on
+Period Start Date within one granularity. Rows: JV Code, Project Name, Business Unit, Status,
+Date. Without the Granularity filter every venture shows three times and the measures triple.
+Pending = no JIB entered in the window; the row exists as long as any FI document was entered
+in it.
 
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
 `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
-with 8 files: four `*.ddls.asddls` + four `*.ddls.xml`. No DEVC file (existing package). Built with
+with 12 files: six `*.ddls.asddls` + six `*.ddls.xml`. No DEVC file (existing package). Built with
 `zip -X ZFI_JIB_STATUS.zip .abapgit.xml src/*`; XML well-formed, UTF-8, no BOM, LF; DDLNAME
 = view name = file name checked by script.
 
 Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_OTH`** (existing; nothing
-in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the four DDL sources in
-dependency order (1, 2, 3, then the cube). If the pull stops on a DDLS with a syntax error,
+in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the six DDL sources in
+dependency order (ENTRY, DOC, DOC_AGG, WINDOW, VENTURE, then the cube). If the pull stops on a DDLS with a syntax error,
 open it in ADT, paste the error here, the fix comes back as that one file and a rebuilt ZIP.
 
 After the pull, by hand:
-1. ADT → Data Preview on `ZI_JIB_STATUS_CUBE`: OVL rows, JibStatus Uploaded with a date for
-   AA2002-style ventures in past periods, Pending without one.
+1. ADT → Data Preview on `ZI_JIB_STATUS_CUBE`, filter Granularity `M`, FiscalYear 2026,
+   FiscalPeriod 02 (May 2026 entries): AA2002 Uploaded with Date 21.05.2026 (the PRD sample,
+   entered 21 May for April). Granularity `Y`, FiscalYear 2026: one row per venture.
 2. ADT → right-click `ZI_JIB_STATUS_CUBE` → Properties → API State → Add Release State →
    **Use in Key User Apps (C1)** → Finish. Without this the CAQ app does not list it.
 3. `RSRTS_ODP_DIS` → `2CZIJIBSTATUSCUBE` opens without errors.

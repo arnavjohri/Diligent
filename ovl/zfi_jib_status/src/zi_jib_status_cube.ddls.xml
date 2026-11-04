@@ -5,7 +5,7 @@
    <DDLS>
     <DDLNAME>ZI_JIB_STATUS_CUBE</DDLNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
-    <DDTEXT>JIB Status per venture and period (cube for CAQ)</DDTEXT>
+    <DDTEXT>JIB Status per venture and entry window (cube for CAQ)</DDTEXT>
     <SOURCE_TYPE>V</SOURCE_TYPE>
    </DDLS>
   </asx:values>
