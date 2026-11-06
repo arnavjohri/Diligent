@@ -68,6 +68,9 @@
 //                                  of the fiscal year; Granularity
 //                                  removed
 //   06.11.2026  Arnav Johri  <TR>  Year and quarter summary columns
+//   06.11.2026  Arnav Johri  <TR>  Last Document Number and Documents
+//                                  in Month on every row, for a
+//                                  one-row-per-month query
 //----------------------------------------------------------------------
 // ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
 //   texts per venture ("shall be a freezed input"; "as mentioned in
@@ -190,6 +193,13 @@ define view ZI_JIB_STATUS_CUBE
       Month.LastEntryDate,
       @EndUserText.label: 'Last JIB Posting Date'
       Month.LastPostingDate,
+      // the month's highest document number, same on every row of the
+      // month: a query that shows this instead of Document Number stays
+      // at one row per venture and month
+      @EndUserText.label: 'Last Document Number'
+      Month.LastDocument,
+      @EndUserText.label: 'Documents in Month'
+      Month.JibDocuments                               as MonthJibDocuments,
 
       // -- the document --------------------------------------------------
       @EndUserText.label: 'Date of JIB Upload'
