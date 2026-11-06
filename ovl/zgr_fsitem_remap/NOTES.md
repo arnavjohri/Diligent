@@ -95,6 +95,12 @@ item hierarchies in the query.
 
 ## Gotchas
 
+- **Never read the standard cube or the Z cube without filters.** Data Preview with the four
+  parameters and no WHERE dumped on OCD on 06/11/26 (`DBSQL_SQL_INTERNAL_DB_ERROR`, HANA statement
+  memory limit, 577 MB in pool `Results`, on `IMCRPTC`). Test in the ADT SQL Console with ledger,
+  dimension, version, year, period and unit in the WHERE (statements in the ISSUES row of 06/11);
+  make those filters mandatory in the CAQ query. Not a defect in `ZI_GR_FSREMAP_CUBE`.
+
 - **The standard cube is `#DEPRECATED`** (successor `I_MATRIXCNSLDTNREPORTC_2`). The Z cube is built
   on the deprecated one because its source was supplied and its signature is known. An upgrade
   that removes it breaks the Z cube — A&Q item 7.

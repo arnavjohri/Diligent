@@ -161,15 +161,25 @@ No requirement is unmapped. Nothing beyond R1–R5 is built (A&Q, last paragraph
 |---|---|---|---|
 | 1 | abapGit pull of `ZGR_FSITEM_REMAP.zip` | 7 objects created and active: 2 domains, 3 data elements, table, DDL source. SE11 shows `ZGR_FSITEM_MAP` with 4 fields and `ZIGRFSREMAPCUBE` | |
 | 2 | SM30 `ZGR_FSITEM_MAP`, New Entries: unit `U1`, FS item `I1`, new `I9`. Save | Row saved without a transport prompt (recording routine off). Column headings *Cons. Unit*, *FS Item*, *New FS Item* | |
-| 3 | ADT Data Preview on `ZI_GR_FSREMAP_CUBE` (`$`, `$`, `$`, today); filter `ConsolidationUnit = U1`, `FinancialStatementItem = I1` | `NewFinancialStatementItem = I9` on every line; `FinancialStatementItem` still `I1` | |
-| 4 | Same preview, a unit / FS item **without** a mapping row | `NewFinancialStatementItem = FinancialStatementItem` on every line (never blank, never NULL) | |
+| 3 | ADT **SQL Console** (never Data Preview, see §7) on `ZI_GR_FSREMAP_CUBE` (`$`, `$`, `$`, today) with `WHERE` on ledger, dimension, version, year, period and `ConsolidationUnit = U1`, `FinancialStatementItem = I1` | `NewFinancialStatementItem = I9` on every line; `FinancialStatementItem` still `I1` | |
+| 4 | Same statement, a unit / FS item **without** a mapping row | `NewFinancialStatementItem = FinancialStatementItem` on every line (never blank, never NULL) | |
 | 5 | Mapping row with blank *New FS Item* | Treated as no mapping — original FS item shown (A&Q 11) | |
-| 6 | Preview row count and sum of `AmountInGroupCurrency` for one unit / version / year-period, Z cube vs. `I_MatrixConsolidationReportC` with the same four parameters | Identical — the join is left outer on a unique key, so no line is dropped or doubled | |
+| 6 | SQL Console `SUM( AmountInGroupCurrency ) … GROUP BY` for one ledger / dimension / version / year-period / unit, Z cube vs. `I_MatrixConsolidationReportC` with the same four parameters and the same `WHERE` | Identical — the join is left outer on a unique key, so no line is dropped or doubled | |
 | 7 | Same selection in *Group Data Analysis* (standard app) vs. a CAQ on the Z cube, at posting level 00/10/20 and at group level, amounts in group currency per FS item | Identical. A difference means the standard read class adds logic the SQL does not — A&Q 9 | |
 | 8 | CAQ: `NewFinancialStatementItem` as a row dimension with key + text; FS item hierarchy on it | Text from `I_GroupReportingFSItem` of the same cons chart of accounts; hierarchy offered | |
 | 9 | Second row for the same unit + FS item in SM30 | Rejected — key violation (SM30 message) | |
 
 ## 7. Open points
+
+**Never read either cube without filters.** 06/11/26, 11:14: Data Preview on `I_MatrixConsolidationReportC`
+(`$`, `$`, `$`, today, no WHERE) dumped `DBSQL_SQL_INTERNAL_DB_ERROR`, SQL code 4 on `IMCRPTC`:
+`STATEMENT_MEMORY_LIMIT_FROM_GLOBAL_CONFIG`, pool `Results`, 577 MB. HANA materialises the whole
+ACDOCU join before the preview's `TOP 100` applies, and the statement memory limit in global.ini
+stops it. Test only through the ADT SQL Console with `WHERE ConsolidationLedger = … AND
+ConsolidationDimension = … AND ConsolidationVersion = … AND FiscalYear = … AND FiscalPeriod = …`
+(plus the unit), which HANA pushes into ACDOCU's key. The CAQ query must make the same five filters
+**mandatory user input**, or the first unfiltered open of the tile dumps the same way. Not a
+reason to raise the HANA limit.
 
 Items 2, 3, 6, 9 and 10 of `ASSUMPTIONS_AND_QUERIES.md` need an answer before the mapping is filled
 in production: key scope (dimension / cons chart of accounts), validity dates, delivery class and
