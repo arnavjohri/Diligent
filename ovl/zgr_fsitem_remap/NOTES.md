@@ -34,6 +34,12 @@ the ones that have pulled on this landscape.
 | 3 | `ZGR_FSITEM_MAP` | Transparent table, delivery class A, maintenance allowed, APPL0, size 0, no buffering, enhancement cat. 1 | `zgr_fsitem_map.tabl.xml` |
 | 4 | `ZI_GR_FSREMAP_CUBE` (SQL view `ZIGRFSREMAPCUBE`) | CDS DDL source, classic view, `#CUBE`, 743 lines | `zi_gr_fsremap_cube.ddls.asddls` + `.ddls.xml` |
 
+Paste-only, not in the ZIP: **`ZGR_FSREMAP_READ`** (`ZGR_FSREMAP_READ.abap`, 234 lines, SE38). Reads
+the cube with obligatory ledger / dimension / version / year / period, optional unit and FS item
+ranges, hierarchy parameters defaulted to `$`, key date today; `SUM` per unit / FS item / new FS
+item / period in local and group currency, `CL_SALV_TABLE` with a *Remapped* checkbox. Selection
+texts are maintained by hand (SE38 → Goto → Text Elements → Selection Texts; list in ISSUES row 3).
+
 Then by hand (never serialised): the TMG (SE11 → Utilities → Table Maintenance Generator), the
 key-user release of the cube (ADT, API State, C1), and the query / tile in *Custom Analytical
 Queries* (functional consultant). TS §4.1 steps 2–5.
