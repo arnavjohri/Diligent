@@ -1,42 +1,48 @@
 //----------------------------------------------------------------------
 // Object    : ZI_JIB_STATUS_CUBE (DDL source, classic view, cube)
-// Title     : JIB Status per joint venture and entry window (cube for
-//             Custom Analytical Queries)
+// Title     : JIB Status per joint venture, month and document (cube
+//             for Custom Analytical Queries)
 // Project   : OVL                                   Module: FI-JVA
-// Source    : Management_Dashboard_-_JIB_Status_-_Final.xlsx
+// Source    : Management_Dashboard_-_JIB_Status_-_Final.xlsx; test
+//             feedback Corporate Accounts (K. Sharma), 06/11/26
 // Author    : Arnav Johri                            Date: 03.11.2026
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 6 of 6 for the Management Dashboard card "JIB Status": the
+//   Object 5 of 5 for the Management Dashboard card "JIB Status": the
 //   data source the functional consultant picks in the Fiori app Custom
-//   Analytical Queries. One row per company code / joint venture /
-//   granularity / window, where a window is a fiscal year (Y), a fiscal
-//   quarter (Q) or a period (M) of the ENTRY date of the JIB documents:
-//     JibStatus      Uploaded when at least one JM document with that
-//                    venture was entered in the window, else Pending
-//     LastEntryDate  BKPF-CPUDT of the latest such document - the day
-//                    it was posted into the system; a JIB uploaded
-//                    today shows today's date. Blank when Pending
-//     JibDocuments   number of JIB documents entered in the window
-//     JibPosted /    0 or 1 per row (measures) - summed over a Business
-//     JibPending     Unit they give "x ventures uploaded, y pending"
-//     Ventures       1 per row - the denominator
-//   A query ALWAYS filters Granularity (Y, Q or M) and then the window:
-//   Fiscal Year 2026 at Y gives one row per venture with its last JIB
-//   entered in that fiscal year; Granularity M with period 02 gives the
-//   same for May. Without the Granularity filter every venture appears
-//   three times and the measures triple.
-//   Built as ZI_JIB_VENTURE (the four ventures) x ZI_JIB_WINDOW (entry
-//   windows with postings), joined on company code, LEFT OUTER JOIN to
-//   ZI_JIB_DOC_AGG (latest JIB entry per venture and window). Status
-//   and the 0/1 measures come from a CASE on the joined JibPosted
-//   column (NULL on a Pending row falls into ELSE) and coalesce( .., 0 )
-//   for the counts. Annotation set copied from ZI_TR_BANKACCT_CUBE /
-//   ZI_BR_BANKREVAL_CUBE (listed by the app on 02/11/26 after the C1
-//   release). After activation: ADT, Properties, API State, Add Release
-//   State, contract Use in Key User Apps (C1) - without it the app
-//   does not list the cube. Check: RSRTS_ODP_DIS on 2CZIJIBSTATUSCUBE.
+//   Analytical Queries. The layout of the requirement's example:
+//     JV | BU | Project Name | Month | Status | Date of JIB Upload |
+//     Document Number
+//   One row per company code / joint venture / fiscal year / posting
+//   period / JIB document. The MONTH is the month the JIB is FOR (the
+//   posting period of the document: "JIB for September" = period 06),
+//   the DATE is the day that document was entered in the system (BKPF
+//   CPUDT: "uploaded on 14.10.2026"), and every document of the month
+//   is its own row (four documents for September 2026 = four rows,
+//   which the analytical table shows as one merged month with four
+//   document numbers). A month with no JIB has exactly one row, Status
+//   Pending, no date, no document - including the months still to come
+//   in the fiscal year.
+//     JibStatus        Uploaded / Pending per venture and month
+//     EntryDate        Date of JIB Upload, per document
+//     LastEntryDate    latest upload date of the month, on every row
+//     AccountingDocument  the document number (navigation target for
+//                      the document header dialog: CompanyCode +
+//                      AccountingDocument + FiscalYear)
+//   Measures: JibDocuments (1 per document row), JibPosted (1 on one
+//   row per uploaded venture-month), JibPending (1 on a Pending row),
+//   Ventures (1 per venture-month) - summed over a Business Unit or a
+//   fiscal year they give "x of n months uploaded".
+//   Filters: Fiscal Year alone lists the twelve months; Fiscal Quarter
+//   or Posting Period narrow it; Period Start Date for a date range.
+//   Built as ZI_JIB_VENTURE (the four ventures) x ZI_JIB_PERIOD (the
+//   twelve periods of every fiscal year with postings), joined on
+//   company code, LEFT OUTER JOIN to ZI_JIB_DOC_AGG (month totals) and
+//   to ZI_JIB_DOC (the documents). Annotation set copied from
+//   ZI_TR_BANKACCT_CUBE / ZI_BR_BANKREVAL_CUBE (listed by the app after
+//   the C1 release). After activation: ADT, Properties, API State, Add
+//   Release State, contract Use in Key User Apps (C1).
 //
 // CHANGE HISTORY
 //   03.11.2026  Arnav Johri  <TR>  Initial development (per posting
@@ -44,9 +50,16 @@
 //   03.11.2026  Arnav Johri  <TR>  Business Unit per venture;
 //                                  ProjectName and labels as in the
 //                                  workbook; PeriodStartDate
-//   04.11.2026  Arnav Johri  <TR>  Windows by ENTRY date at three
-//                                  granularities (Y / Q / M), one row
-//                                  per venture and window
+//   04.11.2026  Arnav Johri  <TR>  Entry-date windows at three
+//                                  granularities (withdrawn 06/11/26:
+//                                  the client's example is per JIB
+//                                  month - August, November, February
+//                                  showed Pending because their JIBs
+//                                  were entered in other months)
+//   06.11.2026  Arnav Johri  <TR>  Month = posting period again; one
+//                                  row per document; all twelve months
+//                                  of the fiscal year; Granularity
+//                                  removed
 //----------------------------------------------------------------------
 // ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
 //   texts per venture ("shall be a freezed input"; "as mentioned in
@@ -55,10 +68,9 @@
 //   still exposed as SAP Venture Name.
 // ASSUMPTION: fiscal year variant April-March for every company code
 //   (OVL: posting period 1 = April, confirmed on the PRD sample).
-// ASSUMPTION: Date = BKPF-CPUDT, the day the JIB document was entered.
-//   For a document parked on one day and posted with FBV0 on a later
-//   day the field may hold the parking day - to be confirmed on one
-//   such document in PRD.
+// ASSUMPTION: a JIB for month X is the JM document whose posting period
+//   is X, however late it was entered (the April JIB entered on 15 May
+//   is April, Uploaded, 15.05.2026).
 // ASSUMPTION: no access control, as on the two earlier cubes. The
 //   published query runs with the user's analytics authorisations.
 //----------------------------------------------------------------------
@@ -66,7 +78,7 @@
 @AbapCatalog.compiler.compareFilter: true
 @AbapCatalog.preserveKey: true
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'JIB Status per venture and entry window (cube)'
+@EndUserText.label: 'JIB Status per venture, month and document (cube)'
 @VDM.viewType: #COMPOSITE
 @Analytics.dataCategory: #CUBE
 @ObjectModel.modelingPattern: #ANALYTICAL_CUBE
@@ -82,13 +94,15 @@
 @ObjectModel.usageType.dataClass: #MIXED
 define view ZI_JIB_STATUS_CUBE
   as select from ZI_JIB_VENTURE as Venture
-    inner join      ZI_JIB_WINDOW  as Window on  Window.CompanyCode = Venture.CompanyCode
-    left outer join ZI_JIB_DOC_AGG as Jib    on  Jib.CompanyCode   = Venture.CompanyCode
-                                             and Jib.JointVenture  = Venture.JointVenture
-                                             and Jib.Granularity   = Window.Granularity
-                                             and Jib.FiscalYear    = Window.FiscalYear
-                                             and Jib.FiscalQuarter = Window.FiscalQuarter
-                                             and Jib.FiscalPeriod  = Window.FiscalPeriod
+    inner join      ZI_JIB_PERIOD  as Period on  Period.CompanyCode = Venture.CompanyCode
+    left outer join ZI_JIB_DOC_AGG as Month  on  Month.CompanyCode  = Venture.CompanyCode
+                                             and Month.JointVenture = Venture.JointVenture
+                                             and Month.FiscalYear   = Period.FiscalYear
+                                             and Month.FiscalPeriod = Period.FiscalPeriod
+    left outer join ZI_JIB_DOC     as Doc    on  Doc.CompanyCode    = Venture.CompanyCode
+                                             and Doc.JointVenture   = Venture.JointVenture
+                                             and Doc.FiscalYear     = Period.FiscalYear
+                                             and Doc.FiscalPeriod   = Period.FiscalPeriod
   association [0..1] to I_CompanyCode as _CompanyCode
     on $projection.CompanyCode = _CompanyCode.CompanyCode
 {
@@ -99,41 +113,46 @@ define view ZI_JIB_STATUS_CUBE
       @ObjectModel.text.element: ['ProjectName']
       @EndUserText.label: 'JV Code'
   key Venture.JointVenture,
-      @ObjectModel.text.element: ['GranularityText']
-      @EndUserText.label: 'Granularity'
-  key Window.Granularity,
       @EndUserText.label: 'Fiscal Year'
-  key Window.FiscalYear,
-      @EndUserText.label: 'Fiscal Quarter'
-  key Window.FiscalQuarter,
-      @EndUserText.label: 'Fiscal Period'
-  key Window.FiscalPeriod,
+  key Period.FiscalYear,
+      @ObjectModel.text.element: ['PeriodMonth']
+      @EndUserText.label: 'Posting Period'
+  key Period.FiscalPeriod,
+      @EndUserText.label: 'Document Number'
+  key Doc.AccountingDocument,
 
-      // -- window attributes (entry date, fiscal year April-March) -------
-      @EndUserText.label: 'Granularity Text'
-      case Window.Granularity
-        when 'Y' then 'Fiscal Year'
-        when 'Q' then 'Quarter'
-        else         'Month'
-      end                                              as GranularityText,
-      @EndUserText.label: 'Period Start Date'
-      Window.PeriodStartDate,
+      // -- month attributes (fiscal year April-March) --------------------
       @EndUserText.label: 'Month'
-      case Window.FiscalPeriod
-        when '01' then 'Apr'
+      case Period.FiscalPeriod
+        when '01' then 'April'
         when '02' then 'May'
-        when '03' then 'Jun'
-        when '04' then 'Jul'
-        when '05' then 'Aug'
-        when '06' then 'Sep'
-        when '07' then 'Oct'
-        when '08' then 'Nov'
-        when '09' then 'Dec'
-        when '10' then 'Jan'
-        when '11' then 'Feb'
-        when '12' then 'Mar'
+        when '03' then 'June'
+        when '04' then 'July'
+        when '05' then 'August'
+        when '06' then 'September'
+        when '07' then 'October'
+        when '08' then 'November'
+        when '09' then 'December'
+        when '10' then 'January'
+        when '11' then 'February'
+        when '12' then 'March'
         else           ' '
       end                                              as PeriodMonth,
+      @EndUserText.label: 'Fiscal Quarter'
+      case Period.FiscalPeriod
+        when '01' then 'Q1'
+        when '02' then 'Q1'
+        when '03' then 'Q1'
+        when '04' then 'Q2'
+        when '05' then 'Q2'
+        when '06' then 'Q2'
+        when '07' then 'Q3'
+        when '08' then 'Q3'
+        when '09' then 'Q3'
+        else           'Q4'
+      end                                              as FiscalQuarter,
+      @EndUserText.label: 'Period Start Date'
+      Period.PeriodStartDate,
 
       // -- venture attributes, texts as in the requirement workbook -------
       @EndUserText.label: 'Project Name'
@@ -157,33 +176,57 @@ define view ZI_JIB_STATUS_CUBE
         else               'OTHER'
       end                                              as BusinessUnit,
 
-      // -- JIB status ------------------------------------------------------
+      // -- JIB status of the month ----------------------------------------
       @EndUserText.label: 'Status'
-      case Jib.JibPosted
+      case Month.JibPosted
         when 1 then 'Uploaded'
         else        'Pending'
       end                                              as JibStatus,
-      @EndUserText.label: 'Date'
-      Jib.LastEntryDate,
+      @EndUserText.label: 'Last JIB Upload Date'
+      Month.LastEntryDate,
       @EndUserText.label: 'Last JIB Posting Date'
-      Jib.LastPostingDate,
+      Month.LastPostingDate,
+
+      // -- the document --------------------------------------------------
+      @EndUserText.label: 'Date of JIB Upload'
+      Doc.EntryDate,
+      @EndUserText.label: 'Posting Date'
+      Doc.PostingDate,
+      @EndUserText.label: 'Document Header Text'
+      Doc.DocumentHeaderText,
+      @EndUserText.label: 'Reference'
+      Doc.Reference,
+      @EndUserText.label: 'Entered By'
+      Doc.EnteredBy,
 
       // -- measures --------------------------------------------------------
       @DefaultAggregation: #SUM
       @EndUserText.label: 'JIB Documents'
-      coalesce( Jib.JibDocuments, cast( 0 as abap.int4 ) ) as JibDocuments,
+      coalesce( Doc.One, cast( 0 as abap.int4 ) )      as JibDocuments,
+      // 1 on the row of the month's highest document number only, so a
+      // venture-month counts once however many documents it has
       @DefaultAggregation: #SUM
       @EndUserText.label: 'JIB Uploaded (1/0)'
-      coalesce( Jib.JibPosted, cast( 0 as abap.int4 ) )    as JibPosted,
+      case when Doc.AccountingDocument = Month.LastDocument
+           then cast( 1 as abap.int4 )
+           else cast( 0 as abap.int4 )
+      end                                              as JibPosted,
       @DefaultAggregation: #SUM
       @EndUserText.label: 'JIB Pending (1/0)'
-      case Jib.JibPosted
+      case Month.JibPosted
         when 1 then cast( 0 as abap.int4 )
         else        cast( 1 as abap.int4 )
       end                                              as JibPending,
       @DefaultAggregation: #SUM
       @EndUserText.label: 'Ventures'
-      cast( 1 as abap.int4 )                           as Ventures,
+      case Month.JibPosted
+        when 1 then
+          case when Doc.AccountingDocument = Month.LastDocument
+               then cast( 1 as abap.int4 )
+               else cast( 0 as abap.int4 )
+          end
+        else cast( 1 as abap.int4 )
+      end                                              as Ventures,
 
       // -- texts -----------------------------------------------------------
       _CompanyCode

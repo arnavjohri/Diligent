@@ -5,7 +5,7 @@
    <DDLS>
     <DDLNAME>ZI_JIB_DOC_AGG</DDLNAME>
     <DDLANGUAGE>E</DDLANGUAGE>
-    <DDTEXT>Latest JIB entry per venture and window</DDTEXT>
+    <DDTEXT>JIB postings per venture and period</DDTEXT>
     <SOURCE_TYPE>V</SOURCE_TYPE>
    </DDLS>
   </asx:values>
