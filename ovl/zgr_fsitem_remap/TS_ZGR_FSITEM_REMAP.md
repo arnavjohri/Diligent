@@ -79,6 +79,13 @@ off. Or SE11 with the field list in §4.2. Activate.
 Data Analysis - Cube with FS item remap*, any template; replace the whole template with
 `src/zi_gr_fsremap_cube.ddls.asddls`. Activate.
 
+**Step 1e — F4 on the three fields (SE11, manual, names read off ACDOCU).** `ACDOCU` → *Entry
+help/check* → rows `RBUNIT` / `RITEM` → *Srch Help* (or the data element's *Further
+Characteristics*). Then `ZGR_FSITEM_MAP` → *Entry help/check* → *Search Help* on `RBUNIT` (unit
+help), `RITEM` and `RITEM_NEW` (FS item help), export parameter mapped to the field; a chart-of-
+accounts import parameter stays unassigned. If ACDOCU carries a check table instead: *Foreign Keys*
+→ *Generate proposal* → chart-of-accounts key field generic `*`. Activate.
+
 **Step 2 — Table Maintenance Generator (SE11 → `ZGR_FSITEM_MAP` → Utilities → Table Maintenance
 Generator).** Authorization group `&NC&` (or the GR group if one exists); function group
 `ZGR_FSITEM_MAP` (new); maintenance type **one step**, overview screen 1; recording routine

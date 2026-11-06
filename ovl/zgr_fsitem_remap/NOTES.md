@@ -77,6 +77,25 @@ Re-zip after any change:
 
     cd ovl/zgr_fsitem_remap && rm -f ZGR_FSITEM_REMAP.zip && zip -X ZGR_FSITEM_REMAP.zip .abapgit.xml src/*
 
+## F4 in SM30 (asked 06/11/26) — manual SE11 step after the import
+
+A search-help assignment or a foreign key is DDIC metadata that abapGit has never pulled here, so
+it is done in SE11 once the table is active. The names come from ACDOCU, not from memory:
+
+1. SE11 → `ACDOCU` → *Entry help/check*: rows `RBUNIT` and `RITEM`, columns *Check table* and
+   *Srch Help* (if empty: double-click the data element → *Further Characteristics* → Search Help).
+2. SE11 → `ZGR_FSITEM_MAP` → Change → *Entry help/check* → row → *Search Help* button → name,
+   export parameter mapped to the field → Copy. `RBUNIT` gets the unit help; `RITEM` **and**
+   `RITEM_NEW` the FS item help. An import parameter for the cons chart of accounts stays
+   unassigned (single chart, A&Q 2). Activate; the TMG needs no regeneration.
+3. Check table instead of search help on ACDOCU: *Foreign Keys* → that check table → *Generate
+   proposal*; the chart-of-accounts key field, absent here, becomes generic `*`. This variant
+   also validates on save.
+
+Alternative: the two standard data elements from step 1 on `RBUNIT` / `RITEM` in place of
+`ZGR_RBUNIT` / `ZGR_RITEM` (table XML + DDL change, A&Q 4); `RITEM_NEW` keeps `ZGR_RITEM_NEW` for
+its heading and gets the help by step 2.
+
 ## How the view does it
 
 ```
