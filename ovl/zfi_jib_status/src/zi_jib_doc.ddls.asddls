@@ -9,8 +9,15 @@
 // DESCRIPTION
 //   Object 1 of 7 for the Management Dashboard card "JIB Status". One
 //   row per JIB document and joint venture: BKPF restricted to document
-//   type JM and not reversed, joined to its BSEG lines for the venture,
-//   DISTINCT so the 150-odd lines of a JIB collapse to one row. Carries
+//   type JM, joined to its BSEG lines for the venture, DISTINCT so the
+//   150-odd lines of a JIB collapse to one row. REVERSED JIBs COUNT:
+//   Block 5A books its JIB and reverses it later (1025001669 for June
+//   2025, reversed 01.07.2025 by 9102500194; both December 2025
+//   documents reversed 31.01.2026), and Corporate Accounts still treats
+//   the month as uploaded (06/11/26). The reversal document and a
+//   Reversed flag are carried so the dashboard can show it. The
+//   reversal documents themselves are type YH, not JM, so the document
+//   type filter keeps them out. Carries
 //   the posting period the JIB is FOR (GJAHR / MONAT - "JIB for
 //   September" sits in period 06/2026) and the day it was entered in
 //   the system (CPUDT - "uploaded on 14.10.2026"), plus header text,
@@ -36,6 +43,8 @@
 //                                  text, reference, user added
 //   06.11.2026  Arnav Johri  <TR>  FiscalQuarter of the posting period
 //                                  (for the quarter summary)
+//   06.11.2026  Arnav Johri  <TR>  Reversed JIBs no longer excluded;
+//                                  ReversalDocument, ReversalIndicator
 //----------------------------------------------------------------------
 // ASSUMPTION: document type JM is a literal here, deliberately not read
 //   from the GS01 set: if the upload is ever switched to another type,
@@ -43,6 +52,10 @@
 //   second value in the WHERE at that point.
 // ASSUMPTION: XBLNR / BKTXT ("AIOC JIB", "For September ,26") are typed
 //   by the user in the upload file; shown, never used as criteria.
+// ASSUMPTION: a reversed JIB counts as uploaded for its month, with the
+//   original entry date. A JIB reversed and posted again shows both
+//   documents. Reversal documents are not type JM on this system (YH,
+//   number range 91); if that ever changes they would count as JIBs.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIJIBDOC'
 @AbapCatalog.compiler.compareFilter: true
@@ -92,11 +105,17 @@ define view ZI_JIB_DOC
       Doc.xblnr                      as Reference,
       @EndUserText.label: 'Entered By'
       Doc.usnam                      as EnteredBy,
+      @EndUserText.label: 'Reversal Document'
+      Doc.stblg                      as ReversalDocument,
+      @EndUserText.label: 'Reversed'
+      case when Doc.stblg <> ''
+           then 'X'
+           else ' '
+      end                            as ReversalIndicator,
       // 1 per document: the cube's "JIB Documents" measure after the
       // left outer join (coalesce to 0 on a Pending row)
       @EndUserText.label: 'One'
       cast( 1 as abap.int4 )         as One
 }
 where Doc.blart  = 'JM'
-  and Doc.stblg  = ''
   and Item.vname <> ''

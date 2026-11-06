@@ -71,6 +71,8 @@
 //   06.11.2026  Arnav Johri  <TR>  Last Document Number and Documents
 //                                  in Month on every row, for a
 //                                  one-row-per-month query
+//   06.11.2026  Arnav Johri  <TR>  Reversal Document and Reversed flag
+//                                  per document (reversed JIBs count)
 //   06.11.2026  Arnav Johri  <TR>  Semantic object AccountingDocument
 //                                  on both document numbers (click to
 //                                  open the document; the target app
@@ -223,6 +225,10 @@ define view ZI_JIB_STATUS_CUBE
       Doc.Reference,
       @EndUserText.label: 'Entered By'
       Doc.EnteredBy,
+      @EndUserText.label: 'Reversal Document'
+      Doc.ReversalDocument,
+      @EndUserText.label: 'Reversed'
+      Doc.ReversalIndicator,
 
       // -- year summary (same value on every row of the venture-year) ----
       @EndUserText.label: 'Year Status'

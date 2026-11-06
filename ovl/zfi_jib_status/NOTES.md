@@ -128,7 +128,7 @@ twelve months of the fiscal year, Pending for the months not posted yet (October
 
 | # | Object | SQL view | What | Lines |
 |---|---|---|---|---|
-| 1 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` BKPF ⋈ BSEG, document type JM, `stblg = ''`, `vname <> ''`: one row per JIB document and venture with posting period, posting date, entry date (CPUDT), header text, reference, user, and `One` = 1 (the cube's document count) | 87 |
+| 1 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` BKPF ⋈ BSEG, document type JM, `vname <> ''` (reversed ones included, with ReversalDocument / ReversalIndicator): one row per JIB document and venture with posting period, posting date, entry date (CPUDT), header text, reference, user, and `One` = 1 (the cube's document count) | 87 |
 | 1a | `ZI_JIB_YEAR_AGG` | `ZIJIBYEARAGG` | GROUP BY company code / venture / GJAHR on view 1: `max(EntryDate)`, `count(distinct FiscalPeriod)` MonthsUploaded, `count(distinct document)`, JibPosted = 1 — the year summary | 60 |
 | 1b | `ZI_JIB_QTR_AGG` | `ZIJIBQTRAGG` | same per GJAHR + FiscalQuarter (view 1 now carries the quarter of the posting period as a CASE) | 57 |
 | 2 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | GROUP BY company code / venture / GJAHR / MONAT on view 1: `max(EntryDate)` LastEntryDate, `max(PostingDate)`, `max(AccountingDocument)` LastDocument, `count(distinct document)`, JibPosted = 1 | 62 |
@@ -155,8 +155,13 @@ Decisions behind the shape:
 - `JM` is a literal in `ZI_JIB_DOC`, not a SETLEAF join on the GS01 set: if the set is ever
   changed, the JM history must not vanish from the dashboard.
 - No BSTAT filter: parked documents have no BSEG lines, so the inner join already drops them,
-  and the upload-posted headers carry **BSTAT `Z`** in PRD. Reversed documents go through
-  `stblg = ''`; the reversal documents carry STBLG too, so both sides drop.
+  and the upload-posted headers carry **BSTAT `Z`** in PRD.
+- **Reversed JIBs count (06/11/26).** Block 5A books its JIB and reverses it later with FB08
+  reason 02 (1025001669 June 2025 → 9102500194 dated 01.07.2025; 1025005289/5290 December
+  2025 → 9102500642/643 dated 31.01.2026; the reversal clears the vendor line). Corporate
+  Accounts treats the month as uploaded, so the `stblg = ''` filter of 03/11 is gone;
+  ReversalDocument and ReversalIndicator are shown instead. The reversal documents are type
+  **YH** (number range 91), so the JM filter keeps them out of the count.
 - Only JM rows were pulled from PRD (BLART filter), so "JIBs under another type" (check 3) is
   unproven; Arnav's call 03/11/26: JM is enough.
 - **Scope = the four ventures** (Arnav, 03/11/26). `ZI_JIB_VENTURE` keeps AA2002, SD2002,
