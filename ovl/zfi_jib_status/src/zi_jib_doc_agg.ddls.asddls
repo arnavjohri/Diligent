@@ -7,7 +7,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 2 of 5 for the Management Dashboard card "JIB Status". The
+//   Object 2 of 7 for the Management Dashboard card "JIB Status". The
 //   JIB documents of ZI_JIB_DOC grouped per company code / joint
 //   venture / fiscal year / posting period - the month the JIB is FOR:
 //   the latest day one of them was entered (LastEntryDate), the latest

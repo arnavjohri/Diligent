@@ -7,7 +7,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 4 of 5 for the Management Dashboard card "JIB Status".
+//   Object 6 of 7 for the Management Dashboard card "JIB Status".
 //   The ventures the dashboard reports on - one row each from the
 //   venture master T8JV, with the description from T8JVT and the
 //   venture type. The scope is the four ventures the requirement names

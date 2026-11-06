@@ -7,7 +7,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 1 of 5 for the Management Dashboard card "JIB Status". One
+//   Object 1 of 7 for the Management Dashboard card "JIB Status". One
 //   row per JIB document and joint venture: BKPF restricted to document
 //   type JM and not reversed, joined to its BSEG lines for the venture,
 //   DISTINCT so the 150-odd lines of a JIB collapse to one row. Carries
@@ -34,6 +34,8 @@
 //   06.11.2026  Arnav Johri  <TR>  Reads BKPF directly; posting period
 //                                  instead of entry-date windows; header
 //                                  text, reference, user added
+//   06.11.2026  Arnav Johri  <TR>  FiscalQuarter of the posting period
+//                                  (for the quarter summary)
 //----------------------------------------------------------------------
 // ASSUMPTION: document type JM is a literal here, deliberately not read
 //   from the GS01 set: if the upload is ever switched to another type,
@@ -67,6 +69,19 @@ define view ZI_JIB_DOC
 
       @EndUserText.label: 'Posting Period'
       Doc.monat                      as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      case Doc.monat
+        when '01' then 'Q1'
+        when '02' then 'Q1'
+        when '03' then 'Q1'
+        when '04' then 'Q2'
+        when '05' then 'Q2'
+        when '06' then 'Q2'
+        when '07' then 'Q3'
+        when '08' then 'Q3'
+        when '09' then 'Q3'
+        else           'Q4'
+      end                            as FiscalQuarter,
       @EndUserText.label: 'Posting Date'
       Doc.budat                      as PostingDate,
       @EndUserText.label: 'Date of JIB Upload'

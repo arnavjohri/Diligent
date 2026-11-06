@@ -108,9 +108,9 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
    type (CDS view with OData service vs. a report).
 
-## Objects — all five in `ZFI_JIB_STATUS.zip` (06/11/26, consumer: Custom Analytical Queries)
+## Objects — all seven in `ZFI_JIB_STATUS.zip` (06/11/26, consumer: Custom Analytical Queries)
 
-Five classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**.
+Seven classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**.
 No table, no domain, no data element, no `package.devc.xml` — on purpose (the treasury ZIP
 created both DDL sources and not the table; a DEVC file would overwrite the package text).
 
@@ -129,10 +129,12 @@ twelve months of the fiscal year, Pending for the months not posted yet (October
 | # | Object | SQL view | What | Lines |
 |---|---|---|---|---|
 | 1 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` BKPF ⋈ BSEG, document type JM, `stblg = ''`, `vname <> ''`: one row per JIB document and venture with posting period, posting date, entry date (CPUDT), header text, reference, user, and `One` = 1 (the cube's document count) | 87 |
+| 1a | `ZI_JIB_YEAR_AGG` | `ZIJIBYEARAGG` | GROUP BY company code / venture / GJAHR on view 1: `max(EntryDate)`, `count(distinct FiscalPeriod)` MonthsUploaded, `count(distinct document)`, JibPosted = 1 — the year summary | 60 |
+| 1b | `ZI_JIB_QTR_AGG` | `ZIJIBQTRAGG` | same per GJAHR + FiscalQuarter (view 1 now carries the quarter of the posting period as a CASE) | 57 |
 | 2 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | GROUP BY company code / venture / GJAHR / MONAT on view 1: `max(EntryDate)` LastEntryDate, `max(PostingDate)`, `max(AccountingDocument)` LastDocument, `count(distinct document)`, JibPosted = 1 | 62 |
-| 3 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | twelve UNION ALL branches, each `select distinct bukrs, gjahr from bkpf` + the period as `cast( 'nn' as abap.numc(2) )` + PeriodStartDate (1 April of GJAHR + n−1 months): every fiscal year with any document gets all twelve months | 232 |
+| 3 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | twelve UNION ALL branches, each `select distinct bukrs, gjahr from bkpf` + the period as `cast( 'nn' as abap.numc(2) )` + FiscalQuarter literal + PeriodStartDate (1 April of GJAHR + n−1 months): every fiscal year with any document gets all twelve months | 232 |
 | 4 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname, `max(vtext)` under GROUP BY — **WHERE vname = AA2002 / SD2002 / MM2002 / MM2012** | 63 |
-| 5 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 4 ⋈ 3 on company code, LEFT OUTER JOIN 2 (month) and LEFT OUTER JOIN 1 (documents) on company code, venture, GJAHR, MONAT. Keys: CompanyCode (`_CompanyCode`), JointVenture (text ProjectName), FiscalYear, FiscalPeriod (text PeriodMonth), AccountingDocument (NULL on a Pending row → `#`). Characteristics: PeriodMonth (April … March), FiscalQuarter, PeriodStartDate, ProjectName, JointVentureName, VentureType, BusinessUnit, JibStatus (**Status**), LastEntryDate (last upload of the month, every row), LastPostingDate, EntryDate (**Date of JIB Upload**, per document), PostingDate, DocumentHeaderText, Reference, EnteredBy. Measures (INT4, SUM): JibDocuments (`coalesce( Doc.One, 0 )`), JibPosted (1 on the row whose document = LastDocument — searched CASE comparing two joined fields), JibPending (1 on a Pending row), Ventures (JibPosted + JibPending via nested CASE). Header set = `ZI_TR_BANKACCT_CUBE` | 233 |
+| 5 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 4 ⋈ 3 on company code, LEFT OUTER JOIN 2 (month) and LEFT OUTER JOIN 1 (documents) on company code, venture, GJAHR, MONAT. Keys: CompanyCode (`_CompanyCode`), JointVenture (text ProjectName), FiscalYear, FiscalPeriod (text PeriodMonth), AccountingDocument (NULL on a Pending row → `#`). Characteristics: PeriodMonth (April … March), FiscalQuarter, PeriodStartDate, ProjectName, JointVentureName, VentureType, BusinessUnit, JibStatus (**Status**), LastEntryDate (last upload of the month, every row), LastPostingDate, EntryDate (**Date of JIB Upload**, per document), PostingDate, DocumentHeaderText, Reference, EnteredBy. Year / quarter summary on every row (LEFT OUTER JOIN 1a on venture + GJAHR, 1b on + FiscalQuarter): YearStatus, YearLastEntryDate, YearMonthsUploaded, YearJibDocuments, QuarterStatus, QuarterLastEntryDate, QuarterMonthsUploaded, QuarterJibDocuments. Measures (INT4, SUM): JibDocuments (`coalesce( Doc.One, 0 )`), JibPosted (1 on the row whose document = LastDocument — searched CASE comparing two joined fields), JibPending (1 on a Pending row), Ventures (JibPosted + JibPending via nested CASE). Header set = `ZI_TR_BANKACCT_CUBE` | 233 |
 
 `ZI_JIB_ENTRY` and `ZI_JIB_WINDOW` (04/11 model) are **gone from `src/`**; abapGit offers them
 for deletion on the pull — nothing references them. `ZI_JIB_PERIOD` comes back (new shape).
@@ -168,6 +170,13 @@ Decisions behind the shape:
   month with its own status. The year's "last upload" is still visible: filter the fiscal year,
   sort by Date of JIB Upload; the measures summed over the year give "x of 12 months uploaded".
 
+**One line per venture for a year or quarter (Arnav, 06/11/26):** a second query (or a view
+switch) whose rows are JV Code, Project Name, Business Unit, Year Status, Last JIB Upload in
+Fiscal Year, Months Uploaded in Fiscal Year — no Month, no Document Number — collapses to one
+line per venture, because those columns carry the same value on every row of the venture-year.
+Quarter the same with the Quarter columns and a Fiscal Quarter filter. The monthly layout of
+the client's example is untouched by this.
+
 **How the query uses it.** Rows: JV Code, Business Unit, Project Name, Month, Status, Date of
 JIB Upload, Document Number — the analytical table merges the repeated cells, so a month with
 four documents reads as the client's example. Filters: Fiscal Year (twelve months), Fiscal
@@ -178,13 +187,13 @@ is navigation in the Fiori app with CompanyCode, AccountingDocument and FiscalYe
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
 `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
-with 10 files: five `*.ddls.asddls` + five `*.ddls.xml`. No DEVC file (existing package). Built with
+with 14 files: seven `*.ddls.asddls` + seven `*.ddls.xml`. No DEVC file (existing package). Built with
 `zip -X ZFI_JIB_STATUS.zip .abapgit.xml src/*`; XML well-formed, UTF-8, no BOM, LF; DDLNAME
 = view name = file name checked by script.
 
 Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_OTH`** (existing; nothing
-in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the five DDL sources in
-dependency order (DOC, DOC_AGG, PERIOD, VENTURE, then the cube). If the pull stops on a DDLS with a syntax error,
+in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the seven DDL sources in
+dependency order (DOC, DOC_AGG, YEAR_AGG, QTR_AGG, PERIOD, VENTURE, then the cube). If the pull stops on a DDLS with a syntax error,
 open it in ADT, paste the error here, the fix comes back as that one file and a rebuilt ZIP.
 
 After the pull, by hand:

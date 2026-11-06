@@ -18,6 +18,11 @@ Filters: FiscalYear (gives all twelve months, April–March, Pending for the one
 optionally FiscalQuarter, FiscalPeriod, BusinessUnit, JointVenture, or a range on
 PeriodStartDate.
 
+For a one-line-per-venture year view (the tile's summary), build a second query or a view
+switch with rows JointVenture, ProjectName, BusinessUnit, YearStatus, YearLastEntryDate,
+YearMonthsUploaded and no Month / Document Number; the quarter view uses the Quarter* columns
+with a FiscalQuarter filter.
+
 Document Number should open the document header dialog: navigate with CompanyCode,
 AccountingDocument and FiscalYear from the row to the journal entry display app.
 

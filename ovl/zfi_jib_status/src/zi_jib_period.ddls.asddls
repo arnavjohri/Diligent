@@ -8,7 +8,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 3 of 5 for the Management Dashboard card "JIB Status". The
+//   Object 5 of 7 for the Management Dashboard card "JIB Status". The
 //   frame of months the cube reports on: for every company code /
 //   fiscal year in which at least one FI document exists, all twelve
 //   posting periods 01-12, whether or not anything was posted in them.
@@ -26,6 +26,8 @@
 //                                  postings only; withdrawn 04/11/26)
 //   06.11.2026  Arnav Johri  <TR>  Rebuilt: all twelve periods of each
 //                                  fiscal year with postings
+//   06.11.2026  Arnav Johri  <TR>  FiscalQuarter per period (join key
+//                                  of the quarter summary)
 //----------------------------------------------------------------------
 // ASSUMPTION: fiscal year variant April-March for every company code
 //   (OVL: posting period 1 = April, confirmed on the PRD sample).
@@ -50,6 +52,8 @@ define view ZI_JIB_PERIOD
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '01' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q1' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats )
                                      as PeriodStartDate
@@ -66,6 +70,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '02' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q1' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        1, 'INITIAL' )  as PeriodStartDate
@@ -82,6 +88,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '03' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q1' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        2, 'INITIAL' )  as PeriodStartDate
@@ -98,6 +106,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '04' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q2' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        3, 'INITIAL' )  as PeriodStartDate
@@ -114,6 +124,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '05' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q2' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        4, 'INITIAL' )  as PeriodStartDate
@@ -130,6 +142,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '06' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q2' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        5, 'INITIAL' )  as PeriodStartDate
@@ -146,6 +160,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '07' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q3' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        6, 'INITIAL' )  as PeriodStartDate
@@ -162,6 +178,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '08' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q3' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        7, 'INITIAL' )  as PeriodStartDate
@@ -178,6 +196,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '09' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q3' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        8, 'INITIAL' )  as PeriodStartDate
@@ -194,6 +214,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '10' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q4' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        9, 'INITIAL' )  as PeriodStartDate
@@ -210,6 +232,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '11' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q4' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        10, 'INITIAL' )  as PeriodStartDate
@@ -226,6 +250,8 @@ union all
   key Doc.gjahr                      as FiscalYear,
       @EndUserText.label: 'Posting Period'
   key cast( '12' as abap.numc( 2 ) ) as FiscalPeriod,
+      @EndUserText.label: 'Fiscal Quarter'
+      cast( 'Q4' as abap.char( 2 ) )  as FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       dats_add_months( cast( concat( cast( Doc.gjahr as abap.char( 4 ) ), '0401' ) as abap.dats ),
                        11, 'INITIAL' )  as PeriodStartDate

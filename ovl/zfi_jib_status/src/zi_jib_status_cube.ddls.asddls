@@ -9,7 +9,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 5 of 5 for the Management Dashboard card "JIB Status": the
+//   Object 7 of 7 for the Management Dashboard card "JIB Status": the
 //   data source the functional consultant picks in the Fiori app Custom
 //   Analytical Queries. The layout of the requirement's example:
 //     JV | BU | Project Name | Month | Status | Date of JIB Upload |
@@ -36,6 +36,13 @@
 //   fiscal year they give "x of n months uploaded".
 //   Filters: Fiscal Year alone lists the twelve months; Fiscal Quarter
 //   or Posting Period narrow it; Period Start Date for a date range.
+//   YEAR AND QUARTER SUMMARY: every row also carries, for its venture,
+//   the year's and the quarter's Uploaded / Pending text, last upload
+//   date, months uploaded and document count (ZI_JIB_YEAR_AGG,
+//   ZI_JIB_QTR_AGG). A query whose rows are JV Code, Project Name,
+//   Business Unit and the year summary columns - without Month and
+//   Document Number - collapses to one line per venture: the last
+//   posting of the year, whichever month it was in.
 //   Built as ZI_JIB_VENTURE (the four ventures) x ZI_JIB_PERIOD (the
 //   twelve periods of every fiscal year with postings), joined on
 //   company code, LEFT OUTER JOIN to ZI_JIB_DOC_AGG (month totals) and
@@ -60,6 +67,7 @@
 //                                  row per document; all twelve months
 //                                  of the fiscal year; Granularity
 //                                  removed
+//   06.11.2026  Arnav Johri  <TR>  Year and quarter summary columns
 //----------------------------------------------------------------------
 // ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
 //   texts per venture ("shall be a freezed input"; "as mentioned in
@@ -103,6 +111,13 @@ define view ZI_JIB_STATUS_CUBE
                                              and Doc.JointVenture   = Venture.JointVenture
                                              and Doc.FiscalYear     = Period.FiscalYear
                                              and Doc.FiscalPeriod   = Period.FiscalPeriod
+    left outer join ZI_JIB_YEAR_AGG as Year  on  Year.CompanyCode   = Venture.CompanyCode
+                                             and Year.JointVenture  = Venture.JointVenture
+                                             and Year.FiscalYear    = Period.FiscalYear
+    left outer join ZI_JIB_QTR_AGG as Qtr    on  Qtr.CompanyCode    = Venture.CompanyCode
+                                             and Qtr.JointVenture   = Venture.JointVenture
+                                             and Qtr.FiscalYear     = Period.FiscalYear
+                                             and Qtr.FiscalQuarter  = Period.FiscalQuarter
   association [0..1] to I_CompanyCode as _CompanyCode
     on $projection.CompanyCode = _CompanyCode.CompanyCode
 {
@@ -139,18 +154,7 @@ define view ZI_JIB_STATUS_CUBE
         else           ' '
       end                                              as PeriodMonth,
       @EndUserText.label: 'Fiscal Quarter'
-      case Period.FiscalPeriod
-        when '01' then 'Q1'
-        when '02' then 'Q1'
-        when '03' then 'Q1'
-        when '04' then 'Q2'
-        when '05' then 'Q2'
-        when '06' then 'Q2'
-        when '07' then 'Q3'
-        when '08' then 'Q3'
-        when '09' then 'Q3'
-        else           'Q4'
-      end                                              as FiscalQuarter,
+      Period.FiscalQuarter,
       @EndUserText.label: 'Period Start Date'
       Period.PeriodStartDate,
 
@@ -198,6 +202,32 @@ define view ZI_JIB_STATUS_CUBE
       Doc.Reference,
       @EndUserText.label: 'Entered By'
       Doc.EnteredBy,
+
+      // -- year summary (same value on every row of the venture-year) ----
+      @EndUserText.label: 'Year Status'
+      case Year.JibPosted
+        when 1 then 'Uploaded'
+        else        'Pending'
+      end                                              as YearStatus,
+      @EndUserText.label: 'Last JIB Upload in Fiscal Year'
+      Year.LastEntryDate                               as YearLastEntryDate,
+      @EndUserText.label: 'Months Uploaded in Fiscal Year'
+      Year.MonthsUploaded                              as YearMonthsUploaded,
+      @EndUserText.label: 'JIB Documents in Fiscal Year'
+      Year.JibDocuments                                as YearJibDocuments,
+
+      // -- quarter summary (same value on every row of the venture-quarter)
+      @EndUserText.label: 'Quarter Status'
+      case Qtr.JibPosted
+        when 1 then 'Uploaded'
+        else        'Pending'
+      end                                              as QuarterStatus,
+      @EndUserText.label: 'Last JIB Upload in Quarter'
+      Qtr.LastEntryDate                                as QuarterLastEntryDate,
+      @EndUserText.label: 'Months Uploaded in Quarter'
+      Qtr.MonthsUploaded                               as QuarterMonthsUploaded,
+      @EndUserText.label: 'JIB Documents in Quarter'
+      Qtr.JibDocuments                                 as QuarterJibDocuments,
 
       // -- measures --------------------------------------------------------
       @DefaultAggregation: #SUM
