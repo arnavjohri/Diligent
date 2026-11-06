@@ -16,7 +16,10 @@
 *&        excluded;
 *&     2. the log lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG, keyed
 *&        by the task log UUID, which is the header's log number;
-*&     3. one ALV list, header fields in front of the log line fields.
+*&     3. one ALV list. Columns 1-23 are the Fiori task log "Items"
+*&        export, same order and headings, so the two lists compare
+*&        side by side; then the currency keys, the difference subitem
+*&        code, the log UUID and the log header fields.
 *&
 *&   The view carries CDS access control. A user without the group
 *&   reporting authorisation gets no rows and no error - the program
@@ -49,9 +52,38 @@ TYPES: BEGIN OF ty_hdr,
          status           TYPE fincs_log_header-status,
        END OF ty_hdr.
 
-* Output row - header fields first, then the log line fields of the view
-* C_CNSLDTNCRCYTRNSLTNTSKLG (element names from the ST05 trace)
+* Output row - columns 1-23 as in the Fiori "Items" export, then the extras,
+* then the log header. Element names from the ST05 trace of 06/11/26.
 TYPES: BEGIN OF ty_out,
+         consolidationunit             TYPE c_cnsldtncrcytrnsltntsklg-consolidationunit,
+         consolidationunittext         TYPE c_cnsldtncrcytrnsltntsklg-consolidationunittext,
+         cnsldtncrcytranslationmethod  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytranslationmethod,
+         sequencenumber                TYPE c_cnsldtncrcytrnsltntsklg-sequencenumber,
+         setidentificationitem         TYPE c_cnsldtncrcytrnsltntsklg-setidentificationitem,
+         cnsldtntasklogitemtype        TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntasklogitemtype,
+         cnsldtntasklogitemtypetxt     TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntasklogitemtypetxt,
+         cnsldtnfinancialstatementitem TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnfinancialstatementitem,
+         financialstatementitemtext    TYPE c_cnsldtncrcytrnsltntsklg-financialstatementitemtext,
+         subitemcategory               TYPE c_cnsldtncrcytrnsltntsklg-subitemcategory,
+         subitemcategorytext           TYPE c_cnsldtncrcytrnsltntsklg-subitemcategorytext,
+         subitem                       TYPE c_cnsldtncrcytrnsltntsklg-subitem,
+         subitemtext                   TYPE c_cnsldtncrcytrnsltntsklg-subitemtext,
+         cnsldtncrcytrnsltndifffsitem  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytrnsltndifffsitem,
+         crcytrnsltndifffinstmntitmtxt TYPE c_cnsldtncrcytrnsltntsklg-crcytrnsltndifffinstmntitmtxt,
+         crcytrnsltndiffsubitemtxt     TYPE c_cnsldtncrcytrnsltntsklg-crcytrnsltndiffsubitemtxt,
+         cnsldtncrcytranslationkey     TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytranslationkey,
+         cnsldtnexchangerate           TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnexchangerate,
+         cnsldtnjrnlentryamtinloclcrcy TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtinloclcrcy,
+         cnsldtnjrnlentryamtingrpcrcy  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtingrpcrcy,
+         calculateddiffamount          TYPE c_cnsldtncrcytrnsltntsklg-calculateddiffamount,
+         calculatedrefamount           TYPE c_cnsldtncrcytrnsltntsklg-calculatedrefamount,
+         cnsldtnrefexchangeratetype    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnrefexchangeratetype,
+*        extras not in the export
+         cnsldtnjrnlentryamtloclcrcy   TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtloclcrcy,
+         cnsldtnjrnlentryamtgrpcrcy    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtgrpcrcy,
+         cnsldtncrcytrnsltndiffsubitem TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytrnsltndiffsubitem,
+         cnsldtntaskloguuid            TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntaskloguuid,
+*        log header
          cnsldtnlognumber              TYPE fincs_log_header-cnsldtnlognumber,
          cnsldtngroup                  TYPE fincs_log_header-cnsldtngroup,
          fiscalyear                    TYPE fincs_log_header-fiscalyear,
@@ -64,29 +96,6 @@ TYPES: BEGIN OF ty_out,
          userid                        TYPE fincs_log_header-userid,
          iscnsldtntestrun              TYPE fincs_log_header-iscnsldtntestrun,
          status                        TYPE fincs_log_header-status,
-         cnsldtntaskloguuid            TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntaskloguuid,
-         consolidationunit             TYPE c_cnsldtncrcytrnsltntsklg-consolidationunit,
-         consolidationunittext         TYPE c_cnsldtncrcytrnsltntsklg-consolidationunittext,
-         sequencenumber                TYPE c_cnsldtncrcytrnsltntsklg-sequencenumber,
-         cnsldtntasklogitemtype        TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntasklogitemtype,
-         cnsldtntasklogitemtypetxt     TYPE c_cnsldtncrcytrnsltntsklg-cnsldtntasklogitemtypetxt,
-         cnsldtnfinancialstatementitem TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnfinancialstatementitem,
-         financialstatementitemtext    TYPE c_cnsldtncrcytrnsltntsklg-financialstatementitemtext,
-         subitemcategory               TYPE c_cnsldtncrcytrnsltntsklg-subitemcategory,
-         subitem                       TYPE c_cnsldtncrcytrnsltntsklg-subitem,
-         subitemtext                   TYPE c_cnsldtncrcytrnsltntsklg-subitemtext,
-         cnsldtncrcytranslationkey     TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytranslationkey,
-         cnsldtncrcytranslationmethod  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytranslationmethod,
-         cnsldtnrefexchangeratetype    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnrefexchangeratetype,
-         cnsldtnexchangerate           TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnexchangerate,
-         cnsldtnjrnlentryamtinloclcrcy TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtinloclcrcy,
-         cnsldtnjrnlentryamtloclcrcy   TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtloclcrcy,
-         cnsldtnjrnlentryamtingrpcrcy  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtingrpcrcy,
-         cnsldtnjrnlentryamtgrpcrcy    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtgrpcrcy,
-         calculatedrefamount           TYPE c_cnsldtncrcytrnsltntsklg-calculatedrefamount,
-         calculateddiffamount          TYPE c_cnsldtncrcytrnsltntsklg-calculateddiffamount,
-         cnsldtncrcytrnsltndifffsitem  TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytrnsltndifffsitem,
-         cnsldtncrcytrnsltndiffsubitem TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytrnsltndiffsubitem,
        END OF ty_out.
 
 *----------------------------------------------------------------------*
@@ -180,15 +189,16 @@ ENDFORM.
 FORM read_log_lines.
   IF gt_hdr IS NOT INITIAL.
     SELECT cnsldtntaskloguuid, consolidationunit, consolidationunittext,
-           sequencenumber, cnsldtntasklogitemtype, cnsldtntasklogitemtypetxt,
+           cnsldtncrcytranslationmethod, sequencenumber, setidentificationitem,
+           cnsldtntasklogitemtype, cnsldtntasklogitemtypetxt,
            cnsldtnfinancialstatementitem, financialstatementitemtext,
-           subitemcategory, subitem, subitemtext,
-           cnsldtncrcytranslationkey, cnsldtncrcytranslationmethod,
-           cnsldtnrefexchangeratetype, cnsldtnexchangerate,
+           subitemcategory, subitemcategorytext, subitem, subitemtext,
+           cnsldtncrcytrnsltndifffsitem, crcytrnsltndifffinstmntitmtxt,
+           cnsldtncrcytrnsltndiffsubitem, crcytrnsltndiffsubitemtxt,
+           cnsldtncrcytranslationkey, cnsldtnexchangerate,
            cnsldtnjrnlentryamtinloclcrcy, cnsldtnjrnlentryamtloclcrcy,
            cnsldtnjrnlentryamtingrpcrcy, cnsldtnjrnlentryamtgrpcrcy,
-           calculatedrefamount, calculateddiffamount,
-           cnsldtncrcytrnsltndifffsitem, cnsldtncrcytrnsltndiffsubitem
+           calculateddiffamount, calculatedrefamount, cnsldtnrefexchangeratetype
       FROM c_cnsldtncrcytrnsltntsklg
       FOR ALL ENTRIES IN @gt_hdr
       WHERE cnsldtntaskloguuid = @gt_hdr-cnsldtnlognumber
@@ -213,7 +223,8 @@ FORM add_header_fields.
   ENDLOOP.
 
   SORT gt_out BY cnsldtnlogdate DESCENDING cnsldtnlogtime DESCENDING
-                 consolidationunit sequencenumber.
+                 consolidationunit sequencenumber cnsldtnfinancialstatementitem
+                 subitemcategory subitem cnsldtntasklogitemtype.
 ENDFORM.
 
 *&---------------------------------------------------------------------*
@@ -239,45 +250,49 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form set_column_texts
 *&---------------------------------------------------------------------*
-* Readable headings. The view's own labels are kept where SALV has them;
-* these cover the header fields and the long technical names.
+* Headings of columns 1-23 are the Fiori "Items" export headings, so the
+* ALV and the export compare column for column.
 *----------------------------------------------------------------------*
 FORM set_column_texts.
-  PERFORM col_text USING 'CNSLDTNLOGNUMBER'              'Log Number'.
-  PERFORM col_text USING 'CNSLDTNGROUP'                  'Consolidation Group'.
-  PERFORM col_text USING 'FISCALYEAR'                    'Fiscal Year'.
-  PERFORM col_text USING 'FISCALPERIOD'                  'Fiscal Period'.
-  PERFORM col_text USING 'CNSLDTNVERSION'                'Version'.
-  PERFORM col_text USING 'CNSLDTNTASK'                   'Task'.
-  PERFORM col_text USING 'CNSLDTNTASKTYPE'               'Task Type'.
-  PERFORM col_text USING 'CNSLDTNLOGDATE'                'Log Date'.
-  PERFORM col_text USING 'CNSLDTNLOGTIME'                'Log Time'.
-  PERFORM col_text USING 'USERID'                        'Run By'.
-  PERFORM col_text USING 'ISCNSLDTNTESTRUN'              'Test Run'.
-  PERFORM col_text USING 'STATUS'                        'Log Status'.
-  PERFORM col_text USING 'CNSLDTNTASKLOGUUID'            'Task Log UUID'.
-  PERFORM col_text USING 'CONSOLIDATIONUNIT'             'Consolidation Unit'.
-  PERFORM col_text USING 'CONSOLIDATIONUNITTEXT'         'Consolidation Unit Name'.
-  PERFORM col_text USING 'SEQUENCENUMBER'                'Sequence'.
-  PERFORM col_text USING 'CNSLDTNTASKLOGITEMTYPE'        'Log Item Type'.
-  PERFORM col_text USING 'CNSLDTNTASKLOGITEMTYPETXT'     'Log Item Type Text'.
-  PERFORM col_text USING 'CNSLDTNFINANCIALSTATEMENTITEM' 'FS Item'.
-  PERFORM col_text USING 'FINANCIALSTATEMENTITEMTEXT'    'FS Item Text'.
-  PERFORM col_text USING 'SUBITEMCATEGORY'               'Subitem Category'.
-  PERFORM col_text USING 'SUBITEM'                       'Subitem'.
-  PERFORM col_text USING 'SUBITEMTEXT'                   'Subitem Text'.
-  PERFORM col_text USING 'CNSLDTNCRCYTRANSLATIONKEY'     'Translation Key'.
-  PERFORM col_text USING 'CNSLDTNCRCYTRANSLATIONMETHOD'  'Translation Method'.
-  PERFORM col_text USING 'CNSLDTNREFEXCHANGERATETYPE'    'Reference Rate Type'.
-  PERFORM col_text USING 'CNSLDTNEXCHANGERATE'           'Exchange Rate'.
-  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTINLOCLCRCY' 'Amount in Local Currency'.
-  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTLOCLCRCY'   'Local Currency'.
-  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTINGRPCRCY'  'Amount in Group Currency'.
-  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTGRPCRCY'    'Group Currency'.
-  PERFORM col_text USING 'CALCULATEDREFAMOUNT'           'Reference Amount'.
-  PERFORM col_text USING 'CALCULATEDDIFFAMOUNT'          'Translation Difference'.
-  PERFORM col_text USING 'CNSLDTNCRCYTRNSLTNDIFFFSITEM'  'Difference FS Item'.
-  PERFORM col_text USING 'CNSLDTNCRCYTRNSLTNDIFFSUBITEM' 'Difference Subitem'.
+  PERFORM col_text USING 'CONSOLIDATIONUNIT'               'Consolidation Unit'.
+  PERFORM col_text USING 'CONSOLIDATIONUNITTEXT'           'Consolidation Unit Desc.'.
+  PERFORM col_text USING 'CNSLDTNCRCYTRANSLATIONMETHOD'    'Translation Method'.
+  PERFORM col_text USING 'SEQUENCENUMBER'                  'Sequence'.
+  PERFORM col_text USING 'SETIDENTIFICATIONITEM'           'Selection ID'.
+  PERFORM col_text USING 'CNSLDTNTASKLOGITEMTYPE'          'Item Type (Technical)'.
+  PERFORM col_text USING 'CNSLDTNTASKLOGITEMTYPETXT'       'Item Type'.
+  PERFORM col_text USING 'CNSLDTNFINANCIALSTATEMENTITEM'   'FS Item'.
+  PERFORM col_text USING 'FINANCIALSTATEMENTITEMTEXT'      'FS Item Description'.
+  PERFORM col_text USING 'SUBITEMCATEGORY'                 'SI Cat.'.
+  PERFORM col_text USING 'SUBITEMCATEGORYTEXT'             'SI Category Description'.
+  PERFORM col_text USING 'SUBITEM'                         'Subitem'.
+  PERFORM col_text USING 'SUBITEMTEXT'                     'Subitem Description'.
+  PERFORM col_text USING 'CNSLDTNCRCYTRNSLTNDIFFFSITEM'    'Difference Item'.
+  PERFORM col_text USING 'CRCYTRNSLTNDIFFFINSTMNTITMTXT'   'Difference Item Desc.'.
+  PERFORM col_text USING 'CRCYTRNSLTNDIFFSUBITEMTXT'       'Difference Subitem Desc.'.
+  PERFORM col_text USING 'CNSLDTNCRCYTRANSLATIONKEY'       'CT Key'.
+  PERFORM col_text USING 'CNSLDTNEXCHANGERATE'             'Exchange Rate'.
+  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTINLOCLCRCY'   'LC Amount'.
+  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTINGRPCRCY'    'GC Amount'.
+  PERFORM col_text USING 'CALCULATEDDIFFAMOUNT'            'Translation Difference'.
+  PERFORM col_text USING 'CALCULATEDREFAMOUNT'             'Reference Amount'.
+  PERFORM col_text USING 'CNSLDTNREFEXCHANGERATETYPE'      'Reference Exchange Rate Indicator'.
+  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTLOCLCRCY'     'Local Currency'.
+  PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTGRPCRCY'      'Group Currency'.
+  PERFORM col_text USING 'CNSLDTNCRCYTRNSLTNDIFFSUBITEM'   'Difference Subitem'.
+  PERFORM col_text USING 'CNSLDTNTASKLOGUUID'              'Task Log UUID'.
+  PERFORM col_text USING 'CNSLDTNLOGNUMBER'                'Log Number'.
+  PERFORM col_text USING 'CNSLDTNGROUP'                    'Consolidation Group'.
+  PERFORM col_text USING 'FISCALYEAR'                      'Fiscal Year'.
+  PERFORM col_text USING 'FISCALPERIOD'                    'Fiscal Period'.
+  PERFORM col_text USING 'CNSLDTNVERSION'                  'Version'.
+  PERFORM col_text USING 'CNSLDTNTASK'                     'Task'.
+  PERFORM col_text USING 'CNSLDTNTASKTYPE'                 'Task Type'.
+  PERFORM col_text USING 'CNSLDTNLOGDATE'                  'Log Date'.
+  PERFORM col_text USING 'CNSLDTNLOGTIME'                  'Log Time'.
+  PERFORM col_text USING 'USERID'                          'Run By'.
+  PERFORM col_text USING 'ISCNSLDTNTESTRUN'                'Test Run'.
+  PERFORM col_text USING 'STATUS'                          'Log Status'.
 ENDFORM.
 
 *&---------------------------------------------------------------------*

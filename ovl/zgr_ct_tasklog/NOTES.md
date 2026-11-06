@@ -36,8 +36,41 @@ The task log opened from CXCD is the Group Reporting generic log, OData service
 ## Shipping method
 
 Paste-only: SE38 → create `ZGR_CT_TASKLOG`, type 1 executable, paste
-`ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap` (302 lines, 06/11/26). No `original/` — new object.
+`ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap` (317 lines, 06/11/26, v2). No `original/` — new object.
 Not yet syntax-checked on OCD.
+
+## ALV columns 1–23 = the Fiori "Items" export (`test/Items_4_fiori_export_2026-11-06.xlsx`)
+
+Same order and headings as the export, so the two lists compare column for column.
+
+| # | Export heading | View element |
+|---|---|---|
+| 1 | Consolidation Unit | ConsolidationUnit |
+| 2 | Consolidation Unit Desc. | ConsolidationUnitText |
+| 3 | Translation Method | CnsldtnCrcyTranslationMethod |
+| 4 | Sequence | SequenceNumber |
+| 5 | Selection ID | SetIdentificationItem |
+| 6 | Item Type (Technical Use Only) | CnsldtnTaskLogItemType |
+| 7 | Item Type | CnsldtnTaskLogItemTypeTxt |
+| 8 | FS Item | CnsldtnFinancialStatementItem |
+| 9 | FS Item Description | FinancialStatementItemText |
+| 10 | SI Cat. | SubitemCategory |
+| 11 | SI Category Description | SubitemCategoryText |
+| 12 | Subitem | Subitem |
+| 13 | Subitem Description | SubitemText |
+| 14 | Difference Item | CnsldtnCrcyTrnsltnDiffFSItem |
+| 15 | Difference Item Desc. | CrcyTrnsltnDiffFinStmntItmTxt |
+| 16 | Difference Subitem Desc. | CrcyTrnsltnDiffSubitemTxt |
+| 17 | CT Key | CnsldtnCrcyTranslationKey |
+| 18 | Exchange Rate | CnsldtnExchangeRate |
+| 19 | LC Amount | CnsldtnJrnlEntryAmtInLoclCrcy |
+| 20 | GC Amount | CnsldtnJrnlEntryAmtInGrpCrcy |
+| 21 | Translation Difference | CalculatedDiffAmount |
+| 22 | Reference Amount | CalculatedRefAmount |
+| 23 | Reference Exchange Rate Indicator | CnsldtnRefExchangeRateType |
+
+Then: local and group currency keys, difference subitem code, task log UUID, and the log header
+fields. The export of 06/11/26 (log of cons group OVL, 3,403 rows) is the comparison baseline.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
 
