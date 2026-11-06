@@ -11,20 +11,21 @@
 *&   Reads the currency translation task log the way the Fiori task log
 *&   (OData service FIN_CONS_GENERICLOG_SRV, reached from CXCD) reads it:
 *&     1. log headers from table FINCS_LOG_HEADER for the selection
-*&        (consolidation group, fiscal year / period, version, task, or
-*&        a log number typed directly), newest first, deleted logs
-*&        excluded;
+*&        (consolidation group, fiscal year / period, version, task,
+*&        test run flag, or a log number typed directly), newest first,
+*&        deleted logs excluded;
 *&     2. the log lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG, keyed
 *&        by the task log UUID, which is the header's log number;
 *&     3. the currency translation attribute of each FS item from the
-*&        assignment table FINCS_FSIASSGMT, for the consolidation chart
-*&        of accounts, attribute version and fiscal year period given on
-*&        the selection screen (the row whose validity covers the period);
+*&        assignment table FINCS_FSIASSGMT, consolidation chart of
+*&        accounts OV (fixed, by request), for the log's own fiscal year
+*&        and period (the assignment whose validity covers it; lowest
+*&        attribute version first);
 *&     4. one ALV list. Columns 1-23 are the Fiori task log "Items"
 *&        export, same order and headings, so the two lists compare
-*&        side by side; then the currency translation attribute and the
-*&        attribute version it came from, the currency keys, the
-*&        difference subitem code, the log UUID and the log header fields.
+*&        side by side; then the currency translation attribute, the
+*&        currency keys, the difference subitem code, the log UUID and
+*&        the log header fields.
 *&
 *&   The view carries CDS access control. A user without the group
 *&   reporting authorisation gets no rows and no error - the program
@@ -35,8 +36,7 @@
 *&---------------------------------------------------------------------*
 REPORT zgr_ct_tasklog.
 
-TABLES: fincs_log_header,
-        fincs_fsiassgmt.
+TABLES: fincs_log_header.
 
 *----------------------------------------------------------------------*
 * Types
@@ -60,7 +60,8 @@ TYPES: BEGIN OF ty_hdr,
 
 * FS item assignment - table FINCS_FSIASSGMT (SE16N, 06/11/26). ITCLG, ITEM,
 * IATVS and FROMYEARPER are the key; the year periods are CHAR 7 YYYYPPP
-* behind conversion exit PERI7 (shown as PPP.YYYY).
+* behind conversion exit PERI7 (shown as PPP.YYYY), so the log's fiscal
+* year and period concatenated compare directly against them.
 * ASSUMPTION: the attribute column is SA_CURRENCY_TRANSLATION, as named
 * in the request; the SE16N screenshot cuts the name at SA_CURRENCY_TRANSLA.
 TYPES: BEGIN OF ty_assg,
@@ -103,7 +104,6 @@ TYPES: BEGIN OF ty_out,
          cnsldtnrefexchangeratetype    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnrefexchangeratetype,
 *        extras not in the export
          sa_currency_translation       TYPE fincs_fsiassgmt-sa_currency_translation,
-         iatvs                         TYPE fincs_fsiassgmt-iatvs,
          cnsldtnjrnlentryamtloclcrcy   TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtloclcrcy,
          cnsldtnjrnlentryamtgrpcrcy    TYPE c_cnsldtncrcytrnsltntsklg-cnsldtnjrnlentryamtgrpcrcy,
          cnsldtncrcytrnsltndiffsubitem TYPE c_cnsldtncrcytrnsltntsklg-cnsldtncrcytrnsltndiffsubitem,
@@ -126,11 +126,15 @@ TYPES: BEGIN OF ty_out,
 *----------------------------------------------------------------------*
 * Data
 *----------------------------------------------------------------------*
-DATA: gt_hdr TYPE SORTED TABLE OF ty_hdr WITH UNIQUE KEY cnsldtnlognumber,
-      gt_out TYPE STANDARD TABLE OF ty_out,
-      gt_assg TYPE STANDARD TABLE OF ty_assg,
-      go_alv TYPE REF TO cl_salv_table,
-      gv_msg TYPE string.
+* Consolidation chart of accounts of the FS item assignments - fixed to OV
+* by request (06/11/26), not a selection field.
+CONSTANTS gc_itclg TYPE fincs_fsiassgmt-itclg VALUE 'OV'.
+
+DATA: gt_hdr  TYPE SORTED TABLE OF ty_hdr WITH UNIQUE KEY cnsldtnlognumber,
+      gt_out  TYPE STANDARD TABLE OF ty_out,
+      gt_assg TYPE SORTED TABLE OF ty_assg WITH NON-UNIQUE KEY item iatvs fromyearper,
+      go_alv  TYPE REF TO cl_salv_table,
+      gv_msg  TYPE string.
 
 *----------------------------------------------------------------------*
 * Selection screen
@@ -142,21 +146,13 @@ SELECT-OPTIONS: s_group FOR fincs_log_header-cnsldtngroup,
                 s_vers  FOR fincs_log_header-cnsldtnversion,
                 s_task  FOR fincs_log_header-cnsldtntask,
                 s_lognr FOR fincs_log_header-cnsldtnlognumber.
-PARAMETERS:     p_maxlg TYPE i DEFAULT 1.
+PARAMETERS:     p_test  TYPE fincs_log_header-iscnsldtntestrun AS CHECKBOX,
+                p_maxlg TYPE i DEFAULT 1.
 SELECTION-SCREEN END OF BLOCK b1.
-
-* FS item assignment, as selected in SE16N on FINCS_FSIASSGMT: Cons COA OV,
-* fiscal year period 003.2025 (internal 2025003), attribute version open.
-SELECTION-SCREEN BEGIN OF BLOCK b2 WITH FRAME TITLE TEXT-002.
-PARAMETERS:     p_itclg TYPE fincs_fsiassgmt-itclg DEFAULT 'OV' OBLIGATORY,
-                p_yrper TYPE fincs_fsiassgmt-fromyearper DEFAULT '2025003' OBLIGATORY.
-SELECT-OPTIONS: s_iatvs FOR fincs_fsiassgmt-iatvs.
-SELECTION-SCREEN END OF BLOCK b2.
 * Selection texts (SE38 -> Goto -> Text elements): S_GROUP Consolidation Group,
 * S_YEAR Fiscal Year, S_PERID Fiscal Period, S_VERS Consolidation Version,
-* S_TASK Consolidation Task, S_LOGNR Log Number, P_MAXLG Number of latest logs,
-* P_ITCLG Cons. Chart of Accounts, P_YRPER Fiscal Year Period,
-* S_IATVS FS Item Attributes Version.
+* S_TASK Consolidation Task, S_LOGNR Log Number, P_TEST Test Run,
+* P_MAXLG Number of latest logs.
 
 *----------------------------------------------------------------------*
 * Events
@@ -190,7 +186,8 @@ END-OF-SELECTION.
 *&---------------------------------------------------------------------*
 *& Form read_headers
 *&---------------------------------------------------------------------*
-* Newest logs first, deleted ones excluded, at most P_MAXLG of them.
+* Newest logs first, deleted ones excluded, at most P_MAXLG of them. The
+* test run flag is an exact filter: blank = update runs, X = test runs.
 * ASSUMPTION: DELETION = ' ' marks a live log. The task log service reads
 * the deleted ones with DELETION = 'X' (ST05 trace, 06/11/26).
 *----------------------------------------------------------------------*
@@ -205,6 +202,7 @@ FORM read_headers.
       AND cnsldtnversion   IN @s_vers
       AND cnsldtntask      IN @s_task
       AND cnsldtnlognumber IN @s_lognr
+      AND iscnsldtntestrun  = @p_test
       AND deletion          = @space
     ORDER BY cnsldtnlogdate DESCENDING, cnsldtnlogtime DESCENDING
     INTO CORRESPONDING FIELDS OF TABLE @gt_hdr
@@ -267,17 +265,17 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 *& Form read_fsi_assignment
 *&---------------------------------------------------------------------*
-* Currency translation attribute per FS item from FINCS_FSIASSGMT for the
-* chart of accounts, the attribute versions and the fiscal year period on
-* the selection screen: the assignment whose FROMYEARPER..TOYEARPER covers
-* P_YRPER. Where more than one assignment covers it (several attribute
-* versions, S_IATVS left open) the lowest version / earliest start is
-* used and its version is shown next to the attribute.
+* Currency translation attribute per FS item from FINCS_FSIASSGMT, chart
+* of accounts OV, all attribute versions. For each log line the fiscal
+* year and period of its log form the year period YYYYPPP, and the first
+* assignment of the FS item (lowest version, earliest start) whose
+* FROMYEARPER..TOYEARPER covers it supplies the attribute.
 *----------------------------------------------------------------------*
 FORM read_fsi_assignment.
-  DATA: lt_item TYPE STANDARD TABLE OF ty_item,
-        ls_item TYPE ty_item,
-        ls_assg TYPE ty_assg.
+  DATA: lt_item  TYPE STANDARD TABLE OF ty_item,
+        ls_item  TYPE ty_item,
+        ls_assg  TYPE ty_assg,
+        lv_yrper TYPE fincs_fsiassgmt-fromyearper.
 
   LOOP AT gt_out ASSIGNING FIELD-SYMBOL(<ls_out>).
     ls_item-item = <ls_out>-cnsldtnfinancialstatementitem.
@@ -290,30 +288,25 @@ FORM read_fsi_assignment.
     SELECT item, iatvs, fromyearper, toyearper, sa_currency_translation
       FROM fincs_fsiassgmt
       FOR ALL ENTRIES IN @lt_item
-      WHERE itclg        = @p_itclg
-        AND item         = @lt_item-item
-        AND iatvs       IN @s_iatvs
-        AND fromyearper <= @p_yrper
-        AND toyearper   >= @p_yrper
+      WHERE itclg = @gc_itclg
+        AND item  = @lt_item-item
       INTO TABLE @gt_assg.
   ENDIF.
 
   IF gt_assg IS INITIAL.
-    MESSAGE 'No FS item assignment found in FINCS_FSIASSGMT for this chart of accounts and period'
+    MESSAGE 'No FS item assignment found in FINCS_FSIASSGMT for chart of accounts OV'
       TYPE 'S' DISPLAY LIKE 'W'.
     RETURN.
   ENDIF.
 
-  SORT gt_assg BY item iatvs fromyearper.
-  DELETE ADJACENT DUPLICATES FROM gt_assg COMPARING item.
-
   LOOP AT gt_out ASSIGNING <ls_out>.
-    READ TABLE gt_assg INTO ls_assg
-      WITH KEY item = <ls_out>-cnsldtnfinancialstatementitem BINARY SEARCH.
-    IF sy-subrc = 0.
-      <ls_out>-sa_currency_translation = ls_assg-sa_currency_translation.
-      <ls_out>-iatvs                   = ls_assg-iatvs.
-    ENDIF.
+    CONCATENATE <ls_out>-fiscalyear <ls_out>-fiscalperiod INTO lv_yrper.
+    LOOP AT gt_assg INTO ls_assg WHERE item = <ls_out>-cnsldtnfinancialstatementitem.
+      IF ls_assg-fromyearper <= lv_yrper AND ls_assg-toyearper >= lv_yrper.
+        <ls_out>-sa_currency_translation = ls_assg-sa_currency_translation.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
   ENDLOOP.
 ENDFORM.
 
@@ -368,7 +361,6 @@ FORM set_column_texts.
   PERFORM col_text USING 'CALCULATEDREFAMOUNT'             'Reference Amount'.
   PERFORM col_text USING 'CNSLDTNREFEXCHANGERATETYPE'      'Reference Exchange Rate Indicator'.
   PERFORM col_text USING 'SA_CURRENCY_TRANSLATION'         'Crcy Transl. Attrib.'.
-  PERFORM col_text USING 'IATVS'                           'FS Item Attr. Version'.
   PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTLOCLCRCY'     'Local Currency'.
   PERFORM col_text USING 'CNSLDTNJRNLENTRYAMTGRPCRCY'      'Group Currency'.
   PERFORM col_text USING 'CNSLDTNCRCYTRNSLTNDIFFSUBITEM'   'Difference Subitem'.
