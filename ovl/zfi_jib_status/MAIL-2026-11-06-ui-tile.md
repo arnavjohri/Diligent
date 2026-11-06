@@ -23,8 +23,12 @@ switch with rows JointVenture, ProjectName, BusinessUnit, YearStatus, YearLastEn
 YearMonthsUploaded and no Month / Document Number; the quarter view uses the Quarter* columns
 with a FiscalQuarter filter.
 
-Document Number should open the document header dialog: navigate with CompanyCode,
-AccountingDocument and FiscalYear from the row to the journal entry display app.
+Document Number should open the document, as in FB03. The cube marks Document Number and Last
+Document Number with semantic object AccountingDocument and every row carries CompanyCode,
+AccountingDocument and FiscalYear. Please wire the intent navigation to the journal entry
+display app (or an FB03 WebGUI target mapping) in the launchpad; if the semantic object does
+not reach the query's $metadata, add the SemanticObject annotation in the app's local
+annotation file.
 
 Thanks & Regards,
 Arnav Johri | Associate Consultant | Diligent Global

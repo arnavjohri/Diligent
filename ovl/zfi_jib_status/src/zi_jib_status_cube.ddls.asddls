@@ -71,6 +71,10 @@
 //   06.11.2026  Arnav Johri  <TR>  Last Document Number and Documents
 //                                  in Month on every row, for a
 //                                  one-row-per-month query
+//   06.11.2026  Arnav Johri  <TR>  Semantic object AccountingDocument
+//                                  on both document numbers (click to
+//                                  open the document; the target app
+//                                  is launchpad configuration)
 //----------------------------------------------------------------------
 // ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
 //   texts per venture ("shall be a freezed input"; "as mentioned in
@@ -82,6 +86,11 @@
 // ASSUMPTION: a JIB for month X is the JM document whose posting period
 //   is X, however late it was entered (the April JIB entered on 15 May
 //   is April, Uploaded, 15.05.2026).
+// ASSUMPTION: @Consumption.semanticObject reaches the generated query's
+//   OData metadata. If it does not, the UI developer adds the
+//   SemanticObject annotation for Document Number in the app's local
+//   annotation file; the navigation parameters (CompanyCode,
+//   AccountingDocument, FiscalYear) are on every row either way.
 // ASSUMPTION: no access control, as on the two earlier cubes. The
 //   published query runs with the user's analytics authorisations.
 //----------------------------------------------------------------------
@@ -136,6 +145,7 @@ define view ZI_JIB_STATUS_CUBE
       @ObjectModel.text.element: ['PeriodMonth']
       @EndUserText.label: 'Posting Period'
   key Period.FiscalPeriod,
+      @Consumption.semanticObject: 'AccountingDocument'
       @EndUserText.label: 'Document Number'
   key Doc.AccountingDocument,
 
@@ -196,6 +206,7 @@ define view ZI_JIB_STATUS_CUBE
       // the month's highest document number, same on every row of the
       // month: a query that shows this instead of Document Number stays
       // at one row per venture and month
+      @Consumption.semanticObject: 'AccountingDocument'
       @EndUserText.label: 'Last Document Number'
       Month.LastDocument,
       @EndUserText.label: 'Documents in Month'
