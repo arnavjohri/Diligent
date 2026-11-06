@@ -4,7 +4,7 @@
 
 | Item | Value |
 |---|---|
-| Version | 1.0 |
+| Version | 1.1 (1.0 on 06.11.2026 paste-only; 1.1 the same day: abapGit ZIP, Z domains, DTELs domain-based) |
 | Author | Arnav Johri, Diligent Global |
 | Date | 06.11.2026 |
 | Project / system | OVL (assumed) · OCD 500 (ADT header of the supplied source) |
@@ -26,10 +26,11 @@ query can show both.
 
 | Object | Type | New / changed | Package | TR |
 |---|---|---|---|---|
-| `ZGR_RBUNIT` (CHAR 18), `ZGR_RITEM` (CHAR 10), `ZGR_RITEM_NEW` (CHAR 10) | Data elements, built-in types, SE11 manual | New | GR package (TBD) | TBD |
-| `ZGR_FSITEM_MAP` | Transparent table — `ZGR_FSITEM_MAP.tabl.ddl` (ADT DDL) | New | same | same |
+| `ZGR_RBUNIT` (CHAR 18), `ZGR_RITEM` (CHAR 10) | Domains | New | GR package (chosen at import) | TBD |
+| `ZGR_RBUNIT`, `ZGR_RITEM`, `ZGR_RITEM_NEW` | Data elements on those domains | New | same | same |
+| `ZGR_FSITEM_MAP` | Transparent table | New | same | same |
+| `ZI_GR_FSREMAP_CUBE` (SQL view `ZIGRFSREMAPCUBE`) | CDS DDL source, classic view, `@Analytics.dataCategory: #CUBE` | New | same | same |
 | Table maintenance generator for `ZGR_FSITEM_MAP` | SE11 → Utilities → TMG, manual (function group `ZGR_FSITEM_MAP`) | New | same | same |
-| `ZI_GR_FSREMAP_CUBE` (SQL view `ZIGRFSREMAPCUBE`) | CDS DDL source, classic view, `@Analytics.dataCategory: #CUBE` — `ZI_GR_FSREMAP_CUBE.ddls.asddls` | New | same | same |
 | Key-user release of `ZI_GR_FSREMAP_CUBE` (API State, contract C1) | ADT, manual | New | — | same |
 | Custom Analytical Query + tile on `ZI_GR_FSREMAP_CUBE` | Fiori app, by the functional consultant | New | — | — |
 
@@ -38,52 +39,66 @@ modification); ACDOCU; the existing GR objects in `ovl/gr_venture_release` and `
 
 ## 4. Detailed changes
 
-Source files: `ovl/zgr_fsitem_remap/ZGR_FSITEM_MAP.tabl.ddl` (41 lines) and
-`ovl/zgr_fsitem_remap/ZI_GR_FSREMAP_CUBE.ddls.asddls` (743 lines). Everything ships by paste.
+Source: `ovl/zgr_fsitem_remap/src/` (8 files) and `ovl/zgr_fsitem_remap/.abapgit.xml`; archive
+`ovl/zgr_fsitem_remap/ZGR_FSITEM_REMAP.zip`. Paste fallback for the table:
+`ovl/zgr_fsitem_remap/ZGR_FSITEM_MAP.tabl.ddl` (ADT Database Table DDL, 41 lines).
 
 ### 4.1 Build and activation order
 
-**Step 1 — Data elements (SE11, Data type → Data element, *Elementary type → Predefined Type*).**
+**Step 1 — DDIC + view by abapGit ZIP.** `ZABAPGIT_STANDALONE` → New Offline Repo → package (the
+existing GR package, or a new one; the ZIP carries no `package.devc.xml`, so the package is not
+touched) → Import ZIP `ZGR_FSITEM_REMAP.zip` → Pull → transport request when asked. abapGit
+activates in dependency order: domains → data elements → table → `ZI_GR_FSREMAP_CUBE`. Check first
+in SE11 that `ZGR_FSITEM_MAP`, `ZIGRFSREMAPCUBE`, `ZGR_RBUNIT`, `ZGR_RITEM`, `ZGR_RITEM_NEW` do not
+already exist. Expected on the cube: warnings only (the standard's deprecated associations
+`_CnsldtnUnit` / `_PartnerUnit` / `_InvesteeUnit` carry `@API.element.releaseState: #DEPRECATED`,
+same as in the standard cube). If the pull stops on the DDLS, the DDIC is already in: open the
+view in ADT, paste the error back, the fix comes back as the one file.
 
-| Name | Type / length | Short description | Field labels short / medium / long / heading |
+**Step 1 fallback — same objects, same order, by hand** (if a DDIC object does not arrive, as on
+the `ZFI_TR_BANKACCT` pull of 03/11/26):
+
+1a. SE11 → Domain: `ZGR_RBUNIT` CHAR 18, output length 18, text *Consolidation unit, 18
+characters (as ACDOCU-RBUNIT)*; `ZGR_RITEM` CHAR 10, output length 10, text *FS item, 10
+characters (as ACDOCU-RITEM)*. Activate both.
+
+1b. SE11 → Data element (*Elementary type → Domain*):
+
+| Name | Domain | Short description | Field labels short (10) / medium (20) / long (40) / heading (20) |
 |---|---|---|---|
-| `ZGR_RBUNIT` | CHAR 18 | Consolidation unit (GR FS item remap) | Cons.Unit / Cons. Unit / Consolidation Unit / Consolidation Unit |
-| `ZGR_RITEM` | CHAR 10 | FS item (GR FS item remap) | FS Item / FS Item / FS Item / FS Item |
-| `ZGR_RITEM_NEW` | CHAR 10 | New FS item (GR FS item remap) | New Item / New FS Item / New FS Item / New FS Item |
+| `ZGR_RBUNIT` | `ZGR_RBUNIT` | Consolidation unit (GR FS item remap) | Cons.Unit / Cons. Unit / Consolidation Unit / Consolidation Unit |
+| `ZGR_RITEM` | `ZGR_RITEM` | FS item as posted (GR FS item remap) | FS Item / FS Item / FS Item / FS Item |
+| `ZGR_RITEM_NEW` | `ZGR_RITEM` | New FS item to report instead (GR FS item remap) | New Item / New FS Item / New FS Item / New FS Item |
 
-No domain, no search help, no conversion exit. Activate all three. (A&Q item 4 says how to use
-the standard ACDOCU data elements instead, once their names have been read off SE11 → `ACDOCU`.)
+1c. Table: ADT → New → Other → Dictionary → Database Table `ZGR_FSITEM_MAP`, replace the source
+with `ZGR_FSITEM_MAP.tabl.ddl` (the `//` header lines are comments and can stay); *Technical
+Settings*: data class **APPL0**, size category **0**, buffering **not allowed**, log data changes
+off. Or SE11 with the field list in §4.2. Activate.
 
-**Step 2 — Table `ZGR_FSITEM_MAP` (ADT: New → Other → Dictionary → Database Table).** Name
-`ZGR_FSITEM_MAP`, description *Group Reporting: FS item remap per consolidation unit*. Replace the
-generated source with `ZGR_FSITEM_MAP.tabl.ddl` (the `//` header lines are comments and can stay).
-Then *Technical Settings* (link at the top of the editor): data class **APPL2**, size category
-**0**, buffering **not allowed**, *log data changes* off. Activate. SE11 fallback: §4.2.
+1d. ADT → New → Core Data Services → Data Definition `ZI_GR_FSREMAP_CUBE`, description *Group
+Data Analysis - Cube with FS item remap*, any template; replace the whole template with
+`src/zi_gr_fsremap_cube.ddls.asddls`. Activate.
 
-**Step 3 — Table Maintenance Generator (SE11 → `ZGR_FSITEM_MAP` → Utilities → Table Maintenance
+**Step 2 — Table Maintenance Generator (SE11 → `ZGR_FSITEM_MAP` → Utilities → Table Maintenance
 Generator).** Authorization group `&NC&` (or the GR group if one exists); function group
 `ZGR_FSITEM_MAP` (new); maintenance type **one step**, overview screen 1; recording routine
 **no, or user, recording routine** (delivery class A — the standard routine would prompt for a
 transport on every SM30 entry, A&Q item 6). Create. Test: SM30 → `ZGR_FSITEM_MAP` → Maintain →
 New Entries: columns read *Cons. Unit*, *FS Item*, *New FS Item*.
 
-**Step 4 — CDS `ZI_GR_FSREMAP_CUBE` (ADT: New → Core Data Services → Data Definition).** Name
-`ZI_GR_FSREMAP_CUBE`, description *Group Data Analysis - Cube with FS item remap*, template *Define
-View* (any — the source is replaced). Replace the whole template with
-`ZI_GR_FSREMAP_CUBE.ddls.asddls`. Activate. Expected: warnings only (the standard's deprecated
-associations `_CnsldtnUnit` / `_PartnerUnit` / `_InvesteeUnit` carry `@API.element.releaseState:
-#DEPRECATED`, same as in the standard cube). An error names the line — paste it back.
+**Step 3 — Key-user release (ADT).** Right-click the DDL source `ZI_GR_FSREMAP_CUBE` → Properties
+→ *API State* → Add Release State → **Use in Key User Apps (C1)**. Without it the cube is not
+offered in *Custom Analytical Queries* (MEMORY §4.1; bank reval 28/10–02/11/26). Check with
+`RSRTS_ODP_DIS` on `2CZIGRFSREMAPCUBE` if the app still does not list it.
 
-**Step 5 — Key-user release (ADT).** Right-click the DDL source → Properties → *API State* → Add
-Release State → **Use in Key User Apps (C1)**. Without it the cube is not offered in *Custom
-Analytical Queries* (MEMORY §4.1; bank reval 28/10–02/11/26). Check with `RSRTS_ODP_DIS` on
-`2CZIGRFSREMAPCUBE` if the app still does not list it.
+**Step 4 — Query and tile.** Functional consultant, *Custom Analytical Queries* on
+`ZI_GR_FSREMAP_CUBE` (search without `*`); the four parameters are prompted exactly as on the
+standard cube (`$` = no hierarchy, key date = today).
 
-**Step 6 — Query and tile.** Functional consultant, *Custom Analytical Queries* on
-`ZI_GR_FSREMAP_CUBE`; the four parameters are prompted exactly as on the standard cube (`$` = no
-hierarchy, key date = today).
+**Step 5 — Mapping entries.** Group Reporting team, SM30 `ZGR_FSITEM_MAP`. Nothing changes in the
+cube until rows exist.
 
-### 4.2 Table `ZGR_FSITEM_MAP` — SE11 fallback for step 2
+### 4.2 Table `ZGR_FSITEM_MAP` — SE11 field list (fallback for step 1c)
 
 Delivery class **A**; Data Browser/Table View Maint. **Display/Maintenance Allowed**; enhancement
 category *Can be enhanced (character-type)*.
@@ -95,7 +110,7 @@ category *Can be enhanced (character-type)*.
 | `RITEM` | X | X | `ZGR_RITEM` | CHAR 10 | FS item as posted (ACDOCU) |
 | `RITEM_NEW` | — | — | `ZGR_RITEM_NEW` | CHAR 10 | FS item to report instead; blank = no mapping |
 
-Technical settings as in step 2.
+Technical settings as in step 1c.
 
 ### 4.3 CDS `ZI_GR_FSREMAP_CUBE` — what differs from the standard cube
 
@@ -119,34 +134,47 @@ The `//BOC By Arnav on 06/11/26` / `//EOC` markers enclose the three customer ad
 is the standard, so a later diff against `original/` after a support package shows exactly what
 SAP changed.
 
+### 4.4 The abapGit XML
+
+Every `src/*.xml` is the element-for-element shape of a file that has pulled on this landscape —
+DOMA / DTEL / TABL as `ovl/zfi_bank_reval/src/` (OCD 28/10/26) and `kpmg/zpp_forecast_paints/src/`
+(19/10/26), DDLS as the bank reval views. Only values differ. Deliberately absent: `package.devc.xml`
+(package chosen at import, not rewritten), foreign keys (shape never pulled here; SE11 if wanted,
+A&Q 5). Re-zip after any change: `cd ovl/zgr_fsitem_remap && rm -f ZGR_FSITEM_REMAP.zip && zip -X
+ZGR_FSITEM_REMAP.zip .abapgit.xml src/*`.
+
 ## 5. Requirement mapping
 
 | # | Requirement (chat, 06/11/2026) | Implemented by |
 |---|---|---|
-| R1 | A table with consolidation unit, FS item and new FS item | `ZGR_FSITEM_MAP` (keys `RBUNIT`, `RITEM`; `RITEM_NEW`), data elements `ZGR_*` |
-| R2 | The user maintains it | Delivery class A, maintenance allowed, TMG (step 3) → SM30 |
+| R1 | A table with consolidation unit, FS item and new FS item | `ZGR_FSITEM_MAP` (keys `RBUNIT`, `RITEM`; `RITEM_NEW`), domains and data elements `ZGR_*` |
+| R2 | The user maintains it | Delivery class A, maintenance allowed, TMG (step 2) → SM30 |
 | R3 | Another view on top of `I_MatrixConsolidationReportC` | `ZI_GR_FSREMAP_CUBE`, data source the standard cube with its parameters passed through, every standard element carried |
 | R4 | New column: the new FS item if present, else the old FS item | `NewFinancialStatementItem` — left outer join + CASE (§4.3); `_NewFinStmntItm` for key + text in the query |
+| R5 | "zip file to directly upload the objects" | `ZGR_FSITEM_REMAP.zip`, abapGit offline (§4.1 step 1, §4.4) |
 
-No requirement is unmapped. Nothing beyond R1–R4 is built (A&Q, last paragraph).
+No requirement is unmapped. Nothing beyond R1–R5 is built (A&Q, last paragraph).
 
 ## 6. Test scenarios
 
 | # | Input | Expected | Actual |
 |---|---|---|---|
-| 1 | SM30 `ZGR_FSITEM_MAP`, New Entries: unit `U1`, FS item `I1`, new `I9`. Save | Row saved without a transport prompt (recording routine off). Column headings *Cons. Unit*, *FS Item*, *New FS Item* | |
-| 2 | ADT Data Preview on `ZI_GR_FSREMAP_CUBE` (`$`, `$`, `$`, today); filter `ConsolidationUnit = U1`, `FinancialStatementItem = I1` | `NewFinancialStatementItem = I9` on every line; `FinancialStatementItem` still `I1` | |
-| 3 | Same preview, a unit / FS item **without** a mapping row | `NewFinancialStatementItem = FinancialStatementItem` on every line (never blank, never NULL) | |
-| 4 | Mapping row with blank *New FS Item* | Treated as no mapping — original FS item shown (A&Q 11) | |
-| 5 | Preview row count and sum of `AmountInGroupCurrency` for one unit / version / year-period, Z cube vs. `I_MatrixConsolidationReportC` with the same four parameters | Identical — the join is left outer on a unique key, so no line is dropped or doubled | |
-| 6 | Same selection in *Group Data Analysis* (standard app) vs. a CAQ on the Z cube, at posting level 00/10/20 and at group level, amounts in group currency per FS item | Identical. A difference means the standard read class adds logic the SQL does not — A&Q 9 | |
-| 7 | CAQ: `NewFinancialStatementItem` as a row dimension with key + text; FS item hierarchy on it | Text from `I_GroupReportingFSItem` of the same cons chart of accounts; hierarchy offered | |
-| 8 | Second row for the same unit + FS item in SM30 | Rejected — key violation (SM30 message) | |
+| 1 | abapGit pull of `ZGR_FSITEM_REMAP.zip` | 7 objects created and active: 2 domains, 3 data elements, table, DDL source. SE11 shows `ZGR_FSITEM_MAP` with 4 fields and `ZIGRFSREMAPCUBE` | |
+| 2 | SM30 `ZGR_FSITEM_MAP`, New Entries: unit `U1`, FS item `I1`, new `I9`. Save | Row saved without a transport prompt (recording routine off). Column headings *Cons. Unit*, *FS Item*, *New FS Item* | |
+| 3 | ADT Data Preview on `ZI_GR_FSREMAP_CUBE` (`$`, `$`, `$`, today); filter `ConsolidationUnit = U1`, `FinancialStatementItem = I1` | `NewFinancialStatementItem = I9` on every line; `FinancialStatementItem` still `I1` | |
+| 4 | Same preview, a unit / FS item **without** a mapping row | `NewFinancialStatementItem = FinancialStatementItem` on every line (never blank, never NULL) | |
+| 5 | Mapping row with blank *New FS Item* | Treated as no mapping — original FS item shown (A&Q 11) | |
+| 6 | Preview row count and sum of `AmountInGroupCurrency` for one unit / version / year-period, Z cube vs. `I_MatrixConsolidationReportC` with the same four parameters | Identical — the join is left outer on a unique key, so no line is dropped or doubled | |
+| 7 | Same selection in *Group Data Analysis* (standard app) vs. a CAQ on the Z cube, at posting level 00/10/20 and at group level, amounts in group currency per FS item | Identical. A difference means the standard read class adds logic the SQL does not — A&Q 9 | |
+| 8 | CAQ: `NewFinancialStatementItem` as a row dimension with key + text; FS item hierarchy on it | Text from `I_GroupReportingFSItem` of the same cons chart of accounts; hierarchy offered | |
+| 9 | Second row for the same unit + FS item in SM30 | Rejected — key violation (SM30 message) | |
 
 ## 7. Open points
 
 Items 2, 3, 6, 9 and 10 of `ASSUMPTIONS_AND_QUERIES.md` need an answer before the mapping is filled
 in production: key scope (dimension / cons chart of accounts), validity dates, delivery class and
-transport of entries, the read-class comparison (test 6), and whether a DCL is needed. Items 4 and
+transport of entries, the read-class comparison (test 7), and whether a DCL is needed. Items 4 and
 5 (standard data elements, F4 / existence check in SM30) are SE11-only follow-ups that need no code
-change. Items 7, 8, 13 and 16 are design confirmations.
+change. Items 7, 8, 13 and 16 are design confirmations. The 03/11/26 `ZFI_TR_BANKACCT` pull that
+created the views but not the table is still undiagnosed; if this pull does the same, supply the
+abapGit log line for the first DDIC object (not a screenshot of the whole log).

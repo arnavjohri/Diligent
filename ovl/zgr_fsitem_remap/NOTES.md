@@ -12,45 +12,64 @@ item when the table has a row for the line's unit + FS item (and the new item is
 otherwise the line's own FS item. Everything else in the cube is the standard cube, element for
 element, so a query built on it behaves like one built on SAP's.
 
-| Table field | Key | Data element | Type | SM30 heading |
-|---|---|---|---|---|
-| `MANDT` | key | `MANDT` | CLNT 3 | — |
-| `RBUNIT` | key | `ZGR_RBUNIT` (new, built-in type) | CHAR 18 | Cons. Unit |
-| `RITEM` | key | `ZGR_RITEM` (new, built-in type) | CHAR 10 | FS Item |
-| `RITEM_NEW` | — | `ZGR_RITEM_NEW` (new, built-in type) | CHAR 10 | New FS Item |
+| Table field | Key | Data element | Domain | Type | SM30 heading |
+|---|---|---|---|---|---|
+| `MANDT` | key | `MANDT` | `MANDT` | CLNT 3 | — |
+| `RBUNIT` | key | `ZGR_RBUNIT` (new) | `ZGR_RBUNIT` (new) | CHAR 18 | Cons. Unit |
+| `RITEM` | key | `ZGR_RITEM` (new) | `ZGR_RITEM` (new) | CHAR 10 | FS Item |
+| `RITEM_NEW` | — | `ZGR_RITEM_NEW` (new) | `ZGR_RITEM` | CHAR 10 | New FS Item |
 
-Z data elements with built-in types on purpose: the standard ACDOCU data elements are not
-confirmed from here (no system access) and a wrong name costs an activation cycle; the CDS join
-compares by type and length, which are the ACDOCU lengths. Item 4 of the A&Q says how to swap in
-the standard elements if wanted.
+Z domains and Z data elements on purpose: the standard ACDOCU data elements are not confirmed from
+here (no system access) and a wrong name costs an activation cycle; the CDS join compares by type
+and length, which are the ACDOCU lengths. Item 4 of the A&Q says how to swap in the standard
+elements if wanted. Domain-based (not built-in types) because the DOMA + DTEL abapGit shapes are
+the ones that have pulled on this landscape.
 
-## Objects, in creation order
+## Objects — all in the ZIP, in the order abapGit activates them
 
-1. **Data elements** `ZGR_RBUNIT`, `ZGR_RITEM`, `ZGR_RITEM_NEW` — SE11, form-based (TS §4.1 step 1).
-   Never serialised by paste; 1 minute each.
-2. **Table `ZGR_FSITEM_MAP`** — `ZGR_FSITEM_MAP.tabl.ddl` (41 lines incl. header), ADT *Database
-   Table* DDL source, paste whole. Delivery class **A**, *Display/Maintenance allowed*,
-   enhancement category *character-type*. Technical settings (separate tab): APPL2, size 0, no
-   buffering. SE11 fallback: TS §4.2.
-3. **TMG** on `ZGR_FSITEM_MAP` — SE11 → Utilities → Table Maintenance Generator, manual (TS §4.1
-   step 3). Then SM30.
-4. **CDS `ZI_GR_FSREMAP_CUBE`** — `ZI_GR_FSREMAP_CUBE.ddls.asddls` (743 lines), SQL view
-   `ZIGRFSREMAPCUBE`, classic `define view`, `@Analytics.dataCategory: #CUBE`. ADT: New → Data
-   Definition, name `ZI_GR_FSREMAP_CUBE`, replace the template with the file. Needs 2 active.
-5. **Key-user release** of the cube — ADT, right-click the DDL source → Properties → API State →
-   *Use in Key User Apps (C1)*. Manual; without it *Custom Analytical Queries* does not list the
-   cube (MEMORY §4.1, bank reval 28/10–02/11/26).
-6. The query / tile — functional consultant, in *Custom Analytical Queries* on
-   `ZI_GR_FSREMAP_CUBE`.
+| # | Object | Type | File in `src/` |
+|---|---|---|---|
+| 1 | `ZGR_RBUNIT` (CHAR 18), `ZGR_RITEM` (CHAR 10) | Domains | `zgr_rbunit.doma.xml`, `zgr_ritem.doma.xml` |
+| 2 | `ZGR_RBUNIT`, `ZGR_RITEM`, `ZGR_RITEM_NEW` | Data elements | `zgr_rbunit.dtel.xml`, `zgr_ritem.dtel.xml`, `zgr_ritem_new.dtel.xml` |
+| 3 | `ZGR_FSITEM_MAP` | Transparent table, delivery class A, maintenance allowed, APPL0, size 0, no buffering, enhancement cat. 1 | `zgr_fsitem_map.tabl.xml` |
+| 4 | `ZI_GR_FSREMAP_CUBE` (SQL view `ZIGRFSREMAPCUBE`) | CDS DDL source, classic view, `#CUBE`, 743 lines | `zi_gr_fsremap_cube.ddls.asddls` + `.ddls.xml` |
+
+Then by hand (never serialised): the TMG (SE11 → Utilities → Table Maintenance Generator), the
+key-user release of the cube (ADT, API State, C1), and the query / tile in *Custom Analytical
+Queries* (functional consultant). TS §4.1 steps 2–5.
 
 Optional, on request: DCL inheriting the standard cube's access control (A&Q item 10); SE93
 transactions on SM30 (item 16); foreign keys / search helps on the table fields (item 5).
 
-## How it ships
+## How it ships — abapGit ZIP `ZGR_FSITEM_REMAP.zip` (06/11/26)
 
-**Paste**, all three code objects. No abapGit ZIP: the hand-written DDLS XML shape is proven on
-this landscape (28/10, 03/11) but the DTEL/TABL shapes only via `kpmg/zpp_forecast_paints`, and
-the two data elements are quicker in SE11 than in XML. Re-evaluate if a fourth GR object follows.
+`.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/` with
+8 files. **No `package.devc.xml`** — the target package is chosen when the offline repo is created
+(the GR objects' existing package, or a new one), and leaving the DEVC out means the import does
+not rewrite that package's description. Every XML is the element-for-element shape of files that
+pulled on this landscape: DOMA / DTEL / TABL as `ovl/zfi_bank_reval` (OCD, 28/10/26) and
+`kpmg/zpp_forecast_paints` (19/10/26); DDLS `DDLNAME, DDLANGUAGE, DDTEXT, SOURCE_TYPE = V` as the
+three bank reval views (28/10, 03/11). Values differ, elements and order do not. No foreign keys
+in the XML (that shape has never been pulled here).
+
+**Not yet imported.** `ovl/zfi_tr_bankacct` (03/11/26, same TABL shape) came back "views created,
+table not created" and the pull log line was never supplied — so a DDIC failure on this pull is
+possible and the SE11 fallback below is part of the delivery, not an afterthought.
+
+Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package (existing GR package, or new) → Import
+ZIP `ZGR_FSITEM_REMAP.zip` → Pull → transport request when asked. Check first in SE11 that
+`ZGR_FSITEM_MAP`, `ZIGRFSREMAPCUBE`, the two domains and three data elements do not already exist.
+If the pull stops on the DDLS with an activation error, the DDIC is already in: open
+`ZI_GR_FSREMAP_CUBE` in ADT and paste the error back.
+
+**Fallback, same objects, same order, by hand:** SE11 domains `ZGR_RBUNIT` (CHAR 18) and
+`ZGR_RITEM` (CHAR 10); SE11 data elements on them with the labels in TS §4.1; table from
+`ZGR_FSITEM_MAP.tabl.ddl` (ADT Database Table, paste whole) or the SE11 field list in TS §4.2;
+then ADT → New → Data Definition `ZI_GR_FSREMAP_CUBE`, paste `src/zi_gr_fsremap_cube.ddls.asddls`.
+
+Re-zip after any change:
+
+    cd ovl/zgr_fsitem_remap && rm -f ZGR_FSITEM_REMAP.zip && zip -X ZGR_FSITEM_REMAP.zip .abapgit.xml src/*
 
 ## How the view does it
 
@@ -81,7 +100,7 @@ item hierarchies in the query.
   that removes it breaks the Z cube — A&Q item 7.
 - **`@Analytics.readClassName: 'CL_FINCS_GRA_CUBE_REL'` is not carried.** The Z cube is plain SQL
   over the foundation view. Compare totals with *Group Data Analysis* for one unit / version /
-  period at posting level and at group level before anyone reports from it (TS §6, test 4).
+  period at posting level and at group level before anyone reports from it (TS §6, test 7).
 - **`#NOT_REQUIRED` access control** — the standard cube restricts by DCL. Fine for the
   consolidation team; a DCL is one object if the tile goes wider.
 - Key is unit + FS item only (single dimension / cons chart of accounts assumed). Adding `RDIMEN`
@@ -89,6 +108,8 @@ item hierarchies in the query.
 - A row with a blank *New FS Item* is "no mapping" (falls back). Blank is never shown.
 - Delivery class A with the **standard** TMG recording routine prompts for a transport on every
   SM30 entry — set *no, or user, recording routine* when generating.
+- The CAQ app lists a cube only when it is `#CUBE`, classified (`modelingPattern` /
+  `supportedCapabilities`, both set) **and** released for key-user apps (C1, manual in ADT).
 - `_Extension` and `_FiscalCalendarDate` from the standard source are left out: the first is SAP's
   extension hook (extend-view target), the second is defined there but never exposed.
 - Baseline in `original/` is the SAP source as pasted from ADT on 06/11/26. Diff against it after

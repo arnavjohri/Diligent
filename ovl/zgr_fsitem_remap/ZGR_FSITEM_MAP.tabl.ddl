@@ -11,8 +11,8 @@
 //   item of ACDOCU, the FS item that is to be reported instead. Read by
 //   ZI_GR_FSREMAP_CUBE (left outer join on RBUNIT + RITEM); a row with
 //   an empty RITEM_NEW counts as "no mapping".
-//   Object 2 of 3 - the three Z data elements (object 1) are created in
-//   SE11 first, see TS section 4.1 step 1.
+//   Paste fallback for the abapGit ZIP (src/zgr_fsitem_map.tabl.xml):
+//   the two Z domains and three Z data elements come first - TS 4.1.
 //
 // ASSUMPTION: one consolidation dimension and one consolidation chart
 //   of accounts in use, so neither is part of the key (query 2).
@@ -25,7 +25,7 @@
 //   06.11.2026  Arnav Johri  <TR>  Initial development
 //----------------------------------------------------------------------
 // Technical settings (separate tab in ADT / SE11, not in this source):
-//   data class APPL2, size category 0, buffering not allowed,
+//   data class APPL0, size category 0, buffering not allowed,
 //   log data changes off. Delivery class A, maintenance allowed.
 //----------------------------------------------------------------------
 @EndUserText.label : 'Group Reporting: FS item remap per consolidation unit'

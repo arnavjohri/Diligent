@@ -17,7 +17,7 @@
 //       with a non-empty new item exists, else FinancialStatementItem.
 //   The original FinancialStatementItem stays as it is. _NewFinStmntItm
 //   gives the new column its texts and hierarchies (same cons chart of
-//   accounts). Object 3 of 3; needs ZGR_FSITEM_MAP active.
+//   accounts). Last object of the ZIP; needs ZGR_FSITEM_MAP active.
 //
 // ASSUMPTION: built on the deprecated I_MatrixConsolidationReportC as
 //   supplied, not on its successor I_MATRIXCNSLDTNREPORTC_2, whose
