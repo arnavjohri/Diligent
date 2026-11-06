@@ -36,7 +36,7 @@ The task log opened from CXCD is the Group Reporting generic log, OData service
 ## Shipping method
 
 Paste-only: SE38 → create `ZGR_CT_TASKLOG`, type 1 executable, paste
-`ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap` (317 lines, 06/11/26, v2). No `original/` — new object.
+`ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap` (409 lines, 06/11/26, v3). No `original/` — new object.
 Not yet syntax-checked on OCD.
 
 ## ALV columns 1–23 = the Fiori "Items" export (`test/Items_4_fiori_export_2026-11-06.xlsx`)
@@ -69,14 +69,37 @@ Same order and headings as the export, so the two lists compare column for colum
 | 22 | Reference Amount | CalculatedRefAmount |
 | 23 | Reference Exchange Rate Indicator | CnsldtnRefExchangeRateType |
 
-Then: local and group currency keys, difference subitem code, task log UUID, and the log header
-fields. The export of 06/11/26 (log of cons group OVL, 3,403 rows) is the comparison baseline.
+Then: **Crcy Transl. Attrib.** and **FS Item Attr. Version** (from `FINCS_FSIASSGMT`, below), local
+and group currency keys, difference subitem code, task log UUID, and the log header fields. The
+export of 06/11/26 (log of cons group OVL, 3,403 rows) is the comparison baseline.
+
+## FS item assignment join — `FINCS_FSIASSGMT` (v3, 06/11/26)
+
+Table *FS Item Assignments, Version- and Year-Period-Dependent* (SE16N screenshot in `trace/`).
+Key: MANDT, ITCLG (Cons COA, CHAR 2), ITEM (FS item, CHAR 10 ALPHA), IATVS (FS item attributes
+version, CHAR 3 ALPHA), FROMYEARPER; plus TOYEARPER. The year periods are CHAR 7 `YYYYPPP`
+behind conversion exit PERI7, shown as `PPP.YYYY` — 003.2025 is stored as `2025003`.
+
+Second selection block, defaults as in the screenshot: **Cons. Chart of Accounts** `OV`,
+**Fiscal Year Period** `003.2025`, **FS Item Attributes Version** open. For every FS item in the
+log the program reads the assignment rows of that COA whose `FROMYEARPER ≤ period ≤ TOYEARPER`
+(the SE16N selection with from = to = 003.2025 is the special case of that) and fills
+`SA_CURRENCY_TRANSLATION` into the list. If several rows cover the period (several versions with
+the version left open) the lowest version / earliest start wins and its version is shown. No
+assignment at all for the COA and period → a message, list still shown.
+
+**ASSUMPTION:** the attribute column is `SA_CURRENCY_TRANSLATION`, as named in the request; the
+screenshot cuts it at `SA_CURRENCY_TRANSLA…` (data element `FINCS_FSI_CURRENCY_TRANSL…`). If
+activation says *Unknown column name*, read the full name from SE11 and fix it in `ty_assg`, the
+SELECT and the output structure — four places.
 
 ## Text elements to maintain (SE38 → Goto → Text elements)
 
-Text symbol `001` Task log selection. Selection texts: S_GROUP Consolidation Group ·
-S_YEAR Fiscal Year · S_PERID Fiscal Period · S_VERS Consolidation Version · S_TASK Consolidation
-Task · S_LOGNR Log Number · P_MAXLG Number of latest logs.
+Text symbols `001` Task log selection · `002` FS item assignment (FINCS_FSIASSGMT).
+Selection texts: S_GROUP Consolidation Group · S_YEAR Fiscal Year · S_PERID Fiscal Period ·
+S_VERS Consolidation Version · S_TASK Consolidation Task · S_LOGNR Log Number · P_MAXLG Number of
+latest logs · P_ITCLG Cons. Chart of Accounts · P_YRPER Fiscal Year Period · S_IATVS FS Item
+Attributes Version.
 
 ## Gotchas
 
