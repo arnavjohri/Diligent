@@ -27,7 +27,10 @@
 //   line plus the years it already contains (93483: 2,519.71 instead of
 //   0.00, ISSUES #5). The cube now restricts itself to the fiscal year of
 //   the key date; carry-forward lines (period 000) carry the first day of
-//   that year as posting date, so they stay in.
+//   that year as posting date, so they stay in. A function in the WHERE
+//   was refused ("Random expressions are not supported in a condition"),
+//   so the ITM computes KeyDateFiscalYear from the key date passed down
+//   and the WHERE compares two fields.
 // ASSUMPTION: fiscal year variant V3 for OVL - April to March, year named
 //   by the calendar year of April (ACDOCA: 01.10.2025 = period 007.2025).
 //   Fiscal year = calendar year of (key date - 3 months). If OVL ever used
@@ -83,7 +86,10 @@ define view ZI_BR_BANKREVAL_CUBE
     @EndUserText.label: 'Revaluation Currency'
     @Consumption.defaultValue: 'USD'
     P_RevalCurrency : waers
-  as select from ZI_BR_BANKREVAL_ITM as Item
+  //BOC By Arnav on 10/11/26 - key date passed to the ITM
+  //  as select from ZI_BR_BANKREVAL_ITM as Item
+  as select from ZI_BR_BANKREVAL_ITM( P_RevalDate: $parameters.P_RevalDate ) as Item
+  //EOC By Arnav on 10/11/26 - key date passed to the ITM
   association [0..1] to I_Ledger                     as _Ledger
     on $projection.Ledger = _Ledger.Ledger
   association [0..1] to I_CompanyCode                as _CompanyCode
@@ -244,8 +250,6 @@ where
   // report - delete the next line to show those accounts again.
   and Item.GLHouseBankAccount is not initial
   //EOC By Arnav on 10/11/26 - found active on OCD
-  //BOC By Arnav on 10/11/26 - fiscal year of the key date (V3)
-  and Item.LedgerFiscalYear =
-      cast( substring( dats_add_months( $parameters.P_RevalDate, -3, 'INITIAL' ), 1, 4 )
-            as abap.numc(4) )
-  //EOC By Arnav on 10/11/26 - fiscal year of the key date (V3)
+  //BOC By Arnav on 10/11/26 - fiscal year of the key date (V3), from the ITM
+  and Item.LedgerFiscalYear = Item.KeyDateFiscalYear
+  //EOC By Arnav on 10/11/26 - fiscal year of the key date (V3), from the ITM
