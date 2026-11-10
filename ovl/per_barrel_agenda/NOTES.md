@@ -43,3 +43,8 @@ and row count (1,547) as supplied 10/11/26.
 `ZFI_AGENDA_SE16_full_2026-11-10.tsv` - the whole table, 1,547 rows, as pasted 10/11/26.
 `ZPRA_T_MREC_PRD_GJAHR2025_SE16_2026-11-10.tsv` - reconciled production, fiscal year 2025,
 2,335 rows, as pasted 10/11/26. Both taken from the session record, tab-separated, no header.
+`ZFI_PL_PRO_AN_CL1202_2025ANNUAL_run_2026-11-10.tsv`, `ZFI_PL_PRO_AN_CL1202_screen_2026-11-10.png` -
+output and screen of the control run of 10/11/26 (CL1202, 2025 ANNUAL in both column sets).
+That run **overwrote CL1202's rows in `ZFI_AGENDA`**; the full-table file above is the copy of
+what was there before. Result in `docs/PBA_sheet_to_CDS_mapping.md` section 11: a fresh run
+does not tie to the board figures for CPO-5 production cost and DD&A - open.

@@ -1,0 +1,136 @@
+----------Quantitative Information Report---------------						
+1	Opening inventory:		10,621.26			10,621.26	
+1a	Stock in Storage tanks/locations/FPSO		10,621.26			10,621.26	
+1b	Stock in pipelines/linefill						
+							
+2	Share of Production		5,417,237.3			5,417,237.3	
+							
+3	Profit Oil/Gas:						
+3a	State/Govt. share-lifted by OVL						
+3b	State/Govt. share-taken by state in kind						
+							
+4	Share of entitled production (entitlement) (2-3)		5,417,237.3			5,417,237.3	
+							
+5	Royalty paid in kind & Transit Loss/Flaring etc.:		1,920,529.35			1,920,529.35	
+5a	Royalty paid in kind		1,920,529.35			1,920,529.35	
+5b	Transit loss/Flaring etc.						
+							
+6	Production quantity after Royalty paid in kind, transit loss		3,496,707.95			3,496,707.95	
+							
+7	Internal consumption:						
+7a	Production activity						
+7b	Others						
+							
+8	Net production quantity available (6-7)		3,496,707.95			3,496,707.95	
+							
+9	Closing Stock:		5,974.72			5,974.72	
+9a	Stock in Storage tanks/locations/FPSO		5,974.72			5,974.72	
+9b	Stock in pipelines/linefill						
+							
+10	Adj. for Changes in Inventories/Other adj.						
+							
+11	Net quantity available for sale (8-9-10+1+3a)		3,501,354.49			3,501,354.49	
+							
+12	Overlift/(underlift) quantity (13-11)		-6,977.35			-6,977.35	
+							
+13	Total Sales quantity		3,494,377.14			3,494,377.14	
+							
+14	Total Sales quantity-net of state share (13-3a)		3,494,377.14			3,494,377.14	
+							
+	-----------Profitability Producing Project Report-----------						
+	REVENUE FROM CRUDE OIL	223.62	223.62		223.62	223.62	
+	REVENUE FROM NATURAL GAS						
+	LESS:PROFIT OIL PAID IN CASH						
+	SALE OF VAP						
+	OTHER OPERATING REVENUE						
+	(I) SALES REALISATION	223.62	223.62		223.62	223.62	
+							
+	OPREATING EXPENSE :						
+	ROYALTY	0.39	0.38	0.01	0.39	0.38	0.01
+	OTHER TAXES (AS APPLICABLE)	3.36	3.36		3.36	3.36	
+	PRODUCTION EXPENSES	23.82	23.82		23.82	23.82	
+	OTHER OPERATING EXPENSE	12.13	12.13		12.13	12.13	
+	TRANSPORTATION EXPENSES						
+	INTERNAL CONSUMPTION OF GAS						
+	(II) TOTAL OPERATING EXPENSES	39.69	39.69	0.01	39.69	39.69	0.01
+							
+	DDA & EXPLORATION :						
+	DEPLETION	7.88	7.88		7.88	7.88	
+	DEPRECIATION AND AMORTISATION	0.26	0.26		0.26	0.26	
+	EXPLORATION COSTS (SURVEY)	0.47	0.47		0.47	0.47	
+	EXPLORATION COSTS (DRY WELL)	12.29	12.29		12.29	12.29	
+	(III) TOTAL DDA & EXPLORATION	20.9	20.9		20.9	20.9	
+							
+	(IV) OPERATING COST	60.59	60.59	0.01	60.59	60.59	0.01
+	ADJUSTMENT FOR COST OF SALES:						
+	(V)CHANGE IN INVENTORIES	0.01	0.01		0.01	0.01	
+	(VI)OVERLIFT/(UNDERLIFT)	-0.1	-0.1		-0.1	-0.1	
+	(VII) COST OF GOODS SOLD (IV+V+VI)	60.5	60.5	0.01	60.5	60.5	0.01
+							
+	(VIII) NET OPERATING MARGIN (I-VII)	163.12	163.12	-0.01	163.12	163.12	-0.01
+							
+	OTHER INCOME/ EXPENSE :						
+	OTHER INCOME	-0.16	-0.16		-0.16	-0.16	
+	FINANCE COST	0.15	0.15		0.15	0.15	
+	PROVISIONS, WRITE OFF AND OTHER IMPAIRMENT	-0.11	-0.11		-0.11	-0.11	
+	OTHER EXPENSES (INCL. EXCHANGE FLUCTUATION)	-7.92	-7.92		-7.92	-7.92	
+	(IX) TOTAL OTHER INCOME/ EXPENSE	-8.04	-8.04		-8.04	-8.04	
+							
+	(X) NET PROFIT BEFORE TAX (VIII-IX)	171.16	171.17	-0.01	171.16	171.17	-0.01
+							
+	(XI) INCOME TAX	62.53	62.53		62.53	62.53	
+							
+	(XII) NET PROFIT/(LOSS) AFTER TAX (X-XI)	108.63	108.64	-0.01	108.63	108.64	-0.01
+							
+	IMPAIRMENT LOSS/(REVERSAL)						
+							
+	NET PROFIT/(LOSS) AFTER TAX-BEFORE IMPAIRMENT	108.63	108.64	-0.01	108.63	108.64	-0.01
+							
+	------------------Per Barrel Analysis Report----------------						
+	REVENUE FROM CRUDE OIL		63.99			63.99	
+	REVENUE FROM NATURAL GAS						
+	LESS:PROFIT OIL PAID IN CASH		63.99			63.99	
+	SALE OF VAP						
+	OTHER OPERATING REVENUE						
+	(I) SALES REALISATION		63.99			63.99	
+							
+	OPREATING EXPENSE :						
+	ROYALTY		0.07	0.01		0.07	0.01
+	OTHER TAXES (AS APPLICABLE)		0.62			0.62	
+	PRODUCTION EXPENSES		4.4			4.4	
+	OTHER OPERATING EXPENSE		2.24			2.24	
+	TRANSPORTATION EXPENSES						
+	INTERNAL CONSUMPTION OF GAS						
+	(II) TOTAL OPERATING EXPENSES		7.33	0.01		7.33	0.01
+							
+	DDA & EXPLORATION :						
+	DEPLETION		1.45			1.45	
+	DEPRECIATION AND AMORTISATION		0.05			0.05	
+	EXPLORATION COSTS (SURVEY)		0.09			0.09	
+	EXPLORATION COSTS (DRY WELL)		2.27			2.27	
+	(III) TOTAL DDA & EXPLORATION		3.86			3.86	
+							
+	(IV) OPERATING COST		11.18	0.01		11.18	0.01
+	ADJUSTMENT FOR COST OF SALES:						
+	(V)CHANGE IN INVENTORIES						
+	(VI)OVERLIFT/(UNDERLIFT)						
+	(VII) COST OF GOODS SOLD (IV+V+VI)		17.31	0.01		17.31	0.01
+							
+	(VIII) NET OPERATING MARGIN (I-VII)		46.68	-0.01		46.68	-0.01
+							
+	OTHER INCOME/ EXPENSE :						
+	OTHER INCOME		-0.05			-0.05	
+	FINANCE COST		0.04			0.04	
+	PROVISIONS, WRITE OFF AND OTHER IMPAIRMENT		-0.03			-0.03	
+	OTHER EXPENSES (INCL. EXCHANGE FLUCTUATION)		-2.27			-2.27	
+	(IX) TOTAL OTHER INCOME/ EXPENSE		-2.3			-2.3	
+							
+	(X) NET PROFIT BEFORE TAX (VIII-IX)		48.98	-0.01		48.98	-0.01
+							
+	(XI) INCOME TAX		17.89			17.89	
+							
+	(XII) NET PROFIT/(LOSS) AFTER TAX (X-XI)		31.09	-0.01		31.09	-0.01
+							
+	IMPAIRMENT LOSS/(REVERSAL)						
+							
+	NET PROFIT/(LOSS) AFTER TAX-BEFORE IMPAIRMENT		31.09	-0.01		31.09	-0.01

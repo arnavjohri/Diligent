@@ -324,3 +324,75 @@ What closes which gap:
 - FY 2023-24 and earlier (4,417 cells): typed history; not in SAP. Upload once into a
   table, or leave blank.
 
+
+## 11. Control run of ZFI_PL for CL1202 - what a fresh run fetches (10/11/26)
+
+Arnav ran Profitability Analysis (`PRO_AN`) for CL1202 (CPO-5), company code OVL, with
+**2025 ANNUAL in both column sets** (screen heading `ANNUAL FY 25 - 26` twice). Output as
+pasted: `../original/ZFI_PL_PRO_AN_CL1202_2025ANNUAL_run_2026-11-10.tsv`; screen:
+`../original/ZFI_PL_PRO_AN_CL1202_screen_2026-11-10.png`. Compared with CL1202's rows in
+`../original/ZFI_AGENDA_SE16_full_2026-11-10.tsv` (the table before the run).
+
+**96 lines in the output: 64 equal the saved rows, 32 differ.** The 32 come from six inputs;
+every other changed line is a total or a per-barrel figure built on them.
+
+| Input line | Saved rows | Fresh run | Difference |
+|---|---:|---:|---:|
+| PRODUCTION EXPENSES (USD mn) | 35.23 | 23.82 | -11.41 |
+| DEPLETION (USD mn) | 6.53 | 7.88 | +1.35 |
+| PROVISIONS, WRITE OFF AND OTHER IMPAIRMENT (USD mn) | 0.00 | -0.11 | -0.11 |
+| (XI) INCOME TAX (USD mn) | 45.25 | 62.53 | +17.28 |
+| Closing stock, storage tanks (bbl) | 7,988.60 | 5,974.72 | -2,013.88 |
+| Adj. for Changes in Inventories / Other adj. (bbl) | 2,013.87 | blank | -2,013.87 |
+
+Reproduced to the cent: crude revenue 223.62, Share of Production 5,417,237.30, Total Sales
+quantity 3,494,377.14, price 63.99, royalty 0.38, other taxes 3.36, other operating expense
+12.13, transport nil, depreciation and amortisation 0.26, survey 0.47, dry well 12.29,
+opening stock 10,621.26.
+
+**The board workbook agrees with the saved rows, not with the fresh run.**
+`Revenue & Costs!BY24` (CPO-5, Annual FY'26, production cost) = 47.36 = 35.23 + 12.13; the
+fresh run gives 35.95. DD&A in the workbook 6.79 = 6.53 + 0.26; fresh run 8.14. Per barrel
+of production: production cost 8.74 against 6.64, DD&A 1.25 against 1.50.
+
+What the source shows about the two kinds of difference:
+
+- **Stock quantities** are not calculated. `cal_quant` prints `ZPNL_QI_OIL-CST_TNK` and
+  `-CH_INVT` of the record COMPANY / BUKRS / PRO_NAM / FISYEAR / ZPERIOD = ANNUAL as stored
+  (`MZFIPLF01`, FORM `fetch_quant` / `cal_quant`). So that record was saved again after the
+  run that produced the saved rows: closing stock now 5,974.72 = 7,988.60 - 2,013.88 and no
+  adjustment. Net quantity available for sale (+4,027.75), overlift quantity (-4,027.75)
+  and the overlift amount (-0.09 to -0.10) follow from it.
+- **The four amounts** are sums of `KSL` from the JV ledger for the G/L accounts mapped to
+  those lines in `ZFI_PNL_GL`. The four differences add up to +7.11, so this is not accounts
+  moved from one line to another inside the statement: the ledger amounts read are different.
+  Not proven which of these it is:
+  1. ASSUMPTION: the 26/10/26 change is active where the run was made, so the run read ACDOCA
+     through `JV_JVSO1_ACDOCA`, while the saved rows were produced from `JVSO1`. Then the
+     differences are the ACDOCA against JVSO1 gap on those accounts - the subject of
+     `ovl/zfi_acdoca_jvso1_recon/` and `ovl/z_jva_alignment/`.
+  2. Postings to those accounts after the saved run.
+  3. Accounts added to or removed from those four lines in `ZFI_PNL_GL` since the saved run.
+
+Effect of the run on the table: `MODIFY zfi_agenda` runs for every output line as soon as the
+analysis is displayed (`MZFIPLI01`, after `cre_per_barl`). CL1202 now carries 2025 ANNUAL in
+column sets 1 and 2; **its 2024 ANNUAL comparison column and the saved 2025 figures are no
+longer in the table of that client.** The file in `../original/` is the copy of them.
+`ZI_PBA_LINE` needs no change: a second set that repeats the first is dropped. Six older rows
+with texts the program no longer writes (`CHANGE IN INVENTORIES`, `OVERLIFT/(UNDERLIFT)`,
+`PROFIT OIL PAID IN CASH`, sections A2 and A3, all zero) stay as they were.
+
+Consequence for the report: ZFI_PL does fetch every line the PBA sheet needs, but a fresh run
+in this system does not tie to the board figure for CPO-5 production cost and DD&A. Until
+the four amounts are explained, no further project should be run through `PRO_AN` there -
+each run replaces rows that match the board paper with today's ledger figures.
+
+Checks (Arnav, in the system the run was made in):
+1. SE38, `MZFIPLF01`, FORM `cre_prd_proj`: does the active source read `jv_jvso1_acdoca`
+   or `jvso1`?
+2. SE16 `ZFI_PNL_GL`: the G/L accounts whose `PRD_PRO` is one of the four lines. Then
+   `ZFI_ACDOCA_JVSO1_RECON` for company code OVL, fiscal year 2025, periods 1 to 12,
+   filtered on venture CL1202 and those accounts: group-currency differences of about
+   11.41 mn, 1.35 mn, 0.11 mn and 17.28 mn prove cause 1.
+3. SE16 `ZPNL_QI_OIL`, PRO_NAM = CL1202, FISYEAR = 2025: `CST_TNK`, `CH_INVT` and the
+   change stamp of the ANNUAL record.
