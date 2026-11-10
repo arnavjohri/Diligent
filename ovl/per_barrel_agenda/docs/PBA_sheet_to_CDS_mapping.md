@@ -551,3 +551,27 @@ key. Aggregated per report row / product / year / period and divided as the quer
 input cells of the sheet, 194 within 0.015; the 21 outside are those of section 9. Every
 project has a name; every report row number equals the sheet's serial number.
 
+## 16. Activated - first output of the cube (10/11/26)
+
+Arnav created the four objects one by one in ADT by paste, in the order table function, class,
+item view, cube; no activation error was reported. He then pasted part of the cube's output
+(`../original/ZI_PBA_CUBE_output_partial_2026-11-10.tsv`: IEL, LZ, MECL, PCSA).
+
+- 1,322 complete rows, 22 columns each. Every row - keys, texts, the nine measures and the
+  line value - equals the result of the SQLite run of section 15 on the production extract.
+- The output is at line grain, as designed: one row per ZFI_PL line, each measure filled on
+  its own lines and zero on the others. Added up per project and period it gives the query's
+  figures. IEL, OIL, 2025 9M: revenue 32.60, production cost 18.57, royalty 17.24, transport
+  1.69, DD&A 6.24 (USD mn), production 0.601276, sales net 0.601901 (million bbl). Revenue /
+  sales net = 54.16 and DD&A / production = 10.38, the per-barrel figures ZFI_PL itself saved
+  in section A3 for the same lines.
+- Report Row No. is displayed as 5, 7, 8, 12, 13, 99: a literal made of digits is NUMC in a
+  classic view, and the list display drops the leading zero. Sorting is numeric, which is what
+  the column is for.
+- Now proven on this landscape: a CDS table function with an AMDP class, `$session.client`
+  passed to its client parameter from a classic view, and the DF34_DEC columns read through
+  `TO_DECIMAL` in SQLScript.
+
+Still to do: C1 release of `ZI_PBA_CUBE`, the query with its eight calculated measures
+(`../NOTES.md`), transport request.
+

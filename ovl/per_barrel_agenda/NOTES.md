@@ -1,10 +1,10 @@
 # Per Barrel Analysis - Board Agenda format (OVL)
 
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
-**Status:** PBA sheet chosen (10/11/26). Four objects built 10/11/26 and awaiting import:
-table function + class (ADT paste) and two views in `ZFI_PBA.zip`. The earlier `ZI_PBA_LINE`
-is withdrawn (it cast a DF34_DEC column, which this release most likely rejects).
-AgendaFormat sheet: assessed only.
+**Status:** PBA sheet chosen (10/11/26). **All four objects are active (Arnav, 10/11/26, created by
+paste in ADT)** and the cube returns data: 1,322 rows of its output compared with the expected
+result, all equal. Open: C1 release of `ZI_PBA_CUBE`, the query in Custom Analytical Queries,
+transport. AgendaFormat sheet: assessed only.
 
 ## What it is
 The annual "Per Barrel Analysis" workbook, sheet `AgendaFormat`: five blocks per project
@@ -109,3 +109,6 @@ text, third column, producing-project line), no header, as pasted 10/11/26.
 `ZFI_PL_PRO_AN_CL1202_2025_2024_ANNUAL_run2_2026-11-10.tsv` - Arnav's second run in PRD the same
 day, 2025 ANNUAL against 2024 ANNUAL: it put the previous-year column back for CL1202
 (`docs/PBA_sheet_to_CDS_mapping.md` section 14).
+`ZI_PBA_CUBE_output_partial_2026-11-10.tsv` - part of the cube's output as Arnav pasted it after
+activation (IEL, LZ, MECL, PCSA; 1,322 complete rows, list display with thousands separators).
+
