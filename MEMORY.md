@@ -239,6 +239,7 @@ that worked. This table is the asset — append to it whenever a new one is foun
 | Classic view: arithmetic inside a `CASE` condition is rejected | Pre-compute the value in the underlying view and compare fields only (`ZDPR_P_PERF_AGG` → `ZDPR_Q_PROD_PERF`) |
 | `@Semantics.text: true` / `@ObjectModel.text.element` wanted on a value-help view | Use a classic `define view` (with `@AbapCatalog.sqlViewName`): both activate there (`ZI_DOM_FIXVAL_VH`, 22/10/26). It is the view-entity form that fails (row above) |
 | Warnings `Key Definitions of <view> and DD07T are different, VALPOS / AS4VERS is missing in key` | Expected on every value help over `DD07T` filtered to one domain, the logon language and `as4local = 'A'`: under that filter (`domname`, `domvalue_l`) is unique. Leave as is — adding `valpos` / `as4vers` to the key only widens the OData key |
+| A table column of type **DF16_DEC / DF34_DEC** (decimal floating point, e.g. `ZFI_AGENDA-CRUDE_OIL1`) needed as a measure | **Not activation-tested on OCD - from SAP sources (10/11/26):** a DDIC-based view can only read these types; `cast`, arithmetic and functions are not supported before roughly release 2022 (7.51 news; no DF34_DEC source row in the 7.54 cast table). Read the table through a **CDS table function + AMDP** (`TO_DECIMAL( col, p, s )`, on HANA the column is a plain DECIMAL) and build the views on that (`ovl/per_barrel_agenda`). Create the table function first, then the class, then the views - never all in one abapGit ZIP |
 
 Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `Type`.
 
@@ -536,6 +537,16 @@ first line, ask which system the session's data comes from, and offer a read-onl
 a display list) instead. "In dev only" buried in a paragraph is not a safeguard. Take an SE16
 before-image of the target table as a file first, every time.**
 
+**M-30 - Shipped a view whose one unproven construct was only flagged, not resolved.** (10/11/26 · `ovl/per_barrel_agenda`)
+`ZI_PBA_LINE` cast the DF34_DEC columns of `ZFI_AGENDA` to DEC and carried an ASSUMPTION line
+saying the cast was untested. Checked properly only when Arnav asked for all views with no
+correction rounds: older releases do not allow any cast on that type in a CDS view. The object
+would have failed its first activation.
+→ **Read the DDIC type of every column before writing CDS on a Z table. An assumption that can
+stop activation is resolved before delivery - by documentation, a proven precedent in the repo
+or a different construct - not written into the header and shipped. If it cannot be resolved,
+say so and build around it.**
+
 ---
 
 ## 6. Shipping — what can and cannot go back through abapGit
@@ -565,6 +576,7 @@ maintenance views/TMG, SNRO number ranges, SU21 auth objects, SCDO change docume
 | `ovl/zfi_tr_bankacct/` | ZIP `ZFI_TR_BANKACCT.zip` built 03/11/26 (DEVC, 3 DOMA, 7 DTEL, TABL, 2 DDLS — basic view + CAQ cube) from the same shapes as `zfi_bank_reval` (values blanked and diffed, element for element). **Not yet imported.** Foreign keys deliberately left out of the XML — SE11 step after import; the cube's key-user release (ADT, C1) is manual too |
 | `ovl/zfi_jib_status/` | ZIP `ZFI_JIB_STATUS.zip` built 03/11/26: 4 DDLS only, into existing package `ZFI_OTH`, so no DEVC file (no DDIC on purpose — the treasury import created both DDLS and not the table). DDLS shape = the one that pulled on 28/10 and 03/11. **Not yet imported.** Cube key-user release (ADT, C1) manual |
 | `ovl/zgr_fsitem_remap/` | ZIP `ZGR_FSITEM_REMAP.zip` built 06/11/26 (2 DOMA, 3 DTEL, TABL, DDLS cube on `I_MatrixConsolidationReportC`; **no DEVC**, package chosen at import) from the bank reval / forecast-paints shapes. **Not yet imported.** TMG and C1 release manual |
+| `ovl/per_barrel_agenda/` | hybrid, built 10/11/26: table function `ZI_PBA_AGENDA_TF` and AMDP class `ZCL_PBA_AGENDA_TF` by ADT paste first (a view on a table function will not activate before its class, and abapGit activates DDLS before CLAS), then ZIP `ZFI_PBA.zip` with 2 DDLS in the JIB shape. Package without an existing offline repo. **Not yet imported.** C1 release manual |
 | `kpmg/zfi_tds_cl34/` | complete ZIP that **failed four imports**; shipped by paste |
 | `kpmg/zmm_po_budget/` overall | hybrid — DDIC + message class by ZIP; BAdI insert, SE54 event, screen module, TMG, SE93 by hand |
 | `kpmg/zmb5b/`, `kpmg/zmmims/`, `kpmg/zmm_me35k_release/`, `kpmg/zsd_scheme/`, `kpmg/zpp_forecast/`, `kpmg/zmm_po_budget_deferred/` | paste-only |

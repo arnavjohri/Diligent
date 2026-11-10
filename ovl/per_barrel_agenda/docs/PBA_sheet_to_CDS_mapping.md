@@ -150,11 +150,14 @@ a change to ZFI_PL and a decision for Arnav and finance; it is not built.
 
 ## 7. Objects
 
-| # | Object | What | State |
-|---|---|---|---|
-| 1 | `ZI_PBA_LINE` (classic view, `../ZI_PBA_LINE.ddls.asddls`) | `ZFI_AGENDA` with the four column sets turned into rows; DF34_DEC cast to DEC | delivered 10/11/26, not yet activated |
-| 2 | measures per project / product / year / period | picks the lines of section 1 into base measures | not written; waits for object 1 and the line list |
-| 3 | cube for CAQ | dimensions, SUM measures, key-user release | not written |
+Built 10/11/26 - see section 15. The first plan (a view `ZI_PBA_LINE` casting DF34_DEC to DEC,
+then a measures view, then a cube) is withdrawn.
+
+| # | Object | What |
+|---|---|---|
+| 1 | `ZI_PBA_AGENDA_TF` (table function) + `ZCL_PBA_AGENDA_TF` (AMDP) | reads `ZFI_AGENDA`; DEC values, one row per year / period / product |
+| 2 | `ZI_PBA_ITEM` (classic view) | the rows under business names |
+| 3 | `ZI_PBA_CUBE` (classic view, cube) | dimensions, SUM measures, key-user release |
 
 ## 8. Full CL1202 list and one row per project - SE16, 10/11/26 (pasted in chat)
 
@@ -512,4 +515,39 @@ the read through `JV_JVSO1_ACDOCA` gives back production expenses, depletion and
 to the cent. The view is therefore reading those accounts correctly, and the fiscal year
 2025 differences point to entries posted after the run finance saved between 28.04.2026 and
 25.07.2026 rather than to lines the view cannot see. Not proven; not pursued.
+
+## 15. Objects as built (10/11/26)
+
+Arnav asked for all views in one go, in a ZIP, with no correction rounds. Rethinking the first
+view showed its weak point: `CRUDE_OILn` / `GASn` are DF34_DEC, and the ABAP documentation and
+SAP community sources say a DDIC-based CDS view can only read that type - no cast, no
+arithmetic - until release 2022 or so (7.51 news: "none in ABAP CDS besides simple reads"; the
+7.54 cast table has no DF34_DEC source row; the reported workaround is an AMDP table function).
+The cast in `ZI_PBA_LINE` would most likely have failed activation. Design changed:
+
+- **`ZI_PBA_AGENDA_TF` + `ZCL_PBA_AGENDA_TF=>GET_LINES`**: SQLScript, eight SELECTs joined by
+  UNION ALL (four column sets x oil / gas). `TO_DECIMAL( value, 16, 5 )` as `LINE_VALUE`;
+  `QUANTITY_MN` = oil value x 0.000001, gas value as stored. A later column set repeating an
+  earlier year / period is left out. Client through the parameter `p_clnt`
+  (`@Environment.systemField: #CLIENT`).
+- **`ZI_PBA_ITEM`**: projection of the table function, `p_clnt : $session.client`.
+- **`ZI_PBA_CUBE`**: line grain, no SQL aggregation (as the bank reval, treasury and JIB cubes).
+  Each PBA input is a measure filled on the rows of its ZFI_PL lines by nested simple CASEs
+  and zero elsewhere. Keys: company code, JV code, product, fiscal year, period, ZFI_PL
+  section, ZFI_PL line. Texts: project name, report row (Myanmar A-1 and A-3 merged), report
+  row number (the sheet's serial number, per product), product name, financial year. A
+  generic measure `LineValue` with the section / line dimensions gives every other ZFI_PL
+  line.
+- Only constructs that have activated on this landscape are used in the two views (simple and
+  nested CASE with literal branches, `cast( 0 as abap.dec )`, text elements, the JIB cube's
+  annotation set). No `sum()`, no GROUP BY, no arithmetic, no AND / OR in a CASE.
+- Not proven on this landscape before: a CDS table function, an AMDP class,
+  `$session.client` as an actual parameter.
+
+Test (no system access): the class's SQL statement and both DDL sources, as written, were run
+in SQLite on `../original/ZFI_AGENDA_SE16_full_2026-11-10.tsv` (only `TO_DECIMAL`, the
+NVARCHAR cast and the annotations translated). 1,547 table rows give 5,998 rows, no duplicate
+key. Aggregated per report row / product / year / period and divided as the query will: 215
+input cells of the sheet, 194 within 0.015; the 21 outside are those of section 9. Every
+project has a name; every report row number equals the sheet's serial number.
 

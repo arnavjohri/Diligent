@@ -1,8 +1,10 @@
 # Per Barrel Analysis - Board Agenda format (OVL)
 
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
-**Status:** PBA sheet chosen (10/11/26). Object 1 `ZI_PBA_LINE` delivered 10/11/26, **not yet
-activated**. Objects 2 and 3 not written. AgendaFormat sheet: assessed only.
+**Status:** PBA sheet chosen (10/11/26). Four objects built 10/11/26 and awaiting import:
+table function + class (ADT paste) and two views in `ZFI_PBA.zip`. The earlier `ZI_PBA_LINE`
+is withdrawn (it cast a DF34_DEC column, which this release most likely rejects).
+AgendaFormat sheet: assessed only.
 
 ## What it is
 The annual "Per Barrel Analysis" workbook, sheet `AgendaFormat`: five blocks per project
@@ -25,9 +27,59 @@ It is **not** a DPR report. Only the production block comes from the DPR tables
 are typed into the workbook.
 
 ## Shipping method
-**ADT paste, one DDL source at a time** - loose `.ddls.asddls` files at the folder root, no
-`src/`, no `.abapgit.xml`. Suggested package `ZFI_OTH` (where ZFI_PL and the JIB views
-live); Arnav decides. The cube's key-user release (ADT, API State, C1) is manual.
+**Hybrid: two objects by ADT paste, then one abapGit ZIP.** The order is fixed.
+
+| # | Object | How | File |
+|---|---|---|---|
+| 1 | `ZI_PBA_AGENDA_TF` (CDS table function) | ADT paste, activate | `ZI_PBA_AGENDA_TF.ddls.asddls` |
+| 2 | `ZCL_PBA_AGENDA_TF` (class, AMDP) | ADT paste, activate | `ZCL_PBA_AGENDA_TF.clas.abap` |
+| 3 | `ZI_PBA_ITEM` (classic view, `ZIPBAITEM`) | ZIP | `src/zi_pba_item.ddls.asddls` |
+| 4 | `ZI_PBA_CUBE` (classic view, cube, `ZIPBACUBE`) | ZIP | `src/zi_pba_cube.ddls.asddls` |
+
+Why not one ZIP: `ZFI_AGENDA`'s value columns are DF34_DEC, which a CDS view on an older
+release can read but not cast, so the table is read through an AMDP table function. abapGit
+activates DDL sources before classes, and a view on a table function activates only when its
+class is active - a ZIP holding all four would stop on the views and never reach the class.
+The class also keeps out of the ZIP because no hand-written class XML has pulled on OCD.
+
+Steps (development system):
+1. Package: one that has **no abapGit offline repo on it** - new `ZFI_PBA`, not `ZFI_OTH`
+   (the JIB offline repo sits on `ZFI_OTH`; a different ZIP imported into that repo offers
+   the seven JIB views for deletion on the pull).
+2. ADT, New, Data Definition `ZI_PBA_AGENDA_TF`, replace the whole template with the file,
+   activate. It activates without the class.
+3. ADT, New, ABAP Class `ZCL_PBA_AGENDA_TF`, replace the whole source, activate.
+4. `ZABAPGIT_STANDALONE`, New Offline Repo on that package, Import ZIP `ZFI_PBA.zip`, Pull.
+   The two views activate in order (item, then cube). The table function and the class show
+   as local objects that are not in the ZIP - leave them.
+5. ADT, Data Preview on `ZI_PBA_CUBE` (empty if `ZFI_AGENDA` is empty in development).
+6. ADT, `ZI_PBA_CUBE`, Properties, API State, Add Release State, **Use in Key User Apps (C1)**.
+7. Custom Analytical Queries: data source `ZI_PBA_CUBE`.
+If the ZIP is refused, the two files in `src/` paste into ADT exactly as they are, item first.
+Re-zip after any change: `zip -X ZFI_PBA.zip .abapgit.xml src/*` from this folder.
+
+## The query (Custom Analytical Queries)
+Rows: Report Row No., Report Row (or JV Code). Filters: Product (always - OIL and GAS are
+different units), Fiscal Year, Reporting Period. Calculated measures:
+
+| Calculated measure | Formula |
+|---|---|
+| Realised price | Revenue / Sales Qty Net of State Share |
+| Production cost | Production Cost / Production Quantity |
+| Royalty | Royalty and Taxes / Production Quantity |
+| Transportation | Transportation / Sales Qty Net of State Share |
+| DD&A | Depletion and Depreciation / Production Quantity |
+| Survey | Survey and Dry Well / Production Quantity |
+| Cost of goods sold | the five cost measures above added |
+| Profit | Realised price - Cost of goods sold |
+
+Amounts are USD mn and quantities are millions (million bbl for OIL, million MMBTU for GAS), so
+each quotient is USD per bbl / per MMBTU. The total row is then a weighted average, as the
+sheet's OVERALL rows are. Any other ZFI_PL line: measure ZFI_PL Line Value restricted to one
+ZFI_PL Section and one ZFI_PL Line.
+Checked on the 1,547 production rows (same SQL and CASE text, run in SQLite, 10/11/26): 215
+input cells of the PBA sheet rebuilt, 194 within 0.015 of the workbook; the other 21 are the
+differences listed in `docs/PBA_sheet_to_CDS_mapping.md` section 9.
 
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
