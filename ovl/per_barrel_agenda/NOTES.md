@@ -77,6 +77,18 @@ Amounts are USD mn and quantities are millions (million bbl for OIL, million MMB
 each quotient is USD per bbl / per MMBTU. The total row is then a weighted average, as the
 sheet's OVERALL rows are. Any other ZFI_PL line: measure ZFI_PL Line Value restricted to one
 ZFI_PL Section and one ZFI_PL Line.
+**Layout like the sheet (Arnav's question, 10/11/26).** The cube's own rows are ZFI_PL lines and
+are not the report. In the query: Report Row No. and Report Row on the rows; Fiscal Year and
+Reporting Period on the columns with the eight calculated measures; the nine base measures
+hidden; Product fixed to OIL (a second query for GAS). The total row is the sheet's OVERALL row.
+Oil, 9M 2025-26, worked from the production extract: seven projects, and the price column equals
+the sheet's 9M FY'26 column on all seven (61.98, 63.67, 54.16, 61.06, 62.66, 53.80, 69.54).
+What the query does not give: the board page's formatting, years ZFI_PL no longer holds, rows
+with no ZFI_PL project, and the second OVERALL row without a second filter. For the exact board
+page the recommended route is the workbook as it is, fed by one export of this query in place
+of the 15 ZFI_PL extract files; an ABAP report writing into the Excel template is the
+alternative and a separate build. **Decision open - after finance has seen the query.**
+
 Checked on the 1,547 production rows (same SQL and CASE text, run in SQLite, 10/11/26): 215
 input cells of the PBA sheet rebuilt, 194 within 0.015 of the workbook; the other 21 are the
 differences listed in `docs/PBA_sheet_to_CDS_mapping.md` section 9.
