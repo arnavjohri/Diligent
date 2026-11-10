@@ -128,3 +128,53 @@ exposed as SUM measures; a calculated measure in the query would give a differen
    in either source.
 7. Is one query per block acceptable, or must the output look like the board page? The
    second is not a CAQ deliverable.
+
+## 8. Follow-up 10/11/26: "everything is in ZFI_PL", three tabs, exact board layout
+
+Arnav relayed: the functional user says everything can be displayed in ZFI_PL; the workbook
+is fed by the tabs PBA, Revenue & Costs and Reconciliation; if all of that is available,
+the report must look exactly like AgendaFormat, because that page goes to the board.
+
+### 8.1 The three tabs
+
+| Tab | From ZFI_PL? | Basis |
+|---|---|---|
+| PBA | Yes | `PBA_sheet_to_CDS_mapping.md`; CPO-5 rebuilt from `ZFI_AGENDA` rows |
+| Revenue & Costs | Yes, in USD mn, for the run the table holds | its Annual FY'26 cells are links to the ZFI_PL extracts; 23 of 24 project revenues equal the table |
+| Reconciliation | **No** | every input is a link to the standalone and the consolidated accounts workbooks (INR mn). `MZFIPLF01` has no consolidated / standalone / EWIP logic at all |
+
+### 8.2 AgendaFormat is not fed by those three tabs alone
+
+Sheet references in the AgendaFormat formulas: BoardAgenda Variance 59, PBA 54, BoardAgenda
+Workng 47, Production & Sales Quantity 45, Reconciliation 1, Revenue & Costs 0 (only
+indirectly). The two BoardAgenda sheets are where the typed inputs enter (section 4).
+
+### 8.3 What ZFI_PL's own agenda list (FORM `cre_age`) shows
+
+Per project and for two periods: crude price, crude revenue (USD mn), crude sales quantity,
+crude production, and the same four for gas. Nothing else. Counted in `MZFIPLF01`: no INR,
+no exchange rate, no TCURR read, no Dated Brent, no quantity / price / exchange variance
+(its "variance analysis" is period 1 minus period 2 and a percentage). Its columns headed
+MMT and BCM are not conversions: crude is bbl / 1,000,000 and gas is the stored quantity
+x 2.000000.
+
+So the user's statement holds for price, USD revenue and quantities. It does not hold for
+INR revenue, the three variances, Brent, MMT / BCM, Sakhalin-1 revenue or VAP.
+
+### 8.4 Exact board layout
+
+Custom Analytical Queries gives a pivot grid, not a designed page: no five blocks side by
+side, no fixed headings, no footnote. On this landscape a formatted workbook has so far been
+produced only by the classic DPR report through Excel OLE in SAP GUI; the Fiori download of
+the DPR emits CSV because XCO XLSX is not available (MEMORY section 4.1).
+
+| Option | Layout | Where it runs |
+|---|---|---|
+| CAQ, one query per block | same figures, grid layout | Fiori |
+| Classic report writing the AgendaFormat sheet through Excel OLE | exact page | SAP GUI only |
+| Custom UI5 page | exact page | Fiori; UI development, not a paste delivery |
+
+Whatever the option, the inputs of section 4 need a home (one small maintained table) or
+finance must accept the page without them, and `ZFI_AGENDA` must stop overwriting runs
+(history table, `PBA_sheet_to_CDS_mapping.md` section 8.4). Decisions open; nothing built.
+
