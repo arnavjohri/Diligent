@@ -128,8 +128,8 @@ to 3 of section 5 and replaces what sections 3 and 4 assumed about years accumul
   space before the bracket. FORMs `cre_rev` / `cre_bar` of ZFI_PL read them without the
   space (18 places in `MZFIPLF01`), so those two lists never pick up exploration cost.
   ZFI_PL is not touched; the CDS uses the stored spelling.
-- Not visible in the pasted rows: 'ROYALTY', 'Share of Production', and the A2 rows of the
-  cost lines. To be confirmed from a full list of one project before object 2.
+- 'ROYALTY', 'Share of Production' and the A2 rows of the cost lines were not visible in
+  the first paste. Confirmed from the full CL1202 list the same day - section 8.
 
 Tie-out, joint venture CL1202 (CPO-5 Colombia):
 
@@ -155,4 +155,89 @@ a change to ZFI_PL and a decision for Arnav and finance; it is not built.
 | 1 | `ZI_PBA_LINE` (classic view, `../ZI_PBA_LINE.ddls.asddls`) | `ZFI_AGENDA` with the four column sets turned into rows; DF34_DEC cast to DEC | delivered 10/11/26, not yet activated |
 | 2 | measures per project / product / year / period | picks the lines of section 1 into base measures | not written; waits for object 1 and the line list |
 | 3 | cube for CAQ | dimensions, SUM measures, key-user release | not written |
+
+## 8. Full CL1202 list and one row per project - SE16, 10/11/26 (pasted in chat)
+
+### 8.1 Lines confirmed, with their exact stored text
+
+| Base measure of object 2 | Section | Stored `PER` text(s) | Column |
+|---|---|---|---|
+| Revenue, USD mn | A2 | `REVENUE FROM CRUDE OIL` | CRUDE_OIL |
+| Revenue, USD mn | A2 | `REVENUE FROM NATURAL GAS` | GAS |
+| Production cost, USD mn | A2 | `PRODUCTION EXPENSES` + `OTHER OPERATING EXPENSE` | both |
+| Royalty, USD mn | A2 | `ROYALTY` + `OTHER TAXES (AS APPLICABLE)` | both |
+| Transportation, USD mn | A2 | `TRANSPORTATION EXPENSES` | both |
+| DD&A, USD mn | A2 | `DEPLETION` + `DEPRECIATION AND AMORTISATION` | both |
+| Survey, USD mn | A2 | `EXPLORATION COSTS (SURVEY)` + `EXPLORATION COSTS (DRY WELL)` | both |
+| Production quantity | A1 | `Share of Production` | both |
+| Sales quantity | A1 | `Total Sales quantity` | both |
+| Sales quantity net of state share | A1 | `Total Sales quantity-net of state share (13-3a)` | both |
+
+Oil quantities are in bbl (5,417,237.30 for CL1202). The gas quantity unit is still not
+confirmed: CL1202 has no gas. A full list of one gas project settles it.
+
+### 8.2 The eight PBA figures for CPO-5, rebuilt from the table rows (2025 ANNUAL)
+
+| Section | From `ZFI_AGENDA` (A2 / A1) | Excel PBA row 21 | Difference |
+|---|---|---|---|
+| Realised price | 63.9942 | 63.9942 | 0 |
+| Production cost | 8.7425 | 8.7424 | 0.0001 |
+| Royalty | 0.6904 | 0.6922 | -0.0018 |
+| Transportation | 0 | 0 | 0 |
+| DD&A | 1.2534 | 1.2534 | 0 |
+| Survey | 2.3554 | 0.1348 | +2.2207 |
+| Total cost of goods sold | 13.0417 | 10.8228 | +2.2189 |
+| Profit | 50.9525 | 53.1715 | -2.2189 |
+
+- The stored A3 values equal A2 / A1 line for line (ten lines checked), so the base-measure
+  design reproduces what ZFI_PL shows.
+- Royalty: the Excel reads the total column of the extract, which includes 0.01 USD mn of
+  gas royalty, and divides by a typed production of 5,417,280 bbl.
+- **Survey: the Excel cell is wrong for CPO-5.** Its formula reads rows 60+61 of the extract;
+  every other project reads 61+62. It therefore adds depreciation and amortisation (0.26)
+  to survey (0.47) = 0.73 USD mn, and leaves out dry well (12.29). Survey + dry well is
+  12.76 USD mn = 2.36 per bbl. The 0.26 is also in the Excel's DD&A cell (6.53 + 0.26 =
+  6.79), so it is counted twice. Cost of goods sold and profit for CPO-5, and the two
+  OVERALL rows, carry the same slip. For finance to confirm.
+- The sheet's "Total cost of goods sold" is the sum of the five cost ratios. For CPO-5 that
+  is 13.04, the figure ZFI_PL stores as `(IV) OPERATING COST` (A3). It is not ZFI_PL's
+  `(VII) COST OF GOODS SOLD` (20.19), which also takes inventory change and overlift and
+  divides by sales quantity. The query follows the sheet.
+
+### 8.3 Which run each project is on (PER = REVENUE FROM CRUDE OIL, PER_KEY = A2)
+
+| COMP | PROJ | Column set 1 | Column set 2 | Sheet row (matched on revenue) |
+|---|---|---|---|---|
+| OVL | AA2002 | 2025 ANNUAL | 2024 ANNUAL | ACG, Azerbaijan |
+| OVL | CL1202 | 2025 ANNUAL | 2024 ANNUAL | CPO-5, Colombia |
+| OVL | SD2002 | 2025 ANNUAL | 2024 ANNUAL | Block 5A (SPOC), South Sudan |
+| OVV | VANKOR | 2025 ANNUAL | 2024 ANNUAL | Vankorneft, Russia |
+| SCB | PIVSA | 2025 ANNUAL | 2024 ANNUAL | PIVSA San Cristobal, Venezuela |
+| OVL | MM2002 | 2025 ANNUAL | 2024 ANNUAL | Myanmar (gas only; A-1 or A-3 not told apart) |
+| OVL | MM2012 | 2025 ANNUAL | 2024 ANNUAL | Myanmar (gas only; A-1 or A-3 not told apart) |
+| N/A | IEL | 2025 9M | 2024 9M | Imperial Energy, Russia |
+| N/A | LZ | 2025 9M | 2024 9M | Lower Zakum, UAE |
+| N/A | MECL | 2025 9M | 2024 9M | MECL, Colombia |
+| N/A | PCSA | 2025 9M | 2024 9M | Carabobo, Venezuela |
+| OCL | BC10 | 2025 9M | 2024 9M | Block BC-10, Brazil |
+| OVL | VN2012 | 2025 9M | 2024 9M | Block 06.1, Vietnam |
+| OBV | GPOC | 2025 9M | 2024 ANNUAL | GPOC, South Sudan |
+| OVL | RU2002 | 2024 Q1 | 2024 Q1 | Sakhalin-1, Russia (by code; all zero) |
+
+- 23 of the 24 non-zero revenue figures equal the workbook to the cent, annual against its
+  annual column and 9M against its 9M column. The one that differs is Vietnam 9M FY'25
+  (table 1.82, workbook 2.00, a typed value).
+- **In this client 7 projects are on the annual run, 7 on the 9M run and 1 on an old Q1
+  run.** An annual query here shows 7 of 15 projects. `COMP` is not always OVL, and four
+  projects carry `N/A`.
+- Project names are in `ZFI_PNL_PROJ-TXTJV`; the last column above is only the cross-check.
+
+### 8.4 Recommendation on history (decision open)
+
+To get what the Excel shows - several periods side by side, all projects - the figures must
+stop being overwritten. A history table keyed by company / project / section / line / fiscal
+year / period, written next to the `MODIFY zfi_agenda` in `MZFIPLI01`, does that. One ZFI_PL
+run per project with Q1, H1, 9M and ANNUAL of a year as its four columns then fills that
+whole year. `ZI_PBA_LINE` would read the history table and keep its eight output fields, so
+objects 2 and 3 do not change. Needs a fresh download of `MZFIPLI01` first. Not built.
 
