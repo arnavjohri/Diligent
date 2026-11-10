@@ -59,8 +59,9 @@ the sheet for FY'26 as well, so nothing is lost there.
 ## 3. What SAP cannot supply for this sheet
 
 - **History.** Only the Annual FY'26 column is linked to ZFI_PL extracts. FY'25 and earlier,
-  and the FY'26 Q1 / H1 / 9M columns, are typed values. ZFI_PL went live 17.03.2023 and the
-  write to `ZFI_AGENDA` was added 28.03.2024, so earlier years are not in SAP at all.
+  and the FY'26 Q1 / H1 / 9M columns, are typed values. `ZFI_AGENDA` keeps only the last
+  run per project (section 6), so SAP holds no history either: at most the four year /
+  period columns of that last run.
 - **The typed ACG DD&A figure.**
 - **The page layout**: eight sections times twelve years on one sheet.
 
@@ -83,7 +84,7 @@ Source options for the base measures:
 
 | | Source | For | Against |
 |---|---|---|---|
-| A | `ZFI_AGENDA`, per_key A1 (quantities) and A2 (amounts) | small build; figures equal what finance saw in ZFI_PL | exists only for the year / period combinations a user ran; can be stale; needs the table key and types (checks below) |
+| A | `ZFI_AGENDA`, per_key A1 (quantities) and A2 (amounts) | small build; figures equal what finance saw in ZFI_PL | holds the last run per project only (section 6); a re-run for another period replaces the figures |
 | B | `ZPNL_QI_OIL` / `ZPNL_QI_GAS` for quantities, JVA ledger through the `ZFI_PNL_GL` mapping for amounts | live, approved / frozen quantities | re-implements FORM `cre_prd_proj` (about 3,900 lines) in CDS; `ZFI_PNL_GL` structure not known here |
 
 Recommended: A, once the checks pass.
@@ -102,3 +103,56 @@ Recommended: A, once the checks pass.
    probably empty there. Agree how the cube is to be tested.
 6. Finance: is current year against previous year (plus whatever years the table holds)
    acceptable in place of twelve years, and one query each for oil and gas?
+
+## 6. `ZFI_AGENDA` as found - SE11 and SE16, 10/11/26
+
+Screenshots: `../original/ZFI_AGENDA_SE11_2026-11-10.png`, `..._SE16_count_2026-11-10.png`.
+Sample rows were pasted in chat (client 500, partial list). This section answers checks 1
+to 3 of section 5 and replaces what sections 3 and 4 assumed about years accumulating.
+
+- **Key: MANDT, COMP, PROJ, PER, PER_KEY. Fiscal year and period are not in the key.** Every
+  run of a project overwrites the rows of its previous run. The table holds the last run
+  per project and nothing else.
+- Value columns `CRUDE_OIL1..4`, `GAS1..4`: DF34_DEC, length 16, decimals 5 (data elements
+  `ZCRUDE_OIL`, `ZGAS`). `FISCAL1..4` GJAHR, `PERIOD1..4` CHAR 6 (`ZPERIOD_P`), `PER` CHAR
+  100, `PROJ` CHAR 6 (`JV_NAME`).
+- 1,547 rows in total, about 100 lines per project.
+- `FISCALn` carries the start year: 2025 = FY 2025-26.
+- Projects sit on different runs. CL1202 is on 2025 ANNUAL against 2024 ANNUAL; RU2002 is
+  on 2024 Q1 in both column sets. A project appears under a year / period only if that
+  combination was in its last run.
+- Left-over rows exist: CL1202 'PROFIT OIL PAID IN CASH' (A2) still carries 2024 Q1 / 2023
+  ANNUAL. The line is now written as 'LESS:PROFIT OIL PAID IN CASH', so the old row is
+  never overwritten. Harmless while the lines picked are current ones.
+- Stored texts are 'EXPLORATION COSTS (SURVEY)' and 'EXPLORATION COSTS (DRY WELL)', with a
+  space before the bracket. FORMs `cre_rev` / `cre_bar` of ZFI_PL read them without the
+  space (18 places in `MZFIPLF01`), so those two lists never pick up exploration cost.
+  ZFI_PL is not touched; the CDS uses the stored spelling.
+- Not visible in the pasted rows: 'ROYALTY', 'Share of Production', and the A2 rows of the
+  cost lines. To be confirmed from a full list of one project before object 2.
+
+Tie-out, joint venture CL1202 (CPO-5 Colombia):
+
+| Line (section) | Table, 2025 | Workbook, FY'26 | Table, 2024 | Workbook, FY'25 |
+|---|---|---|---|---|
+| REVENUE FROM CRUDE OIL (A2), USD mn | 223.62 | 223.62 | 278.60 | 278.60 |
+| Total Sales quantity (A1), bbl | 3,494,377.14 | 3,494,377.14 | 3,819,130.03 | 3,819,130.03 |
+| REVENUE FROM CRUDE OIL (A3), USD / bbl | 63.99 | 63.9942 | 72.95 | 72.9486 |
+| PRODUCTION EXPENSES + OTHER OPERATING EXPENSE (A3) | 6.50 + 2.24 | 8.74 on the check sheet | | |
+| DEPLETION + DEPRECIATION AND AMORTISATION (A3) | 1.21 + 0.05 | 1.26 on the check sheet | | |
+| EXPLORATION COSTS (DRY WELL) + (SURVEY) (A3) | 2.27 + 0.09 | 2.36 on the check sheet | | |
+
+**Consequence.** A report on this table shows the last ZFI_PL run per project, usually the
+current period against the comparison period. It cannot show a run that has since been
+replaced. If periods are to be kept, a history table keyed by year and period is needed,
+written at the point where ZFI_PL writes `ZFI_AGENDA` (one insert in `MZFIPLI01`). That is
+a change to ZFI_PL and a decision for Arnav and finance; it is not built.
+
+## 7. Objects
+
+| # | Object | What | State |
+|---|---|---|---|
+| 1 | `ZI_PBA_LINE` (classic view, `../ZI_PBA_LINE.ddls.asddls`) | `ZFI_AGENDA` with the four column sets turned into rows; DF34_DEC cast to DEC | delivered 10/11/26, not yet activated |
+| 2 | measures per project / product / year / period | picks the lines of section 1 into base measures | not written; waits for object 1 and the line list |
+| 3 | cube for CAQ | dimensions, SUM measures, key-user release | not written |
+
