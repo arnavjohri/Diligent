@@ -93,6 +93,26 @@ Checked on the 1,547 production rows (same SQL and CASE text, run in SQLite, 10/
 input cells of the PBA sheet rebuilt, 194 within 0.015 of the workbook; the other 21 are the
 differences listed in `docs/PBA_sheet_to_CDS_mapping.md` section 9.
 
+## Query steps in Custom Analytical Queries (given to Arnav 10/11/26)
+Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NOTES.md`).
+0. Cube released C1; `RSRTS_ODP_DIS` -> `2CZIPBACUBE` opens without errors.
+1. *New*. Data source: search `ZI_PBA` - no asterisk. Name `ZZ1_PBA_OIL`, label
+   "Per Barrel Analysis - Oil".
+2. *Field Selection*: Report Row No., Report Row, Product, Fiscal Year, Reporting Period; the six
+   amount measures, Production Quantity (mn), Sales Qty Net of State Share (mn). Not ZFI_PL
+   Section / Line / Line Value, not Sales Quantity (mn).
+3. *Display*: rows Report Row No., Report Row; columns Fiscal Year (display text), Reporting
+   Period, measures. *Add Calculated Measure* eight times (formulas in the table above; cost of
+   goods sold and profit refer to the other calculated measures), 2 decimals. Hide the eight
+   base measures if the measure properties offer it.
+4. *Filters*: Product = fixed value OIL; Fiscal Year and Reporting Period = user input, several
+   values allowed.
+5. *Preview* with 2025 / 9M: seven rows, Imperial 54.16, total price 65.22 (production extract
+   of 10/11/26). Then *Publish* (generates the `ZZ9_` query). Tile and Excel export from *Query
+   Browser*.
+6. Second query `ZZ1_PBA_GAS`: the same with Product = GAS.
+Not yet tried on this system: division in a calculated measure, and `NDIV0( )` around it.
+
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
 in development and transported; figures can only be tied out after transport.
