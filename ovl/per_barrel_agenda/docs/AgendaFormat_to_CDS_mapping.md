@@ -178,3 +178,23 @@ Whatever the option, the inputs of section 4 need a home (one small maintained t
 finance must accept the page without them, and `ZFI_AGENDA` must stop overwriting runs
 (history table, `PBA_sheet_to_CDS_mapping.md` section 8.4). Decisions open; nothing built.
 
+### 8.5 Which of the missing inputs can be calculated or read from SAP (10/11/26)
+
+| Input | Obtainable without typing? | How | Open |
+|---|---|---|---|
+| Average USD/INR rate | Probably | TCURR holds USD to INR; rate types CLT, M and TTA are maintained on this system (bank reval work, `ovl/zfi_bank_reval/NOTES.md`). No annual average is known to be stored, so it is computed from the entries | which rate type and averaging rule reproduce 88.335 (FY'26) and 84.5875 (FY'25). x4 and x12 of both give two-decimal sums, so an average of quarterly or monthly rates is likely. Test in SE16 |
+| INR revenue | Yes, as USD x rate | arithmetic | see VAT and booked-INR rows below |
+| Quantity / price / exchange variance | Yes | the three formulas on BoardAgenda Variance A33:A35 | 12 manual +/-0.01 plugs in the sheet |
+| MMT, BCM | Yes | factors in `ZPNL_QI_CONVO` (ZFI_PL) or `ZPRA_T_TAR_CF` (DPR) | which factor finance wants |
+| Production | Yes | DPR tables (section 3) | - |
+| VAT added back to revenue | Not from `ZFI_AGENDA` | the USD "adjustments" are VAT (cell comments: "Amount of VAT", "Net of VAT"). Block 2 is gross of VAT; the ZFI_PL revenue line is net. ZFI_PL knows a VAT G/L (0000200668) but stores no VAT line | a ledger read per project; not verified |
+| Booked INR on standalone projects | No | the INR "adjustments" replace USD x average rate by the booked figure for the projects tagged ST | - |
+| Dated Brent | No | market quotation; TCURR does not hold it | maintained table |
+| Sakhalin-1 revenue | No | not in ZFI_PL (RU2002 is all zero) | - |
+| Value added products | Maybe | ZFI_PL has a line `SALE OF VAP`; value for IEL not seen yet | full table download |
+
+Effect of leaving the typed adjustments out, FY'26 (ZFI_PL revenue x 88.335 against the
+sheet): CPO-5 -17.5 %, Imperial -10.8 %, BC-10 gas -10.8 %, Vietnam crude and gas -6 %,
+SPOC -0.75 %, ACG -0.70 %, Myanmar -0.09 %, all other lines equal. All lines together
+-2.07 % (226,446 against 231,228 INR mn).
+
