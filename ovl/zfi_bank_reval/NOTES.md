@@ -45,7 +45,7 @@ The cube is line items. A balance as on a key date is: fiscal year of the key da
 filter) + posting date ≤ key date (cube `where`). The opening balance of that year is the
 period-000 carry-forward line in ACDOCA, written only by *Carry Forward Balances* (FAGLGVTR)
 for that year, ledger and company code. Without it the query shows the year's movements only
-(ISSUES #5, 10/11/26). Do not "fix" this by removing the fiscal-year filter: every year's
+(ISSUES #5, 10/11/26 — in that case the carry-forward existed and the users had run the query with **no** fiscal-year filter, which is the opposite error). Do not "fix" this by removing the fiscal-year filter: every year's
 carry-forward line plus the prior year's items would then be counted twice, and converted
 systems hold pre-migration balances only as carry-forward lines anyway.
 
