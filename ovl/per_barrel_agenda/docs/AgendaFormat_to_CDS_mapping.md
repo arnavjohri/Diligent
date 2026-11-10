@@ -198,3 +198,34 @@ sheet): CPO-5 -17.5 %, Imperial -10.8 %, BC-10 gas -10.8 %, Vietnam crude and ga
 SPOC -0.75 %, ACG -0.70 %, Myanmar -0.09 %, all other lines equal. All lines together
 -2.07 % (226,446 against 231,228 INR mn).
 
+### 8.6 Tab "Production & Sales Quantity" (Arnav, 10/11/26: this tab, not Reconciliation)
+
+The three base tabs are therefore PBA, Revenue & Costs and Production & Sales Quantity.
+How the Annual FY'26 column of this tab is filled:
+
+| Figure | Filled from | In SAP |
+|---|---|---|
+| Oil sales, MMBBL (12 projects) | ZFI_PL extract, `Total Sales quantity` (net of state share for Carabobo, CPO-5) | `ZFI_AGENDA` A1; CL1202 equal to the bbl |
+| Gas production and sales, million MMBTU (6 projects) | ZFI_PL extract, `Share of Production` / `Total Sales quantity`, gas column | `ZFI_AGENDA` A1, gas column (unit to be confirmed on a gas project) |
+| Oil production, bbl and tonnes (14 lines) | typed table "PRODUCTION DATA - Annual FY 2025-26" (approved production) | DPR reconciled table `ZPRA_T_MREC_PRD` with `ZPRA_T_TAR_CF`; ZFI_PL `Share of Production` is within 0.44 % but has no Sakhalin-1 and no BC-60 |
+| Gas production, MMSCM (12 lines) | same typed table | DPR reconciled table |
+| Gas sales, MMSCM | formula: MMBTU sales / (MMBTU production / MMSCM production) | follows from the rows above |
+| Sales quantity, MMT | formula: MMBBL sales / (bbl per tonne of the typed table) | follows from the rows above |
+| Q1, H1, 9M columns; all earlier years | typed | not in SAP |
+
+So this tab is obtainable as well, from two sources: ZFI_PL for sales and MMBTU, DPR for the
+approved production.
+
+Test on the current year (the DPR export in the repo ends 31.12.2025 = 9M FY'26, daily
+table, JV rate x participating interest x 275 days, against the tab's typed 9M column):
+
+| | Lines | Within 0.5 % | Outside |
+|---|---|---|---|
+| Oil production, MMBBL | 13 | 10 | Sakhalin-1 +20 %, Vietnam condensate 0.0189 against 0.0055, Imperial +0.9 % |
+| Gas production, MMSCM | 6 | 3 | Sakhalin-1 14.5 against 395.1, Vietnam 32.9 against 16.7, BC-10 +0.8 % |
+
+The **daily** table is therefore not good enough for Sakhalin-1 and Vietnam in the current
+year. The exact match of section 3 was on the **reconciled monthly** table (FY 2024-25).
+The annual page must read the reconciled table, and check 1 of section 7 (all twelve
+periods of GJAHR 2025 loaded) decides whether FY'26 is there.
+
