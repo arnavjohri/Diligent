@@ -11,8 +11,11 @@ the previous year. The ask (Arnav, 10/11/26): rebuild it as a CDS cube shown in 
 Analytical Queries, the way `ovl/zfi_bank_reval/` and `ovl/zfi_tr_bankacct/` were done.
 
 ## Where the answer is
-`docs/AgendaFormat_to_CDS_mapping.md` - block-by-block source mapping, the proof for the
-production block, the inputs that are not in SAP, and the seven checks to run first.
+- `docs/AgendaFormat_to_CDS_mapping.md` - block-by-block source mapping, the proof for the
+  production block, the inputs that are not in SAP, and the seven checks to run first.
+- `docs/PBA_sheet_to_CDS_mapping.md` - the same for the `PBA` sheet (10/11/26 follow-up).
+  **PBA is the better candidate:** one source (ZFI_PL), all USD, none of the typed inputs.
+  The workbook's hidden `Check Sheet` already ties it to ZFI_PL (95 of 118 cells equal).
 
 ## The one thing to remember
 It is **not** a DPR report. Only the production block comes from the DPR tables
