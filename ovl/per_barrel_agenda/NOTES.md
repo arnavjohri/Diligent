@@ -111,6 +111,8 @@ Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NO
    of 10/11/26). Then *Publish* (generates the `ZZ9_` query). Tile and Excel export from *Query
    Browser*.
 6. Second query `ZZ1_PBA_GAS`: the same with Product = GAS.
+   Alternative, one query for both: Product as a mandatory single-value user input instead of
+   the fixed value. Never OIL and GAS in one run - the total would add barrels to MMBTU.
 Not yet tried on this system: division in a calculated measure, and `NDIV0( )` around it.
 
 ## The table behind it
