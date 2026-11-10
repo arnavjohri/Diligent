@@ -492,3 +492,24 @@ figures and 2025 in both columns for CPO-5. To be confirmed by Arnav.
   `ZFI_AGENDA` in development may hold little or nothing, so a data preview there proves the
   view, not the figures; the tie-out against the workbook is done after transport.
 
+## 14. Second run for CL1202 - 2025 ANNUAL against 2024 ANNUAL (10/11/26)
+
+Arnav ran Profitability Analysis for CL1202 again in PRD, this time with 2024 ANNUAL as the
+second column set. Output as pasted:
+`../original/ZFI_PL_PRO_AN_CL1202_2025_2024_ANNUAL_run2_2026-11-10.tsv`.
+
+- **2025 ANNUAL column:** identical to the first run on all 96 lines.
+- **2024 ANNUAL column:** 86 of 96 lines equal the rows saved before the control run. The 10
+  that differ come from one input, OTHER EXPENSES (INCL. EXCHANGE FLUCTUATION): 6.86 saved,
+  6.01 now (-0.85), carried into (IX), (X), (XII) and their per-barrel lines. It sits below
+  the operating margin and is not an input of the PBA sheet.
+- So `ZFI_AGENDA` for CL1202 again carries both years, and every PBA-sheet figure for CPO-5
+  in FY 2024-25 is what it was: price 72.95, production expenses 26.97, other operating
+  expense 4.08, depletion 12.19, depreciation 0.12, survey 4.01, royalty 0.23.
+
+What it says about the gap of section 12.3 (left as it is, section 13): for fiscal year 2024
+the read through `JV_JVSO1_ACDOCA` gives back production expenses, depletion and income tax
+to the cent. The view is therefore reading those accounts correctly, and the fiscal year
+2025 differences point to entries posted after the run finance saved between 28.04.2026 and
+25.07.2026 rather than to lines the view cannot see. Not proven; not pursued.
+

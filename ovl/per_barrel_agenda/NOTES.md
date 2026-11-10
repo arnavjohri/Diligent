@@ -54,3 +54,6 @@ does not tie to the board figures for CPO-5 production cost and DD&A - open.
 text, third column, producing-project line), no header, as pasted 10/11/26.
 `ZPNL_QI_OIL_CL1202_SE16_2026-11-10.tsv` - quantity records of CL1202, 25 rows, as pasted
 10/11/26. Read in `docs/PBA_sheet_to_CDS_mapping.md` section 12.
+`ZFI_PL_PRO_AN_CL1202_2025_2024_ANNUAL_run2_2026-11-10.tsv` - Arnav's second run in PRD the same
+day, 2025 ANNUAL against 2024 ANNUAL: it put the previous-year column back for CL1202
+(`docs/PBA_sheet_to_CDS_mapping.md` section 14).
