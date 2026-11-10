@@ -112,6 +112,7 @@ ovl/                             OVL / ONGC Videsh
   ocv-to-ovl-transfer/           Colombia OCV → OVL document transfer
   zf01_exchange_rate/            Exchange rate OData V2 interface (CPI → TCURR)
   zfi_bank_reval/                Bank revaluation custom analytical query — cube + mapping table (Group Reporting)
+  per_barrel_agenda/             Per Barrel Analysis board-agenda format — CAQ feasibility and source mapping (nothing built)
   mm-fiori/                      MM programs assessed for Fiori tiles
   zmm_purchdoc_cds_ext/          PO / PR / contract CDS extensions for custom fields (TR OCQK901357)
   ztest_t001/                    abapGit round-trip test (importable repo)
