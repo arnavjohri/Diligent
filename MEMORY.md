@@ -524,6 +524,18 @@ on the KPMG system lists one hit, yet the debugger showed it in two more methods
 standard code there is incomplete. For a full-text search over standard code use
 `RS_ABAP_SOURCE_SCAN` (SE38), which reads the source itself.
 
+**M-29 - Recommended a control run of a transaction that writes.** (10/11/26 · `ovl/per_barrel_agenda`)
+To see what ZFI_PL fetches, the reply proposed running Profitability Analysis for CL1202 "in dev
+only". That function does `MODIFY zfi_agenda` + `COMMIT WORK` for every output line as soon as the
+list is displayed - no save button. The run was made in production: finance's saved rows for the
+project were replaced, the previous-year column was lost, and the only copy of the old values is
+the SE16 paste filed that morning. The tables pasted all session had been production data; that
+was never asked.
+→ **Before proposing any test run, read whether the transaction writes. If it does, say so in the
+first line, ask which system the session's data comes from, and offer a read-only route (SE16N,
+a display list) instead. "In dev only" buried in a paragraph is not a safeguard. Take an SE16
+before-image of the target table as a file first, every time.**
+
 ---
 
 ## 6. Shipping — what can and cannot go back through abapGit

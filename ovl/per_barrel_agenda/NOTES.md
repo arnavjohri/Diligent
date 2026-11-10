@@ -30,6 +30,8 @@ are typed into the workbook.
 live); Arnav decides. The cube's key-user release (ADT, API State, C1) is manual.
 
 ## The table behind it
+All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
+in development and transported; figures can only be tied out after transport.
 `ZFI_AGENDA` keeps the **last ZFI_PL run per project only** - fiscal year and period are not
 in its key (SE11, 10/11/26). The report shows that run and has no history. Details and the
 tie-out in `docs/PBA_sheet_to_CDS_mapping.md` section 6.

@@ -475,3 +475,20 @@ The quantity table holds records saved by business users up to 23.10.2026 (2026 
 live system, CL1202's rows in the live `ZFI_AGENDA` are the ones that were overwritten, and
 the list reports that read that table (`REV`, `BAR_REP`, `AGE_REP`) now show the fresh
 figures and 2025 in both columns for CPO-5. To be confirmed by Arnav.
+
+## 13. Decisions of 10/11/26 after the control run
+
+- **The system is production (PRD).** Arnav confirmed. Every table pasted on 10/11/26
+  (`ZFI_AGENDA`, `ZPRA_T_MREC_PRD`, `ZFI_PNL_GL`, `ZPNL_QI_OIL`) is live data, and the control
+  run of section 11 replaced CL1202's rows in the live `ZFI_AGENDA`.
+- **The data gap is left as it is.** Arnav: the data is coming correctly; the four ledger
+  amounts of section 12.3 are not to be chased. The `JVSO1` against `CJVSO1_ACD` check is
+  dropped. The report shows what ZFI_PL last saved, whatever the ledger gave on that day.
+- Known consequence, accepted: for CPO-5 the report will show production cost 35.95 and DD&A
+  8.14 (USD mn) where the board workbook V3 has 47.36 and 6.79, and no previous-year column,
+  until finance runs Profitability Analysis for CL1202 again with 2025 ANNUAL and 2024 ANNUAL.
+  That run is finance's to make; nothing in production is touched from here.
+- The views are created and activated in the development system and reach PRD by transport.
+  `ZFI_AGENDA` in development may hold little or nothing, so a data preview there proves the
+  view, not the figures; the tie-out against the workbook is done after transport.
+
