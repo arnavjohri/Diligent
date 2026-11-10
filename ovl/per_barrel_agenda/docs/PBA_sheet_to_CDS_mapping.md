@@ -241,3 +241,49 @@ run per project with Q1, H1, 9M and ANNUAL of a year as its four columns then fi
 whole year. `ZI_PBA_LINE` would read the history table and keep its eight output fields, so
 objects 2 and 3 do not change. Needs a fresh download of `MZFIPLI01` first. Not built.
 
+## 9. Full `ZFI_AGENDA` table, 1,547 rows - the whole PBA sheet rebuilt (10/11/26)
+
+`../original/ZFI_AGENDA_SE16_full_2026-11-10.tsv` (as pasted by Arnav, client 500).
+
+**Object 1 logic run on the real rows** (same rules as `ZI_PBA_LINE`): 1,547 table rows give
+2,999 view rows, **no duplicate key**; 99 repeated year / period entries dropped (all RU2002);
+column set 3 is used on 4 rows, set 4 on none.
+
+**Gas quantity unit: million MMBTU.** Myanmar sales 14.174 + 5.244 = 19.418 and Vankor 35.827
+equal the workbook. MM2002 is Block A-1 (gas revenue 103.32), MM2012 is A-3 (38.10).
+
+**Value added products are in the table:** IEL, `SALE OF VAP`, section A2, gas column: 6.00
+(9M FY'26) and 4.89 (9M FY'25), USD mn.
+
+**Runs:** 7 projects on 2025 ANNUAL / 2024 ANNUAL, 6 on 2025 9M / 2024 9M, GPOC on 2025 9M /
+2024 ANNUAL, RU2002 on 2024 Q1. Every project also carries 2 to 8 left-over rows of old
+line names (`CHANGE IN INVENTORIES`, `OVERLIFT/(UNDERLIFT)`) on older periods.
+
+**Comparison.** Base measures per section 8.1, ratios as in section 1, each project in the
+periods its last run holds, against the same project / year / period cell of the PBA sheet:
+
+| Section | Cells | Within 0.015 |
+|---|---|---|
+| Realised price | 34 | 32 |
+| Production cost | 34 | 29 |
+| Royalty | 34 | 31 |
+| Transportation | 33 | 33 |
+| DD&A | 34 | 26 |
+| Survey | 34 | 31 |
+| **Six input sections** | **203** | **182** |
+
+The 21 outside: 9 differ by 0.04 or less (production quantity: ZFI_PL figure against the
+typed approved production). The other 12:
+
+| Cells | Cause |
+|---|---|
+| ACG: production cost FY'25, DD&A FY'25 and FY'26, survey FY'25 | finance's own figures in the sheet (FY'26 DD&A typed 35.14 USD mn) |
+| CPO-5: survey FY'25 and FY'26 | sheet shows 0 and 0.13; the table has survey + dry well of 12.63 and 12.76 USD mn. FY'25 is zero in the sheet, so exploration cost looks left out for CPO-5 on purpose; the FY'26 formula (rows 60+61) is a slip on top of that. **This corrects section 8.2, which called the sheet simply wrong.** For finance to say which is intended |
+| PIVSA royalty FY'25; Vietnam price 9M FY'25, oil and gas; MECL DD&A 9M both years; Vankor DD&A FY'26, oil and gas | the figure in this client's table differs from the one finance used (typed prior-period values, or a later re-run) |
+
+**Formula error in the sheet, prior-year profit.** `PBA!MH` is `=+J-KL`: Annual FY'25 profit
+takes the **Q1** price (column J) where the annual price is column P. `PBA!MG` is `=+M-KK`:
+9M takes the Q3 price (M) instead of 9M (N). The current-year columns are right (`MD = I - KH`).
+All prior-year profit cells of the sheet are affected (SPOC FY'25: sheet 23.12, price 75.49
+minus cost 55.55 = 19.94). For finance.
+

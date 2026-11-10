@@ -229,3 +229,27 @@ year. The exact match of section 3 was on the **reconciled monthly** table (FY 2
 The annual page must read the reconciled table, and check 1 of section 7 (all twelve
 periods of GJAHR 2025 loaded) decides whether FY'26 is there.
 
+### 8.7 Reconciled production, GJAHR 2025, all periods - proof for FY 2025-26 (10/11/26)
+
+`../original/ZPRA_T_MREC_PRD_GJAHR2025_SE16_2026-11-10.tsv` (2,335 rows, as pasted by Arnav).
+This closes check 1 of section 7 and replaces "not proven" in section 3.
+
+OVL share = JV quantity x participating interest (percentages of the DPR export). Oil:
+`NET_PROD`, QTY1 in bbl and QTY2 in tonnes - the table carries tonnes itself, no conversion
+factor is needed. Gas: `GROSS_PROD` minus `GAS_INJ`; MCM as is, MCF / 35.3, M3 / 1,000,000.
+
+| Against the workbook's approved production, Annual FY'26 | Lines | Equal | Different |
+|---|---|---|---|
+| Oil, bbl | 14 | 13 (to the barrel) | BC-10: table 2,360,603.5, workbook 2,357,305 (+0.14 %) |
+| Oil, tonnes | 14 | 12 | BC-10 +495 t; BC-60 20,650.6 against 9,051 (keying error below) |
+| Gas, MMSCM | 12 | 11 (to 0.001) | BC-10 32.651 against 32.631 |
+
+- Sakhalin-1: 52,187,533.5 bbl JV x 20 % = 10,437,506.7; workbook 10,437,507.
+- Net gas is gross minus injection: Sakhalin-1 622.593 and ACG 127.539 match only that way.
+- All twelve periods are present for 14 assets. `BRA_BC2` (BC-60 Jubarte) starts in period
+  5; `VNM_B06` has periods 1-3 only, and its totals still equal the workbook.
+- **Keying error in the table:** GJAHR 2025, MONAT 8, `BRA_BC2_JUBARTE`, `NET_PROD`: QTY2 is
+  5,536,097.463 TO for 3,573,089.590 BBL (0.645 bbl per tonne; every other row is 6.2-7.7).
+  With 536,097.463 the BC-60 tonnes come to 9,050.6, the workbook's 9,051. Any MMT figure for
+  BC-60 is overstated until the row is corrected. Not ours to change; for the DPR data owner.
+

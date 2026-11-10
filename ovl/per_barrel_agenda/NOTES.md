@@ -40,3 +40,6 @@ links to (15 ZFI_PL extracts, S-1 LLC, standalone and consolidated accounts) wer
 supplied.
 `ZFI_AGENDA_SE11_2026-11-10.png`, `ZFI_AGENDA_SE16_count_2026-11-10.png` - table definition
 and row count (1,547) as supplied 10/11/26.
+`ZFI_AGENDA_SE16_full_2026-11-10.tsv` - the whole table, 1,547 rows, as pasted 10/11/26.
+`ZPRA_T_MREC_PRD_GJAHR2025_SE16_2026-11-10.tsv` - reconciled production, fiscal year 2025,
+2,335 rows, as pasted 10/11/26. Both taken from the session record, tab-separated, no header.
