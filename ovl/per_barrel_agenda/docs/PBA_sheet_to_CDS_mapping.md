@@ -287,3 +287,40 @@ takes the **Q1** price (column J) where the annual price is column P. `PBA!MG` i
 All prior-year profit cells of the sheet are affected (SPOC FY'25: sheet 23.12, price 75.49
 minus cost 55.55 = 19.94). For finance.
 
+## 10. Where SAP has no record - does the Excel hold a figure there? (10/11/26)
+
+Yes, almost everywhere. Count over the project rows of the PBA sheet, all eight sections:
+cells with a non-zero figure in the Excel, and how many of those have the same project /
+year / period in this client's `ZFI_AGENDA` (client 500, table as filed in `../original/`).
+
+| Year | Period | Excel has a figure | SAP has the record |
+|---|---|---|---|
+| FY 2025-26 | Annual | 104 | 44 |
+| FY 2025-26 | 9M | 104 | 60 |
+| FY 2025-26 | H1 | 104 | 0 |
+| FY 2025-26 | Q1 | 103 | 0 |
+| FY 2025-26 | Q2, Q3, Q4 | 42 | 0 |
+| FY 2024-25 | Annual | 103 | 49 |
+| FY 2024-25 | 9M | 101 | 52 |
+| FY 2024-25 | H1, Q1, Q2-Q4 | 246 | 0 |
+| FY 2023-24 and earlier (ten years) | all | 4,417 | 0 |
+| **Total** | | **5,324** | **205** |
+
+- Annual FY'26, rows with Excel figures and no SAP annual record (60 cells): Vietnam oil
+  and gas, BC-10 oil and gas, Imperial oil and gas, MECL, GPOC, Carabobo, Lower Zakum - the
+  seven projects whose last run in this client is 9M. Finance did run them for the year (the
+  workbook's annual column is linked to those extracts); the table has since been, or in
+  this client never was, on that run.
+- Sakhalin-1: no figure in the Excel from FY 2023-24 onwards, so nothing is missing there.
+  Its figures up to FY 2022-23 are typed.
+- Rows with no ZFI_PL project (GNPOC Sudan, Imperial Domestic / International, AFPC, Block
+  24): no Excel figure after FY 2022-23.
+
+What closes which gap:
+- Annual against previous annual, all projects (207 cells): one ZFI_PL annual run per
+  project in the system the report reads. No development.
+- Q1, H1, 9M next to Annual for both years (about 700 more cells): the history table of
+  section 8.4 plus one run per project and year with the four periods as columns.
+- FY 2023-24 and earlier (4,417 cells): typed history; not in SAP. Upload once into a
+  table, or leave blank.
+
