@@ -238,6 +238,12 @@ define view ZI_BR_BANKREVAL_CUBE
 }
 where
   Item.PostingDate <= $parameters.P_RevalDate
+  //BOC By Arnav on 10/11/26 - found active on OCD, added by hand, no marker
+  // Drops every account without a house bank account in BAM (Excel: most
+  // are "To be created"; 96468 has none). The hierarchy already scopes the
+  // report - delete the next line to show those accounts again.
+  and Item.GLHouseBankAccount is not initial
+  //EOC By Arnav on 10/11/26 - found active on OCD
   //BOC By Arnav on 10/11/26 - fiscal year of the key date (V3)
   and Item.LedgerFiscalYear =
       cast( substring( dats_add_months( $parameters.P_RevalDate, -3, 'INITIAL' ), 1, 4 )
