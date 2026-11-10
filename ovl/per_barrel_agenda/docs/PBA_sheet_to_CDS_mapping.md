@@ -396,3 +396,82 @@ Checks (Arnav, in the system the run was made in):
    11.41 mn, 1.35 mn, 0.11 mn and 17.28 mn prove cause 1.
 3. SE16 `ZPNL_QI_OIL`, PRO_NAM = CL1202, FISYEAR = 2025: `CST_TNK`, `CH_INVT` and the
    change stamp of the ANNUAL record.
+
+## 12. Follow-up to the control run - mapping table and quantity records (10/11/26)
+
+Arnav's answers to the three checks of section 11, as pasted:
+`../original/ZFI_PNL_GL_SE16_2026-11-10.tsv` (1,168 accounts: G/L, text, third column, fourth
+column - no header was pasted; the fourth column holds the producing-project line texts, so
+it is read as `PRD_PRO`) and `../original/ZPNL_QI_OIL_CL1202_SE16_2026-11-10.tsv` (25 rows).
+
+### 12.1 Check 1 - the active source reads `jv_jvso1_acdoca`
+So the control run read ACDOCA through the view. Whether the saved rows were produced from
+`JVSO1` or from the view is still not known.
+
+### 12.2 Check 3 - the stock difference is explained
+`ZPNL_QI_OIL`, CL1202, 2025, ANNUAL (stamp fields per `save_quant`: created, changed,
+approved):
+
+| | Value |
+|---|---|
+| Opening stock | 10,621.26 |
+| Share of production | 5,417,237.30 |
+| Closing stock (`CST_TNK`) | 5,974.72 |
+| Adjustment (`CH_INVT`) | 0 |
+| Overlift (`OVR_UND`) | -6,977.35 |
+| Total sales (`TOT_SAL`) | 3,494,377.14 |
+| Created | 96021, 28.04.2026 |
+| Changed | 96021, 25.07.2026 - approval cleared, not approved again |
+
+On the same 25.07.2026 the same user created the 2026 Q1 record with opening stock 5,974.72.
+The program takes opening stock from the closing stock of the previous ANNUAL record, so the
+2025 ANNUAL record was changed that day: closing stock 7,988.60 less the 2,013.87 adjustment
+became closing stock 5,974.72 with no adjustment. The saved analysis rows carry the earlier
+values, so **the saved CL1202 run was made between 28.04.2026 and 25.07.2026**. Production
+and sales quantity did not change, so no figure of the PBA sheet is affected. The 2024 ANNUAL
+record (closing 10,621.26, overlift 5,711.59, sales 3,819,130.03) equals the saved rows.
+
+### 12.3 Check 2 - the accounts behind the four amounts
+A mapping row reaches a statement line only when its fourth-column text equals the line text
+(`READ TABLE it_final_bar ... WITH KEY per = wa_gls1-prd_pro`, FORM `cre_prd_proj`).
+
+| Line | Difference (USD mn) | Accounts |
+|---|---:|---|
+| PRODUCTION EXPENSES | -11.41 | 200382, 209985, 250141 |
+| DEPLETION | +1.35 | 209103, 209114 |
+| (XI) INCOME TAX | +17.28 | 209701, 209702, 209711, 209722, 209723, 209724, 209726 |
+| PROVISIONS, WRITE OFF AND OTHER IMPAIRMENT | -0.11 | 29 accounts, 2015xx and 209123, 209125 |
+
+Open, and the one check that decides it: the same selection the program uses - ledger 4A,
+company code OVL, year 2025, periods 01 to 16, venture CL1202, the twelve accounts of the
+first three lines - summed on `KSL` per account and period, once on `JVSO1` and once on
+`CJVSO1_ACD` (the SQL view of `JV_JVSO1_ACDOCA`).
+- `JVSO1` gives the saved figures (35.23, 6.53, 45.25): the difference is ACDOCA against
+  JVSO1; the period shows whether it is lines missing from the view or postings made after
+  JVSO1 stopped being written.
+- `JVSO1` gives the fresh figures (23.82, 7.88, 62.53): the saved rows were simply older than
+  the final ledger, and the board workbook was built on them.
+
+### 12.4 Mapping texts that match no line (for finance, not ours to change)
+Fourteen accounts carry a fourth-column text that is not a line of the producing-project
+statement as printed, so their amounts do not reach it:
+
+| Mapping text | Printed line | Accounts |
+|---|---|---|
+| INCOME TAX (XII) | (XI) INCOME TAX | 200688, 200963, 201557, 250112 |
+| EXPLORATION COSTS (SURVEY & DRY WELL) | two separate lines | 200875, 209113, 250142 |
+| CHANGE IN INVENTORIES | (V)CHANGE IN INVENTORIES | 239101, 239116, 239120 |
+| PROFIT OIL PAID IN CASH | LESS:PROFIT OIL PAID IN CASH | 200607, 200608 |
+| OVERLIFT/(UNDERLIFT) | (VI)OVERLIFT/(UNDERLIFT) | 201943 |
+| DEPRECIATION, DEPLETION & AMORTIZATION | DEPLETION / DEPRECIATION AND AMORTISATION | 201530 |
+
+The three zero rows of older text left in `ZFI_AGENDA` (section 11) are the same renaming.
+ASSUMPTION: the printed line texts are the only ones the program matches on; the line list
+itself comes from `ZFI_PNL_GLF4`, which was not supplied.
+
+### 12.5 Which system
+The quantity table holds records saved by business users up to 23.10.2026 (2026 H1, user
+82407). That is live data or a very recent copy of it. If the control run was made in the
+live system, CL1202's rows in the live `ZFI_AGENDA` are the ones that were overwritten, and
+the list reports that read that table (`REV`, `BAR_REP`, `AGE_REP`) now show the fresh
+figures and 2025 in both columns for CPO-5. To be confirmed by Arnav.

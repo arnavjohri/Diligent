@@ -59,3 +59,9 @@ by each fix; git history keeps earlier versions). Paste sheets `PATCH_*.abap` be
 - `SELECT * FROM zfi_pnl_gl ... FOR ALL ENTRIES IN @it_jvso1..4` has no `IS NOT INITIAL`
   guard. Pre-existing; untouched because an empty driver currently fills `it_gls1..4` with
   the whole mapping table and later code may rely on that.
+
+## Mapping table as of 10/11/26
+The full `ZFI_PNL_GL` (1,168 accounts) is filed in
+`ovl/per_barrel_agenda/original/ZFI_PNL_GL_SE16_2026-11-10.tsv`. Fourteen accounts carry a
+producing-project text that equals no statement line and so never reach the statement - list
+in `ovl/per_barrel_agenda/docs/PBA_sheet_to_CDS_mapping.md` section 12.4.

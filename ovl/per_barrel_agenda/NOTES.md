@@ -48,3 +48,7 @@ output and screen of the control run of 10/11/26 (CL1202, 2025 ANNUAL in both co
 That run **overwrote CL1202's rows in `ZFI_AGENDA`**; the full-table file above is the copy of
 what was there before. Result in `docs/PBA_sheet_to_CDS_mapping.md` section 11: a fresh run
 does not tie to the board figures for CPO-5 production cost and DD&A - open.
+`ZFI_PNL_GL_SE16_2026-11-10.tsv` - the ZFI_PL G/L mapping, 1,168 accounts, four columns (G/L,
+text, third column, producing-project line), no header, as pasted 10/11/26.
+`ZPNL_QI_OIL_CL1202_SE16_2026-11-10.tsv` - quantity records of CL1202, 25 rows, as pasted
+10/11/26. Read in `docs/PBA_sheet_to_CDS_mapping.md` section 12.

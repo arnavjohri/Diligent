@@ -253,3 +253,11 @@ factor is needed. Gas: `GROSS_PROD` minus `GAS_INJ`; MCM as is, MCF / 35.3, M3 /
   With 536,097.463 the BC-60 tonnes come to 9,050.6, the workbook's 9,051. Any MMT figure for
   BC-60 is overstated until the row is corrected. Not ours to change; for the DPR data owner.
 
+
+### 8.8 VAT accounts identified from the ZFI_PL mapping (10/11/26)
+`ZFI_PNL_GL` (filed in `../original/ZFI_PNL_GL_SE16_2026-11-10.tsv`) maps the VAT accounts
+into the revenue lines: 200668 VAT on Crude Oil, 200666 VAT on Condensate Sales and 250104
+VAT - Allocation GL to REVENUE FROM CRUDE OIL, 200665 VAT on Gas Sales to REVENUE FROM NATURAL
+GAS. That is why ZFI_PL revenue is net of VAT (from fiscal year 2025; before that the program
+drops 200668). The USD adjustment of section 8.5 is therefore the JV-ledger amount on these
+four accounts per project - obtainable from SAP, not typed. Not yet tied to a workbook figure.
