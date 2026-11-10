@@ -39,6 +39,16 @@ optional removal of the two line-item fields `HouseBank` / `HouseBankAccount` fr
 yes on 03/11/26, parked while the house bank issue was open — one cube activation, query must drop the
 field first).
 
+## Balance logic — read before answering a "does not match FBL3N" mail
+
+The cube is line items. A balance as on a key date is: fiscal year of the key date (query
+filter) + posting date ≤ key date (cube `where`). The opening balance of that year is the
+period-000 carry-forward line in ACDOCA, written only by *Carry Forward Balances* (FAGLGVTR)
+for that year, ledger and company code. Without it the query shows the year's movements only
+(ISSUES #5, 10/11/26). Do not "fix" this by removing the fiscal-year filter: every year's
+carry-forward line plus the prior year's items would then be counted twice, and converted
+systems hold pre-migration balances only as carry-forward lines anyway.
+
 ## Column map — Excel → source
 
 | Excel col | Heading | Source in the cube |
