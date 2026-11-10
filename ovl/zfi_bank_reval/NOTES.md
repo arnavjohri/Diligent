@@ -46,7 +46,7 @@ date ≤ key date, both enforced in the cube's `where` since 10/11/26 (V3: year 
 months); before that the year was left to a query filter, which the users' variable did not apply. The opening balance of that year is the
 period-000 carry-forward line in ACDOCA, written only by *Carry Forward Balances* (FAGLGVTR)
 for that year, ledger and company code. Without it the query shows the year's movements only
-(ISSUES #5, 10/11/26 — in that case the carry-forward existed and the users had run the query with **no** fiscal-year filter, which is the opposite error). Do not "fix" this by removing the fiscal-year filter: every year's
+(ISSUES #5, 10/11/26 — in that case the carry-forward existed and the users had run the query with **no** fiscal-year filter, which is the opposite error; an account that closed the prior year at 0.00 gets no carry-forward line at all, 93483). Carry-forward lines carry TransactionCurrency = INR with the local amount and the account balance in BalanceTransactionCurrency; that is why *Balance in Account Currency* reads `AmountInBalanceTransacCrcy` for foreign-currency accounts (ISSUES #8). Do not "fix" this by removing the fiscal-year filter: every year's
 carry-forward line plus the prior year's items would then be counted twice, and converted
 systems hold pre-migration balances only as carry-forward lines anyway.
 
@@ -61,12 +61,12 @@ systems hold pre-migration balances only as carry-forward lines anyway.
 | G | Business Unit | `BusinessUnit` — mapping table ("fixed element" per the Excel) |
 | H | Account Currency | `GLAccountCurrency` = SKB1-WAERS |
 | I | PI Interest in Bank Account | `PIShare` — mapping table, factor (0.97, 0.45, 1, 0.4, 0.9) |
-| J | Local Currency Balance | `AmountInGLAccountCurrency` (company-code amount for INR accounts, transaction amount otherwise) |
+| J | Local Currency Balance | `AmountInGLAccountCurrency` (company-code amount for INR accounts, **balance-transaction amount** otherwise — carry-forward lines carry INR as transaction currency, 10/11/26) |
 | K | OVL Share = J × I | **query calculated measure** `AmountInGLAccountCurrency * PIShare` |
 | L | Exchange Rate (from OB08) | `ExchangeRate` — SAP `currency_conversion` of 1 unit at `P_RevalDate` with the account's rate type |
 | M | Exchange Rate Type (CLT / M / TTA) | `ExchangeRateType` — mapping table (it is an **input** to the rate lookup, not read from TCURR) |
 | N | USD Balance after revaluation = K × L | **query calculated measure** `OVL Share * ExchangeRate` |
-| O | Reported USD Balance SAP | `AmountInGlobalCurrency` / `AmountInFunctionalCurrency` / `AmountInFreeDefinedCurrency1` — whichever currency type is USD (confirm, then drop the other two) |
+| O | Reported USD Balance SAP | `AmountInGlobalCurrency` — Global currency is USD at OVL (ACDOCA RKCUR = USD, confirmed 10/11/26); Functional / Free-defined 1 can be dropped |
 
 Prompts: Fiscal Year + Period range as today (query variables), plus `P_RevalDate`
 (user input, the revaluation date) and `P_RevalCurrency` (fixed value `USD` in the query).

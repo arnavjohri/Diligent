@@ -13,9 +13,15 @@
 //----------------------------------------------------------------------
 // ASSUMPTION: a bank G/L whose account currency (SKB1-WAERS) differs
 //   from the company code currency is posted only in that currency, so
-//   its "Local Currency Balance" (Excel col J) is the transaction
-//   currency amount; for an INR account it is the company code currency
-//   amount. This is the SAP posting rule for foreign account currencies.
+//   its "Local Currency Balance" (Excel col J) is the amount in the
+//   balance transaction currency; for an INR account it is the company
+//   code currency amount. 10/11/26 (v7): the transaction-currency amount
+//   was used before and is wrong for carry-forward lines (DG00000000):
+//   SAP writes those with transaction currency INR / local amount and
+//   the account's own balance in the balance transaction currency
+//   (96488, FY 2026: INR 1,058,510.38 vs USD 12,550.14, the true
+//   opening balance). AmountInBalanceTransacCrcy is right for both line
+//   types; for normal documents the two currencies coincide.
 // ASSUMPTION: ZFI_BR_GLMAP has no validity dates - one PI share per
 //   company code + G/L. Add DATAB/DATBI if shares must be historised.
 // 28/10/26: first activation failed with "CAST 1.0 of type FLTP to type
@@ -164,7 +170,11 @@ define view ZI_BR_BANKREVAL_ITM
       case
         when AcctCoCd.waers = Item.CompanyCodeCurrency
         then Item.AmountInCompanyCodeCurrency
-        else Item.AmountInTransactionCurrency
+        //BOC By Arnav on 10/11/26 - carry-forward lines carry the account
+        // balance in the balance transaction currency, not the transaction one
+        //  else Item.AmountInTransactionCurrency
+        else Item.AmountInBalanceTransacCrcy
+        //EOC By Arnav on 10/11/26
       end                              as AmountInGLAccountCurrency,
 
       // One unit of the account currency, 10 decimals. The cube converts
