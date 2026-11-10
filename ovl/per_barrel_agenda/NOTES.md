@@ -93,30 +93,27 @@ Checked on the 1,547 production rows (same SQL and CASE text, run in SQLite, 10/
 input cells of the PBA sheet rebuilt, 194 within 0.015 of the workbook; the other 21 are the
 differences listed in `docs/PBA_sheet_to_CDS_mapping.md` section 9.
 
-## Query steps in Custom Analytical Queries (given to Arnav 10/11/26)
+## Query steps in Custom Analytical Queries - one query, oil and gas (Arnav, 10/11/26)
 Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NOTES.md`).
 0. Cube released C1; `RSRTS_ODP_DIS` -> `2CZIPBACUBE` opens without errors.
-1. *New*. Data source: search `ZI_PBA` - no asterisk. Name `ZZ1_PBA_OIL`, label
-   "Per Barrel Analysis - Oil".
-2. *Field Selection*: Report Row No., Report Row, Product, Fiscal Year, Reporting Period; the six
+1. *New*. Data source: search `ZI_PBA` - no asterisk. Name `ZZ1_PBA`, label "Per Barrel Analysis".
+2. *Field Selection*: Product, Report Row No., Report Row, Fiscal Year, Reporting Period; the six
    amount measures, Production Quantity (mn), Sales Qty Net of State Share (mn). Not ZFI_PL
    Section / Line / Line Value, not Sales Quantity (mn).
-3. *Display*: rows Report Row No., Report Row; columns Fiscal Year (display text), Reporting
-   Period, measures. *Add Calculated Measure* eight times (formulas in the table above; cost of
-   goods sold and profit refer to the other calculated measures), 2 decimals. Hide the eight
-   base measures if the measure properties offer it.
-4. *Filters*: Product = fixed value OIL; Fiscal Year and Reporting Period = user input, several
-   values allowed.
-5. *Preview* with 2025 / 9M: seven rows, Imperial 54.16, total price 65.22 (production extract
-   of 10/11/26). Then *Publish* (generates the `ZZ9_` query). Tile and Excel export from *Query
-   Browser*.
-6. Second query `ZZ1_PBA_GAS`: the same with Product = GAS.
-   **One query for both (Arnav asked, 10/11/26; recommended):** no Product filter; Product
-   (display text) as the FIRST row field, above Report Row No. and Report Row, with its result
-   row on. That gives an oil block and a gas block as on the sheet, and each block's result row
-   is its OVERALL row. Only the grand total over both products means nothing (it adds barrels to
-   MMBTU) - switch it off or ignore it. Name the measures "per unit".
-Not yet tried on this system: division in a calculated measure, and `NDIV0( )` around it.
+3. *Display*, rows in this order: Product (display text, result row on), Report Row No., Report
+   Row. Columns: Fiscal Year (display text), Reporting Period, measures.
+4. *Add Calculated Measure* eight times (formulas in the table of section The query; cost of
+   goods sold and profit refer to the other calculated measures), 2 decimals, each division
+   inside `NDIV0( )` - many rows have a zero quantity. Hide the eight base measures and the
+   grand total if the properties offer it: the total over both products adds barrels to MMBTU.
+5. *Filters*: Fiscal Year and Reporting Period = user input, several values allowed. Report Row
+   No. = fixed range 1 to 16: row number 99 is a project that has no row in that product's table
+   on the sheet (oil-only projects in the gas block, Myanmar in the oil block). No Product filter.
+6. *Preview* with 2025 / 9M, expected from the production extract of 10/11/26 - Crude Oil: seven
+   projects, Imperial 54.16, block result 65.22; Natural Gas: Vietnam 5.20, BC-10 0.66, block
+   result 3.00 (Myanmar and Imperial show 0.00 there). Then *Publish* (generates the `ZZ9_`
+   query). Tile and Excel export from *Query Browser*.
+Not yet tried on this system: division in a calculated measure, `NDIV0( )`, a fixed range filter.
 
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
