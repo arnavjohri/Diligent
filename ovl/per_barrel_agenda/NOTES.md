@@ -111,8 +111,11 @@ Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NO
    of 10/11/26). Then *Publish* (generates the `ZZ9_` query). Tile and Excel export from *Query
    Browser*.
 6. Second query `ZZ1_PBA_GAS`: the same with Product = GAS.
-   Alternative, one query for both: Product as a mandatory single-value user input instead of
-   the fixed value. Never OIL and GAS in one run - the total would add barrels to MMBTU.
+   **One query for both (Arnav asked, 10/11/26; recommended):** no Product filter; Product
+   (display text) as the FIRST row field, above Report Row No. and Report Row, with its result
+   row on. That gives an oil block and a gas block as on the sheet, and each block's result row
+   is its OVERALL row. Only the grand total over both products means nothing (it adds barrels to
+   MMBTU) - switch it off or ignore it. Name the measures "per unit".
 Not yet tried on this system: division in a calculated measure, and `NDIV0( )` around it.
 
 ## The table behind it
