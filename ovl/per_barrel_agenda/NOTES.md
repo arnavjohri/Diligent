@@ -140,6 +140,14 @@ divisions with the labels of `ZI_PBA_CUBE`; cost of goods sold = the five per-un
 profit = `"Realised Price" - "Cost of Goods Sold"`. **Exception Aggregation stays unticked** - with
 it the total row would be an average of the project ratios, not the weighted figure.
 
+**Error seen 12/11/26:** `<Name> cannot be used in CostofGoodsSold (not measure in cube nor calc.
+element in query)` for the five per-unit measures, and `CostOfGoodsSold cannot be used in Profit`.
+Cause: formulas 7 and 8 were entered with the element names of the table above, but the app had
+named the calculated measures from their labels (label without blanks: `CostofGoodsSold`, so
+also `ProductionCostperUnit` and so on); only `RealisedPrice` happened to match. Fix: rebuild
+formulas 7 and 8 by picking the measures from the editor's list (quoted labels). The Name column
+of the table above is therefore not what this app produces - do not type names into a formula.
+
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
 in development and transported; figures can only be tied out after transport.
