@@ -3,8 +3,9 @@
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
 **Status:** PBA sheet chosen (10/11/26). Query published 12/11/26 (`2CZZ9_6Y2SQTAPWWLS`); first export
 checked - `docs/PBA_sheet_to_CDS_mapping.md` section 17. **12/11/26: class and cube changed for all
-periods of a year side by side (section 18) - class handed to Arnav, awaiting activation; cube
-next.** AgendaFormat sheet: assessed only.
+periods of a year side by side (section 18) - both activated by Arnav 12/11/26. Open: query
+change (Period No. on the columns) and one ZFI_PL run per project with Q1, H1, 9M, ANNUAL.**
+AgendaFormat sheet: assessed only.
 
 ## What it is
 The annual "Per Barrel Analysis" workbook, sheet `AgendaFormat`: five blocks per project
@@ -190,3 +191,22 @@ day, 2025 ANNUAL against 2024 ANNUAL: it put the previous-year column back for C
 activation (IEL, LZ, MECL, PCSA; 1,322 complete rows, list display with thousands separators).
 `CAQ_export_6_2025_9M_2026-11-12.xlsx` - first export of the published query, 2025-26 9M, as supplied
 12/11/26.
+
+## Query change for all periods side by side (given to Arnav 12/11/26)
+Query `2CZZ9_6Y2SQTAPWWLS`, after the cube with Period No. is active:
+1. Field Selection: tick **Period No.** (Reporting Period stays ticked).
+2. Display: Period No. and Reporting Period on the **columns**, below the measures, Period No.
+   above Reporting Period. Rows unchanged (Product, Report Row No., Report Row).
+3. Filters: no fixed value on Reporting Period; Fiscal Year stays the user input, single value,
+   mandatory. Report Row No. 1 to 16 stays.
+4. Save, preview, publish again.
+Columns then read, per measure: 1 Q1, 2 Q2, 3 H1, 4 Q3, 5 9M, 6 Q4, 7 ANNUAL. A period shows only
+for projects whose saved ZFI_PL run holds it (Q2 / Q3 / Q4 need the two cumulative periods).
+The sheet shows the cost sections for Q1, H1, 9M, Annual only; the query also has them for Q2,
+Q3, Q4 - finance can hide those columns in Excel.
+
+## ZFI_PL run for finance (given 12/11/26)
+Profitability Analysis, once per project, the four year / period pairs filled with the **same
+year** and **Q1, H1, 9M, Annual** (values from the period F4: Q1 Apr - Jun, H1 Apr - Sept, 9M
+Apr - Dec, Annual Apr - Mar). Display the output - that saves it. Each run replaces that
+project's saved rows (the previous-year column goes). It is production: finance runs it, not us.

@@ -674,3 +674,6 @@ still one per project (15 runs) - the report only reads what ZFI_PL saved. Two y
 periods, or no ZFI_PL runs at all, need the history table of section 8.4 or a rebuild from the
 ledger.
 
+**Activated 12/11/26** (Arnav, by paste): `ZCL_PBA_AGENDA_TF` and `ZI_PBA_CUBE` as changed.
+Not yet seen: the query with the periods on the columns, and a project saved with the four
+periods - until a project is run that way the derived quarters have nothing to work from.
