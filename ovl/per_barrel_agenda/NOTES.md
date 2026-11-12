@@ -230,3 +230,9 @@ it does not exist for the launchpad. The tile needs the **published** query: `2C
 name of the published `ZZ1_...` view. Find it in ADT (`@AbapCatalog.sqlViewName` of the `ZZ1_`
 query view) or open the query from *Query Browser* and copy the address from `#AnalyticQuery`.
 Published name of the Per Barrel query: **not yet recorded**.
+
+**Cube source in the system (seen 12/11/26):** Arnav keeps the previous version commented out on
+top - all 335 lines of the 10/11 source with `//` in front, two blank lines, then the active
+source. The repo copy carries the same block (690 lines) so that a later paste does not drop it.
+A further change goes into the active part only; do not comment the whole object out a second time.
+
