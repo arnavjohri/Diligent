@@ -131,9 +131,14 @@ zero. Create in this order.
 | Cost of Goods Sold | `CostOfGoodsSold` | sum of `ProdCostPerUnit`, `RoyaltyPerUnit`, `TransportPerUnit`, `DdaPerUnit`, `SurveyPerUnit` |
 | Profit | `Profit` | `RealisedPrice - CostOfGoodsSold` |
 
-ASSUMPTION: the formula editor takes element names as typed. Not seen on this system - the one
-generated query filed here (`ovl/zfi_bank_reval/original/ZZ9_BR_REPORT.ddls.asddls`) has no
-formula. If a name is rejected, pick the measure from the editor's list instead.
+**Seen on Arnav's screen, 12/11/26:** the editor (Display, measure properties, Expression, Formula,
+*Edit*) writes measures as their LABEL in double quotes, not as element names, e.g.
+`NDIV0 ( "Revenue (USD mn)" / "Sales Qty Net of State Share (mn)" )`. `NDIV0` is accepted as a
+function name. The operator has to sit between the two operands - his first attempt had both
+measures inserted and the slash after them. The formulas above, in that syntax: the same six
+divisions with the labels of `ZI_PBA_CUBE`; cost of goods sold = the five per-unit labels added;
+profit = `"Realised Price" - "Cost of Goods Sold"`. **Exception Aggregation stays unticked** - with
+it the total row would be an average of the project ratios, not the weighted figure.
 
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
