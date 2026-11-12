@@ -612,3 +612,9 @@ not have), and which MECL DD&A figure is right.
 Layout seen in the export: no result rows (Product totals not switched on) and rows in
 alphabetical order (Report Row sits above Report Row No.).
 
+**Decision, 12/11/26 (Arnav, on finance's confirmation):** the production quantity may differ
+from the sheet; ZFI_PL's own Share of Production stays the divisor for now. The BC-10, GPOC,
+Lower Zakum and MECL production-cost / royalty / DD&A differences of up to 0.04 are therefore
+accepted. Still open with finance: MECL DD&A (8.13 in SAP, 8.68 on the sheet) and Myanmar at 9M
+(no record in SAP). Only 2025-26 9M has been checked through the published query so far.
+
