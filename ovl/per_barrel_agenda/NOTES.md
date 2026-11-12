@@ -1,10 +1,11 @@
 # Per Barrel Analysis - Board Agenda format (OVL)
 
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
-**Status:** PBA sheet chosen (10/11/26). Query published 12/11/26 (`2CZZ9_6Y2SQTAPWWLS`); first export
+**Status:** PBA sheet chosen (10/11/26). Query built 12/11/26; both exports so far are from the **preview** (`2CZZ9_...` is the preview's
+temporary query, not the published one - see *Tile* at the end); first export
 checked - `docs/PBA_sheet_to_CDS_mapping.md` section 17. **12/11/26: class and cube changed for all
 periods of a year side by side (section 18) - both activated by Arnav 12/11/26. Second export
-(all periods, query `2CZZ9_NKE76O91E4N5`) checked 12/11/26: figures equal SAP, no Q1 because none
+(all periods, preview query `2CZZ9_NKE76O91E4N5`) checked 12/11/26: figures equal SAP, no Q1 because none
 is saved - section 19. Open: Period No. above Reporting Period on the columns, and one ZFI_PL run
 per project with Q1, H1, 9M, ANNUAL.**
 AgendaFormat sheet: assessed only.
@@ -114,8 +115,8 @@ Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NO
    on the sheet (oil-only projects in the gas block, Myanmar in the oil block). No Product filter.
 6. *Preview* with 2025 / 9M, expected from the production extract of 10/11/26 - Crude Oil: seven
    projects, Imperial 54.16, block result 65.22; Natural Gas: Vietnam 5.20, BC-10 0.66, block
-   result 3.00 (Myanmar and Imperial show 0.00 there). Then *Publish* (generates the `ZZ9_`
-   query). Tile and Excel export from *Query Browser*.
+   result 3.00 (Myanmar and Imperial show 0.00 there). Then *Publish* (the published query is `2CZZ1_...`;
+   `ZZ9_` is the preview copy). Tile and Excel export from *Query Browser*.
 Not yet tried on this system: division in a calculated measure, `NDIV0( )`, a fixed range filter.
 
 ## Formula text for the eight calculated measures (given to Arnav 12/11/26)
@@ -214,3 +215,18 @@ Profitability Analysis, once per project, the four year / period pairs filled wi
 year** and **Q1, H1, 9M, Annual** (values from the period F4: Q1 Apr - Jun, H1 Apr - Sept, 9M
 Apr - Dec, Annual Apr - Mar). Display the output - that saves it. Each run replaces that
 project's saved rows (the previous-year column goes). It is production: finance runs it, not us.
+
+## Tile (12/11/26)
+Launchpad Designer, catalog `ZZ1_BANKREVAL_REPORT`, group *Bank Reports* (both already in Arnav's
+role). Pattern copied from the bank reval tile, which works on this system:
+- Tile *App Launcher - Static*, **Use semantic object navigation unticked**, Target URL
+  `#AnalyticQuery-analyze?bsa_query=<query>&sap-app-origin-hint` (bank reval: `2CZZ1_BZHO1M6TDK65`).
+- Target mapping, Application Type URL, same URL, System Alias blank.
+
+**First try failed: `Query 2CZZ9_NKE76O91E4N5 is unknown`.** The name was taken from the header of
+export 7, and that export was made from the *preview*. A `2CZZ9_<random>` name is the preview's
+temporary query (`ZZ9_...` SQL view, a new one per preview - export 6 had `2CZZ9_6Y2SQTAPWWLS`);
+it does not exist for the launchpad. The tile needs the **published** query: `2C` + the SQL view
+name of the published `ZZ1_...` view. Find it in ADT (`@AbapCatalog.sqlViewName` of the `ZZ1_`
+query view) or open the query from *Query Browser* and copy the address from `#AnalyticQuery`.
+Published name of the Per Barrel query: **not yet recorded**.

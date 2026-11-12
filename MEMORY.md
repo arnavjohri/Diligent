@@ -548,6 +548,15 @@ stop activation is resolved before delivery - by documentation, a proven precede
 or a different construct - not written into the header and shipped. If it cannot be resolved,
 say so and build around it.**
 
+**M-31 - Gave a preview's temporary query name as the published query.** (12/11/26 · `ovl/per_barrel_agenda`)
+The header of a query export read `2CZZ9_NKE76O91E4N5`; it went into the tile's target URL and
+the launchpad answered `Query ... is unknown`. The export had been made from the *Preview* of
+Custom Analytical Queries, which runs a temporary `ZZ9_<random>` copy - a new name per preview.
+→ **A `2CZZ9_...` query name is a preview, never the published query. For a tile, Analysis for
+Office or a target mapping use the published one: `2C` + the `sqlViewName` of the `ZZ1_...`
+view (bank reval: `2CZZ1_BZHO1M6TDK65`). Two exports with different `ZZ9_` names are one query
+previewed twice, not two queries.**
+
 ---
 
 ## 6. Shipping — what can and cannot go back through abapGit

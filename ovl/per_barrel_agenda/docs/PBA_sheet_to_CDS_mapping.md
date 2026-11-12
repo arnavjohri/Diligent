@@ -699,3 +699,8 @@ no period filter. Arnav: Q1 is not visible.
   the column axis, so the columns sort by the period text. Period No. has to stand above
   Reporting Period. Fiscal Year and Financial Year are one value and need not be on the columns.
 
+**Correction, 12/11/26:** `2CZZ9_NKE76O91E4N5` and `2CZZ9_6Y2SQTAPWWLS` (section 17) are not two
+queries. Both are the temporary query of a preview - a new name per preview. The published query
+is `2CZZ1_...`. The figures checked are unaffected; the name is what a tile cannot use
+(`Query 2CZZ9_NKE76O91E4N5 is unknown`).
+
