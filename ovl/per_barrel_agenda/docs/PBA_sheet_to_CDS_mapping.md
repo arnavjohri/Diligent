@@ -575,3 +575,40 @@ item view, cube; no activation error was reported. He then pasted part of the cu
 Still to do: C1 release of `ZI_PBA_CUBE`, the query with its eight calculated measures
 (`../NOTES.md`), transport request.
 
+## 17. First export of the published query - 2025-26, 9M (12/11/26)
+
+`../original/CAQ_export_6_2025_9M_2026-11-12.xlsx`: query `2CZZ9_6Y2SQTAPWWLS` on `2CZIPBACUBE`,
+variables Fiscal Year 2025 and Reporting Period 9M, filter Report Row No. 1 to 16. Eleven rows
+(four gas, seven oil), the eight calculated measures. The empty preview of the same morning was
+the filter on the text field, as suspected; with Fiscal Year it returns data.
+
+**Against SAP:** 88 of 88 cells equal the figures worked out from the production extract of
+10/11/26 (largest difference 1.4e-14). The calculated measures, `NDIV0` and the range filter do
+what was intended.
+
+**Against the board workbook** (PBA sheet, 9M FY'26 columns G, BX, DT, FP, HL, JH, KG, MC; oil
+rows 10 to 20, gas rows 32 to 37): 65 of 88 cells within 0.015. The six input measures: 55 of 66.
+
+| Cells | Query | Workbook | Cause |
+|---|---|---|---|
+| Myanmar gas, 4 inputs | 0 | price 7.33, costs 0.62 / 0.71 / 0.79 | MM2002 and MM2012 are on the ANNUAL run in SAP; no 9M record exists. The workbook has 108.98 USD mn on 14.872 mn MMBTU |
+| BC-10 production cost, DD&A | 17.09, 14.11 | 17.12, 14.13 | same amounts (31.23, 25.78); production 1.827654 in ZFI_PL, 1.823903 on the sheet |
+| GPOC production cost | 26.70 | 26.72 | same amount (80.89); production 3.029500 against 3.026770 |
+| Lower Zakum royalty, DD&A | 15.01, 6.98 | 15.05, 7.00 | same amounts (68.07, 31.64); production 4.533487 against 4.521754 |
+| MECL production cost | 24.71 | 24.68 | same amount (16.71); production 0.676260 against 0.677199 |
+| MECL DD&A | 12.02 | 12.82 | amount differs: 8.13 in SAP, 8.68 on the sheet |
+
+The twelve cost-of-goods-sold and profit cells that differ are sums of the above (Imperial by
+0.02, from rounding inside the tolerance).
+
+So: every amount equals the workbook except MECL DD&A; every price equals except Myanmar, which
+SAP does not hold for 9M. The small cost differences are the production quantity: the sheet
+divides by the approved production of its Production & Sales Quantity tab (DPR), ZFI_PL by its
+own Share of Production, up to 0.26 % apart.
+
+For finance, not changed here: whether ZFI_PL's production quantity is acceptable as the
+divisor (the alternative is production from the DPR reconciled table - a join the cube does
+not have), and which MECL DD&A figure is right.
+Layout seen in the export: no result rows (Product totals not switched on) and rows in
+alphabetical order (Report Row sits above Report Row No.).
+

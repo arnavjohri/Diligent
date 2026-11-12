@@ -1,8 +1,9 @@
 # Per Barrel Analysis - Board Agenda format (OVL)
 
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
-**Status:** PBA sheet chosen (10/11/26). **All four objects are active (Arnav, 10/11/26, created by
-paste in ADT)** and the cube returns data: 1,322 rows of its output compared with the expected
+**Status:** PBA sheet chosen (10/11/26). Query published 12/11/26 (`2CZZ9_6Y2SQTAPWWLS`); first export
+checked - see `docs/PBA_sheet_to_CDS_mapping.md` section 17. **All four objects are active (Arnav,
+10/11/26, created by paste in ADT)** and the cube returns data: 1,322 rows of its output compared with the expected
 result, all equal. Open: C1 release of `ZI_PBA_CUBE`, the query in Custom Analytical Queries,
 transport. AgendaFormat sheet: assessed only.
 
@@ -153,7 +154,8 @@ of the table above is therefore not what this app produces - do not type names i
 2025. *Financial Year* is the label of `FiscalYearName`, the text field that holds `2025-26`;
 the key field `FiscalYear` is labelled *Fiscal Year*. So the filter most likely sits on the text
 field and 2025 matches nothing. Test: enter 2025-26. Proper set-up: filter and column on *Fiscal
-Year*, *Financial Year* out of the field selection. Not yet confirmed by him. The two labels are
+Year*, *Financial Year* out of the field selection. **Confirmed 12/11/26:** with Fiscal Year
+the query returns data (export filed). The two labels are
 too close - a point against the cube's labelling, to be changed only if he wants another
 activation.
 
@@ -187,4 +189,5 @@ day, 2025 ANNUAL against 2024 ANNUAL: it put the previous-year column back for C
 (`docs/PBA_sheet_to_CDS_mapping.md` section 14).
 `ZI_PBA_CUBE_output_partial_2026-11-10.tsv` - part of the cube's output as Arnav pasted it after
 activation (IEL, LZ, MECL, PCSA; 1,322 complete rows, list display with thousands separators).
-
+`CAQ_export_6_2025_9M_2026-11-12.xlsx` - first export of the published query, 2025-26 9M, as supplied
+12/11/26.
