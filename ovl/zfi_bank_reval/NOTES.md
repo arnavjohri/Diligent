@@ -232,6 +232,8 @@ active → query built on the cube in the app → published query run as a tile 
 | 8 | FI | *Preview* → *Publish* | Preview with Company Code, FY, key date 30.09.2026 → one row per bank G/L, columns as in the Excel. Publish generates `ZZ9_BR_REPORT2` |
 | 9 | FI / users | Run | Three ways to the same query: (a) *Query Browser* app → search the query → *Open* / *Create Tile* on the user's launchpad; (b) Excel via Analysis for Office, BW query `2CZZ9_BR_REPORT2`; (c) Fiori *Create Tile* from the query itself. The Excel sheet for Group Reporting is the export of (a) or (b) |
 
+Usability (12/11/26): after *Navigate To* → Display Journal Entry and back, the app restores the filter bar but not the result — save the variant with *Set as Default* + *Apply Automatically*, or open documents in a new tab (Ctrl+click). Standard Fiori behaviour, nothing in the query.
+
 Monthly use: enter company code, fiscal year, revaluation date; the balance is cumulative to
 that date (carry-forward included), the rate is OB08 on that date for each account's rate
 type. New bank account → FI adds a row in SM30 and the account to the hierarchy; nothing
