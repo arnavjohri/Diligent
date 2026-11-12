@@ -229,7 +229,14 @@ temporary query (`ZZ9_...` SQL view, a new one per preview - export 6 had `2CZZ9
 it does not exist for the launchpad. The tile needs the **published** query: `2C` + the SQL view
 name of the published `ZZ1_...` view. Find it in ADT (`@AbapCatalog.sqlViewName` of the `ZZ1_`
 query view) or open the query from *Query Browser* and copy the address from `#AnalyticQuery`.
-Published name of the Per Barrel query: **not yet recorded**.
+Published query (ADT, 12/11/26): view **`ZZ1_PBA`** ("Per Barrel Analysis Report"), SQL view
+`ZZ1_S370PML0P5P2`, so the query is **`2CZZ1_S370PML0P5P2`** and the tile / target mapping URL is
+`#AnalyticQuery-analyze?bsa_query=2CZZ1_S370PML0P5P2&sap-app-origin-hint`. Source as generated:
+`original/ZZ1_PBA.ddls.asddls` (generated - never edit in ADT, the next Publish overwrites it).
+Read from that source, still as published 12/11/26: columns Financial Year, Reporting Period,
+Period No., Fiscal Year (so the periods sort by text - Period No. has to go above Reporting
+Period); rows Product, Report Row, Report Row No. (rows sort by name, not by the sheet's
+number); Fiscal Year and Reporting Period are optional prompts with several values allowed.
 
 **Cube source in the system (seen 12/11/26):** Arnav keeps the previous version commented out on
 top - all 335 lines of the 10/11 source with `//` in front, two blank lines, then the active
