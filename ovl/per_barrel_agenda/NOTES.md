@@ -115,6 +115,26 @@ Same sequence that worked for the bank revaluation query (`ovl/zfi_bank_reval/NO
    query). Tile and Excel export from *Query Browser*.
 Not yet tried on this system: division in a calculated measure, `NDIV0( )`, a fixed range filter.
 
+## Formula text for the eight calculated measures (given to Arnav 12/11/26)
+Element names of `ZI_PBA_CUBE`; the Name column is what is typed in the New Calculated Measure
+dialog and what the last two formulas refer to. `NDIV0( x )` returns x, or 0 when x divides by
+zero. Create in this order.
+
+| Label | Name | Formula |
+|---|---|---|
+| Realised Price | `RealisedPrice` | `NDIV0( RevenueAmount / SalesQuantityNet )` |
+| Production Cost per Unit | `ProdCostPerUnit` | `NDIV0( ProductionCostAmount / ProductionQuantity )` |
+| Royalty per Unit | `RoyaltyPerUnit` | `NDIV0( RoyaltyAmount / ProductionQuantity )` |
+| Transportation per Unit | `TransportPerUnit` | `NDIV0( TransportAmount / SalesQuantityNet )` |
+| DD&A per Unit | `DdaPerUnit` | `NDIV0( DdaAmount / ProductionQuantity )` |
+| Survey per Unit | `SurveyPerUnit` | `NDIV0( SurveyAmount / ProductionQuantity )` |
+| Cost of Goods Sold | `CostOfGoodsSold` | sum of `ProdCostPerUnit`, `RoyaltyPerUnit`, `TransportPerUnit`, `DdaPerUnit`, `SurveyPerUnit` |
+| Profit | `Profit` | `RealisedPrice - CostOfGoodsSold` |
+
+ASSUMPTION: the formula editor takes element names as typed. Not seen on this system - the one
+generated query filed here (`ovl/zfi_bank_reval/original/ZZ9_BR_REPORT.ddls.asddls`) has no
+formula. If a name is rejected, pick the measure from the editor's list instead.
+
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
 in development and transported; figures can only be tied out after transport.
