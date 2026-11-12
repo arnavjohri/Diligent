@@ -189,6 +189,19 @@ Quarter, Posting Period, Business Unit, JV Code, or a range on Period Start Date
 Period, not Month (text). No mandatory filter in the cube. The document header dialog on a click
 is navigation in the Fiori app with CompanyCode, AccountingDocument and FiscalYear from the row.
 
+**Launchpad side of the document click (settled 12/11/26).** Target mapping `AccountingDocument-displayFB03`,
+Application Type Transaction FB03, parameters renamed AccountingDocument → RF05L-BELNR, CompanyCode →
+RF05L-BUKRS, FiscalYear → RF05L-GJAHR, additional parameters allowed. The analysis app (FPM_BICS_OVP)
+navigates in place by default and the launchpad's stateful SAP GUI container then fails on the second
+document with HTTP 403 (ISSUES 10). Fix is on the **tile**, not the mapping: Target URL
+`#AnalyticQuery-analyze?bsa_query=2CZZ1_TWKWN9B2DSJV&sap-ushell-next-navmode=explace` — the launchpad
+passes `next-navmode` to the Web Dynpro app, which echoes it as `sap-ushell-navmode`, so every document
+opens in a new tab and the report tab keeps its state. `sap-ushell-navmode=explace` as a mapping
+parameter does nothing (an explicit value from the app wins over a mapping default). Keep the tile URL
+free of `&/sap-iapp-state=…` — a bookmarked app state breaks Back. The Navigate To list shows every
+target mapping for semantic object AccountingDocument in the user's catalogs; the standard
+`displayDocuments` entry disappears only when the user's roles carry no catalog containing it.
+
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
 `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
