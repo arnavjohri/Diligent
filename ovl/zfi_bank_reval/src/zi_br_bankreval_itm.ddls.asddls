@@ -13,9 +13,15 @@
 //----------------------------------------------------------------------
 // ASSUMPTION: a bank G/L whose account currency (SKB1-WAERS) differs
 //   from the company code currency is posted only in that currency, so
-//   its "Local Currency Balance" (Excel col J) is the transaction
-//   currency amount; for an INR account it is the company code currency
-//   amount. This is the SAP posting rule for foreign account currencies.
+//   its "Local Currency Balance" (Excel col J) is the amount in the
+//   balance transaction currency; for an INR account it is the company
+//   code currency amount. 10/11/26 (v7): the transaction-currency amount
+//   was used before and is wrong for carry-forward lines (DG00000000):
+//   SAP writes those with transaction currency INR / local amount and
+//   the account's own balance in the balance transaction currency
+//   (96488, FY 2026: INR 1,058,510.38 vs USD 12,550.14, the true
+//   opening balance). AmountInBalanceTransacCrcy is right for both line
+//   types; for normal documents the two currencies coincide.
 // ASSUMPTION: ZFI_BR_GLMAP has no validity dates - one PI share per
 //   company code + G/L. Add DATAB/DATBI if shares must be historised.
 // 28/10/26: first activation failed with "CAST 1.0 of type FLTP to type
@@ -37,6 +43,12 @@
 // 03/11/26 (v5): G/L description wanted as its own column (Excel col C).
 //   SKAT joined on chart of accounts + G/L account in the logon language;
 //   TXT50 exposed as GLAccountLongName.
+// 10/11/26 (v6): the cube may not use a function in its WHERE ("Random
+//   expressions are not supported in a condition"), so the fiscal year of
+//   the key date is computed here as a column: parameter P_RevalDate added,
+//   KeyDateFiscalYear = calendar year of (key date - 3 months), the V3
+//   rule (April-March, year named by the calendar year of April). The cube
+//   compares LedgerFiscalYear with it field to field.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRBNKREVITM'
 @AbapCatalog.compiler.compareFilter: true
@@ -47,6 +59,11 @@
 @ClientHandling.algorithm: #SESSION_VARIABLE
 @Metadata.ignorePropagatedAnnotations: true
 define view ZI_BR_BANKREVAL_ITM
+  //BOC By Arnav on 10/11/26 - key date for the fiscal year column
+  with parameters
+    @EndUserText.label: 'Revaluation Key Date'
+    P_RevalDate : vdm_v_key_date
+  //EOC By Arnav on 10/11/26 - key date for the fiscal year column
   as select from I_GLAccountLineItemCube as Item
     left outer join skb1         as AcctCoCd on  AcctCoCd.bukrs = Item.CompanyCode
                                              and AcctCoCd.saknr = Item.GLAccount
@@ -86,6 +103,10 @@ define view ZI_BR_BANKREVAL_ITM
 
       // -- time ------------------------------------------------------
       Item.LedgerFiscalYear,
+      //BOC By Arnav on 10/11/26 - fiscal year of the key date (V3)
+      cast( substring( dats_add_months( $parameters.P_RevalDate, -3, 'INITIAL' ), 1, 4 )
+            as abap.numc(4) )            as KeyDateFiscalYear,
+      //EOC By Arnav on 10/11/26 - fiscal year of the key date (V3)
       Item.FiscalPeriod,
       Item.FiscalYearPeriod,
       Item.FiscalYearVariant,
@@ -149,7 +170,11 @@ define view ZI_BR_BANKREVAL_ITM
       case
         when AcctCoCd.waers = Item.CompanyCodeCurrency
         then Item.AmountInCompanyCodeCurrency
-        else Item.AmountInTransactionCurrency
+        //BOC By Arnav on 10/11/26 - carry-forward lines carry the account
+        // balance in the balance transaction currency, not the transaction one
+        //  else Item.AmountInTransactionCurrency
+        else Item.AmountInBalanceTransacCrcy
+        //EOC By Arnav on 10/11/26
       end                              as AmountInGLAccountCurrency,
 
       // One unit of the account currency, 10 decimals. The cube converts

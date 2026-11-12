@@ -22,9 +22,19 @@
 // Author    : Arnav Johri
 // Date      : 28.10.2026
 //----------------------------------------------------------------------
-// ASSUMPTION: the query filters one fiscal year; the WHERE below only
-//   stops lines posted after the key date. Carry-forward lines (period 0)
-//   carry the first day of the year as posting date, so they stay in.
+// 10/11/26: the query's year variable did not restrict rows, so the cube
+//   summed every fiscal year up to the key date - each year's carry-forward
+//   line plus the years it already contains (93483: 2,519.71 instead of
+//   0.00, ISSUES #5). The cube now restricts itself to the fiscal year of
+//   the key date; carry-forward lines (period 000) carry the first day of
+//   that year as posting date, so they stay in. A function in the WHERE
+//   was refused ("Random expressions are not supported in a condition"),
+//   so the ITM computes KeyDateFiscalYear from the key date passed down
+//   and the WHERE compares two fields.
+// ASSUMPTION: fiscal year variant V3 for OVL - April to March, year named
+//   by the calendar year of April (ACDOCA: 01.10.2025 = period 007.2025).
+//   Fiscal year = calendar year of (key date - 3 months). If OVL ever used
+//   a variant named by the closing year, this becomes + 9 months.
 // ASSUMPTION: 'USD' is set as the fixed value of P_RevalCurrency in the
 //   query. Which SAP currency type already holds USD (Global, Functional
 //   or Free-defined 1) is to be confirmed in FINSC_LEDGER / OB22; the two
@@ -76,7 +86,10 @@ define view ZI_BR_BANKREVAL_CUBE
     @EndUserText.label: 'Revaluation Currency'
     @Consumption.defaultValue: 'USD'
     P_RevalCurrency : waers
-  as select from ZI_BR_BANKREVAL_ITM as Item
+  //BOC By Arnav on 10/11/26 - key date passed to the ITM
+  //  as select from ZI_BR_BANKREVAL_ITM as Item
+  as select from ZI_BR_BANKREVAL_ITM( P_RevalDate: $parameters.P_RevalDate ) as Item
+  //EOC By Arnav on 10/11/26 - key date passed to the ITM
   association [0..1] to I_Ledger                     as _Ledger
     on $projection.Ledger = _Ledger.Ledger
   association [0..1] to I_CompanyCode                as _CompanyCode
@@ -231,3 +244,12 @@ define view ZI_BR_BANKREVAL_CUBE
 }
 where
   Item.PostingDate <= $parameters.P_RevalDate
+  //BOC By Arnav on 10/11/26 - found active on OCD, added by hand, no marker
+  // Dropped every account without a house bank account in BAM (Excel: most
+  // are "To be created"; 96468 has none). The hierarchy already scopes the
+  // report - removed again by Arnav on 10/11/26, 96468 visible since.
+  //  and Item.GLHouseBankAccount is not initial
+  //EOC By Arnav on 10/11/26 - found active on OCD
+  //BOC By Arnav on 10/11/26 - fiscal year of the key date (V3), from the ITM
+  and Item.LedgerFiscalYear = Item.KeyDateFiscalYear
+  //EOC By Arnav on 10/11/26 - fiscal year of the key date (V3), from the ITM
