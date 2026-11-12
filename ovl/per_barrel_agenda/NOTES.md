@@ -148,6 +148,15 @@ also `ProductionCostperUnit` and so on); only `RealisedPrice` happened to match.
 formulas 7 and 8 by picking the measures from the editor's list (quoted labels). The Name column
 of the table above is therefore not what this app produces - do not type names into a formula.
 
+**Preview empty, 12/11/26** ("The result set does not contain any relevant data", query
+`2CZZ9_6Y2SQTAPWWLS`). The prompt on Arnav's screen is labelled *Financial Year* with the value
+2025. *Financial Year* is the label of `FiscalYearName`, the text field that holds `2025-26`;
+the key field `FiscalYear` is labelled *Fiscal Year*. So the filter most likely sits on the text
+field and 2025 matches nothing. Test: enter 2025-26. Proper set-up: filter and column on *Fiscal
+Year*, *Financial Year* out of the field selection. Not yet confirmed by him. The two labels are
+too close - a point against the cube's labelling, to be changed only if he wants another
+activation.
+
 ## The table behind it
 All tables pasted on 10/11/26 are **production** data (confirmed by Arnav). The views are built
 in development and transported; figures can only be tied out after transport.
