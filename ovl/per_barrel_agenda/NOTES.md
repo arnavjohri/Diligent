@@ -3,8 +3,10 @@
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
 **Status:** PBA sheet chosen (10/11/26). Query published 12/11/26 (`2CZZ9_6Y2SQTAPWWLS`); first export
 checked - `docs/PBA_sheet_to_CDS_mapping.md` section 17. **12/11/26: class and cube changed for all
-periods of a year side by side (section 18) - both activated by Arnav 12/11/26. Open: query
-change (Period No. on the columns) and one ZFI_PL run per project with Q1, H1, 9M, ANNUAL.**
+periods of a year side by side (section 18) - both activated by Arnav 12/11/26. Second export
+(all periods, query `2CZZ9_NKE76O91E4N5`) checked 12/11/26: figures equal SAP, no Q1 because none
+is saved - section 19. Open: Period No. above Reporting Period on the columns, and one ZFI_PL run
+per project with Q1, H1, 9M, ANNUAL.**
 AgendaFormat sheet: assessed only.
 
 ## What it is
@@ -191,6 +193,8 @@ day, 2025 ANNUAL against 2024 ANNUAL: it put the previous-year column back for C
 activation (IEL, LZ, MECL, PCSA; 1,322 complete rows, list display with thousands separators).
 `CAQ_export_6_2025_9M_2026-11-12.xlsx` - first export of the published query, 2025-26 9M, as supplied
 12/11/26.
+`CAQ_export_7_2025_all_periods_2026-11-12.xlsx` - export of query `2CZZ9_NKE76O91E4N5`, 2025-26, periods
+on the columns (9M, ANNUAL, H1 - no Q1 saved), as supplied 12/11/26.
 
 ## Query change for all periods side by side (given to Arnav 12/11/26)
 Query `2CZZ9_6Y2SQTAPWWLS`, after the cube with Period No. is active:

@@ -677,3 +677,25 @@ ledger.
 **Activated 12/11/26** (Arnav, by paste): `ZCL_PBA_AGENDA_TF` and `ZI_PBA_CUBE` as changed.
 Not yet seen: the query with the periods on the columns, and a project saved with the four
 periods - until a project is run that way the derived quarters have nothing to work from.
+
+## 19. Second export - 2025-26, all periods on the columns (12/11/26)
+
+File: `../original/CAQ_export_7_2025_all_periods_2026-11-12.xlsx`. Query `2CZZ9_NKE76O91E4N5`
+(a new query, no label yet - not `2CZZ9_6Y2SQTAPWWLS`), Fiscal Year 2025, Report Row No. 1 to 16,
+no period filter. Arnav: Q1 is not visible.
+
+- **No Q1 because none is saved.** For 2025 `ZFI_AGENDA` holds 9M for seven oil projects, ANNUAL
+  for five, and 9M / ANNUAL / H1 for Myanmar (H1 and 9M all zero). No project has Q1, and none
+  has two cumulative periods with figures, so no quarter can be derived either. The export shows
+  exactly the saved periods. Q1 appears once a project is run in ZFI_PL with Q1, H1, 9M, ANNUAL
+  (section 18).
+- **Against SAP:** 152 of 152 values equal the result expected from the extract of 10/11.
+- **Against the workbook** (six input sections): 9M 55 of 66 within 0.015, ANNUAL 36 of 42, H1 2
+  of 6. Outside, all on record already: Myanmar 9M and H1 (no figures in SAP); production
+  quantity divisor (BC-10, GPOC, Lower Zakum, MECL, PIVSA - accepted 12/11); MECL DD&A 12.02
+  against 12.82; ACG DD&A 23.97 against the typed 10.02; CPO-5 survey 2.36 against 0.13 (sheet
+  formula); Vankor DD&A oil 6.19 against 5.99, gas 1.02 against 0.99.
+- **Column order** in the export is 9M, ANNUAL, H1: Reporting Period stands above Period No. on
+  the column axis, so the columns sort by the period text. Period No. has to stand above
+  Reporting Period. Fiscal Year and Financial Year are one value and need not be on the columns.
+
