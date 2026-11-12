@@ -618,3 +618,28 @@ Lower Zakum and MECL production-cost / royalty / DD&A differences of up to 0.04 
 accepted. Still open with finance: MECL DD&A (8.13 in SAP, 8.68 on the sheet) and Myanmar at 9M
 (no record in SAP). Only 2025-26 9M has been checked through the published query so far.
 
+**Production quantity per project, ZFI_PL against the sheet (asked 12/11/26).** Millions: mn bbl
+for oil, mn MMBTU for gas. Production extract of 10/11/26; sheet = the divisor its formulas use.
+
+| Period | Product | Project | ZFI_PL | Sheet | Difference |
+|---|---|---|---:|---:|---:|
+| 9M 2025-26 | Oil | Block 06.1, Vietnam | 0.005493 | 0.005493 | 0.00 % |
+| 9M 2025-26 | Oil | Block BC-10, Brazil | 1.827654 | 1.823903 | +0.21 % |
+| 9M 2025-26 | Oil | Imperial Energy, Russia | 0.601276 | 0.601099 | +0.03 % |
+| 9M 2025-26 | Oil | MECL, Colombia | 0.676260 | 0.677199 | -0.14 % |
+| 9M 2025-26 | Oil | GPOC, South Sudan | 3.029500 | 3.026770 | +0.09 % |
+| 9M 2025-26 | Oil | Carabobo, Venezuela | 0.216903 | 0.216904 | 0.00 % |
+| 9M 2025-26 | Oil | Lower Zakum, UAE | 4.533487 | 4.521754 | +0.26 % |
+| 9M 2025-26 | Gas | Block 06.1, Vietnam | 0.603000 | 0.603000 | 0.00 % |
+| 9M 2025-26 | Gas | Imperial Energy, Russia | 2.637000 | 2.637000 | 0.00 % |
+| 9M 2025-26 | Gas | Block BC-10, Brazil | 0.953000 | 0.953000 | 0.00 % |
+| Annual 2025-26 | Oil | PIVSA San Cristobal, Venezuela | 0.609520 | 0.608776 | +0.12 % |
+| Annual 2025-26 | Oil | Block 5A (SPOC), South Sudan | 0.923755 | 0.923755 | 0.00 % |
+| Annual 2025-26 | Oil | ACG, Azerbaijan | 3.508489 | 3.508489 | 0.00 % |
+| Annual 2025-26 | Oil | CPO-5, Colombia | 5.417237 | 5.417280 | 0.00 % |
+| Annual 2025-26 | Oil | Vankorneft, Russia | 15.587539 | 15.587539 | 0.00 % |
+| Annual 2025-26 | Gas | Block A-1 and A-3, Myanmar | 31.243000 | 31.243000 | 0.00 % |
+| Annual 2025-26 | Gas | Vankorneft, Russia | 37.132000 | 37.132000 | 0.00 % |
+
+In the query the figure is the measure Production Quantity (mn): un-hide it on the Display tab.
+
