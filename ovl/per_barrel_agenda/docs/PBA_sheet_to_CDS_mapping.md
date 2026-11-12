@@ -643,3 +643,34 @@ for oil, mn MMBTU for gas. Production extract of 10/11/26; sheet = the divisor i
 
 In the query the figure is the measure Production Quantity (mn): un-hide it on the Display tab.
 
+## 18. All periods of one year side by side, all projects (12/11/26)
+
+Requirement as Arnav stated it: ZFI_PL is run one asset at a time; the report must show all
+assets and all quarters side by side like the Excel, for one year at a time.
+
+What the sheet shows: price for Q1, Q2, H1, Q3, 9M, Q4, Annual; the cost sections, cost of goods
+sold and profit for Q1, H1, 9M, Annual. Its in-between quarters are differences of cumulative
+figures (`Revenue & Costs`: H1 = Q1 + Q2, Q4 = Annual - 9M).
+
+How it is met without touching ZFI_PL:
+- ZFI_PL saves four year / period columns per run. One Profitability Analysis run per project
+  with **Q1, H1, 9M and ANNUAL of the same year** as the four columns puts all four cumulative
+  periods of that project into `ZFI_AGENDA`.
+- `ZCL_PBA_AGENDA_TF` (changed 12/11/26) adds Q2 = H1 - Q1, Q3 = 9M - H1, Q4 = ANNUAL - 9M for
+  every A2 line and the three A1 quantity lines the measures use. A quarter that ZFI_PL itself
+  saved is kept as saved. Stock lines of A1 and section A3 are not differenced.
+- `ZI_PBA_CUBE` (changed 12/11/26) gets Period No. (Q1 1, Q2 2, H1 3, Q3 4, 9M 5, Q4 6, Annual 7)
+  so the columns stand in the sheet's order instead of alphabetically.
+- Query: Period No. and Reporting Period on the columns, Fiscal Year as the prompt.
+
+Test (SQLite, same SQL and CASE text): real table unchanged on its saved periods (215 sheet
+cells, 194 within 0.015, as before), no duplicate key. A made-up project with ANNUAL v, 9M
+0.75 v, H1 0.5 v, Q1 0.2 v gives Q2 0.3 v, Q3 0.25 v, Q4 0.25 v on revenue, costs and
+quantities, in the order 1 to 7. A second one with a saved Q2 keeps the saved figure.
+
+Limits: each run replaces the project's saved rows, so the previous-year comparison column is
+gone while a project is on the four-period run; one year per project at a time; the run is
+still one per project (15 runs) - the report only reads what ZFI_PL saved. Two years with all
+periods, or no ZFI_PL runs at all, need the history table of section 8.4 or a rebuild from the
+ledger.
+

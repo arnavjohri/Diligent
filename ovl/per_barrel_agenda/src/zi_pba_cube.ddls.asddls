@@ -51,6 +51,9 @@
 //
 // CHANGE HISTORY
 //   10.11.2026  Arnav Johri  <TR>  Initial development
+//   12.11.2026  Arnav Johri  <TR>  Period No. for the order of the
+//                                  periods (Q1, Q2, H1, Q3, 9M, Q4,
+//                                  Annual)
 //----------------------------------------------------------------------
 // ASSUMPTION: Project Name and Report Row are the row texts of the PBA
 //   sheet, matched to the ZFI_PL project by revenue on 10/11/26 (RU2002
@@ -179,6 +182,21 @@ define view ZI_PBA_CUBE
             else               '99'
           end
       end                                              as ReportRowNumber,
+
+//BOC By Arnav on 12/11/26
+      // the period's place in the year, for columns in the sheet's order
+      @EndUserText.label: 'Period No.'
+      case Item.ReportingPeriod
+        when 'Q1'     then '1'
+        when 'Q2'     then '2'
+        when 'H1'     then '3'
+        when 'Q3'     then '4'
+        when '9M'     then '5'
+        when 'Q4'     then '6'
+        when 'ANNUAL' then '7'
+        else               '9'
+      end                                              as ReportingPeriodNumber,
+//EOC By Arnav on 12/11/26
 
       // -- product and year texts ------------------------------------------
       @EndUserText.label: 'Product Name'

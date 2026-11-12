@@ -29,13 +29,25 @@ CLASS zcl_pba_agenda_tf DEFINITION
 *   one is left out (ZFI_PL fills two sets with the same selection when
 *   it is run that way).
 *
+*   12.11.2026: the quarters ZFI_PL does not save are worked out here,
+*   so that one ZFI_PL run per project with Q1, H1, 9M and ANNUAL as
+*   its four columns gives all seven periods of the year:
+*     Q2 = H1 - Q1,  Q3 = 9M - H1,  Q4 = ANNUAL - 9M
+*   for every line of section A2 and the three quantity lines of A1 the
+*   report uses. A quarter ZFI_PL itself saved is taken as saved.
+*
 * CHANGE HISTORY
 *   10.11.2026  Arnav Johri  <TR>  Initial development
+*   12.11.2026  Arnav Johri  <TR>  Q2, Q3, Q4 derived from the saved
+*                                  cumulative periods
 *----------------------------------------------------------------------*
 * ASSUMPTION: FISCALn above 0000 marks a column set that is in use.
 * ASSUMPTION: when a row repeats a year and period in a later column
 *   set, both sets carry the same figures (true for all 1,547 rows
 *   checked on 10/11/26).
+* ASSUMPTION: a quarter is the difference of two cumulative periods,
+*   as the board workbook does it (its Q4 = Annual - 9M). Stock lines
+*   of A1 and the per-barrel lines of A3 are not differenced.
 *----------------------------------------------------------------------*
 
   PUBLIC SECTION.
@@ -61,7 +73,10 @@ CLASS zcl_pba_agenda_tf IMPLEMENTATION.
     OPTIONS READ-ONLY
     USING zfi_agenda.
 
-    RETURN
+--BOC By Arnav on 12/11/26
+--  RETURN
+    lt_base =
+--EOC By Arnav on 12/11/26
       SELECT mandt                                       AS mandt,
              comp                                        AS company_code,
              proj                                        AS joint_venture,
@@ -185,6 +200,132 @@ CLASS zcl_pba_agenda_tf IMPLEMENTATION.
          AND ( fiscal4 <> fiscal1 OR period4 <> period1 )
          AND ( fiscal4 <> fiscal2 OR period4 <> period2 )
          AND ( fiscal4 <> fiscal3 OR period4 <> period3 );
+
+--BOC By Arnav on 12/11/26
+    RETURN
+      SELECT mandt                                       AS mandt,
+             company_code                                AS company_code,
+             joint_venture                               AS joint_venture,
+             report_section                              AS report_section,
+             line_text                                   AS line_text,
+             fiscal_year                                 AS fiscal_year,
+             report_period                               AS report_period,
+             product                                     AS product,
+             line_value                                  AS line_value,
+             quantity_mn                                 AS quantity_mn
+        FROM :lt_base
+      UNION ALL
+      SELECT c.mandt                                     AS mandt,
+             c.company_code                              AS company_code,
+             c.joint_venture                             AS joint_venture,
+             c.report_section                            AS report_section,
+             c.line_text                                 AS line_text,
+             c.fiscal_year                               AS fiscal_year,
+             CAST( 'Q2' AS NVARCHAR(6) )                 AS report_period,
+             c.product                                   AS product,
+             TO_DECIMAL( c.line_value - p.line_value, 16, 5 )    AS line_value,
+             TO_DECIMAL( c.quantity_mn - p.quantity_mn, 23, 11 ) AS quantity_mn
+        FROM :lt_base AS c
+       INNER JOIN :lt_base AS p
+          ON  p.mandt          = c.mandt
+          AND p.company_code   = c.company_code
+          AND p.joint_venture  = c.joint_venture
+          AND p.report_section = c.report_section
+          AND p.line_text      = c.line_text
+          AND p.fiscal_year    = c.fiscal_year
+          AND p.product        = c.product
+          AND p.report_period  = 'Q1'
+        LEFT OUTER JOIN :lt_base AS s
+          ON  s.mandt          = c.mandt
+          AND s.company_code   = c.company_code
+          AND s.joint_venture  = c.joint_venture
+          AND s.report_section = c.report_section
+          AND s.line_text      = c.line_text
+          AND s.fiscal_year    = c.fiscal_year
+          AND s.product        = c.product
+          AND s.report_period  = 'Q2'
+       WHERE c.report_period = 'H1'
+         AND s.mandt IS NULL
+         AND ( c.report_section = 'A2'
+            OR ( c.report_section = 'A1'
+                 AND c.line_text IN ( 'Share of Production',
+                                      'Total Sales quantity',
+                                      'Total Sales quantity-net of state share (13-3a)' ) ) )
+      UNION ALL
+      SELECT c.mandt                                     AS mandt,
+             c.company_code                              AS company_code,
+             c.joint_venture                             AS joint_venture,
+             c.report_section                            AS report_section,
+             c.line_text                                 AS line_text,
+             c.fiscal_year                               AS fiscal_year,
+             CAST( 'Q3' AS NVARCHAR(6) )                 AS report_period,
+             c.product                                   AS product,
+             TO_DECIMAL( c.line_value - p.line_value, 16, 5 )    AS line_value,
+             TO_DECIMAL( c.quantity_mn - p.quantity_mn, 23, 11 ) AS quantity_mn
+        FROM :lt_base AS c
+       INNER JOIN :lt_base AS p
+          ON  p.mandt          = c.mandt
+          AND p.company_code   = c.company_code
+          AND p.joint_venture  = c.joint_venture
+          AND p.report_section = c.report_section
+          AND p.line_text      = c.line_text
+          AND p.fiscal_year    = c.fiscal_year
+          AND p.product        = c.product
+          AND p.report_period  = 'H1'
+        LEFT OUTER JOIN :lt_base AS s
+          ON  s.mandt          = c.mandt
+          AND s.company_code   = c.company_code
+          AND s.joint_venture  = c.joint_venture
+          AND s.report_section = c.report_section
+          AND s.line_text      = c.line_text
+          AND s.fiscal_year    = c.fiscal_year
+          AND s.product        = c.product
+          AND s.report_period  = 'Q3'
+       WHERE c.report_period = '9M'
+         AND s.mandt IS NULL
+         AND ( c.report_section = 'A2'
+            OR ( c.report_section = 'A1'
+                 AND c.line_text IN ( 'Share of Production',
+                                      'Total Sales quantity',
+                                      'Total Sales quantity-net of state share (13-3a)' ) ) )
+      UNION ALL
+      SELECT c.mandt                                     AS mandt,
+             c.company_code                              AS company_code,
+             c.joint_venture                             AS joint_venture,
+             c.report_section                            AS report_section,
+             c.line_text                                 AS line_text,
+             c.fiscal_year                               AS fiscal_year,
+             CAST( 'Q4' AS NVARCHAR(6) )                 AS report_period,
+             c.product                                   AS product,
+             TO_DECIMAL( c.line_value - p.line_value, 16, 5 )    AS line_value,
+             TO_DECIMAL( c.quantity_mn - p.quantity_mn, 23, 11 ) AS quantity_mn
+        FROM :lt_base AS c
+       INNER JOIN :lt_base AS p
+          ON  p.mandt          = c.mandt
+          AND p.company_code   = c.company_code
+          AND p.joint_venture  = c.joint_venture
+          AND p.report_section = c.report_section
+          AND p.line_text      = c.line_text
+          AND p.fiscal_year    = c.fiscal_year
+          AND p.product        = c.product
+          AND p.report_period  = '9M'
+        LEFT OUTER JOIN :lt_base AS s
+          ON  s.mandt          = c.mandt
+          AND s.company_code   = c.company_code
+          AND s.joint_venture  = c.joint_venture
+          AND s.report_section = c.report_section
+          AND s.line_text      = c.line_text
+          AND s.fiscal_year    = c.fiscal_year
+          AND s.product        = c.product
+          AND s.report_period  = 'Q4'
+       WHERE c.report_period = 'ANNUAL'
+         AND s.mandt IS NULL
+         AND ( c.report_section = 'A2'
+            OR ( c.report_section = 'A1'
+                 AND c.line_text IN ( 'Share of Production',
+                                      'Total Sales quantity',
+                                      'Total Sales quantity-net of state share (13-3a)' ) ) );
+--EOC By Arnav on 12/11/26
 
   ENDMETHOD.
 ENDCLASS.

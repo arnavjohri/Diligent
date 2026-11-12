@@ -2,10 +2,9 @@
 
 **Project:** OVL (ONGC Videsh) · finance MIS, corporate accounts
 **Status:** PBA sheet chosen (10/11/26). Query published 12/11/26 (`2CZZ9_6Y2SQTAPWWLS`); first export
-checked - see `docs/PBA_sheet_to_CDS_mapping.md` section 17. **All four objects are active (Arnav,
-10/11/26, created by paste in ADT)** and the cube returns data: 1,322 rows of its output compared with the expected
-result, all equal. Open: C1 release of `ZI_PBA_CUBE`, the query in Custom Analytical Queries,
-transport. AgendaFormat sheet: assessed only.
+checked - `docs/PBA_sheet_to_CDS_mapping.md` section 17. **12/11/26: class and cube changed for all
+periods of a year side by side (section 18) - class handed to Arnav, awaiting activation; cube
+next.** AgendaFormat sheet: assessed only.
 
 ## What it is
 The annual "Per Barrel Analysis" workbook, sheet `AgendaFormat`: five blocks per project
