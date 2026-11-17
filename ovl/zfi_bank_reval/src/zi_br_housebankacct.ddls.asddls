@@ -22,6 +22,23 @@
 // ASSUMPTION: V_T012K_BAM is the CDS entity name of the replacement
 //   object (SE11 -> T012K -> Extras -> Proxy Object). If activation says
 //   it is unknown, read the entity name there and substitute it.
+// 17/11/26 v3: one row per company code + G/L account. BAM holds two
+//   account IDs for G/L 95312 (HB130 and HB131), so every line item of
+//   that account joined twice and the query showed 95312 on two rows
+//   with the full balance on each (testing sheet 16/11/26, Khyati Sharma).
+//   Any G/L with two BAM rows under the same account ID would have been
+//   doubled without a visible second row (suspected for 93201, HB001).
+//   Grouped by company code + G/L; house bank, account ID, bank account
+//   number and currency are the MIN over the rows of that G/L, so a G/L
+//   with two account IDs shows the alphabetically first one (95312: HB130).
+//   The ITM join (CompanyCode + GLAccount) and the cube are unchanged.
+// ASSUMPTION: V_T012K_BAM-HKONT is stored in the 10-digit internal form
+//   (SE16N on 03/11/26 showed the unconverted value 0000096488), so the
+//   lpad is not needed and the view groups on the raw field - a function
+//   in the select list of a grouped classic view was not risked. If a
+//   mapped G/L ever comes back without house bank, check the stored
+//   HKONT of its BAM row; an unpadded value needs the lpad back in a
+//   second helper on top of this one.
 //----------------------------------------------------------------------
 @AbapCatalog.sqlViewName: 'ZIBRHBANKACCT'
 @AbapCatalog.compiler.compareFilter: true
@@ -35,11 +52,25 @@ define view ZI_BR_HOUSEBANKACCT
   as select from V_T012K_BAM
   //EOC By Arnav on 03/11/26
 {
+  //BOC By Arnav on 17/11/26 - one row per company code + G/L account
+  //  key bukrs                    as CompanyCode,
+  //  key hbkid                    as HouseBank,
+  //  key hktid                    as HouseBankAccount,
+  //      lpad( hkont, 10, '0' )   as GLAccount,
+  //      bankn                    as BankAccountNumber,
+  //      @Semantics.currencyCode: true
+  //      waers                    as BankAccountCurrency
   key bukrs                    as CompanyCode,
-  key hbkid                    as HouseBank,
-  key hktid                    as HouseBankAccount,
-      lpad( hkont, 10, '0' )   as GLAccount,
-      bankn                    as BankAccountNumber,
+  key hkont                    as GLAccount,
+      min( hbkid )             as HouseBank,
+      min( hktid )             as HouseBankAccount,
+      min( bankn )             as BankAccountNumber,
       @Semantics.currencyCode: true
-      waers                    as BankAccountCurrency
+      min( waers )             as BankAccountCurrency
+  //EOC By Arnav on 17/11/26 - one row per company code + G/L account
 }
+//BOC By Arnav on 17/11/26 - one row per company code + G/L account
+group by
+  bukrs,
+  hkont
+//EOC By Arnav on 17/11/26 - one row per company code + G/L account

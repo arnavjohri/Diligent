@@ -28,6 +28,15 @@ So the columns go into a **custom cube**, and the query is **re-created** in the
 that cube (a new ID, e.g. `ZZ1_BR_REPORT2`; fields re-selected — far fewer than the 247
 now selected; hierarchy re-picked).
 
+## Status 17/11/26
+
+Testing sheet from Khyati Sharma (16/11/26, `original/Bank_Revaluation_-_FY25_FIORI_Testing_2026-11-16.xlsx`):
+four points, ISSUES #10-#13. Code: `ZI_BR_HOUSEBANKACCT` v3 (one row per G/L, ends the 95312 double row).
+Query: Transaction Currency off the rows, Account Currency on; OVL Share / Balance After Revaluation
+rebuilt on *Balance in Account Currency* (they were chained on *Amount in Transaction Currency*, which
+left the Field Selection on 10/11 and took the three derived columns with it). 93201 needs Khyati's
+key date and FBL3N figure.
+
 ## Status 03/11/26
 
 All four CDS objects active on OCD (`ZFI_BR_GLMAP`, `ZI_BR_HOUSEBANKACCT` v2, `ZI_BR_BANKREVAL_ITM` v4,
@@ -49,6 +58,15 @@ for that year, ledger and company code. Without it the query shows the year's mo
 (ISSUES #5, 10/11/26 — in that case the carry-forward existed and the users had run the query with **no** fiscal-year filter, which is the opposite error; an account that closed the prior year at 0.00 gets no carry-forward line at all, 93483). Carry-forward lines carry TransactionCurrency = INR with the local amount and the account balance in BalanceTransactionCurrency; that is why *Balance in Account Currency* reads `AmountInBalanceTransacCrcy` for foreign-currency accounts (ISSUES #8). Do not "fix" this by removing the fiscal-year filter: every year's
 carry-forward line plus the prior year's items would then be counted twice, and converted
 systems hold pre-migration balances only as carry-forward lines anyway.
+
+**Transaction Currency must not be on the query rows** (ISSUES #11, 17/11/26). A foreign-currency
+account has INR lines (carry-forward) and own-currency lines, so with Transaction Currency on the rows it
+splits into two rows: the INR row's *Balance in Account Currency* is the opening balance in the account
+currency, the other row the year's movements. One row per G/L needs Account Currency on the rows instead.
+The flip side: *Amount in Transaction Currency* then shows `*` on those accounts (mixed currencies in one
+cell, ISSUES #2) - it cannot be both one row per G/L and split by currency. The measure is still in the
+ITM and the cube; only the query dropped it. The calculated measures must be built on *Balance in Account
+Currency*, not on it (ISSUES #12).
 
 ## Column map — Excel → source
 
@@ -97,7 +115,7 @@ Alternative considered and **not** recommended: hardcoding the 49 PI values in a
 
 ### 1b. `ZI_BR_HOUSEBANKACCT` — `src/zi_br_housebankacct.ddls.asddls` (03/11/26)
 
-Helper on **`V_T012K_BAM`** (the compatibility view T012K is redirected to; a CDS `select from t012k` reads the physical table with only the legacy ECC rows, 03/11/26): keys company code, house bank, account ID; `lpad(hkont, 10, '0')` as `GLAccount`, bank account number, currency. Activate before the ITM.
+Helper on **`V_T012K_BAM`** (the compatibility view T012K is redirected to; a CDS `select from t012k` reads the physical table with only the legacy ECC rows, 03/11/26). **v3 (17/11/26, 76 lines): one row per company code + G/L** - `group by bukrs, hkont`, `min()` on house bank, account ID, bank account number and currency. BAM holds two account IDs for G/L 95312 (HB130, HB131); before v3 every line of that account joined twice and the query showed it on two rows with the full balance on each (ISSUES #11). A G/L with two BAM rows under one account ID would have been doubled invisibly (suspected for 93201, ISSUES #10). The `lpad` is gone: HKONT is stored padded (SE16N 03/11/26), and a function in the select list of a grouped classic view was not worth an activation cycle. Join in the ITM unchanged. Activate before the ITM; the ITM and cube need no change for v3.
 
 ### 2. `ZI_BR_BANKREVAL_ITM` — `src/zi_br_bankreval_itm.ddls.asddls` (147 lines, v4)
 
@@ -227,7 +245,7 @@ active → query built on the cube in the app → published query run as a tile 
 | 3b | Arnav | ADT | 28/10/26, released but still not listed: cube re-delivered with `@ObjectModel.modelingPattern: #ANALYTICAL_CUBE`, `@ObjectModel.supportedCapabilities: [#ANALYTICAL_PROVIDER, …]`, `@Metadata.allowExtensions: true` (the classification the key-user catalogue reads; the ZZ9 query carries the query-side equivalents). After activation check Properties → API State still says Released. Cross-check in the *View Browser* app: the cube should show type Cube and the key-user release flag |
 | 4 | FI (or Arnav with them) | Fiori *Custom Analytical Queries* → *New* | Data source: search `ZI_BR_BANKREVAL_CUBE` or `ZI_BR` — **no asterisk**, the dialog searches "contains" and takes `*` literally (`zi*` returned nothing on 28/10/26). Listed once it is a `#CUBE`, classified, **and** released for key-user apps. Before going to the app, prove the analytic engine accepts the cube: `RSRTS_ODP_DIS` → `2CZIBRBNKREVCUBE` (2C + SQL view name) must open without errors; `RSRT` → `2CZIBRBNKREVCUBE/!2CZIBRBNKREVCUBE` (the `/!…` suffix is the default query; the bare provider name gives *GENUNIID is invalid*) runs it with the two parameters prompted. Query name e.g. `ZZ1_BR_REPORT2`, label "Bank Revaluation" |
 | 5 | FI | *Field Selection* | Tick: Ledger, Company Code, G/L Account, Account Currency, Exchange Rate Type, Project/Section, Business Unit, Bank Account Number, G/L House Bank, Fiscal Year, Fiscal Period, Posting Date, Accounting Document; measures Balance in Account Currency, PI Share, Exchange Rate at Key Date, and the one USD amount (Global / Functional / Free-defined 1 — whichever is USD) |
-| 6 | FI | *Display* | Rows: Company Code, G/L Account (Display Hierarchy on, pick `H109/ONGC/BANK_REVAL`, key and text), Account Currency, Exchange Rate Type, Project/Section, Business Unit. Columns: the measures. *Add Calculated Measure* twice: **OVL Share** = `Balance in Account Currency * PI Share`; **USD Balance after revaluation** = `OVL Share * Exchange Rate at Key Date`. Decimals: rate 6, amounts 2. Totals off for PI Share and Exchange Rate |
+| 6 | FI | *Display* | Rows: Company Code, G/L Account (Display Hierarchy on, pick `H109/ONGC/BANK_REVAL`, key and text), Account Currency, Exchange Rate Type, Project/Section, Business Unit. Columns: the measures. *Add Calculated Measure* twice: **OVL Share** = `Balance in Account Currency * PI Share`; **USD Balance after revaluation** = `OVL Share * Exchange Rate at Key Date`. Decimals: rate 6, amounts 2. Totals off for PI Share and Exchange Rate. **17/11/26:** the live query (`ZZ1_BZHO1M6TDK65`, "Bank Revaluation Report") still has *Transaction Currency* on the rows (remove, put *Account Currency* there) and its ALC / OVL Share / Balance After Revaluation chain was built on *Amount in Transaction Currency*, which is no longer selected - rebuild the two measures as above on *Balance in Account Currency*, delete ALC or redefine it as that measure (the cube already restricts the year) |
 | 7 | FI | *Filters* | Parameters: `P_RevalDate` = User Input Value (the revaluation date), `P_RevalCurrency` = Fixed Value `USD`. Variables: Ledger (derived, leading), Company Code mandatory, Fiscal Year mandatory, Period range optional |
 | 8 | FI | *Preview* → *Publish* | Preview with Company Code, FY, key date 30.09.2026 → one row per bank G/L, columns as in the Excel. Publish generates `ZZ9_BR_REPORT2` |
 | 9 | FI / users | Run | Three ways to the same query: (a) *Query Browser* app → search the query → *Open* / *Create Tile* on the user's launchpad; (b) Excel via Analysis for Office, BW query `2CZZ9_BR_REPORT2`; (c) Fiori *Create Tile* from the query itself. The Excel sheet for Group Reporting is the export of (a) or (b) |
