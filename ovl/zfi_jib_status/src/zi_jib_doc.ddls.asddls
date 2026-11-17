@@ -7,7 +7,7 @@
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 1 of 7 for the Management Dashboard card "JIB Status". One
+//   Object 1 of 8 for the Management Dashboard card "JIB Status". One
 //   row per JIB document and joint venture: BKPF restricted to document
 //   type JM, joined to its BSEG lines for the venture, DISTINCT so the
 //   150-odd lines of a JIB collapse to one row. REVERSED JIBs COUNT:
@@ -34,6 +34,11 @@
 //   line, 03/11/26), and a JIB document carries exactly one venture.
 //   Parked documents have no BSEG lines, so the inner join drops them;
 //   no BSTAT filter is used (upload-posted headers carry BSTAT 'Z').
+//   The document type itself is a column since 17/11/26 (the client
+//   wants it in the report); it reads JM on every row as long as the
+//   WHERE below is the only filter on it. ZI_JIB_VENTURE (the ventures
+//   that have a JIB) and ZI_JIB_CLEARING (the vendor line's clearing)
+//   read this view, so the JM filter lives here only.
 //
 // CHANGE HISTORY
 //   04.11.2026  Arnav Johri  <TR>  Initial development (on ZI_JIB_ENTRY,
@@ -45,6 +50,9 @@
 //                                  (for the quarter summary)
 //   06.11.2026  Arnav Johri  <TR>  Reversed JIBs no longer excluded;
 //                                  ReversalDocument, ReversalIndicator
+//   17.11.2026  Arnav Johri  <TR>  AccountingDocumentType (BKPF-BLART)
+//                                  for the Document Type column
+//                                  (ISSUES 11)
 //----------------------------------------------------------------------
 // ASSUMPTION: document type JM is a literal here, deliberately not read
 //   from the GS01 set: if the upload is ever switched to another type,
@@ -80,6 +88,10 @@ define view ZI_JIB_DOC
       @EndUserText.label: 'Joint Venture'
   key Item.vname                     as JointVenture,
 
+      // 17/11/26: Document Type column asked by the client (ISSUES 11);
+      // JM on every row today - the WHERE below is the only filter on it
+      @EndUserText.label: 'Document Type'
+      Doc.blart                      as AccountingDocumentType,
       @EndUserText.label: 'Posting Period'
       Doc.monat                      as FiscalPeriod,
       @EndUserText.label: 'Fiscal Quarter'
