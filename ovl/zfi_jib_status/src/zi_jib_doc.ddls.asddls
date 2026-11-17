@@ -35,10 +35,19 @@
 //   Parked documents have no BSEG lines, so the inner join drops them;
 //   no BSTAT filter is used (upload-posted headers carry BSTAT 'Z').
 //   The document type itself is a column since 17/11/26 (the client
-//   wants it in the report); it reads JM on every row as long as the
-//   WHERE below is the only filter on it. ZI_JIB_VENTURE (the ventures
-//   that have a JIB) and ZI_JIB_CLEARING (the vendor line's clearing)
-//   read this view, so the JM filter lives here only.
+//   wants it in the report). ZI_JIB_VENTURE (the ventures that have a
+//   JIB) and ZI_JIB_CLEARING (the vendor line's clearing) read this
+//   view, so the document type filter lives here only.
+//   SECOND DOCUMENT TYPE, 17/11/26: the Bangladesh JIBs (ventures
+//   BD1012, BD1112, vendor lines in BDT, number range 60) are posted
+//   under document type OS, not JM - Arnav's vendor line item list of
+//   17/11/26 shows the JM subtotal followed by an OS group with the
+//   same venture columns. OS is therefore a second value of the
+//   document type filter. Because the reversal type of OS documents is
+//   not known (JM reverses as YH, which the type filter kept out), the
+//   reversal documents themselves are excluded by BKPF-XREVERSAL = '2'
+//   whatever their type; the reversed originals (XREVERSAL = '1') stay,
+//   as before.
 //
 // CHANGE HISTORY
 //   04.11.2026  Arnav Johri  <TR>  Initial development (on ZI_JIB_ENTRY,
@@ -53,11 +62,24 @@
 //   17.11.2026  Arnav Johri  <TR>  AccountingDocumentType (BKPF-BLART)
 //                                  for the Document Type column
 //                                  (ISSUES 11)
+//   17.11.2026  Arnav Johri  <TR>  Document type OS added (Bangladesh
+//                                  JIBs); reversal documents excluded
+//                                  by XREVERSAL instead of by type
+//                                  (ISSUES 12)
 //----------------------------------------------------------------------
-// ASSUMPTION: document type JM is a literal here, deliberately not read
-//   from the GS01 set: if the upload is ever switched to another type,
-//   the history posted as JM must stay visible. Add the new type as a
-//   second value in the WHERE at that point.
+// ASSUMPTION: the document types are literals here, deliberately not
+//   read from the GS01 set (which holds JM only): if the upload is ever
+//   switched to another type, the history must stay visible. A further
+//   type is one more OR line in the WHERE.
+// ASSUMPTION: every OS document with a venture on its lines is a JIB.
+//   Not proven beyond the Bangladesh rows seen on 17/11/26: SE16N BKPF
+//   OVL / OS, XBLNR, BKTXT and TCODE tell whether OS also carries other
+//   postings; if it does, a different marker is needed for OS.
+// ASSUMPTION: BKPF-XREVERSAL is '1' on a reversed document and '2' on
+//   the reversal document (the field exists on this system: ZF_RESET_CLR
+//   reads it). Check before activating: SE16N BKPF OVL 1025001669 /
+//   2025 must show XREVERSAL 1 and 9102500194 / 2025 must show 2. If it
+//   is the other way round, swap the value in the WHERE.
 // ASSUMPTION: XBLNR / BKTXT ("AIOC JIB", "For September ,26") are typed
 //   by the user in the upload file; shown, never used as criteria.
 // ASSUMPTION: a reversed JIB counts as uploaded for its month, with the
@@ -89,7 +111,7 @@ define view ZI_JIB_DOC
   key Item.vname                     as JointVenture,
 
       // 17/11/26: Document Type column asked by the client (ISSUES 11);
-      // JM on every row today - the WHERE below is the only filter on it
+      // JM or OS - the WHERE below is the only filter on it
       @EndUserText.label: 'Document Type'
       Doc.blart                      as AccountingDocumentType,
       @EndUserText.label: 'Posting Period'
@@ -129,5 +151,11 @@ define view ZI_JIB_DOC
       @EndUserText.label: 'One'
       cast( 1 as abap.int4 )         as One
 }
-where Doc.blart  = 'JM'
-  and Item.vname <> ''
+// 17/11/26: OS added for the Bangladesh JIBs; reversal documents out
+// by XREVERSAL, whatever their type (ISSUES 12)
+// where Doc.blart  = 'JM'
+//   and Item.vname <> ''
+where ( Doc.blart = 'JM'
+     or Doc.blart = 'OS' )
+  and Doc.xreversal <> '2'
+  and Item.vname    <> ''
