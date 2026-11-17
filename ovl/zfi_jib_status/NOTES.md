@@ -108,9 +108,9 @@ BU     Z mapping table (vname -> BU, project name) — or CASE on the venture pr
 7. Consumer of the data source: Fiori / OData, SAC, or an ABAP report? Decides the object
    type (CDS view with OData service vs. a report).
 
-## Objects — all seven in `ZFI_JIB_STATUS.zip` (06/11/26, consumer: Custom Analytical Queries)
+## Objects — all eight in `ZFI_JIB_STATUS.zip` (06/11/26; eighth view 17/11/26, ISSUES 11; consumer: Custom Analytical Queries)
 
-Seven classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**.
+Eight classic `define view`s in `src/`, one abapGit ZIP, into the **existing package `ZFI_OTH`**.
 No table, no domain, no data element, no `package.devc.xml` — on purpose (the treasury ZIP
 created both DDL sources and not the table; a DEVC file would overwrite the package text).
 
@@ -128,13 +128,14 @@ twelve months of the fiscal year, Pending for the months not posted yet (October
 
 | # | Object | SQL view | What | Lines |
 |---|---|---|---|---|
-| 1 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` BKPF ⋈ BSEG, document type JM, `vname <> ''` (reversed ones included, with ReversalDocument / ReversalIndicator): one row per JIB document and venture with posting period, posting date, entry date (CPUDT), header text, reference, user, and `One` = 1 (the cube's document count) | 87 |
+| 1 | `ZI_JIB_DOC` | `ZIJIBDOC` | `select distinct` BKPF ⋈ BSEG, document type JM, `vname <> ''` (reversed ones included, with ReversalDocument / ReversalIndicator): one row per JIB document and venture with posting period, posting date, entry date (CPUDT), header text, reference, user, and `One` = 1 (the cube's document count); **17/11/26:** AccountingDocumentType = BLART (**Document Type**) | 133 |
 | 1a | `ZI_JIB_YEAR_AGG` | `ZIJIBYEARAGG` | GROUP BY company code / venture / GJAHR on view 1: `max(EntryDate)`, `count(distinct FiscalPeriod)` MonthsUploaded, `count(distinct document)`, JibPosted = 1 — the year summary | 60 |
 | 1b | `ZI_JIB_QTR_AGG` | `ZIJIBQTRAGG` | same per GJAHR + FiscalQuarter (view 1 now carries the quarter of the posting period as a CASE) | 57 |
+| 1c | `ZI_JIB_CLEARING` | `ZIJIBCLEARING` | **17/11/26.** View 1 ⋈ BSEG on the document key, `koart = 'K'` and `augbl <> ''`, GROUP BY company code / document / GJAHR: `max(augdt)` ClearingDate, `max(augbl)` ClearingDocument — one row per **cleared** JIB document (vendor line settled, or reversed: FB08 clears it). Kept apart from view 1 because AUGBL on its DISTINCT list would split a document into a cleared and an uncleared row | 81 |
 | 2 | `ZI_JIB_DOC_AGG` | `ZIJIBDOCAGG` | GROUP BY company code / venture / GJAHR / MONAT on view 1: `max(EntryDate)` LastEntryDate, `max(PostingDate)`, `max(AccountingDocument)` LastDocument, `count(distinct document)`, JibPosted = 1 | 62 |
 | 3 | `ZI_JIB_PERIOD` | `ZIJIBPERIOD` | twelve UNION ALL branches, each `select distinct bukrs, gjahr from bkpf` + the period as `cast( 'nn' as abap.numc(2) )` + FiscalQuarter literal + PeriodStartDate (1 April of GJAHR + n−1 months): every fiscal year with any document gets all twelve months | 232 |
-| 4 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV left join T8JVT on bukrs + vname, `max(vtext)` under GROUP BY — **WHERE vname = AA2002 / SD2002 / MM2002 / MM2012** | 63 |
-| 5 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 4 ⋈ 3 on company code, LEFT OUTER JOIN 2 (month) and LEFT OUTER JOIN 1 (documents) on company code, venture, GJAHR, MONAT. Keys: CompanyCode (`_CompanyCode`), JointVenture (text ProjectName), FiscalYear, FiscalPeriod (text PeriodMonth), AccountingDocument (NULL on a Pending row → `#`). Characteristics: PeriodMonth (April … March), FiscalQuarter, PeriodStartDate, ProjectName, JointVentureName, VentureType, BusinessUnit, JibStatus (**Status**), LastEntryDate (last upload of the month, every row), LastPostingDate, EntryDate (**Date of JIB Upload**, per document), PostingDate, DocumentHeaderText, Reference, EnteredBy. LastDocument (**Last Document Number**) and MonthJibDocuments on every row of the month, so a query showing Last Document Number instead of Document Number stays at one row per month. Year / quarter summary on every row (LEFT OUTER JOIN 1a on venture + GJAHR, 1b on + FiscalQuarter): YearStatus, YearLastEntryDate, YearMonthsUploaded, YearJibDocuments, QuarterStatus, QuarterLastEntryDate, QuarterMonthsUploaded, QuarterJibDocuments. Measures (INT4, SUM): JibDocuments (`coalesce( Doc.One, 0 )`), JibPosted (1 on the row whose document = LastDocument — searched CASE comparing two joined fields), JibPending (1 on a Pending row), Ventures (JibPosted + JibPending via nested CASE). Header set = `ZI_TR_BANKACCT_CUBE` | 233 |
+| 4 | `ZI_JIB_VENTURE` | `ZIJIBVENTURE` | T8JV **inner join view 1 on bukrs + vname (17/11/26: every venture with at least one JIB document, any company code)**, left join T8JVT, `max(vtext)` under GROUP BY. The four-code WHERE of 03/11 is commented out, not deleted | 80 |
+| 5 | `ZI_JIB_STATUS_CUBE` | `ZIJIBSTATUSCUBE` | 4 ⋈ 3 on company code, LEFT OUTER JOIN 2 (month) and LEFT OUTER JOIN 1 (documents) on company code, venture, GJAHR, MONAT. Keys: CompanyCode (`_CompanyCode`), JointVenture (text ProjectName), FiscalYear, FiscalPeriod (text PeriodMonth), AccountingDocument (NULL on a Pending row → `#`). Characteristics: PeriodMonth (April … March), FiscalQuarter, PeriodStartDate, ProjectName, JointVentureName, VentureType, BusinessUnit, JibStatus (**Status**), LastEntryDate (last upload of the month, every row), LastPostingDate, EntryDate (**Date of JIB Upload**, per document), PostingDate, DocumentHeaderText, Reference, EnteredBy. **17/11/26:** AccountingDocumentType (**Document Type**); LEFT OUTER JOIN 1c on the document key → ClearingDate (**Clearing Date**), ClearingDocument (**Clearing Document**), null (`#`) while the JIB is open and on a Pending row, no semantic object (the row's FiscalYear is the JIB's); ProjectName ELSE = JointVentureName and BusinessUnit ELSE = 'Unassigned' for the ventures outside the four. LastDocument (**Last Document Number**) and MonthJibDocuments on every row of the month, so a query showing Last Document Number instead of Document Number stays at one row per month. Year / quarter summary on every row (LEFT OUTER JOIN 1a on venture + GJAHR, 1b on + FiscalQuarter): YearStatus, YearLastEntryDate, YearMonthsUploaded, YearJibDocuments, QuarterStatus, QuarterLastEntryDate, QuarterMonthsUploaded, QuarterJibDocuments. Measures (INT4, SUM): JibDocuments (`coalesce( Doc.One, 0 )`), JibPosted (1 on the row whose document = LastDocument — searched CASE comparing two joined fields), JibPending (1 on a Pending row), Ventures (JibPosted + JibPending via nested CASE). Header set = `ZI_TR_BANKACCT_CUBE` | 335 |
 
 `ZI_JIB_ENTRY` and `ZI_JIB_WINDOW` (04/11 model) are **gone from `src/`**; abapGit offers them
 for deletion on the pull — nothing references them. `ZI_JIB_PERIOD` comes back (new shape).
@@ -164,9 +165,10 @@ Decisions behind the shape:
   **YH** (number range 91), so the JM filter keeps them out of the count.
 - Only JM rows were pulled from PRD (BLART filter), so "JIBs under another type" (check 3) is
   unproven; Arnav's call 03/11/26: JM is enough.
-- **Scope = the four ventures** (Arnav, 03/11/26). `ZI_JIB_VENTURE` keeps AA2002, SD2002,
-  MM2002, MM2012; ProjectName and Business Unit are CASEs per venture in the cube with the
-  workbook's texts. A fifth venture = one OR line in the view and two WHENs in the cube.
+- **Scope = the four ventures** (Arnav, 03/11/26) — **superseded 17/11/26** by the client's "all
+  ventures": `ZI_JIB_VENTURE` now lists every venture with a JIB document (see the section at
+  the end). ProjectName and Business Unit stay CASEs per venture in the cube with the
+  workbook's texts for the four; the others fall back to the T8JVT text / 'Unassigned'.
 - **What two full PRD documents showed (03/11/26):** every BSEG line carries VNAME, the vendor
   line (PK 31) included; one venture per document. VN2012 (Vietnam 06.1) is a structurally
   normal JIB outside today's list — the "non-valid" example.
@@ -205,13 +207,13 @@ target mapping for semantic object AccountingDocument in the user's catalogs; th
 ## How it ships — abapGit ZIP `ZFI_JIB_STATUS.zip`
 
 `.abapgit.xml` (`STARTING_FOLDER /src/`, `FOLDER_LOGIC PREFIX`) at the folder root; `src/`
-with 14 files: seven `*.ddls.asddls` + seven `*.ddls.xml`. No DEVC file (existing package). Built with
+with 16 files: eight `*.ddls.asddls` + eight `*.ddls.xml`. No DEVC file (existing package). Built with
 `zip -X ZFI_JIB_STATUS.zip .abapgit.xml src/*`; XML well-formed, UTF-8, no BOM, LF; DDLNAME
 = view name = file name checked by script.
 
 Import: `ZABAPGIT_STANDALONE` → New Offline Repo → package **`ZFI_OTH`** (existing; nothing
-in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the seven DDL sources in
-dependency order (DOC, DOC_AGG, YEAR_AGG, QTR_AGG, PERIOD, VENTURE, then the cube). If the pull stops on a DDLS with a syntax error,
+in the ZIP touches the package itself) → Import ZIP → Pull → transport request when asked. abapGit activates the eight DDL sources in
+dependency order (DOC, DOC_AGG, YEAR_AGG, QTR_AGG, PERIOD, VENTURE, CLEARING, then the cube). If the pull stops on a DDLS with a syntax error,
 open it in ADT, paste the error here, the fix comes back as that one file and a rebuilt ZIP.
 
 After the pull, by hand:
@@ -224,3 +226,43 @@ After the pull, by hand:
 4. GR consultant: Custom Analytical Queries → New → data source `ZI_JIB_STATUS_CUBE` (search
    without `*`). Rows: JV Code, Project Name, Business Unit, JIB Posting Status, Date (Last
    JIB Entry); filters Fiscal Year, Posting Period / Fiscal Quarter, Business Unit.
+
+## 17/11/26 — client's additional requirements (ISSUES 11)
+
+Mail 17/11/26, Corporate Accounts: "working well and meeting expectations", plus four additions.
+Four objects changed or created, pasted one by one into ADT in this order, ZIP rebuilt with 8 DDLS:
+
+| Ask | Where | How |
+|---|---|---|
+| 1. All ventures | `ZI_JIB_VENTURE` | inner join to `ZI_JIB_DOC`: every venture with at least one JM document, any company code. Ventures with no JIB ever posted are **not** listed (an operated venture cannot be told from a non-operated one with a missing JIB without the T8JV venture type, whose values are unread). VN2012 comes back with its 2016-17 history and Pending months after |
+| 2. Document Type | `ZI_JIB_DOC` → cube | `AccountingDocumentType` = BKPF-BLART, JM on every document row |
+| 3. Clearing Date | `ZI_JIB_CLEARING` (new) → cube | vendor line (KOART K) of the JM document, `max(augdt)` |
+| 4. Clearing Document | same | `max(augbl)`; both null while the JIB is open and on a Pending row — "filled only if cleared", as asked |
+
+Decisions still with the client: (a) list ventures that never had a JIB (would need the T8JV
+venture type); (b) Business Unit for the ventures beyond the four — the cube shows `Unassigned`
+until the mapping arrives (one WHEN per venture, or a Z table by SM30). A reversed JIB shows its
+reversal document (YH) as the clearing document; the Reversed column tells it from a payment.
+
+**Custom Analytical Queries — what the GR consultant changes (nothing else moves).** The
+published query is `ZZ1_TWKWN9B2DSJV` (tile URL `bsa_query=2CZZ1_TWKWN9B2DSJV`); the name does not
+change on republish, so the tile stays as it is.
+
+1. Custom Analytical Queries → open `ZZ1_TWKWN9B2DSJV` → *Edit*. The field list is re-read from
+   `ZI_JIB_STATUS_CUBE`, so the three new fields are offered unticked.
+2. *Field Selection*: tick **Document Type** (`AccountingDocumentType`), **Clearing Date**
+   (`ClearingDate`), **Clearing Document** (`ClearingDocument`).
+3. *Display*: set all three to **Row** and drag them after *Document Number*, in that order.
+   Leave the measures alone.
+4. *Filters*: if JV Code or Business Unit carries a **fixed** filter value (the four codes, or
+   MENA & CIS / AP), remove it — a fixed filter on the query would hide the new ventures however
+   the cube is built. User-input filters stay.
+5. *Save* → *Publish*. Do not read the technical name off the *Preview*: that is a `ZZ9_…` copy
+   (MEMORY.md M-31). The published name is still `ZZ1_TWKWN9B2DSJV`.
+6. In the tile, a user who saved a personal view has to add the three columns once via
+   *Settings*; a fresh start shows them because they are query rows.
+
+Checks after the cube is active: Data Preview on `ZI_JIB_STATUS_CUBE`, SD2002 / 2025 — the June row
+1025001669 shows Document Type JM, Clearing Document 9102500194, Clearing Date 01.07.2025; an open
+JIB shows `#` in both clearing columns. ADT Properties → API State still shows C1 (elements were
+only added; if it is gone, add it again).
