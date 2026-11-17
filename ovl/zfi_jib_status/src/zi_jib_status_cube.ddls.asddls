@@ -4,16 +4,19 @@
 //             for Custom Analytical Queries)
 // Project   : OVL                                   Module: FI-JVA
 // Source    : Management_Dashboard_-_JIB_Status_-_Final.xlsx; test
-//             feedback Corporate Accounts (K. Sharma), 06/11/26
+//             feedback Corporate Accounts (K. Sharma), 06/11/26; client
+//             mail 17/11/26 (all ventures, document type, clearing)
 // Author    : Arnav Johri                            Date: 03.11.2026
 // Transport : <TR>
 //----------------------------------------------------------------------
 // DESCRIPTION
-//   Object 7 of 7 for the Management Dashboard card "JIB Status": the
+//   Object 8 of 8 for the Management Dashboard card "JIB Status": the
 //   data source the functional consultant picks in the Fiori app Custom
 //   Analytical Queries. The layout of the requirement's example:
 //     JV | BU | Project Name | Month | Status | Date of JIB Upload |
 //     Document Number
+//   plus, since 17/11/26, Document Type | Clearing Date | Clearing
+//   Document (the client's additional requirements, ISSUES 11).
 //   One row per company code / joint venture / fiscal year / posting
 //   period / JIB document. The MONTH is the month the JIB is FOR (the
 //   posting period of the document: "JIB for September" = period 06),
@@ -30,6 +33,11 @@
 //     AccountingDocument  the document number (navigation target for
 //                      the document header dialog: CompanyCode +
 //                      AccountingDocument + FiscalYear)
+//     AccountingDocumentType  BKPF-BLART, JM on every document row
+//     ClearingDate / ClearingDocument  from the vendor line of the
+//                      document (ZI_JIB_CLEARING): filled once the JIB
+//                      is cleared, null (#) while it is open and on a
+//                      Pending row
 //   Measures: JibDocuments (1 per document row), JibPosted (1 on one
 //   row per uploaded venture-month), JibPending (1 on a Pending row),
 //   Ventures (1 per venture-month) - summed over a Business Unit or a
@@ -43,13 +51,15 @@
 //   Business Unit and the year summary columns - without Month and
 //   Document Number - collapses to one line per venture: the last
 //   posting of the year, whichever month it was in.
-//   Built as ZI_JIB_VENTURE (the four ventures) x ZI_JIB_PERIOD (the
-//   twelve periods of every fiscal year with postings), joined on
-//   company code, LEFT OUTER JOIN to ZI_JIB_DOC_AGG (month totals) and
-//   to ZI_JIB_DOC (the documents). Annotation set copied from
-//   ZI_TR_BANKACCT_CUBE / ZI_BR_BANKREVAL_CUBE (listed by the app after
-//   the C1 release). After activation: ADT, Properties, API State, Add
-//   Release State, contract Use in Key User Apps (C1).
+//   Built as ZI_JIB_VENTURE (every venture with a JIB document, since
+//   17/11/26) x ZI_JIB_PERIOD (the twelve periods of every fiscal year
+//   with postings), joined on company code, LEFT OUTER JOIN to
+//   ZI_JIB_DOC_AGG (month totals), to ZI_JIB_DOC (the documents) and to
+//   ZI_JIB_CLEARING (the document's clearing). Annotation set copied
+//   from ZI_TR_BANKACCT_CUBE / ZI_BR_BANKREVAL_CUBE (listed by the app
+//   after the C1 release). After activation: ADT, Properties, API
+//   State, Add Release State, contract Use in Key User Apps (C1). The
+//   release of 06/11 survives this change: elements are only added.
 //
 // CHANGE HISTORY
 //   03.11.2026  Arnav Johri  <TR>  Initial development (per posting
@@ -77,17 +87,33 @@
 //                                  on both document numbers (click to
 //                                  open the document; the target app
 //                                  is launchpad configuration)
+//   17.11.2026  Arnav Johri  <TR>  ISSUES 11: Document Type; Clearing
+//                                  Date and Clearing Document (LEFT
+//                                  OUTER JOIN ZI_JIB_CLEARING); with
+//                                  every venture now in scope,
+//                                  ProjectName falls back to the SAP
+//                                  venture text and Business Unit to
+//                                  'Unassigned' outside the four
 //----------------------------------------------------------------------
 // ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
 //   texts per venture ("shall be a freezed input"; "as mentioned in
 //   Excel"): AA2002 ACG and SD2002 Block 5A are MENA & CIS BU, MM2002
-//   A1, Myanmar and MM2012 A3, Myanmar are AP BU. The T8JVT text is
-//   still exposed as SAP Venture Name.
+//   A1, Myanmar and MM2012 A3, Myanmar are AP BU. For every other
+//   venture (in scope since 17/11/26) ProjectName is the T8JVT text and
+//   Business Unit reads 'Unassigned' until the client supplies the
+//   mapping - one WHEN line each here, or a Z table by SM30 if the list
+//   keeps growing. The T8JVT text is still exposed as SAP Venture Name.
 // ASSUMPTION: fiscal year variant April-March for every company code
 //   (OVL: posting period 1 = April, confirmed on the PRD sample).
 // ASSUMPTION: a JIB for month X is the JM document whose posting period
 //   is X, however late it was entered (the April JIB entered on 15 May
 //   is April, Uploaded, 15.05.2026).
+// ASSUMPTION: Clearing Date / Clearing Document are those of the
+//   document's vendor line (see ZI_JIB_CLEARING). A reversed JIB shows
+//   the reversal document there; the Reversed column tells it apart from
+//   a payment. The clearing document carries no semantic object: the
+//   row's FiscalYear is the JIB's, so the FB03 click would open the
+//   wrong year.
 // ASSUMPTION: @Consumption.semanticObject reaches the generated query's
 //   OData metadata. If it does not, the UI developer adds the
 //   SemanticObject annotation for Document Number in the app's local
@@ -125,6 +151,10 @@ define view ZI_JIB_STATUS_CUBE
                                              and Doc.JointVenture   = Venture.JointVenture
                                              and Doc.FiscalYear     = Period.FiscalYear
                                              and Doc.FiscalPeriod   = Period.FiscalPeriod
+    // 17/11/26: clearing of the document's vendor line (ISSUES 11)
+    left outer join ZI_JIB_CLEARING as Clr   on  Clr.CompanyCode        = Doc.CompanyCode
+                                             and Clr.AccountingDocument = Doc.AccountingDocument
+                                             and Clr.FiscalYear         = Doc.FiscalYear
     left outer join ZI_JIB_YEAR_AGG as Year  on  Year.CompanyCode   = Venture.CompanyCode
                                              and Year.JointVenture  = Venture.JointVenture
                                              and Year.FiscalYear    = Period.FiscalYear
@@ -174,25 +204,30 @@ define view ZI_JIB_STATUS_CUBE
       Period.PeriodStartDate,
 
       // -- venture attributes, texts as in the requirement workbook -------
+      // 17/11/26: ventures outside the four fall back to the SAP text
       @EndUserText.label: 'Project Name'
       case Venture.JointVenture
         when 'AA2002' then 'ACG'
         when 'SD2002' then 'Block 5A'
         when 'MM2002' then 'A1, Myanmar'
         when 'MM2012' then 'A3, Myanmar'
-        else               'OTHER'
+//      else               'OTHER'
+        else               Venture.JointVentureName
       end                                              as ProjectName,
       @EndUserText.label: 'SAP Venture Name'
       Venture.JointVentureName,
       @EndUserText.label: 'Venture Type'
       Venture.VentureType,
+      // 17/11/26: Business Unit of the added ventures = client's mapping,
+      // one WHEN per venture here once it is known
       @EndUserText.label: 'Business Unit'
       case Venture.JointVenture
         when 'AA2002' then 'MENA & CIS BU'
         when 'SD2002' then 'MENA & CIS BU'
         when 'MM2002' then 'AP BU'
         when 'MM2012' then 'AP BU'
-        else               'OTHER'
+//      else               'OTHER'
+        else               'Unassigned'
       end                                              as BusinessUnit,
 
       // -- JIB status of the month ----------------------------------------
@@ -215,6 +250,9 @@ define view ZI_JIB_STATUS_CUBE
       Month.JibDocuments                               as MonthJibDocuments,
 
       // -- the document --------------------------------------------------
+      // 17/11/26: Document Type (ISSUES 11)
+      @EndUserText.label: 'Document Type'
+      Doc.AccountingDocumentType,
       @EndUserText.label: 'Date of JIB Upload'
       Doc.EntryDate,
       @EndUserText.label: 'Posting Date'
@@ -229,6 +267,13 @@ define view ZI_JIB_STATUS_CUBE
       Doc.ReversalDocument,
       @EndUserText.label: 'Reversed'
       Doc.ReversalIndicator,
+
+      // -- clearing of the document (vendor line), 17/11/26 ---------------
+      // null while the JIB is open and on a Pending row
+      @EndUserText.label: 'Clearing Date'
+      Clr.ClearingDate,
+      @EndUserText.label: 'Clearing Document'
+      Clr.ClearingDocument,
 
       // -- year summary (same value on every row of the venture-year) ----
       @EndUserText.label: 'Year Status'
