@@ -28,6 +28,16 @@ So the columns go into a **custom cube**, and the query is **re-created** in the
 that cube (a new ID, e.g. `ZZ1_BR_REPORT2`; fields re-selected — far fewer than the 247
 now selected; hierarchy re-picked).
 
+## Status 18/11/26
+
+Second testing mail (Khyati, 18/11/26, key date 31.03.2026, `original/Bank_Statement_FIORI_Updates_2026-11-18.xlsx`):
+93201 now correct (the 16/11 figure was a FY 2026 key date, ISSUES #10 closed); 95312 single house bank row
+(helper v3 proven). Still 39 accounts on two rows because **Transaction Currency is still on the query rows**;
+each pair adds up to the FBL3N balance, 0 exceptions (`RECON_2026-11-18.md`). The calculated measures came
+back on the old *Amount in Transaction Currency* base and are wrong on every foreign-currency INR row
+(ISSUES #14). Two app changes outstanding, no code: rows (Transaction Currency off, Account Currency on) and
+measures (OVL Share and Balance After Revaluation on *Balance in Account Currency*, ALC deleted).
+
 ## Status 17/11/26
 
 Testing sheet from Khyati Sharma (16/11/26, `original/Bank_Revaluation_-_FY25_FIORI_Testing_2026-11-16.xlsx`):
