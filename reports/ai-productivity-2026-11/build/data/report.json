@@ -1677,6 +1677,4178 @@
       "The approach is repeatable - the same loop and toolkit worked on PAL, ONGC and Astral, across reports, CDS / RAP, workflow, enhancements and ATC.",
       "Next steps: share the AI delivery toolkit with the team, reuse the dashboard pattern for further cards, apply the ATC patterns to the next remediation wave."
      ]
+    },
+    {
+     "t": "h1",
+     "text": "Annex A - Detailed AI Use Case Register",
+     "pageBreak": true
+    },
+    {
+     "t": "p",
+     "text": "Every use case not already described in sections 4 to 6, 8 and 13, by project. Hours per use case are in the project tables of sections 4 to 6."
+    },
+    {
+     "t": "h2",
+     "text": "PAL - 3 further use cases"
+    },
+    {
+     "t": "h3",
+     "text": "UC-003  PAL customer invoice / credit memo / debit memo forms: PDF mailed by the program cannot be opened (INC01967)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI03CUSTINV1 (report); ZFI_03_CUSTINV_FORM (include; corrected); ZFI_03_CUSTINV_TOP (include; unchanged); ZFI_03_CUSTINV_SEL (include; unchanged); ZFIBSDMCM (transaction); ZDJ_ENCRYPTPDF (SM69 external command)"
+      ],
+      [
+       "Business requirement",
+       "Invoice PDFs e-mailed to customers by the program (radio button rb_email) could not be opened in Acrobat or Edge, while the same document saved with Save as PDF, or resent manually by AR, opened. Customers must receive a readable invoice PDF and the e-mail log must not report success for a broken mail."
+      ],
+      [
+       "Technical challenge",
+       "The mail path does not attach the Adobe output: it writes the PDF to the application server, runs an external OS command, waits 2 seconds, reads the file back and attaches the read-back, with no return code checked anywhere in the chain."
+      ],
+      [
+       "What AI did",
+       "From a 7,084-line SE80 print listing the assistant rebuilt one source file per include with a new parser (scripts/unlist.py), traced the mail path and identified the unchecked write / encrypt / read-back round trip as the only path that can corrupt the attachment. It delivered the whole corrected include ZFI_03_CUSTINV_FORM (5,020 -> 5,197 lines, 20 BOC/EOC blocks dated 10/10/26): every step checked, read-back validated (%PDF header, %%EOF, /Encrypt, exact size), nothing sent and the log set to Failed on any error,..."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE80 print listing (10.10.26); debugged in production on 12/10/26 under his own user (credit memo AVIAREPS KFT., stopped at o_send_request->send and ended with /n, nothing sent) and reported the variable values; relayed AR's report that the mail works from one user ID and not from another;"
+      ],
+      [
+       "Result",
+       "Completed - Every return code in the mail chain is now checked (OPEN DATASET, ZTMP_DIR lookup, SXPG_COMMAND_EXECUTE status and exit code, C13Z_RAWDATA_READ, SCMS_BINARY_TO_XSTRING); The read-back is validated before it can replace the in-memory PDF;"
+      ],
+      [
+       "Timeline",
+       "10/10/26 to 13/10/26; 3 active AI-session day(s), 13 commits"
+      ],
+      [
+       "Evidence",
+       "pal/zfi03custinv1; pal/zfi03custinv1/ISSUES.md; pal/zfi03custinv1/NOTES.md; pal/zfi03custinv1/ZFI_03_CUSTINV_FORM.abap; pal/zfi03custinv1/original/ZFI03CUSTINV1.TXT"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-004  SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer Line Items"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZXVVFU02 (include of customer exit EXIT_SAPLV60B_002, enhancement SDVFX002); READ_TEXT (VBBK / 0002)"
+      ],
+      [
+       "Business requirement",
+       "The customer line of SD billing documents showed no text in Fiori Manage Customer Line Items (F0711); business wanted the sales order Header Note 1 there, as on the Statement of Account."
+      ],
+      [
+       "Technical challenge",
+       "SGTXT must be filled at posting time inside an existing exit include whose SIS CHECK statement leaves the exit early; the first-created sales order must be found from CVBRP at VF01 time."
+      ],
+      [
+       "What AI did",
+       "Chose the exit over BTE / AC_DOCUMENT with reasons, placed the insert above the existing SIS CHECK, wrote the first-created-SO rule (VBAK ERDAT/ERZET), READ_TEXT with language fallback and keep-existing rule; include 119 -> 221 lines;"
+      ],
+      [
+       "My work",
+       "Arnav filed the active include, confirmed text ID 0002 in TTXIT and pastes / tests in the PAL system."
+      ],
+      [
+       "Result",
+       "Completed - Fix in the SD-FI exit only: no Fiori or CDS change needed; Insert point above the SIS CHECK so non-SIS invoices are covered"
+      ],
+      [
+       "Timeline",
+       "21/09/26 to 23/09/26; 2 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "pal/zsd_fi_sgtxt; pal/zsd_fi_sgtxt/ISSUES.md (branch claude/charming-thompson-6lsel8); pal/zsd_fi_sgtxt/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-006  PAL invoice-upload utility class: local and group currency validated independently in the AR and GL upload"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZCL_INV_UTILITY (class; methods validate_inv_data_ar and validate_inv_data_gl changed); ZFM_INV_DOC_CHECK (function module, RFC NONE; called, not changed); BAPI_ACC_DOCUMENT_POST (BAPI; called from process_invoice_data, not changed)"
+      ],
+      [
+       "Business requirement",
+       "In the AR and GL upload, a document whose local (or group) currency amounts do not balance was accepted with no validation error as long as the document currency balanced. The upload must reject such documents with a message that names the currency that is out of balance."
+      ],
+      [
+       "Technical challenge",
+       "In validate_inv_data_ar and validate_inv_data_gl the local and group checks sat inside one IF that required both currency codes to be filled, so one blank code skipped every check. The four totals were inline DATA(...) declarations inside that branch and were never cleared, so a skipped document was compared against the previous..."
+      ],
+      [
+       "What AI did",
+       "From the class source pasted into the session on 12/10/26, the assistant named the root cause (skipped checks plus stale totals) and wrote the whole corrected class (5,367 -> 5,758 lines) with 6 BOC/EOC blocks dated 12/10/26. Both methods now declare the totals explicitly and clear them per document, validate local and group in separate blocks, treat an amount without a currency code as an error, and issue three currency-specific balance messages."
+      ],
+      [
+       "My work",
+       "Arnav pasted the class source into the session (NOTES.md: 'as pasted into the session 12/10/26 (5367 lines)'). Pasting the two method bodies or the whole class in SE24 / ADT is a manual step (NOTES.md, 'Shipping: PASTE')."
+      ],
+      [
+       "Result",
+       "Completed - Totals declared explicitly and CLEARed per document, removing the stale-value comparison between documents; Local and group currency validated in separate blocks, each only when its own code is filled"
+      ],
+      [
+       "Timeline",
+       "12/10/26 to 12/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "pal/zcl_inv_utility; pal/zcl_inv_utility/ISSUES.md; pal/zcl_inv_utility/NOTES.md; pal/zcl_inv_utility/ZCL_INV_UTILITY.abap; pal/zcl_inv_utility/original/ZCL_INV_UTILITY.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h2",
+     "text": "ONGC (OVL) - 45 further use cases"
+    },
+    {
+     "t": "h3",
+     "text": "UC-007  ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZCL_ZPRA_DAILY_PROD_DPC_EXT (class, SEGW OData V2 DPC extension for the CPI inbound interface); ZPRA_T_DLY_PRD (table, daily production - interface target); ZDPRPRODDASH (BSP application - Fiori Overview Page app zdprdashboard);"
+      ],
+      [
+       "Business requirement",
+       "Rebuild the ONGC Videsh Daily Production Report Excel (actual vs BE target BOEPD graph, production performance table, summary download) as CDS / RAP services and a Fiori dashboard with one tile, one page, six cards and one filter bar."
+      ],
+      [
+       "Technical challenge",
+       "An older S/4 release that rejects much of modern CDS / RAP (no year() / month(), analytical queries not allowed in a V4 binding, classic views need division() and allow no arithmetic in CASE conditions, no XCO XLSX), so every object had to be ported."
+      ],
+      [
+       "What AI did",
+       "this naming set was later abandoned for the senior's ZDPR_* package. Dashboard (16-28/09/26): the Overview Page manifest and local annotations for six cards, four detail-app adjustments, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL, the classic-view rewrite of ZDPR_Q_PROD_PERF, BOE / unit changes in the cubes and DDLX chart fixes, the FiscalYear controller extension (v1-v5) and the handover / review documents and per-system setup checklist."
+      ],
+      [
+       "My work",
+       "Human generated the apps in Business Application Studio, pasted / activated the CDS objects in ADT, ran previews and reported console / network errors by screenshot, deployed with npm run deploy (BSP ZDPRPRODDASH on TR OCQK901673;"
+      ],
+      [
+       "Result",
+       "Completed - Zero-valued measures no longer create rows in ZPRA_T_DLY_PRD: numeric check after conversion instead of a text compare with '0' (CPI sends 0.000 / 0.00); Running class pasted from SE24 and diffed against the repo copy before the fix was applied (no code drift)"
+      ],
+      [
+       "Timeline",
+       "23/09/26 to 27/10/26; 14 active AI-session day(s), 89 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zpra_dpr; ovl/zpra_dpr/ISSUES.md; ovl/zpra_dpr/dashboard/README.md; ovl/zpra_dpr/dashboard/HANDOVER.md; ovl/zpra_dpr/dashboard/detail_apps/zdprperf/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-013  Fiori Manage Purchase Orders: custom EKKO fields on the PO header - CDS extension UI annotations and F4 value..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZC_PURCHASEORDERTP_EXT (CDS view extension of C_PurchaseOrderTP); ZI_DOM_FIXVAL_VH (CDS view); ZI_NAT_PROC_VH (CDS view); ZI_REL_CODE_VH (CDS view); ZI_PERNR_VH (CDS view); ZI_ADRC_VH (CDS view)"
+      ],
+      [
+       "Business requirement",
+       "The custom PO header fields (84 zz / z fields of the EKKO append) must show in the Fiori Manage Purchase Orders app, and the GUI F4 helps of the Customer Data tab (fixed-value domains, Tender Process, release code, addresses, GEM PO No.) must be available in Fiori."
+      ],
+      [
+       "Technical challenge",
+       "The app runs on SAP's SEGW referenced-data-source service MM_PUR_PO_MAINT_V2_SRV (BOPF-based C_PurchaseOrderTP), whose entity sets are fixed at generation, so a CDS value-help annotation alone never reaches the UI."
+      ],
+      [
+       "What AI did",
+       "Reconciled ZC_PURCHASEORDERTP_EXT against structure ZSTR_HEADER (79/79 custom fields present, only 12 of 84 elements annotated) and delivered the extension with UI positions 230-260 for four missing fields. Built six value-help CDS views, the model class ZCL_MM_PO_VH_MPC (v1-v15, 917 lines), the data class ZCL_MM_PO_VH_DPC (v1-v5, 271 lines) and the two enhancement sheets; F4 on Inspection Type was confirmed working in the app on 22/10/26 and the ten fixed-value sets were served."
+      ],
+      [
+       "My work",
+       "Human pasted and activated every object in ADT / SE24 on OCQ and reported each activation error; ran Gateway Client tests and app tests; supplied screenshots (SE09 TR, SE11 ZSTR_HEADER, SEGW runtime artifacts, /IWFND/MAINT_SERVICE, GUI F4), SE11 / SE16N extracts (EKKO, DD04L, DD01L, DD07T), the ST22 dump text and the full $metad..."
+      ],
+      [
+       "Result",
+       "Completed - No modification of SAP standard: value helps added through implicit enhancements calling Z classes; standard C_PurchaseOrderTP filed as reference only; structure_exists guard before each entity type is created, so an inactive view costs only its own value help instead of dumping the whole service"
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 28/10/26; 6 active AI-session day(s), 69 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zmm_purchdoc_cds_ext; ovl/zmm_purchdoc_cds_ext/ISSUES.md; ovl/zmm_purchdoc_cds_ext/NOTES.md; ovl/zmm_purchdoc_cds_ext/F4_FIELD_INVENTORY.md;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-015  Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the Group Data..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZGR_FSITEM_MAP (table); ZGR_RBUNIT (domain); ZGR_RITEM (domain); ZGR_RBUNIT (data element); ZGR_RITEM (data element); ZGR_RITEM_NEW (data element)"
+      ],
+      [
+       "Business requirement",
+       "Group Reporting wants certain FS items reported under a different FS item for certain consolidation units without touching the ACDOCU postings. A user-maintained table (consolidation unit, FS item, new FS item) plus a view on the standard Group Data Analysis cube with a new column showing the mapped FS item when a row exists, el..."
+      ],
+      [
+       "Technical challenge",
+       "The standard cube I_MatrixConsolidationReportC (697 lines, 111 elements, 4 parameters, 73 associations) had to be re-exposed as a customer cube without system access and on an older S/4 release (classic define view)."
+      ],
+      [
+       "What AI did",
+       "Built table ZGR_FSITEM_MAP with two Z domains and three Z data elements, and the 743-line cube ZI_GR_FSREMAP_CUBE (standard elements redefined 1:1, 71 of 73 associations, new column NewFinancialStatementItem via left outer join + CASE, association _NewFinStmntItm). Packaged the 7 objects as abapGit offline ZIP ZGR_FSITEM_REMAP.zip (8 files) with an SE11 / ADT paste fallback, wrote TS_ZGR_FSITEM_REMAP.md (v1.1) and a 16-item ASSUMPTIONS_AND_QUERIES.md."
+      ],
+      [
+       "My work",
+       "Human supplied the ADT source of I_MatrixConsolidationReportC (OCD 500), reported the ST22 dump text (DBSQL_SQL_INTERNAL_DB_ERROR, 11:14), and asked in turn for a ZIP, a custom program ('give code here ill paste') and F4 on the table."
+      ],
+      [
+       "Result",
+       "Completed - Standard cube not modified or extended - customer copy; BOC/EOC markers enclose the three additions so a later diff against original/ shows what SAP changed; Read report makes ledger, dimension, version, year and period obligatory so the read is pushed into ACDOCU's key and the HANA memory dump cann..."
+      ],
+      [
+       "Timeline",
+       "06/11/26 to 06/11/26; 1 active AI-session day(s), 6 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zgr_fsitem_remap; ovl/zgr_fsitem_remap/ISSUES.md; ovl/zgr_fsitem_remap/NOTES.md; ovl/zgr_fsitem_remap/ASSUMPTIONS_AND_QUERIES.md; ovl/zgr_fsitem_remap/TS_ZGR_FSITEM_REMAP.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-016  Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks, Fiori-path dump"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ME_PROCESS_REQ_CUST (BAdI); ME_PROCESS_PO_CUST (BAdI); ZMM_UPDATE_EPROFILE (enhancement)"
+      ],
+      [
+       "Business requirement",
+       "Fiori PR app failed with 'valuation type should be entered' for split-valuated materials; doc type SWO needs a contract; blank item category must be rejected for SEM/SNB/SRC/SWO."
+      ],
+      [
+       "Technical challenge",
+       "Classic BAdIs on the OData path: SY-UCOMM / SY-TCODE guards are empty and a GUI-only global (SAPLMEGUI)G_WORKFLOW dumps on Fiori."
+      ],
+      [
+       "What AI did",
+       "Designed the MBEW-based valuation-type default in PROCESS_ITEM (creation only), mirrored it into the PO BAdI, wrote the SWO-contract and item-category CHECK validations, located and re-guarded the Fiori-path field-symbol dump, and identified MM06E005 / LMLSLF0R for the RFQ equivalent."
+      ],
+      [
+       "My work",
+       "Arnav applied and tested in the system; functional confirmation of each rule."
+      ],
+      [
+       "Result",
+       "Completed"
+      ],
+      [
+       "Timeline",
+       "28/07/26 to 04/08/26 (work-log dates)"
+      ],
+      [
+       "Evidence",
+       "ovl/_engagement (work log 03-04/08) + handoff 5.5; ovl/_engagement/WORKLOG_2026-08.md (03-04/08); COPILOT_CONTEXT_HANDOFF.md 5.5"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-017  ZAA_IMPARMENTLOSS / SAPMZAAIMP impairment and write-back posting - ABAA/ABZU batch input replaced by FI-AA..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "SAPMZAAIMP (module pool, tcode ZAAIMP); MZAAIMPI01 (include, changed); MZAAIMPF01 (include, changed); MZAAIMPTOP / MZAAIMPO01 (includes, not changed); ZAA_IMPARMENTLOSS (report, tcode ZFIIMPR, not changed); BAPI_ASSET_VALUE_ADJUST_POST / BAPI_ASSET_VALUE_ADJUST_CHECK (BAPI)"
+      ],
+      [
+       "Business requirement",
+       "The impairment / write-back posting (tcode ZFIIMPR, then ZAAIMP) failed in SM35 after the S/4 conversion with \"LEAVE TO TRANSACTION is not allowed in batch input\". The posting has to work again on S/4 for its six modes."
+      ],
+      [
+       "Technical challenge",
+       "The ECC-era batch input targets ABAA and ABZU, which on S/4 are dispatchers (RADISPATCH_AB01) that redirect with LEAVE TO TRANSACTION, so all seven BDC call sites across six modes were dead."
+      ],
+      [
+       "What AI did",
+       "Diagnosed from the SM35 log and SE93 that ABAA/ABZU dispatch via RADISPATCH_AB01, traced the mode -> screen -> transaction map for the seven BDC sites, and specified and interpreted a series of BAPI _CHECK tests (including the equivalence check against ABAAL). Delivered MZAAIMPF01 (237 to 658 lines; new FORMs ZAA_VALUE_ADJUST, ZAA_WRITEUP, ZAA_GET_WAERS, ZAA_COLLECT_RETURN, ZAA_BAPI_COMMIT, ZAA_BAPI_ROLLBACK, ZAA_ALPHA_INPUT) and MZAAIMPI01 (1436 to 1925 lines;"
+      ],
+      [
+       "My work",
+       "Arnav supplied the SM35 log and SE93 / SE37 / TABW / TABWA / ANLB / T093 evidence, ran the BAPI_ASSET_VALUE_ADJUST_CHECK tests in SE37 and an ABAAL simulation in dialog, relayed the functional consultant's \"04\" (accounting principle 0004), pasted and activated both includes on OCQ, pasted the activation errors back, and ran ZFII..."
+      ],
+      [
+       "Result",
+       "Completed - Batch input on dispatcher transactions replaced by released FI-AA BAPIs (function group AMFA); Check-then-post per row with a per-asset run log, so errors are readable per asset instead of buried in an SM35 log"
+      ],
+      [
+       "Timeline",
+       "27/08/26 to 27/08/26; 1 active AI-session day(s), 25 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zaa_impairmentloss; ovl/zaa_impairmentloss/ISSUES.md; ovl/zaa_impairmentloss/NOTES.md; ovl/zaa_impairmentloss/MAIL_functional_2026-08-27.md; ovl/zaa_impairmentloss/MZAAIMPF01.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-018  ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV ledger line items (JVSO1 4A /..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_ACDOCA_JVSO1_RECON (report)"
+      ],
+      [
+       "Business requirement",
+       "The functional team needs to see where the universal journal (ACDOCA, ledger 0L) and the JV ledger line items (JVSO1, ledger 4A) disagree for the same FI documents created before the JVA-on-ACDOCA cut-over (default 27.09.2026), totalled by venture, equity group, account, recovery indicator, year and period."
+      ],
+      [
+       "Technical challenge",
+       "Choosing the link between the two ledgers (JVSO1-REFFIDOC = ACDOCA-BELNR, the join SAP's CL_JVA_MIG_CORRECT_ACDOCA uses), reading JVSO1 at line level because aggregates are not allowed with FOR ALL ENTRIES, a UTC time-stamp cut-off, and which JVSO1 4C column holds the third currency (an assumption held in constant GC_OSL_COL)."
+      ],
+      [
+       "What AI did",
+       "Built the report on 19/10/26 (384 lines, CL_SALV_TABLE), removed the transaction-currency comparison on 21/10/26 (367 lines) and added the third currency via ledger 4C plus three 'amount to post' columns on 02/11/26 (451 lines). Wrote a 13-item assumptions-and-queries sheet and a TS (v1.2, .md and .docx) with requirement mapping and nine test scenarios."
+      ],
+      [
+       "My work",
+       "Arnav gave the requirement in chat (19/10), instructed dropping WSL/TSL (21/10) and the extension for the upload (02/11). On 03/11/26 he pasted the report's output for OVL 2022 001 (172 rows with Diff = X) and re-ran it with a later cut-off (recorded in ovl/zfi_acdoca_jva_align/test/README.md and NOTES.md)."
+      ],
+      [
+       "Result",
+       "Completed - ACDOCA totals built on the database with GROUP BY instead of line-by-line reads; IS NOT INITIAL guard before FOR ALL ENTRIES; DOCNR/DOCLN kept in the field list so FAE cannot collapse identical lines"
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 02/11/26; 3 active AI-session day(s), 3 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_acdoca_jvso1_recon; ovl/zfi_acdoca_jvso1_recon/ISSUES.md; ovl/zfi_acdoca_jvso1_recon/NOTES.md; ovl/zfi_acdoca_jvso1_recon/ASSUMPTIONS_AND_QUERIES.md;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-019  ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP via the Data..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZCL_GR_JE_POST (class); CL_FINCS_DP_DOCUMENT_POST (SAP standard class wrapped); IF_BADI_FINCS_CUST_DATAMON (BAdI interface - wiring named as next object, not built)"
+      ],
+      [
+       "Business requirement",
+       "A custom Group Reporting Data Monitor task must post group journal entries into ACDOCU from ABAP."
+      ],
+      [
+       "Technical challenge",
+       "No posting API exists on this release (API_CNSLDTNGRPJRNLENTR is S/4HANA 2022+; the Fiori app's own classes are BOPF/draft-bound), so the posting has to go through SAP's internal Data Monitor engine CL_FINCS_DP_DOCUMENT_POST, whose structures and message-handler class could not be verified without system access (assumptions A1-A..."
+      ],
+      [
+       "What AI did",
+       "Built class ZCL_GR_JE_POST v1 (134 lines) with one public method POST that wraps cl_fincs_dp_document_post_fac=>get_factory( )->create( )->post( ), builds FINCS_S_DOCUMENT_HEAD_POST and FC05_T_PDOC_S4H_QFLE by MOVE-CORRESPONDING from an ACDOCU-typed item table and returns BAPIRET2_T. Wrote NOTES.md with the SE24 test procedure, the three flagged assumptions and the scope left for version 2; the API research is recorded in ovl/cnsldtn_grpjrnl_api/NOTES.md."
+      ],
+      [
+       "My work",
+       "Not evidenced in this folder beyond the requirement itself. Creation in ADT/SE24, activation and the SE24 test are described as steps for Arnav; no result is logged."
+      ],
+      [
+       "Result",
+       "Completed - Messages are returned to the caller as BAPIRET2_T;"
+      ],
+      [
+       "Timeline",
+       "22/10/26 to 22/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zcl_gr_je_post; ovl/zcl_gr_je_post/ISSUES.md; ovl/zcl_gr_je_post/NOTES.md; ovl/zcl_gr_je_post/ZCL_GR_JE_POST.abap; ovl/cnsldtn_grpjrnl_api/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-020  Group Reporting: where the CXCD currency translation task log reads its data (ST05 trace decode) + new report..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZGR_CT_TASKLOG (report); C_CNSLDTNCRCYTRNSLTNTSKLG (standard CDS view, read); FINCS_LOG_HEADER (standard table, read); FINCS_FSIASSGMT (standard table, read); FIN_CONS_GENERICLOG_SRV (standard OData service, analysed); FINCS_LOG_HEADER_OLD (standard CDS view, analysed)"
+      ],
+      [
+       "Business requirement",
+       "The consultant asked which CDS view / table the task log opened from CXCD (currency translation) reads, and wanted a program that reads from it. The list then had to carry all 23 columns of the Fiori 'Items' export for comparison, plus the currency translation attribute per FS item from FINCS_FSIASSGMT."
+      ],
+      [
+       "Technical challenge",
+       "The only evidence was an ST05 binary export (Trace.trc): an ABAP data cluster, LZH-compressed twice, which had to be decoded to find the data sources. No system access, so every field name in the report had to come from the trace's own select lists."
+      ],
+      [
+       "What AI did",
+       "Decoded the ST05 export and identified that the log is served by OData FIN_CONS_GENERICLOG_SRV, with lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG keyed by the task log UUID (= FINCS_LOG_HEADER-CNSLDTNLOGNUMBER) and that ACDOCU is not read; findings and a decoded extract were filed in NOTES.md and trace/."
+      ],
+      [
+       "My work",
+       "Human supplied the ST05 export Trace.trc (OCD 500), the Fiori 'Items' export (Items_4.xlsx, 23 columns, 3,403 rows) and an SE16N screenshot of FINCS_FSIASSGMT; gave three follow-up requirement changes the same day (all export columns; join FINCS_FSIASSGMT; no new selection fields, COA hardcoded OV, Test Run input)."
+      ],
+      [
+       "Result",
+       "Completed - Every field name in the program is one the standard service itself selected in the trace (no guessed names); FOR ALL ENTRIES on FINCS_FSIASSGMT for the distinct FS items instead of a read per line"
+      ],
+      [
+       "Timeline",
+       "06/11/26 to 06/11/26; 1 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zgr_ct_tasklog; ovl/zgr_ct_tasklog/ISSUES.md; ovl/zgr_ct_tasklog/NOTES.md; ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap; tools/st05_decode/st05_decode.py"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-021  ZFI_TR_BANKACCT - Treasury register of the company's own bank accounts for the Management Dashboard: table,..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_TR_BANKACCT (table); ZTR_ACCTNO (domain); ZTR_TEXT60 (domain); ZTR_TEXT120 (domain); ZTR_ACCTNO (data element); ZTR_ACCTNAME (data element)"
+      ],
+      [
+       "Business requirement",
+       "'A separate T-Code is required to be prepared for Bank A/c details. T-Code will be managed by the treasury department and view option will be provided to all other finance personnals.' Nine columns per account (name, number, project/section, business unit, address, currency, country, principal officer, signatory officer);"
+      ],
+      [
+       "Technical challenge",
+       "The Custom Analytical Queries app lists only cubes released for key users (C1), and a cube needs a measure, so a counting cube had to sit on top of the plain view. The DDIC objects ship as hand-built abapGit XML on a landscape where that is fragile (the first import created the DDL sources but not the table), and an existing tab..."
+      ],
+      [
+       "What AI did",
+       "Delivered table ZFI_TR_BANKACCT with three domains and seven data elements, basic view ZI_TR_BANKACCT (63 lines), cube ZI_TR_BANKACCT_CUBE (90 lines) and an abapGit ZIP with 17 source files, all on 03/11/26. Wrote a 16-item assumptions-and-queries sheet, a TS (v1.1, .md and .docx) with the manual SE11 / SE54 / SE93 / key-user-release steps and a nine-step handover table. Found the existing ZFI_BANK_DETAILS by scanning the repo and justified a separate table;"
+      ],
+      [
+       "My work",
+       "Arnav supplied the requirement Excel, asked for a table plus CDS view, relayed that the tile would be built in Custom Analytical Queries, ran the first import (table not created) and reported the cube as not listed."
+      ],
+      [
+       "Result",
+       "Completed - Z data elements so SM30 headings and view labels read as business words ('Principal Officer', not 'Text, 60 characters'); Country and currency stored as SAP keys with check tables for F4 help and grouping"
+      ],
+      [
+       "Timeline",
+       "03/11/26 to 03/11/26; 1 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_tr_bankacct; ovl/zfi_tr_bankacct/ISSUES.md; ovl/zfi_tr_bankacct/NOTES.md; ovl/zfi_tr_bankacct/ASSUMPTIONS_AND_QUERIES.md; ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-022  ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header truncation fix, FF67 upload..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_CNB_BRS (report); ZFIBRSTOP (include); ZFI_CNB_BRS1 (report, new single-source copy); ZFIBRS (transaction); ZPFSTATUS (GUI status)"
+      ],
+      [
+       "Business requirement",
+       "The BRS step failed after Validation with 'Inconsistent header in file ... Run Validation Module First'. The FF67 upload then had to run with a different processing type and, per the change request of 10/10/26, send all bank statement lines to FF67 without validations (a posting exit does the matching), with correct opening/clos..."
+      ],
+      [
+       "Technical challenge",
+       "A 2003 batch-input program driving FF67 (SAPMF40K): the screen sequence changes with the processing type (0101, Specifications popup 0110, posting log list SAPMSSY0 0120), the file header was truncated because AZNUM is 18 digits on OCP, and the balance sign convention (bank side vs company side) produced FV 072."
+      ],
+      [
+       "What AI did",
+       "Reconstructed clean sources from SE38 print listings; delivered corrected ZFIBRSTOP (three fields widened to 70) and ZFI_CNB_BRS (WVAR_ART, BDC screen flow, balances, warning suppression, no-validation upload). Built ZFI_CNB_BRS1 as a single-source copy of the ONGC version with ZFIBRSTOP merged in (4431 lines) plus a matched-only test variant (4330 lines) and a text-element sheet."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE38 listings, ran each upload and pasted the FF67 logs and errors, ran FF67 by hand (0110 popup observation), confirmed the FV 058 / 072 / 093 messages, copied the ONGC version into OCD, supplied the statement-449 bank file and bank book file, pasted the SAP copies for drift checks, corrected the AI's misread..."
+      ],
+      [
+       "Result",
+       "Completed - Header fields widened to 70 so the Validation -> BRS file header no longer truncates (the old 55-char compare silently dropped DT_TO); BDC retries from screen 0110 when FF67 opens on the Specifications popup; success test now on the saved lv_subrc"
+      ],
+      [
+       "Timeline",
+       "09/10/26 to 06/11/26; 4 active AI-session day(s), 22 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_cnb_brs; ovl/zfi_cnb_brs/ISSUES.md; ovl/zfi_cnb_brs/NOTES.md; ovl/zfi_cnb_brs/ZFI_CNB_BRS1_TEXTS.md; ovl/zfi_cnb_brs/ZFI_CNB_BRS1.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-023  ARMS end-user authorisation request tool - TWO pieces: (1) analysis of hardcoded values, role master and..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "SAPMZMMPREPROLE1 (module pool, tcode ZMM_ARMS - analysed, found to be dead code); SAPMZMMPREPROLE1_PHASEII (module pool, tcodes ZICE_ARMS / ZOVL_ARMS - changed); MZMMPREPROLE1_PHASEIII01 (include, corrected); MZMMPREPROLE1_PHASEIIF01 (include, corrected);"
+      ],
+      [
+       "Business requirement",
+       "First an inventory of everything hardcoded in the ARMS authorisation-request tool (company code to purchasing group map, role codes, approval levels, tcodes) and of the roles that make a user an approver."
+      ],
+      [
+       "Technical challenge",
+       "A 2005/06 module pool family of about 25,000 lines with literals spread over five FORMs / MODULEs; the tcode the business actually runs had to be established first (ZMM_ARMS is retired in its own code, ZOVL_ARMS wraps ZICE_ARMS)."
+      ],
+      [
+       "What AI did",
+       "Ran drift checks of the fresh 26/10/26 downloads against the repo copies (identical). Wrote the corrected whole includes MZMMPREPROLE1_PHASEIII01 (8753 -> 8758 lines) and MZMMPREPROLE1_PHASEIIF01 (11138 -> 11193 lines) with 7 edits under BOC/EOC SAP_ABAP 26/10/26, splitting the PM_PS display role into PM + PS rows, and the SE10 paste sheet TR_TABLE_ENTRIES.txt for the role tables."
+      ],
+      [
+       "My work",
+       "Human supplied the SE38 print listing (05/10/26), SE16N screenshots / pasted rows of the role tables, the AGR_1251 extract, Uday's mapping mail and the fresh ZR_PROG_DOWNLOAD listings (OCD/500, 26/10/26); the business confirmed ZOVL_ARMS as the live tcode."
+      ],
+      [
+       "Result",
+       "Completed - Fresh downloads diffed against the repo copy before any change (no drift) and filed as originals; Established the live program first (ZMM_ARMS retired by its own popup + LEAVE PROGRAM) so the change was not made in dead code"
+      ],
+      [
+       "Timeline",
+       "05/10/26 to 26/10/26; 2 active AI-session day(s), 13 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zmm_arms; ovl/zmm_arms/ISSUES.md; ovl/zmm_arms/NOTES.md; ovl/zmm_arms/ROLE_RENAME.md; ovl/zmm_arms/TCODE_COMPARE.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-024  ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway OData V2 -> TCURR);"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZF01_EXCHANGE_RATE_SRV (OData V2 service); ZF01_EXCHANGE_RATE (SEGW project); ZCL_ZF01_EXCHANGE_RATE_DPC_EXT (class); ZCL_ZF01_EXCHANGE_RATE_DPC (class); ZCL_ZF01_EXCHANGE_RATE_MPC_EXT (class); ZCL_ZF01_EXCHANGE_RATE_MPC (class)"
+      ],
+      [
+       "Business requirement",
+       "A partner/source system produces a file of foreign-exchange rates; SAP CPI must post them in mass into TCURR through a custom OData service that validates each record."
+      ],
+      [
+       "Technical challenge",
+       "A flat OData V2 create accepts one rate per call, so mass upload needed an OData $batch changeset with CHANGESET_BEGIN redefined (cv_defer_mode = abap_false). BAPI_EXCHRATE_CREATEMULTIPLE rejected payloads carrying both direct and indirect quotations (E!/033) and unmaintained currency pairs (E!/015), which required clearing the..."
+      ],
+      [
+       "What AI did",
+       "The only artefact in the folder is a 342-line knowledge-transfer document containing the final DPC_EXT method EXCHANGERATESSET_CREATE_ENTITY (about 97 lines of ABAP), the CHANGESET_BEGIN redefinition, the accepted CPI $batch envelope, the FI/Basis configuration prerequisites, data rules for the sender and an 11-row error -> fix table."
+      ],
+      [
+       "My work",
+       "As described in the handover: SEGW modelling and generation, service registration in /IWFND/MAINT_SERVICE, cache clean-up, CPI adapter and mapping set-up, /IWFND/GW_CLIENT tests and debugging on [host] / OCQ 500 ('verified in debugger: BAPI committed, rate in TCURR'). FI must maintain OBBS translation ratios."
+      ],
+      [
+       "Result",
+       "Completed - TCURC/TCURF pre-check returns a clean 'Currency/exchange-rate settings not maintained' message instead of the raw BAPI error E!/015; BAPI error path: rollback and messages raised through the Gateway message container; commit with wait on success"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zf01_exchange_rate; ovl/zf01_exchange_rate/docs/ZF01_EXCHANGE_RATE_HANDOVER.md; ovl/_engagement/WORKLOG_2026-08.md; COPILOT_CONTEXT_HANDOFF.md; README.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-025  ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis - two pieces of work: 5* G/L..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "SAPFZFIPL (module pool); ZFI_PL (transaction); MZFIPLF01 (include, corrected); MZFIPLTOP (include); MZFIPLO01 (include); MZFIPLI01 (include)"
+      ],
+      [
+       "Business requirement",
+       "(1) OVL F&A reported that 5* series G/L accounts appear in ZFI_PL on RISE production, which did not happen in ECC; they are not part of the OVL trial balance and must not need mapping."
+      ],
+      [
+       "Technical challenge",
+       "The 'unmapped G/L' check sits in a block that was not in the first print supplied; on S/4 fourteen secondary cost elements (account group SECC, created by SAPMIGRATION on 26.09.2026) became G/L accounts and surfaced as unmapped."
+      ],
+      [
+       "What AI did",
+       "Reviewed the supplied print and concluded no path in it could surface an unmapped account, gave a breakpoint list, and once the missing block and SKA1 data were supplied identified the SECC cause and wrote PATCH_secc_exclusion.abap (26 lines). On 26/10/26 it diffed the fresh ZR_PROG_DOWNLOAD tree against the 27.09 print (no drift), changed FROM jvso1 to FROM jv_jvso1_acdoca at all 24 sites in MZFIPLF01 (15,384 -> 15,461 lines, old line commented inside BOC/EOC) and produced a 24-site paste sheet (163 lines)."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE38 print of 27.09, checked ZFI_PNL_GL (no 5* rows), supplied the G/L check snippet and the SKA1 facts from OCP, and the full ZR_PROG_DOWNLOAD tree of 26.10.2026; the SECC patch is present in that download, i.e. it was applied in the system by hand."
+      ],
+      [
+       "Result",
+       "Completed - One-line targeted change at each of 24 sites; field list, WHERE and targets untouched; old line kept commented inside BOC/EOC; All 12 selected fields and all 7 WHERE fields checked against the view's DDL before the switch"
+      ],
+      [
+       "Timeline",
+       "27/09/26 to 10/11/26; 3 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_pl; ovl/zfi_pl/ISSUES.md; ovl/zfi_pl/NOTES.md; ovl/zfi_pl/PATCH_secc_exclusion.abap; ovl/zfi_pl/PATCH_jvso1_to_jv_jvso1_acdoca.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-026  ZMMME35K - contract release not working after ECC -> S/4 conversion (root cause and fix)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_RM06EF00 (report, Z copy of RM06EF00); SAPMZFM06L (program / form pool, Z copy of SAPFM06L); ZFM06LFFR (include, Z copy of FM06LFFR); ZFM06LFFR_FRG_SET (include, new - main program SAPMZFM06L); ZMM_FM06LTO1 / ZMM_FM06LCFR / ZMM_FM06LCEK (includes, Z copies); ZMMME35K (transaction)"
+      ],
+      [
+       "Business requirement",
+       "The custom release transaction ZMMME35K (contract release with checks that a linked PR is released and that the OLA value does not exceed the PR value) stopped releasing after the S/4 conversion and had to work again."
+      ],
+      [
+       "Technical challenge",
+       "Two independent causes in frozen 2003 Z copies of SAP code: FEKKO and HIDK are program-local (not in a COMMON PART), so they were built in SAPFM06L but read in SAPMZFM06L, where FRG_SET exits silently and FRG_UPDATE reports 06 022 'No data changed';"
+      ],
+      [
+       "What AI did",
+       "README.md documents the analysis: the standard release flow on S/4, both root causes, the inventory of live and dead custom business logic and a list of known issues not fixed. Delivered a new include ZFM06LFFR_FRG_SET (602 lines) restoring the custom FRG_SET and four helper FORMs, the one-line include swap in ZFM06LFFR and the 13 PERFORM target corrections in ZMM_RM06EF00."
+      ],
+      [
+       "My work",
+       "Not logged. NOTES.md lists the manual work (creating the include and assigning SAPMZFM06L as main program, the include swap, the 13 PERFORM corrections, activation in a fixed order, the T160 entry). The fix sheet refers to 'the 21.08.2026 print of ZMM_RM06EF00', i.e. a supplied print listing;"
+      ],
+      [
+       "Result",
+       "Completed - SAP's own include FM06LFFR_FRG_SET is not edited (it is shared by standard ME35K / ME28 / ME35L); the custom logic goes into a separate Z include; ME_REL_SET keeps the S/4 standard EXCEPTIONS block with E102/E103/E104 handling instead of ECC's commented-out version that risks a short dump"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 2 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_me35k_release; kpmg/zmm_me35k_release/ISSUES.md; kpmg/zmm_me35k_release/NOTES.md; kpmg/zmm_me35k_release/README.md; kpmg/zmm_me35k_release/ZFM06LFFR_FRG_SET.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-027  Fiori F1592 Asset Master Worklist: Custodian / JV fields via CDS extension"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZZI_FIXEDASSETWORKLIST_EXT (CDS extend view); ZZC_FIXEDASSETWORKLIST_EXT (CDS extend view); ANLU (CI_ANLU customer include)"
+      ],
+      [
+       "Business requirement",
+       "OVL Corporate Accounts: Custodian of Assets and Joint Venture fields maintained in the asset master do not appear in the Fiori asset apps."
+      ],
+      [
+       "Technical challenge",
+       "Field lives on ANLU, which the standard view stack does not join; the consumption view accepts no metadata extension on this release; SAP's KBA covered other apps."
+      ],
+      [
+       "What AI did",
+       "Analysed SAP KBA 3049624 and the extensibility routes, then built a modification-free [0..1] association to ANLU in an interface extension carried up by a consumption extension with inline UI annotations after the DDLX route failed activation."
+      ],
+      [
+       "My work",
+       "Arnav confirmed field and alias via F1 / ADT, activated object 1;"
+      ],
+      [
+       "Result",
+       "Completed - No modification of SAP standard views; KBA scope error caught before building"
+      ],
+      [
+       "Timeline",
+       "01/09/26 to 01/09/26; 1 active AI-session day(s), 10 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/f1592_asset_worklist; ovl/f1592_asset_worklist/ISSUES.md (branch claude/standard-field-cds-extend-d8xpij); ovl/asset_fiori_fields/ANALYSIS.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-028  JV transfer programs: GL derivation keyed by JV, offset profit centre from mapping table"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZR_JV_POST (report); ZJV_DOC_TRANSFER (report); ZOCV_OVL_TRANSFER (report); ZJV_MAP_COCODE (table)"
+      ],
+      [
+       "Business requirement",
+       "Receiving GL to be derived from sender GL + company code + JV; offset profit centre for V/G items no longer hardcoded."
+      ],
+      [
+       "Technical challenge",
+       "Mapping chain across five Z mapping tables on JVSO1 (ledgers 4A / 4C) for Colombia OCV to OVL transfers."
+      ],
+      [
+       "What AI did",
+       "Changed the GL derivation key to include JV and moved the offset profit centre to a new PC_DEFAULT field on ZJV_MAP_COCODE; applied the same mapping logic to ZJV_DOC_TRANSFER / ZOCV_OVL_TRANSFER."
+      ],
+      [
+       "My work",
+       "Arnav: SE11 field addition, activation, testing with functional."
+      ],
+      [
+       "Result",
+       "Completed"
+      ],
+      [
+       "Timeline",
+       "13/08/26 to 14/08/26 (work-log dates)"
+      ],
+      [
+       "Evidence",
+       "ovl/ocv-to-ovl-transfer + work log 13-14/08; ovl/_engagement/WORKLOG_2026-08.md (13-14/08); COPILOT_CONTEXT_HANDOFF.md 5.8; ovl/ocv-to-ovl-transfer/"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-029  BAdI ME_PROCESS_PO_CUST method CHECK - PO validity-date rule made a warning in the Fiori Manage Purchase..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ME_PROCESS_PO_CUST (BAdI); IF_EX_ME_PROCESS_PO_CUST~CHECK (BAdI method of the OVL implementation; implementation name and class not supplied); C_PurchaseOrderTP (CDS view, SAP standard); CL_MM_PUR_PO_MAINTAIN_FEAT_CHK (class, SAP standard); ZMM_EKGRP (table);"
+      ],
+      [
+       "Business requirement",
+       "Service-type purchase orders (document types S*) created in the Fiori Manage Purchase Orders app run into the client's PO validity-period checks; the client wants the \"validity end before the latest delivery date\" rule to be a warning in the app and stay an error in the GUI."
+      ],
+      [
+       "Technical challenge",
+       "The method is the client's whole PO rulebook (6,336 lines, history back to 2011). sy-tcode and sy-ucomm are blank in the Fiori session (and for BAPI/RFC/batch callers), so transaction-guarded rules never run there and raw MESSAGE ... TYPE 'E' rules behave differently (first Order shows the error, second Order saves)."
+      ],
+      [
+       "What AI did",
+       "Read the method and documented the four validity-period rules and why they affect Fiori-created service POs; refused a whole-method bypass and limited the change to the validity rule. Delivered the complete corrected method body (6,351 lines, was 6,336): one BOC/EOC block at lines 344-360 raising the message TYPE 'W' when sy-tcode is initial and TYPE 'E' otherwise, original line commented. Flagged an unguarded POPUP_TO_CONFIRM (around line 4563) as a DYNPRO_SEND_IN_BACKGROUND dump risk in Fiori."
+      ],
+      [
+       "My work",
+       "Arnav pasted the 6,336-line method into chat on 27/10/26, supplied the CDHDR-TCODE evidence (blank for app-created POs), forwarded [contact]'s two-PO test mail with screenshots, observed that the app saves on the second Order, decided on 28/10/26 that the rule becomes a warning in the app and stays an error in the GUI, and paste..."
+      ],
+      [
+       "Result",
+       "Completed - Old line commented out inside a single BOC/EOC block; a diff against the supplied original shows 1 line replaced by 16, everything else identical; Whole-method bypass refused (\"it holds every client PO rule\") - only the validity rule was changed"
+      ],
+      [
+       "Timeline",
+       "27/10/26 to 28/10/26; 2 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/me_process_po_cust; ovl/me_process_po_cust/ISSUES.md; ovl/me_process_po_cust/NOTES.md; ovl/me_process_po_cust/IF_EX_ME_PROCESS_PO_CUST_CHECK.abap;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-030  ZFI_BNK_APP1 bank batch approval / digital signature - one click by the second signatory released every batch..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_BNK_APP1 (module pool); ZFI_BNK_APP1_F01 (include, corrected); ZFI_BNK_APP1_I01 (include, corrected); ZFI_BNK_APP1_TOP (include); ZFI_BNK_APP1_O01 (include); ZBCM_CLASS (include)"
+      ],
+      [
+       "Business requirement",
+       "A second signatory selected one batch of payment run 21.08.2026 / LAUFI 00002 and all three batches (3,882.00 / 2,257,792.00 / 14,000.00) were flagged released. The business needs approval recorded batch by batch, with the bank file going out only when the run is fully approved."
+      ],
+      [
+       "Technical challenge",
+       "ZFI_PAYM_FILE holds one record per payment run (LAUFD + LAUFI) while REGUT holds one row per batch (LFDNR); every READ TABLE drops the batch component, so signing one batch transmitted the run's whole file and set one run-level SENT flag. It is fallout of the ECC->S/4 port from BNK_BATCH_HEADER to REGUT;"
+      ],
+      [
+       "What AI did",
+       "Located the defect in ZFI_BNK_APP1 although it was reported against tcode ZBNK_APP2 (a read-only monitor), and documented the mechanism step by step, a second instance on tab 1 (level-1 signature overwritten) and the collateral 'sent but unsigned' batches. Extracted clean include sources from the SE80 download (work/), wrote a QA test sequence, a seven-point open list and a draft mail to the functional consultant."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE80 download (OCQ/500, 27.08.2026 09:40) and the reported evidence rows; pasted and activated both includes in OCQ/500 on 27.08.2026. Still with humans per the log: functional sign-off on the transmission-timing change, the multi-batch test in QA, SE11/SE16 verification checks, informing the users, sending th..."
+      ],
+      [
+       "Result",
+       "Completed - Approval is written per batch to ZFI_BATCH_SIGN with COMMIT; ROLLBACK and a message on failure; Bank file is transmitted only when every batch of the run is approved;"
+      ],
+      [
+       "Timeline",
+       "27/08/26 to 27/08/26; 1 active AI-session day(s), 6 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zbnk_app1; ovl/zbnk_app1/ISSUES.md; ovl/zbnk_app1/NOTES.md; ovl/zbnk_app1/MAIL-2026-08-27.md; ovl/zbnk_app1/ZFI_BNK_APP1_F01.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-031  ZFI_JV_TB (ZJVTB) Joint Venture Trial Balance - three issues: venture column missing in the Excel export,..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_JV_TB (report; REPORT statement in the download reads zzjvtb_test); ZJVTB (transaction)"
+      ],
+      [
+       "Business requirement",
+       "Corporate Accounts reported (1) the last venture VN2012 missing in the Excel output of the Q1 FY27 run, (2) the opening balance blank in every venture column since the program was moved from JVTO1/JVSO1 to the ACDOCA views, and (3) differences in the ECC-vs-RISE validation (G/L 300100 row missing on RISE;"
+      ],
+      [
+       "Technical challenge",
+       "A dynamic ALV with positional field names (BAL_CLO<n>) is exported through an Excel template. The live totals view JV_JVTO1_ACDOCA has no legacy JVTO1 branch, so HSLVT is blank, and the view returns no row for an account whose postings net to zero."
+      ],
+      [
+       "What AI did",
+       "For issue 2 it traced all eight opening-balance write sites and delivered a corrected object (totals view switched to JV_JVTO1_ACDOCA_SWITCH_2 at five reads, USD branch restored to SUM( kslvt )). For issue 3 it showed that observation 2 is a spreadsheet sort artefact (only six G/Ls differ when matched on G/L number; G/L 120170 is zero on RISE) and delivered a one-SELECT patch sheet for observation 1."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE38 list downloads and the output workbooks, ran the breakpoints (lt_alljv, lt_fieldcat), ran the Mock 2 test with the widened template (which disproved the theory), supplied the view DDL from OCQ/500, the fresh source of 22/09 and the OCP print of 28/09, and ran SE16N on 28/09 confirming no row for 300100 /..."
+      ],
+      [
+       "Result",
+       "Completed - Second, independent defect found and fixed: USD branch restored to SUM( kslvt ) AS hslvt; Patch takes the account list from the line items as well, so accounts netting to zero are no longer dropped"
+      ],
+      [
+       "Timeline",
+       "26/08/26 to 28/09/26; 5 active AI-session day(s), 15 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_jv_tb; ovl/zfi_jv_tb/ISSUES.md; ovl/zfi_jv_tb/NOTES.md; ovl/zfi_jv_tb/PATCH-2026-09-28-issue3-obs1.abap; ovl/zfi_jv_tb/MAIL-2026-08-27-gitesh.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-032  ZHANA_SERVICES_PRG 'SAP Timesheet' module pool - CR: Excel download / upload of timesheet rows, Scope..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZHANA_SERVICES_PRG (module pool); ZHANA_SERVICES_PRG_MAILF01 (include - FORMs DOWNLOAD_ROWS, UPLOAD_ROWS, XL_TO_DATE, XL_TO_DAYS, SET_HEADING, GET_SCOPE_VALUES); ZHANA_SERVICES_PRG_STATUS_9O01 (include); ZHANA_SERVICES_PRG_STATUS_9O02 (include); ZHANA_SERVICES_PRG_STATUS_9O03 (include);"
+      ],
+      [
+       "Business requirement",
+       "In Create mode a consultant keys one timesheet row, downloads the rows to Excel, fills more rows there and uploads them back into the table control. Later additions: Scope as a listbox with a Scope filter on download, Print and Consumption buttons calling the copied transactions, and MICROSOFT scope allowed for every Service Ele..."
+      ],
+      [
+       "Technical challenge",
+       "A real .xlsx round trip inside a module pool (CL_SALV_TABLE to XML xlsx for download, CL_FDT_XL_SPREADSHEET for upload read by column position, Excel serial dates). The source came as an SE80 print wrapped at 72 columns, and several existing lines exceed 120 characters, so only marked blocks can be pasted."
+      ],
+      [
+       "What AI did",
+       "Rebuilt the includes from the SE80 print and wrote new FORMs DOWNLOAD_ROWS, UPLOAD_ROWS, XL_TO_DATE, XL_TO_DAYS, SET_HEADING and later GET_SCOPE_VALUES in _MAILF01 (14 -> 672 lines), with fcodes DOWNLOAD / UPLOAD in USER_COMMAND_9002 and the buttons excluded outside Create. Added the Scope-filtered download popup, re-pointed the Print button to ZSAPT_FORM1 and the Consumption button to ZCON1, and on 16/10/26 removed the forcing of Scope to AS IS when Scope = MICROSOFT. Listed the manual SE41 / SE51 steps."
+      ],
+      [
+       "My work",
+       "Human took the decisions (real .xlsx; Create mode only; upload replaces the table-control rows; marker tag SAP_ABAP), supplied the SE80 print, and has to do the SE41 status change (function codes UPLOAD / DOWNLOAD), the SE51 listbox attribute, the paste of marked blocks and the test."
+      ],
+      [
+       "Result",
+       "Completed - Upload validates Scope against the domain fixed values read at run time (CL_ABAP_ELEMDESCR->GET_DDIC_FIXED_VALUES) instead of hardcoded literals; Upload writes nothing to ZSAP_TIMESHEET itself - uploaded rows go through the existing SAVE path and its validation (comment in _MAILF01)"
+      ],
+      [
+       "Timeline",
+       "05/10/26 to 16/10/26; 3 active AI-session day(s), 8 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zhana_services; ovl/zhana_services/ISSUES.md; ovl/zhana_services/NOTES.md; ovl/zhana_services/ZHANA_SERVICES_PRG_MAILF01.abap; git log -- ovl/zhana_services (8 commits,..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-033  ZSAP_CONSUMPTION_REPORT (tcode ZCON / copy ZCON1) - consumed-till-date columns, Available based on till-date,..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZSAP_CONSUMPTION_REPORT (report); ZCON1 (transaction - copy of the report with the new columns); ZSERVICE_ELEMENT (table read); ZSAP_TIMESHEET (table read)"
+      ],
+      [
+       "Business requirement",
+       "Available days only deducted the selected period's consumption; the business wanted a column with everything consumed till date and Available based on that. Then MICROSOFT scope consumption had to be shown, finally deducted from the AS IS scope, with columns ordered AS IS -> Additional -> MICROSOFT."
+      ],
+      [
+       "Technical challenge",
+       "A second aggregation (till-date, Head-IT-approved only) alongside the period aggregation without changing the period columns; the MICROSOFT requirement changed between 06/10/26 and 16/10/26, so delivered columns had to be withdrawn and the Available formula redefined."
+      ],
+      [
+       "What AI did",
+       "Added a second SUM (GT_SUM_TILL, datec <= p_datet, Head IT approved) and new AS IS / Additional 'Consumed till date' columns, with Available days and amount = Scope - Consumed till date (report grew from 270 to 446 lines, changes under BOC/EOC SAP_ABAP). Added MICROSOFT columns, then on 16/10/26 reworked them so that AS IS Available = AS IS scope - AS IS till date - MICROSOFT till date, and reordered the field catalog. Wrote TESTCASE.md with expected values for three date ranges from an SE16N extract."
+      ],
+      [
+       "My work",
+       "Human supplied the original source and the SE16N data extract (06/10/26) and the changing requirement (Option A with own MICROSOFT scope, later MICROSOFT out of AS IS scope; column order). Activation, test and the PRD move are manual; a new SE11 field planned on 06/10/26 was later not needed."
+      ],
+      [
+       "Result",
+       "Completed - Period columns left unchanged; new logic added beside the old inside BOC/EOC markers; Test case with expected values for three date ranges, including what the old logic would have shown"
+      ],
+      [
+       "Timeline",
+       "06/10/26 to 16/10/26; 2 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zsap_consumption_report; ovl/zsap_consumption_report/ISSUES.md; ovl/zsap_consumption_report/NOTES.md; ovl/zsap_consumption_report/TESTCASE.md; git log -- ovl/zsap_consumption_report (5..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-034  ZSAP_TIMESHEET_FORM_PRG timesheet print (running copy ZSAP_TIMESHEET_FORM_PRG_CP, tcode ZSAPT_FORM1) - print..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZSAP_TIMESHEET_FORM_PRG (report, tcode ZSAPT_FORM); ZSAP_TIMESHEET_FORM_PRG_CP (report, running copy, tcode ZSAPT_FORM1); ZSAP_TIMESHEET_FORM (Smart Form - Global Definitions / Initialization code changed); ZSAP_TIMESHEET (table read)"
+      ],
+      [
+       "Business requirement",
+       "A dropdown on the Timesheet Print selection screen to print only the records of the chosen Scope (AS IS / MICROSOFT); finally reduced to two print options: A = AS IS + ADDITIONAL, M = MICROSOFT."
+      ],
+      [
+       "Technical challenge",
+       "Filtering in the program was not enough because the Smart Form re-reads every line of the document by DOC_NO, and the form's interface structure had no Scope field, so the Scope had to be passed as a new optional import parameter and applied in the form's Initialization SELECT."
+      ],
+      [
+       "What AI did",
+       "Added the listbox parameter (P_SCOPE, later P_GRP obligatory), the line filter before the per-document de-duplication and a message when nothing is left (323 -> 413 lines, BOC/EOC SAP_ABAP 06/10/26). Diagnosed the false 'Document No not found' from the debugger observation (sy-subrc 4 after DELETE ADJACENT DUPLICATES with LT_DATA holding one row) and removed the check."
+      ],
+      [
+       "My work",
+       "Human supplied the program source and later the form's Initialization code, ran the copy in the system and reported results (debugger: LT_DATA 1 row; Scope = MICROSOFT still printed all 3 lines of doc 00005; activation error 'Field IS_TIMESHEET-SCOPE is unknown')."
+      ],
+      [
+       "Result",
+       "Completed - Message when nothing is left after the filter instead of a blank run; Removed a false 'Document No not found' caused by checking sy-subrc after DELETE ADJACENT DUPLICATES"
+      ],
+      [
+       "Timeline",
+       "06/10/26 to 06/10/26; 1 active AI-session day(s), 7 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zsap_timesheet_form_prg; ovl/zsap_timesheet_form_prg/ISSUES.md; ovl/zsap_timesheet_form_prg/NOTES.md; ovl/zsap_timesheet_form_prg/ZSAP_TIMESHEET_FORM_PRG.abap;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-035  ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree (19/10/26 rewrite with CDS DDL..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZR_PROG_DOWNLOAD (report); DDDDLSRC (table; read for CDS DDL sources); CL_OO_CLASSNAME_SERVICE (standard class; GET_ALL_METHOD_INCLUDES); GUI_DOWNLOAD (function module)"
+      ],
+      [
+       "Business requirement",
+       "The SAP systems have no ADT connection, so every source the assistant works on has to be downloaded by hand. A report is needed that downloads programs with their complete include tree, function groups, classes and CDS DDL sources in bulk, one file per object, by name list or by package;"
+      ],
+      [
+       "Technical challenge",
+       "Recursive include resolution in source order for programs, function groups (SAPL<group>, TOP, UXX) and class pools (section and CM method includes), a DDDDLSRC read for DDL sources, and a listing layout that the repo's parsers already understand."
+      ],
+      [
+       "What AI did",
+       "The same day, after the live program's selection screen was filed, it recorded the rewrite as superseded and reduced the task to grafting one DDLS block (FORM add_ddl_source) into the live source."
+      ],
+      [
+       "My work",
+       "Arnav supplied the screenshot of the live program's selection screen (original/ZR_PROG_DOWNLOAD_selscreen_2026-10-19.png), which showed that the August version 'is installed and running' with more options than the rewrite. He runs the live program for every download."
+      ],
+      [
+       "Result",
+       "Completed - Read-only report: 'nothing in the system is changed'; One file per object in the listing layout that every original/ in the repo uses, so downloads feed scripts/abap-audit.py and save-original.sh directly"
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 19/10/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "tools/zr_prog_download; tools/zr_prog_download/ISSUES.md; tools/zr_prog_download/NOTES.md; tools/zr_prog_download/ZR_PROG_DOWNLOAD.abap;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-036  ZMMEMD (SAPMZMMEMD): LOA number in Change / Display popups with new search help, four further fixes"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "SAPMZMMEMD (module pool); ZMM_EMDHDR (table); new elementary search help on the EMD header"
+      ],
+      [
+       "Business requirement",
+       "LOA number (ZMM_EMDHDR-LOA_NO) to be selectable in the Change and Display popups of the EMD module pool."
+      ],
+      [
+       "Technical challenge",
+       "The existing search help ZMM_HDRFCDOC reads the detail table, not the header, so a new elementary search help was needed."
+      ],
+      [
+       "What AI did",
+       "Delivered the LOA# field with a new elementary search help on the EMD header table plus four further fixes in the same module pool."
+      ],
+      [
+       "My work",
+       "Arnav pasted and activated; SE11 search help creation by hand."
+      ],
+      [
+       "Result",
+       "Completed"
+      ],
+      [
+       "Timeline",
+       "10/08/26 to 11/08/26 (work-log dates)"
+      ],
+      [
+       "Evidence",
+       "ovl/mm-fiori + work log 10-11/08; ovl/_engagement/WORKLOG_2026-08.md (10-11/08); COPILOT_CONTEXT_HANDOFF.md 5.7"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-037  ZFI_ACDOCA_VNAME_UPD - one-off back-fill of custom field ZZ1_VNAME from VNAME on historical ACDOCA line items"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_ACDOCA_VNAME_UPD (report)"
+      ],
+      [
+       "Business requirement",
+       "After the Group Reporting custom field ZZ1_VNAME and the substitution rule SET_VNAME went live, only new postings are filled; historical ACDOCA lines have an empty ZZ1_VNAME and must be filled from VNAME per company code and fiscal year."
+      ],
+      [
+       "Technical challenge",
+       "A direct mass UPDATE of ACDOCA that must be safe to interrupt and re-run: packages of at most 10,000 lines with a COMMIT each, no cursor held across commits, NULL handling for the appended column, and the real database column name of the custom field (ZZ1_VNAME_COB) only known at activation."
+      ],
+      [
+       "What AI did",
+       "Built the report (329 lines) with test run as default, a package loop with COMMIT per package, a guard that never overwrites an existing value and stop conditions. After activation feedback it corrected the column name to ZZ1_VNAME_COB, added a document-number filter and a 'Max lines' limit for a single-line first test, and removed the authority check on request. Wrote NOTES.md with text elements and run order."
+      ],
+      [
+       "My work",
+       "Arnav activated it on DEV on 16/10/26 and returned the activation error; decided 'No authority check in the code (decided 16/10/26)'; asked for the single-line test option. The GR consultant re-runs the data release afterwards; client/functional approval is required before PRD."
+      ],
+      [
+       "Result",
+       "Completed - Test run is the default and only counts; A line that already has a value is never overwritten, so the report is safe to re-run after an interruption"
+      ],
+      [
+       "Timeline",
+       "16/10/26 to 16/10/26; 1 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_acdoca_vname_upd; ovl/zfi_acdoca_vname_upd/ISSUES.md; ovl/zfi_acdoca_vname_upd/NOTES.md; ovl/zfi_acdoca_vname_upd/ZFI_ACDOCA_VNAME_UPD.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-038  Group Reporting data release: expose Venture (ZZ1_VNAME_COB and standard ACDOCA-VNAME) through two CDS view..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZX_CNSLDTNINTEGRPTDFINVNAME (CDS extend view, SQL append ZXINTFINVNAME); ZX_JOURNALENTRYITEMVNAME (CDS extend view, SQL append ZXEFIJEIVNAME); I_CnsldtnIntegRptdFinData (CDS view, SAP standard, extended); E_JournalEntryItem (CDS view, SAP standard, extended);"
+      ],
+      [
+       "Business requirement",
+       "After the Group Reporting data release (ACDOCA to ACDOCU) the custom Venture field in ACDOCU is blank. The business wants the Venture - the key-user field ZZ1_VNAME_COB and, from 28/09/26, the standard ACDOCA-VNAME as well - available for mapping in the data release task."
+      ],
+      [
+       "Technical challenge",
+       "ZZ1_VNAME_COB is not exposed by I_CnsldtnIntegRptdFinData, so it is not selectable in the mapping value help, and the key-user \"TAI\" usage is not offered on this system. Standard VNAME needs two chained extensions (E_JournalEntryItem first, then the GR view), and on this system E_JournalEntryItem selects from acdoca with alias P..."
+      ],
+      [
+       "What AI did",
+       "Wrote two CDS extend views: ZX_CNSLDTNINTEGRPTDFINVNAME (31 lines; _Extension.ZZ1_VNAME_COB as ZZ_VNAME_COB and _Extension.ZZ_VNAME) and ZX_JOURNALENTRYITEMVNAME (20 lines; Persistence.vname as ZZ_VNAME). Documented the activation order, the functional follow-up (mapping table, re-run of the release) and gotchas. When SAP's review flagged the E_JournalEntryItem extension against guide P110, gave the reasoning why the alias must be used; it was pushed back to SAP unchanged."
+      ],
+      [
+       "My work",
+       "Arnav relayed the SAP incident reply and the SAP review of 05/10/26, asked on 28/09/26 for the standard VNAME as well, supplied the as-is E_JournalEntryItem source and its generated append (original/), and activated ZX_JOURNALENTRYITEMVNAME by paste in ADT. Functional mapping and re-release remain with the functional side."
+      ],
+      [
+       "Result",
+       "Completed - Standard views not touched - customer extend views only (\"E_JournalEntryItem itself and its generated key-user append are **not** touched\"); Elements named ZZ_ (not ZZ1_) so they cannot clash with a generated key-user extension if the TAI usage is enabled later"
+      ],
+      [
+       "Timeline",
+       "28/09/26 to 05/10/26; 2 active AI-session day(s), 8 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/gr_venture_release; ovl/gr_venture_release/ISSUES.md; ovl/gr_venture_release/NOTES.md; ovl/gr_venture_release/ZX_CNSLDTNINTEGRPTDFINVNAME.ddls.abap;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-039  ZMMIMS (SAPMZMMIMS) - GeM Invoice No. F4 correction and automatic display (marker +019)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "SAPMZMMIMS (module pool); ZMMIMS (transaction); MZMMIMSF01 (include); MZMMIMSI01 (include); MZMMIMSTOP (include, referenced); ZGEM_BILL (table)"
+      ],
+      [
+       "Business requirement",
+       "In change mode the GeM Invoice No. was not displayed, and F4 returned 'No values found' (DH801) while a number still appeared in the field. The GeM invoice is to be determined from the purchase order, shown without F4 and saved with the document."
+      ],
+      [
+       "Technical challenge",
+       "IST_RETURN_TAB is a header-line table shared by every search help of the program and was neither refreshed nor guarded, so a cancelled F4 left the value picked in a different search help; DELETE ADJACENT DUPLICATES ran before the PO filter and removed the right invoice; EBELN was missing from the WHERE clause."
+      ],
+      [
+       "What AI did",
+       "A replacement MODULE get_geminv (136 lines) whose header states the three root causes, a patch sheet with the new FORM get_gem_invoice_no and three call points (create, safety net before the MODIFY, change/display), and the two whole includes with the +019 lines in place."
+      ],
+      [
+       "My work",
+       "Not evidenced; NOTES.md says to apply the changes in SE80 against a fresh download and to check EKKO-BSART / PROCSTAT of the affected PO in SE16."
+      ],
+      [
+       "Result",
+       "Completed - PO number added to the WHERE clause - the whole ZGEM_BILL table is no longer read on every F4; Shared return table cleared and refreshed and its assignment guarded, removing the stale value from another search help"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 2 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmmims; kpmg/zmmims/ISSUES.md; kpmg/zmmims/NOTES.md; kpmg/zmmims/MZMMIMSI01_GET_GEMINV.abap; kpmg/zmmims/ZMMIMS_GEM_INV_AUTO_DISPLAY.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-040  ZMM_VMS vendor creation: number-range error in Mock-2, GST classification query"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_VMS (program)"
+      ],
+      [
+       "Business requirement",
+       "Vendor creation in Mock-2 failed with 'No number could be determined for number range'."
+      ],
+      [
+       "Technical challenge",
+       "Mock-2 behaviour differed from ECC; number-range determination for the vendor account group."
+      ],
+      [
+       "What AI did",
+       "Diagnosed the number-range determination failure and supplied the fix; answered the GST vendor classification query; triaged the remaining Mock-2 items."
+      ],
+      [
+       "My work",
+       "User confirmed the fix working (work log 21/08)."
+      ],
+      [
+       "Result",
+       "Completed"
+      ],
+      [
+       "Timeline",
+       "20/08/26 to 21/08/26 (work-log dates)"
+      ],
+      [
+       "Evidence",
+       ".archive/INBOX_2026-08-23.md + work log 21/08; ovl/_engagement/WORKLOG_2026-08.md (21/08); .archive/INBOX_2026-08-23.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-041  ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ -> OCD for objects created in OCQ"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZBC_TADIR_SRCSYS_CHANGE (report); TADIR (table, field SRCSYSTEM)"
+      ],
+      [
+       "Business requirement",
+       "Development was done in OCQ, which is now the quality system. In the new development system OCD every custom object carries TADIR-SRCSYSTEM = OCQ, so each edit is a repair; the objects have to become originals in OCD."
+      ],
+      [
+       "Technical challenge",
+       "A direct mass UPDATE of TADIR writes no change document, so the report has to be safe by construction: run only in OCD, never match standard objects (SRCSYSTEM = SAP), test mode by default and a confirmation before the update."
+      ],
+      [
+       "What AI did",
+       "Built the report (141 lines): selects every R3TR entry with SRCSYSTEM = OCQ, test flag on by default, POPUP_TO_CONFIRM before the update, UPDATE that repeats SRCSYSTEM = OCQ in its WHERE clause, and lists of changed and failed entries. Rewrote it twice the same day on Arnav's instructions and restored a truncated version after a bad edit. Wrote NOTES.md with guards, gotchas (no change document, repair flags in open transports) and the SE03 alternative."
+      ],
+      [
+       "My work",
+       "Arnav asked for the utility and changed the requirement twice on 05/10/26 (\"simplify \u2014 fixed OCQ -> OCD, no selection screen, all custom objects\"; \"change whatever possible\")."
+      ],
+      [
+       "Result",
+       "Completed - Refuses to run unless SY-SYSID = OCD, with a message instead of a dump; Test flag on by default and a confirmation popup (default button No) before any update"
+      ],
+      [
+       "Timeline",
+       "05/10/26 to 05/10/26; 1 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zbc_tadir_srcsys; ovl/zbc_tadir_srcsys/ISSUES.md; ovl/zbc_tadir_srcsys/NOTES.md; ovl/zbc_tadir_srcsys/ZBC_TADIR_SRCSYS_CHANGE.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-042  st05_decode.py: offline decoder for ST05 binary trace exports (.trc)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ST05 (transaction; its binary trace export is the input)"
+      ],
+      [
+       "Business requirement",
+       "To find out which CDS view or table the Group Reporting currency translation task log (opened from CXCD) reads, Arnav supplied an ST05 trace as a binary export file. The trace had to be read without access to the SAP system."
+      ],
+      [
+       "Technical challenge",
+       "The ST05 export is an undocumented binary format: an ABAP data cluster with a UTF-16 payload whose body is compressed with SAP's LZH (a DEFLATE stream behind an 8-byte header with noise bits), and it contains a second nested cluster compressed the same way."
+      ],
+      [
+       "What AI did",
+       "The assistant wrote an 86-line Python script that inflates both cluster levels and writes the trace records as TSV, all UTF-16 strings and the raw decompressed cluster. It was used on the supplied Trace.trc: the decoded extract is filed as ovl/zgr_ct_tasklog/trace/ST05_CXCD_tasklog_decoded_2026-11-06.txt (header: '97911 records'), and the ovl/zgr_ct_tasklog ISSUES entry records the finding derived from it (the log is served by OData FIN_CONS_GENERICLOG_SRV, lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG)."
+      ],
+      [
+       "My work",
+       "Arnav recorded the ST05 trace on OCD 500 and supplied the export file. No further use of the script is recorded."
+      ],
+      [
+       "Result",
+       "Completed - Rejects files that do not start with the ST05 binary export signature; Warns when the decompressed length differs from the length stored in the header"
+      ],
+      [
+       "Timeline",
+       "06/11/26 to 06/11/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "tools/st05_decode; tools/st05_decode/st05_decode.py; ovl/zgr_ct_tasklog/ISSUES.md; ovl/zgr_ct_tasklog/NOTES.md; ovl/zgr_ct_tasklog/trace/ST05_CXCD_tasklog_decoded_2026-11-06.txt"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-043  ZFI_BNK_APP (tcode ZBNK_APP2) bank payment file monitor - dead Back/Exit/Cancel fixed;"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_BNK_APP (report); ZBNK_APP2 (transaction); ZFI_BNK_APP_I01 (include, corrected); ZFI_BNK_APP_OUTPUTO01 (include, corrected); ZFI_BNK_APP_TOP (include); ZFI_BNK_APP_S01 (include)"
+      ],
+      [
+       "Business requirement",
+       "Two issues were reported against tcode ZBNK_APP2: Back (F3) / Exit / Cancel did nothing once the batch list was displayed, and one selected batch released all batches of the run for signatory 68865."
+      ],
+      [
+       "Technical challenge",
+       "Screen 100 had no GUI status at all (SET PF-STATUS still the commented SE51 generator stub) and USER_COMMAND_0100 handled only code 'E'; the screen and status are not part of the SE80 download, so the cause had to be established through SE51/SE41 checks."
+      ],
+      [
+       "What AI did",
+       "Triaged both issues from the SE80 download. For issue 1 it identified the root cause (no GUI status plus a CASE handling only 'E'), specified the SE41 status ZPF_FI_BNK_APP and title ZTITLE_FI_BNK_APP to be created by hand (function type must stay blank), and wrote corrected ZFI_BNK_APP_I01 (38 -> 91 lines: BACK/CANC/EXIT handling, ALV grid and container freed before leaving) and ZFI_BNK_APP_OUTPUTO01 (60 -> 73 lines: SET PF-STATUS / SET TITLEBAR)."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE80 download; ran the SE11/SE16 checks that killed the truncation hypothesis; confirmed SE93 and supplied the where-used list (11 hits) and the SE51 flow logic; confirmed no GUI status exists; created the status and title by hand in SE41/SE80; pasted and activated both includes in OCQ/500;"
+      ],
+      [
+       "Result",
+       "Completed - BACK / EXIT / CANC now handled in USER_COMMAND_0100 (previously only 'E'); ALV grid and container freed (free, CLEAR, cl_gui_cfw=>flush) before leaving so a re-run does not hit a destroyed screen"
+      ],
+      [
+       "Timeline",
+       "27/08/26 to 27/08/26; 1 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zbnk_app2; ovl/zbnk_app2/ISSUES.md; ovl/zbnk_app2/NOTES.md; ovl/zbnk_app2/ZFI_BNK_APP_I01.abap; ovl/zbnk_app2/ZFI_BNK_APP_OUTPUTO01.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-044  ZMM_TMS_STATUS Tender Monitoring Status report - Excel export from the ALV opens a blank workbook"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_TMS_STATUS (report, tcode ZMMTMSSTATUS); SAPMZMMTMS (module pool, tcode ZMMTMS - launches the report, not changed); ZMM_PUR_TENDER_D (table read); ZMM_TMS (table read)"
+      ],
+      [
+       "Business requirement",
+       "Excel export from the ZMMTMSSTATUS ALV (reached via ZMMTMS -> Reports) opened a blank workbook, while the same user and PC exported another custom report fine. Reported by the OVL Head-Commercial office."
+      ],
+      [
+       "Technical challenge",
+       "FORM e01_fieldcat_init passed a constant c_out VALUE '0' as no_out on all 44 field-catalog entries. The grid only hides a column on 'X' so the screen looked right, but the layout dialog and the spreadsheet export treat any non-blank no_out as hidden - zero visible columns, hence an empty workbook."
+      ],
+      [
+       "What AI did",
+       "Ruled out the ONGC logo (REUSE_ALV_COMMENTARY_WRITE paints the HTML pane only) and, from the decisive symptom that Change Layout listed no displayed columns, traced the cause to no_out = '0' on every column. Delivered the corrected object with c_out VALUE space (old line commented inside BOC/EOC 28/10/26; 1533 -> 1536 lines) and noted that a one-line SE38 edit is enough. Filed the fresh download as the baseline and documented the gotcha in NOTES.md."
+      ],
+      [
+       "My work",
+       "Human supplied fresh ZR_PROG_DOWNLOAD listings of ZMM_TMS_STATUS and SAPMZMMTMS (OCD/500, 28.10.2026), and ran the grid tests that showed Change Layout with no displayed columns. The change went into DEV under TR OCDK920415 (system work is manual - the assistant has no system access)."
+      ],
+      [
+       "Result",
+       "Completed - One-constant targeted fix (c_out '0' -> space) for all 44 columns; nothing else touched; Wrong suspect (ONGC logo) explicitly ruled out with the reason"
+      ],
+      [
+       "Timeline",
+       "28/10/26 to 28/10/26; 1 active AI-session day(s), 3 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zmm_tms_status; ovl/zmm_tms_status/ISSUES.md; ovl/zmm_tms_status/NOTES.md; ovl/zmm_tms_status/ZMM_TMS_STATUS.abap; git log -- ovl/zmm_tms_status (3 commits, 28/10/26)"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-045  ZFIBRS bank book upload (BRS) - upload error diagnosis and Excel upload template (no code change)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFIBRS (report, source not in repo)"
+      ],
+      [
+       "Business requirement",
+       "Users running the ZFIBRS bank book upload got 'Inconsistent header in file C:\\SAPPC\\bankbook.txt' and 'Run Validation Module First' and needed the upload to work. No download/template function had been delivered with the original development, so users were producing the tab-delimited .txt themselves."
+      ],
+      [
+       "Technical challenge",
+       "GUI_UPLOAD returned sy-subrc 1 (FILE_OPEN_ERROR): the file was never opened, so the empty table made the program report a misleading 'Inconsistent header'. The program source is not in the repo, so the 16-column file layout had to be inferred from a sample file."
+      ],
+      [
+       "What AI did",
+       "Checked the supplied sample file (115 lines x 16 columns, CRLF, ASCII) and found it clean, then diagnosed the error as FILE_OPEN_ERROR (likely WebGUI / wrong file name / file locked) needing no code change. Built ZFIBRS_Upload_Template.xlsx (Upload sheet with all cells Text-formatted, Instructions, Column Guide) and checked that re-saving it as tab-delimited reproduces the sample lines byte-for-byte."
+      ],
+      [
+       "My work",
+       "Human supplied the error texts, the sy-subrc value and the sample file (samples/bankbook_2026-09.txt). The fix is procedural on the user side: run from SAP GUI desktop, close the file, check the exact file name. Program source was never supplied (original/ is empty)."
+      ],
+      [
+       "Result",
+       "Completed - Root cause found without touching code: GUI_UPLOAD sy-subrc 1 = FILE_OPEN_ERROR, not a header defect; Upload template with Text-formatted cells so Excel does not strip leading zeros or 0.00"
+      ],
+      [
+       "Timeline",
+       "09/10/26 to 09/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfibrs; ovl/zfibrs/ISSUES.md; ovl/zfibrs/NOTES.md; ovl/zfibrs/samples/bankbook_2026-09.txt"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-046  ZFITAX_PBT_CALC_PRG - FAGLFLEXT read drops rows (FOR ALL ENTRIES implicit DISTINCT on S/4 compatibility view)..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFITAX_PBT_CALC_PRG (report, FORM PROCESS_DATA); ZFI_TAX_CREDIT_REPORT (report, same statement needs the same patch); FAGLFLEXT (S/4 compatibility view read by the program)"
+      ],
+      [
+       "Business requirement",
+       "The PBT calculation showed account sums that did not match the ledger: for account 200153 (company code OVL, 2026, ledger 0L) period-6 credits of 18,018.00 INR / 187.81 USD were missing from the account sum."
+      ],
+      [
+       "Technical challenge",
+       "FOR ALL ENTRIES applies an implicit DISTINCT over the columns of the target type ty_fl. On the S/4 FAGLFLEXT compatibility view OBJNR00-08 are zero and rows differ only by DRCRK and RCNTR; ty_fl has no RCNTR, so credit rows with identical amounts collapse (25 rows on DB, 21 in it_fl)."
+      ],
+      [
+       "What AI did",
+       "Diagnosed the row loss as the implicit DISTINCT of FOR ALL ENTRIES on the compatibility view and explained why adding DRCRK/RCNTR/OBJNR to ty_fl would not be a real fix. Wrote the 67-line patch sheet PATCH_FAGLFLEXT_FAE.abap: RANGE on RACCT built from lt_racct, sorted and de-duplicated, guarded with IS NOT INITIAL, original statement commented inside BOC/EOC markers."
+      ],
+      [
+       "My work",
+       "Row counts on OCP (SE16N 25 rows vs 21 in it_fl, dated 29/10/26) are recorded in the patch header - the assistant has no system access, so these came from the system side. Program source was not supplied (NOTES.md: 'No SE80 download supplied yet. Only the patch sheet is here'). Paste and test still to be done by the human."
+      ],
+      [
+       "Result",
+       "Completed - Replaced FOR ALL ENTRIES (implicit DISTINCT losing rows) with a RANGE on RACCT so every DB row is returned; IS NOT INITIAL guard: an empty account list now selects nothing instead of every account for the year / company code"
+      ],
+      [
+       "Timeline",
+       "29/10/26 to 29/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfitax_pbt_calc_prg; ovl/zfitax_pbt_calc_prg/ISSUES.md; ovl/zfitax_pbt_calc_prg/NOTES.md; ovl/zfitax_pbt_calc_prg/PATCH_FAGLFLEXT_FAE.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-047  ZJV_BAPI_BALUPLOAD1 JV G/L balance upload - XREF1 from the upload file not reaching BSEG-XREF1"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZJV_BAPI_BALUPLOAD1 (report, tcode ZJVBALUPLOAD1); ZJV_BAPI_BALUPLOAD1_MON (report, sister program used as reference); BAPI_ACC_DOCUMENT_POST (BAPI called by the program)"
+      ],
+      [
+       "Business requirement",
+       "XREF1 supplied in the upload file must update BSEG-XREF1 on the posted document; it worked in the monthly program ZJV_BAPI_BALUPLOAD1_MON but not in this one."
+      ],
+      [
+       "Technical challenge",
+       "GUI_UPLOAD (FILETYPE DAT) fills the target structure by column position. IST_GL declared XREF1 as field 28 while the 33-column template has SPGL, ZTERM, FUN_AREA, TRAD_PART and TRANS_TYPE between LINENO and XREF1, so XREF1 received the blank column 28 and file column 33 was dropped."
+      ],
+      [
+       "What AI did",
+       "1429 -> 1448 lines). Confirmed that SCREEN_300 already maps LS_GL-REF_KEY_1 = IST_GL-XREF1 and listed what was deliberately not touched (IST_GL1, SCREEN_302 / SCREEN_305, the multi-DELETE row-loss defect in MODIFY_IST_GL). A dev test upload file (BML) was added for the XREF1 check."
+      ],
+      [
+       "My work",
+       "Human pasted the SE80 download on 14/10/26 (filed as original/) and reported that XREF1 works in the _MON program;"
+      ],
+      [
+       "Result",
+       "Completed - Root cause fixed at the declaration (file column and structure field now match by position); no logic change; Fix aligned with the working sister program ZJV_BAPI_BALUPLOAD1_MON"
+      ],
+      [
+       "Timeline",
+       "14/10/26 to 14/10/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zjv_bapi_balupload1; ovl/zjv_bapi_balupload1/ISSUES.md; ovl/zjv_bapi_balupload1/NOTES.md; ovl/zjv_bapi_balupload1/ZJV_BAPI_BALUPLOAD1.abap;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-048  SAP standard JVA correction tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA - how it fetches data (JVSO1 to ACDOCA) and..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "RGJV_UPDATE_ACC_DATA_IN_ACDOCA (report, SAP standard, package GJVA_MIG); CL_JVA_MIG_CORRECT_ACDOCA (class, SAP standard); IF_JVA_MIG_CORRECT_ACDOCA (interface, SAP standard); CL_JVA_MIG_POST_ACDOCA (class, SAP standard); JVSO1 (table); ACDOCA (table)"
+      ],
+      [
+       "Business requirement",
+       "Understand how SAP's JVA ACDOCA correction tool fetches and corrects data and how JVSO1 relates to ACDOCA, in support of the custom VNAME update (ovl/zfi_acdoca_vname_upd), and explain why a test document ends with \"The detected issues cannot be fixed through this program\"."
+      ],
+      [
+       "Technical challenge",
+       "The logic sits in a standard class of 91 methods (19,462-line print). The failing case is a structure mismatch, not a field value: JVSO1 splits the offset line into about 37 lines per venture / equity group / recovery indicator (50 lines) while ACDOCA has 13;"
+      ],
+      [
+       "What AI did",
+       "Wrote a 226-line analysis: the report shell, the JVSO1-to-ACDOCA join per document type, the ten-step data fetch in the class, the interface parameters the report never sets and an eleven-point checklist for \"FI-only run does not update\". Located the raising statement for the 50<>13 document (COMPARE_FIELD_VALUES line 149, wrong_amount) and recorded the way-forward options, including ACDOCA-only split lines through CL_JVA_MIG_POST_ACDOCA."
+      ],
+      [
+       "My work",
+       "Arnav downloaded the three SE80 prints from OCQ/500 on 19.10.2026, ran the test case in FI mode, debugged it and reported the values (IV_CORR_TYPE = 6; ACDOCA 20,695,950.00 against the JV slice 32,400.00), and stated his preferred fix (ACDOCA-only split lines) in the discussion of 19-23/10/26."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Standard object never modified - prints filed under original/ for analysis only; Rule recorded: \"Never INSERT into ACDOCA directly\""
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 23/10/26; 2 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/rgjv_update_acc_data_in_acdoca; ovl/rgjv_update_acc_data_in_acdoca/ISSUES.md; ovl/rgjv_update_acc_data_in_acdoca/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-049  Reference program Z_JVA_ALIGNMENT (from another landscape) - analysis and OVL design for JVA-aligned split..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "Z_JVA_ALIGNMENT (report, reference from another landscape, not an OVL object); ZGTT_COMPANY (table, dependency of the reference program); ZFI_ACDOCA_JVA_ALIGN (report, built in ovl/zfi_acdoca_jva_align); ZFI_ACDOCA_JVSO1_RECON (report, recon, other folder); JVTO1 (table); ACDOCA (table)"
+      ],
+      [
+       "Business requirement",
+       "Arnav supplied a report that inserts JVA-aligned split lines and per-account balancing lines directly into ACDOCA and asked what a similar OVL function needs and which fields it writes. The outcome was the OVL design: upload the alignment lines from the recon Excel and post them to ACDOCA ledger 0L, with an undo."
+      ],
+      [
+       "Technical challenge",
+       "The 736-line reference does its work in one WITH statement over JVTO1 (4A/4C) and ACDOCA (0L), carries hardcodes of another landscape (company code 0453, PET1/PET2, MYR), depends on a global temporary table and inserts directly into ACDOCA with technical marker fields (BSTAT, MIG_SOURCE, SDM_VERSION)."
+      ],
+      [
+       "What AI did",
+       "Wrote a 329-line analysis and design note: the algorithm in six steps with re-run behaviour and a worked example, a dependency table, an ACDOCA field-by-field map (carried over, set by hand, left blank), the finding that the 0453 block is dead code, and ten decisions for an OVL version. Then recorded the agreed OVL design: 15-column Excel template, fields derived by the program, manual decisions, file-level checks and the marker-field decisions."
+      ],
+      [
+       "My work",
+       "Arnav supplied the reference source on 02/11/26, pasted SE16H rows for BELNR CA001J0000 (first without headings, then a screenshot with technical names) and took the decisions: posting date = last day of the period, profit centre from the Excel, period 000 in scope, document type ZJ hardcoded, third-currency column."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Dead code identified in the reference (the 0453 block reads a BELNR that the internal table never holds); Missing filter flagged: the reference filters neither rrcty = '0' nor rvers = '001', so plan records could be inserted into 0L"
+      ],
+      [
+       "Timeline",
+       "02/11/26 to 02/11/26; 1 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/z_jva_alignment; ovl/z_jva_alignment/ISSUES.md; ovl/z_jva_alignment/NOTES.md; ovl/z_jva_alignment/original/Z_JVA_ALIGNMENT.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-050  Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options)..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "API_CNSLDTNGRPJRNLITEM (OData V2 service, SAP standard, read-only); API_CNSLDTNGRPJRNLENTR (OData API, SAP standard - not on this release); FINCS_JRNLENTR_POST_SRV / ZFINCS_JRNLENTR_POST_SRV (OData UI service, SAP standard); FINCS_JRNLENTR_LIST_SRV (OData UI service, SAP standard);"
+      ],
+      [
+       "Business requirement",
+       "The team wants to create (post) group journal entries in ACDOCU by program, from a custom Data Monitor task (BAdI FINCS_CUST_DATAMON) or an ECC caller;"
+      ],
+      [
+       "Technical challenge",
+       "The registered API_CNSLDTNGRPJRNLITEM is read-only and analytical, and the released posting API API_CNSLDTNGRPJRNLENTR (S/4HANA 2022 and later) does not exist on this release - \"no OData service on this release posts group journal entries\"."
+      ],
+      [
+       "What AI did",
+       "Documented the read API (entity sets, four mandatory parameters, call pattern, filterable properties) and established from two catalogue passes that no released posting API exists on the release. Recorded the posting-engine classes with verdicts and the signatures of IF_FINCS_DP_DOCUMENT_POST~POST and IF_FINCS_DOCUMENT_REFRESH~SELECT_DOCUMENTS from SE24 screenshots, and traced the Fiori post action chain (CL_FINCS_JE_POST -> PROCESS_DRAFT)."
+      ],
+      [
+       "My work",
+       "The backend catalogue (/IWFND/MAINT_SERVICE) was checked twice in the system and the results relayed; service metadata, SE24 screenshots of the classes and signatures and the source of PROCESS_DRAFT were supplied; the service document for the test pack was supplied (from the Woodside host, not OCQ)."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Every property, navigation and function-import name in the test pack is marked \"confirm\" until $metadata is read; read-only Step 0 defined before any POST; Upgrade risk of building on unreleased classes or the UI service flagged for sign-off before building"
+      ],
+      [
+       "Timeline",
+       "22/10/26 to 22/10/26; 1 active AI-session day(s), 12 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-051  CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation):..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "CJ88 (transaction); FLQ_INSERT_EXTSN (function module, SAP standard); SAPLFLQEXT / FLQEXT (function group, SAP standard); LFLQEXTF01 (include, FORM UPDATE_ITEM, SAP standard); LFLQEXTU12 (include, SAP standard); FLQITEMFI (table)"
+      ],
+      [
+       "Business requirement",
+       "A finance user gets \"Update was canceled\" express documents when reversing WBS settlement via CJ88 for project OV.13AA2002 (period 001/2026); the reversals do not post. The business needs the reversal to post."
+      ],
+      [
+       "Technical challenge",
+       "the second document hits a duplicate key, INSERT returns sy-subrc 4 and FORM update_item raises INS_ERROR_IT, rolling back the whole LUW. The FM is called dynamically (where-used empty) and the only BAdI is SAP-internal."
+      ],
+      [
+       "What AI did",
+       "No code was written (\"diagnosis only\")."
+      ],
+      [
+       "My work",
+       "The error was reproduced in the system by user SAP_ABAP on 26/08/26 (41 SM13 records). The ST22 dump, the FLQEXT download and the SE16 FLQITEMFI rows were supplied. SE95 (three ways), SE18/SE19 and enhancement checks on LFLQEXTF01 / LFLQEXTU12 were run in the system and came back empty."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Root cause proven from the dump's variables (SY-TABIX = 1 and SY-DBCNT = 0 show the collision is with a row already on the database); Standard code not modified; an implicit enhancement in FORM UPDATE_ITEM \"deliberately rejected\" because it would silently suppress or overwrite Finance data"
+      ],
+      [
+       "Timeline",
+       "26/08/26 to 26/08/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/cj88_flq; ovl/cj88_flq/ISSUES.md; ovl/cj88_flq/NOTES.md; ovl/cj88_flq/evidence/ST22_RAISE_EXCEPTION_20260826_154256.txt; ovl/cj88_flq/original/FLQEXT.TXT"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-052  FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "VALID_BTYPE (function module, SAP standard, function group GJA1); GJ_PARTNER_CHECK (function module, SAP standard); SAPMF05A (program, SAP standard); FBV0 / FBVB (transactions); T8JZ, T8JV, T8JO, T8JQ, T8JF, T8JG (JVA tables); ZFI_RGGBR000_USEREXIT (user-exit program, ruled out)"
+      ],
+      [
+       "Business requirement",
+       "Posting a parked document in FBV0 (employee vendor advance lines coded to corporate venture CP0001) fails with CORE_GJ 912 \"No partner found for venture CP0001 and vendor 7078087\"; the user needs the document to post."
+      ],
+      [
+       "Technical challenge",
+       "The error is raised in standard code: for the corporate venture GJ_PARTNER_CHECK returns sy-subrc 0 at its first IF, the FBV0/FBVB exemption in VALID_BTYPE fires only on sy-subrc 1, so the code falls into the operator check and T8JV-OPERATOR is blank for CP0001."
+      ],
+      [
+       "What AI did",
+       "From the ST05 trace export, the SE37 sources of VALID_BTYPE and GJ_PARTNER_CHECK and SE16N evidence, pinned the branch taken and documented the three-step mechanism. Ruled out custom code, vendor master gaps and missing equity group/shares, and explained why SAP KBA 0828606 (partner netting) does not apply. Wrote a reusable five-step \"how it was found\" method and recommended the SAP note / incident route with an interim functional workaround. No code."
+      ],
+      [
+       "My work",
+       "In the system: ST05 trace on the user's ID with buffer trace, where-used and RS_ABAP_SOURCE_SCAN on Z*/Y* (both empty), SE37 sources and SE16N T8JZ / T8JV were taken and supplied. The case was handed to the functional lead on 08/10/26."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Standard FM not modified - \"the route is an SAP note or incident\"; Custom code ruled out by where-used and RS_ABAP_SOURCE_SCAN on Z*/Y*"
+      ],
+      [
+       "Timeline",
+       "08/10/26 to 08/10/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/fbv0_core_gj_912; ovl/fbv0_core_gj_912/ISSUES.md; ovl/fbv0_core_gj_912/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-053  ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque:..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_CP_MASS_VEN_PAY (report with screens, 'module pool style'); ZFIAPP (transaction); ZFI_CP_MASS_VEN_PAY_TOP (include); ZFI_CP_MAS_VEN_AI001 (include); ZFI_CP_MAS_VEN_BO001 (include); ZFI_CP_MAS_VEN_E0001 (include)"
+      ],
+      [
+       "Business requirement",
+       "F&A reported that ZFIAPP posted payment document 1726000164 without consuming a cheque (FCHN: 'No check information was found'); they need the cause and a payment/cheque step that cannot silently diverge."
+      ],
+      [
+       "Technical challenge",
+       "F-53 and FCH5 are two separate CALL TRANSACTIONs in two LUWs, so the payment commits before the cheque step. The cheque number is guessed as PCEC-CHECL + 1 without reading PAYR or testing the lot ceiling, and bdc_fch5 ignores sy-subrc and every FCH5 error, so an exhausted cheque lot fails silently on every run."
+      ],
+      [
+       "What AI did",
+       "From the 08.08.2026 listing it produced a code analysis naming three silent exits in include ZFI_CP_MAS_VEN_AI001, a secondary trap (hardcoded fiscal-year variant 'V3' for FCH5), a list of SE16 / SM35 / ST22 / SE51 checks, the immediate functional action (new lot in FCHI, manual cheque assignment in FCH5) and a proposed fix. No code was written because the repo copy was not verified as current."
+      ],
+      [
+       "My work",
+       "The cause was confirmed in the system on 31/08/26 from PCEC (the lot keyed on the selection screen had CHECL = CHECT); [contact] (F&A) reported the issue. A fresh SE80 download of ZFI_CP_MAS_VEN_AI001 and the functional corrective action (FCHI / FCH5) remain with humans."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Root cause confirmed against PCEC data before any code was written; Fix withheld until a fresh download exists (repo copy not trusted as current)"
+      ],
+      [
+       "Timeline",
+       "31/08/26 to 31/08/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_cp_mass_ven_pay; ovl/zfi_cp_mass_ven_pay/ISSUES.md; ovl/zfi_cp_mass_ven_pay/NOTES.md; ovl/_engagement/WORKLOG_2026-08.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-054  Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       ""
+      ],
+      [
+       "Business requirement",
+       "Business units are to punch category-wise cumulative Capex (EWIP, DWIP, CWIP, Other) per project at each fortnight end in SAP (USD million, 71 project rows, 24 fortnights a year). SAP must reject a decrease against the prior fortnight, pre-fill the prior reported cumulative and show three colour states (frozen, pre-filled, punch..."
+      ],
+      [
+       "Technical challenge",
+       "The ask is not a report: requirements 1-5 need persistence, pre-fill from the prior period, validation against stored data, a period freeze and per-cell state, none of which exist without custom tables. JV code cannot be the project key (rows with 0, one row with six codes, repeating Sl."
+      ],
+      [
+       "What AI did",
+       "Assessed the FS workbook and wrote a 114-line NOTES.md: mapped Tabs 1-8 and the Opex sheets to one punched input table plus derived values, and gave the verdict \"not a report. A punching transaction plus reports on top\". Proposed a three-layer design (six Z tables sketched, an SE38 program with an editable CL_GUI_ALV_GRID, ALV output reports) and recorded why module pool, SM30, RAP/Fiori and Excel upload were not chosen. No object was built and no object names were decided."
+      ],
+      [
+       "My work",
+       "Arnav supplied the FS workbook on 18/11/26. No other human action is evidenced; the 10 questions are still with the FS owner."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Found that the Excel silently clamps a decrease to zero (IF(E86-D86>0, E86-D86, 0)) and that its history table and rates row are empty (Process-sheet findings C1-C3) - the gaps the SAP build has to close; Flagged that JV code is not usable as the project key"
+      ],
+      [
+       "Timeline",
+       "18/11/26 to 18/11/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/capex_provisional; ovl/capex_provisional/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-055  Custom PR release workflow WS90900008 in ERROR - agent rule AC90900002 returns no agent (diagnosis path only)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "WS90900008 (workflow); AC90900002 (agent rule); EBAN (table)"
+      ],
+      [
+       "Business requirement",
+       "Workflow 50092307 for PR 2100001615 went into ERROR at node 4 (\"Rule AC90900002 ended with an exception\", SWP 088); the PR release workflow has to complete."
+      ],
+      [
+       "Technical challenge",
+       "Nothing of the workflow or of the rule's function module is on file, only two SWI1 screenshots. The rule returned no agent for this PR and is set to terminate on an empty result; what it keys on is unknown."
+      ],
+      [
+       "What AI did",
+       "Read the two SWI1 screenshots and established that agent rule AC90900002 returned no agent for the first ParForEach index of node 4 and terminates on an empty result, while everything before the rule ran. Wrote a four-step diagnosis path (PFAC rule definition and simulation with the work item's container, download of the rule's function module, EBAN comparison with a PR that worked) and two gotchas. No code."
+      ],
+      [
+       "My work",
+       "Arnav supplied two SWI1 screenshots on 28/10/26. The rule's function module and the PR data are still awaited."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - No fix guessed: ISSUES.md states \"What it keys on is unknown (rule not on file)\"; Retest route noted: SWPR (restart after error) continues the workflow, so a new PR is not needed"
+      ],
+      [
+       "Timeline",
+       "28/10/26 to 28/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/wf_pr_release_ws90900008; ovl/wf_pr_release_ws90900008/ISSUES.md; ovl/wf_pr_release_ws90900008/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-056  FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in FAGLL03 / FAGLB03 / RFBILA00 /..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "FAGL_SETTINGS (table, SM30 entries FAGLL03_RESTRICT_MIG, FAGLB03_RESTRICT_MIG, RFSSLD_RESTRICT_MIG, RFBELJ_RESTRICT_MIG, MIG_SOURCE_C_SIGN); FAGLL03 / FAGLL03H (transactions, SAP standard); FAGLB03 (transaction, SAP standard); RFBILA00 / RFSSLD00 (reports, SAP standard);"
+      ],
+      [
+       "Business requirement",
+       "Functional forwarded KBA 2891129: after the ECC to S/4 conversion FAGLL03 / FAGLB03 / RFBILA00 / RFBELJ show migrated data incorrectly; review the notes and the FAGL_SETTINGS steps. They want FAGLL03 first."
+      ],
+      [
+       "Technical challenge",
+       "The FIN migration wrote extra ACDOCA lines with MIG_SOURCE A, C and R that the standard reports select; the remedy is SAP notes plus a FAGL_SETTINGS switch per program. The system has no outbound internet (notes must be uploaded), notes valid only for S4CORE 100-103 come back \"Cannot be implemented\", and the switch is ignored by..."
+      ],
+      [
+       "What AI did",
+       "Reviewed the KBA and mapped each program to its note and FAGL_SETTINGS parameter (seven-row table), and split the work between ABAP/Basis (SNOTE) and functional (SM30 entries, testing). Explained why SNOTE 2697319 came back \"Cannot be implemented\" / \"Not Relevant\" (correction already contained in the release) and how to confirm it. Wrote three caveats for functional (reversals, Fiori and Z reports ignore the switch, other MIG_SOURCE values on OVL) and a DEV test plan. No Z object."
+      ],
+      [
+       "My work",
+       "The functional consultant forwarded the KBA by mail (text truncated, remainder awaited). Arnav tried note 2697319 in SNOTE (result \"Cannot be implemented\") and maintained FAGLL03_RESTRICT_MIG = X in FAGL_SETTINGS in DEV client 500 (\"done\")."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Advised \"SNOTE only. Never hand-apply correction instructions in SE38 (modification)\"; Advised setting the four RESTRICT switches together, else FAGLB03, FAGLL03, RFBILA00 and the journal disagree"
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 23/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/fagl_settings_restrict_mig; ovl/fagl_settings_restrict_mig/ISSUES.md; ovl/fagl_settings_restrict_mig/NOTES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-057  ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only (document status 'U')..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_FBL3N_ACDOCA_U (BAdI implementation); ZCL_IM_FI_FBL3N_ACDOCA_U (class); FI_ITEMS_CH_DATA (classic BAdI, method CHANGE_ITEMS)"
+      ],
+      [
+       "Business requirement",
+       "Journal entries that exist only in ACDOCA with document status 'U' (no BSEG item) are not displayed in FBL3N; they should be listed together with the normal line items."
+      ],
+      [
+       "Technical challenge",
+       "FBL3N builds its list from BSIS/BSAS through logical database SDF, so the BAdI has to read the selection screen by dynamic ASSIGN ('(RFITEMGL)<name>'), select the leading-ledger ACDOCA lines, map them to RFPOSXEXT (whose fields differ on this system), de-duplicate and apply the F_BKPF_BUK check."
+      ],
+      [
+       "What AI did",
+       "Wrote the complete CHANGE_ITEMS method body with header (294-line file), NOTES.md with the SE19 creation steps, a table of selection-screen field names to verify, behaviour, deliberate omissions, risks and five test steps. After the first activation it removed CPUDT / DMBTR / WRBTR / SEGMENT and switched to U_BKTXT / U_USNAM, which do not exist / are named differently in RFPOSXEXT on this system."
+      ],
+      [
+       "My work",
+       "The first activation on 19/10/26 was done in the system and its result fed back ('Confirmed by the first activation (19/10/26)')."
+      ],
+      [
+       "Result",
+       "Completed - sy-tcode guard keeps FBL1N / FBL5N untouched; A wrong selection-screen field name is caught via sy-subrc and reported with an information message - 'no dump'"
+      ],
+      [
+       "Timeline",
+       "19/10/26 to 19/10/26; 1 active AI-session day(s), 2 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/zfi_fbl3n_acdoca_u; ovl/zfi_fbl3n_acdoca_u/ISSUES.md; ovl/zfi_fbl3n_acdoca_u/NOTES.md; ovl/zfi_fbl3n_acdoca_u/ZCL_IM_FI_FBL3N_ACDOCA_U.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h2",
+     "text": "Astral (KPMG) - 9 further use cases"
+    },
+    {
+     "t": "h3",
+     "text": "UC-058  ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZPP_FORECAST (report, transaction ZFCST); ZPP_FORECAST_UPLOAD (report, transaction ZFCST_UPL); ZPP_FORECAST_REPORT (report, transaction ZFCST_RPT); ZCL_PP_FCST (class - calculation engine); ZCL_PP_FCST_UTIL (class - helpers and authority checks);"
+      ],
+      [
+       "Business requirement",
+       "Adhesive forecasting in three modes from billing history, load factor and the business forecast, with eight (later nine) mass uploads with downloadable templates and a final report. Change requests added per-month additional quantities, price and value columns from condition records, five superseded material codes per material,..."
+      ],
+      [
+       "Technical challenge",
+       "The object had to stay screen-free (CL_SALV_TABLE only) to be shippable as an abapGit ZIP, on a release that rejects some modern syntax. Twice the work was built on a stale git base and overwrote or contradicted the system state, and the FS mixes two history sources (billing vs MATDOC) and leaves the superseded-material and lega..."
+      ],
+      [
+       "What AI did",
+       "Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files). The 35 dated log sections (02/09-22/10/26) record: two change-request builds; root causes of 16 activation errors (VALUE with literal rows), a FORM/PERFORM parameter mismatch, the abapGit PROGDIR order import error and the legacy-history bug (left-aligned string template writing months into wrong columns); price derivation from A923/KONP; material-type filter;"
+      ],
+      [
+       "My work",
+       "Arnav supplied the change requests, the QA copy of ZPP_FORECAST_UPLOAD, activation and import errors, screenshots and a debugger finding (do_history ASSIGN returning sy-subrc 4), ran his own tests and relayed the testers' cases (plant 2439), activated the objects (15/09, 23/09), created the SE41 status and the SE11 field by hand..."
+      ],
+      [
+       "Result",
+       "Completed - Screen-free design (CL_SALV_TABLE only) keeps the whole object importable as an abapGit ZIP; Every PERFORM compared against its FORM signature across all five sources after the parameter-count error (0 mismatches)"
+      ],
+      [
+       "Timeline",
+       "21/08/26 to 22/10/26; 13 active AI-session day(s), 73 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zpp_forecast_v2; kpmg/zpp_forecast_v2/ISSUES.md; kpmg/zpp_forecast_v2/NOTES.md; kpmg/zpp_forecast_v2/00_TECHNICAL_OBJECTS.md; kpmg/_docs/ZFORECAST_KT_Tcodes.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-062  TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZFI_TDS_CL34 (report); ZFI_TDS_CL34_TOP (include); ZFI_TDS_CL34_SCR (include); ZFI_TDS_CL34_FORMS (include); I_WithholdingTaxItem / I_JournalEntry (standard CDS views read as the driver)"
+      ],
+      [
+       "Business requirement",
+       "A read-only ALV list of every FI document in which withholding tax (TDS) was deducted from a vendor, for Clause 34 reporting: 25 FS columns (GL code and text, vendor, PAN, section, dates, base amount, rate, TDS amount, exemption certificate data) selected by company code, fiscal year, posting date, vendor and section."
+      ],
+      [
+       "Technical challenge",
+       "The FS could not be implemented literally (T059Z-TXT40 does not exist; 'AWKEY = RMRP' contradicts itself and had to be tested on AWTYP) and no field name could be verified on the unreachable target system."
+      ],
+      [
+       "What AI did",
+       "Built the report and three includes from the FS on 26/08/26 (3,575 lines today) together with BUILD_BRIEF.md, a verified DDIC fact sheet, a query register Q1-Q28, a markdown TS and the TS in the Astral template (docx/doc, 29/09/26). Added an authorisation check (F_BKPF_BUK) for dialog and background runs that the FS had not asked for, and kept the AWTYP reading of the RMRP rule, which the first live run vindicated."
+      ],
+      [
+       "My work",
+       "Arnav created/pasted the four programs, made four abapGit import attempts, reported each activation error, ran two live runs (49 rows company code 1000; 17 rows second company code) and reconciled samples, debugged two documents into GT_GLMSG, supplied SE16 values/screenshots (WITH_ITEM signs, document 1700000053), caught the wr..."
+      ],
+      [
+       "Result",
+       "Completed - AUTHORITY-CHECK F_BKPF_BUK (ACTVT 03) added for dialog and background, closing an exposure of TDS amounts and vendor PANs created by reading base tables; A checker compares every SELECT field list with its target type (13 buffers) and every PROGDIR block with the required element order"
+      ],
+      [
+       "Timeline",
+       "26/08/26 to 29/09/26; 5 active AI-session day(s), 25 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zfi_tds_cl34; kpmg/zfi_tds_cl34/ISSUES.md; kpmg/zfi_tds_cl34/NOTES.md; kpmg/zfi_tds_cl34/BUILD_BRIEF.md; kpmg/zfi_tds_cl34/docs/QUERIES.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-063  Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_PO_BUDGET (transparent table, 11 fields); ZDO_BUDGET_AMT (domain); ZDE_BUDGET (data element); ZDE_ADD_BUDGET (data element); ZMM_BUDGET (message class, 10 messages); ME_PROCESS_PO_CUST (classic BAdI - insert block <002> in method IF_EX_ME_PROCESS_PO_CUST~CHECK of the existing implementation)"
+      ],
+      [
+       "Business requirement",
+       "Block a purchase order (ME21N / ME22N) when its account-assigned value exceeds Budget + Additional Budget maintained per plant, purchasing group and year; the budget table is maintained in SM30 with only Additional Budget changeable after creation. The FS also covers scheduling agreements."
+      ],
+      [
+       "Technical challenge",
+       "The check must be inserted into an existing classic BAdI implementation that carries other developers' code, exactly before 'CHECK sy-tcode NE 'ME29N''. Scheduling agreements (ME31L / ME32L) do not run through that BAdI and carry no EFFWR/NETWR, so their value must be derived (target or scheduled quantity x NETPR / PEINH) in an..."
+      ],
+      [
+       "What AI did",
+       "Produced the DDIC and message class as abapGit XML with ZMM_PO_BUDGET.zip (7 files), the BAdI CHECK insert block (111 lines) and the whole method with the block in place (973 lines), the SE54 event-01 routine, the PBO screen module, and MANUAL_STEPS.md with seven open points. For scheduling agreements: two read-only probe enhancements and a 281-line implicit enhancement for SAPMM06E. source headers are dated 19.08.2026 and 24.08.2026."
+      ],
+      [
+       "My work",
+       "Not logged. The source headers show the consultant ran the probes in the system: ZMM_BUDGET_SA_PROBE2.abap 'PROBE 1 established: XEKPO-EFFWR and XEKPO-NETWR are both empty on a scheduling agreement, and XEKPO-NETPR is populated';"
+      ],
+      [
+       "Result",
+       "Completed - Currency field WAERS added although not in the FS, because the FS compares an amount with no currency; Maintenance rule enforced in SE54 event 01 (survives regeneration, cannot be bypassed) in addition to the cosmetic screen module"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 4 active AI-session day(s), 13 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_po_budget; kpmg/zmm_po_budget/ISSUES.md; kpmg/zmm_po_budget/NOTES.md; kpmg/zmm_po_budget/MANUAL_STEPS.md; kpmg/zmm_po_budget/BADI_CHECK_SNIPPET.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-064  ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_VEND_MASTER (report); ZMM_VEND_MASTER_TOP (include); ZMM_VEND_MASTER_SCR (include); ZMM_VEND_MASTER_CL (include); ZMM_VEND_MASTER_FORMS (include); ZMM_VEND_UPLOAD (transaction)"
+      ],
+      [
+       "Business requirement",
+       "Enhance the existing supplier upload: (R1) record-level processing log and download of failed records only, (R2) automatic extension to company code and purchasing organisation with separate status and 'already extended' detection, (R3) a separate Change mode in which blank cells never overwrite master data, (R4) validation and..."
+      ],
+      [
+       "Technical challenge",
+       "The baseline was an SE38 print listing, not compilable source. Create/extend/change runs through vmd_ei_api=>maintain_bapi and Change mode is only safe if datax flags are set solely for populated cells; the baseline's hard stop (MESSAGE ... LEAVE LIST-PROCESSING) had to be removed."
+      ],
+      [
+       "What AI did",
+       "The repo's src/ holds the five includes (2,601 lines) with markers 'By Arnav on 21/07/2026' and 'Changes by Arnav on 22/07/26'; drafts/ holds the 569-line unit sheet. ISSUES.md is empty."
+      ],
+      [
+       "My work",
+       "Not logged in the folder. kpmg/timesheet (Sep 2026) books 8 h on ZMM_VEND_UPLOAD: 01/09 'Analysed BP/vendor master fields for upload template' and 16-17/09 'Reviewed FSD for vendor upload program; clarifications raised'."
+      ],
+      [
+       "Result",
+       "Completed - A bad record is logged and skipped instead of stopping the whole batch (hard stop removed); Blank-safe Change mode: datax set only when the source cell is filled"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 3 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md; kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-065  ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_BP_CREATE_MAIL (report); ZMM_BP_MAIL (transaction); ZMM_BP_MAIL_MDM (TVARVC variable); ZMM_BP_MAIL_SENDER (TVARVC variable, optional); ZMM_BP_CREATE_MAIL_DAILY (SM36 job); BGJOB (report variant)"
+      ],
+      [
+       "Business requirement",
+       "Once a day a background job must inform MDM, the supplier manager and the supplier's contact that a new supplier account exists, with its name, address and BP number. Changed on 05/10/26 from one consolidated mail to one mail per BP, sent separately to MDM, the ADR6 004 address and the ADR6 005 address."
+      ],
+      [
+       "Technical challenge",
+       "Recipients are resolved by ADR6 sequence position (004/005), the MDM address comes from TVARVC, the 63-character subject exceeds the 50-character document title, and each mail is sent and committed on its own through CL_BCS. The first run dumped on a dynamic SALV call, and DEV has no SMTP node."
+      ],
+      [
+       "What AI did",
+       "Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS. Fixed the first-run dump CALL_METHOD_CONFLICT_TYPE in DISPLAY_LOG and the truncated ALV headings, and diagnosed the SAPoffice status 'no node determined' as missing SCOT configuration rather than a program defect. Implemented the 05/10/26 change request (one mail per BP, per-recipient mails, per-mail result in the log;"
+      ],
+      [
+       "My work",
+       "Functional ([contact], [contact]) and Arnav answered the queries on 25/09/26 and accepted the recipient-by-position risk; Arnav pasted and activated the report ('Activated in the target on first paste'), ran it on a 14-BP range, reported the dump, the SOST status and the heading problem, verified the fix, and confirmed the repo..."
+      ],
+      [
+       "Result",
+       "Completed - MDM address and sender taken from TVARVC instead of being hardcoded; Each mail committed on its own so one failure does not undo the rest; the per-BP result is written to the log column"
+      ],
+      [
+       "Timeline",
+       "22/09/26 to 05/10/26; 2 active AI-session day(s), 7 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_bp_mail; kpmg/zmm_bp_mail/ISSUES.md; kpmg/zmm_bp_mail/NOTES.md; kpmg/zmm_bp_mail/QUERIES.md; kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-066  ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for 'Storage Loc./Batch Stock'"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZRM07MLBD (report, Z copy of standard RM07MLBD); ZMB5B (transaction); RM07MLDD, RM07MLBD_FORM_01, RM07MLBD_FORM_02, RM07MLBD_CUST_FIELDS (standard includes, referenced unchanged)"
+      ],
+      [
+       "Business requirement",
+       "Copy MB5B to ZMB5B and, for the radio button 'Storage Loc./Batch Stock', show the amount (MSEG-DMBTR) in the detail list (July 2026) and, as a follow-up dated 18.08.2026, two more columns: receipt amount and issue amount."
+      ],
+      [
+       "Technical challenge",
+       "The standard fills the value fields only for valuated stock: three gates (summen_bilden collects quantities only, bestaende_berechnen fills values only in the BWBST branch, the totals field catalogue appends the amount columns only for BWBST) and an initial currency key leave the columns empty if only the field catalogue is chan..."
+      ],
+      [
+       "What AI did",
+       "The repo additionally holds the 18.08.2026 follow-up: the whole program (6,206 lines) with BOC/EOC blocks 'By Arnav on 18/08/26' and a 7-unit paste sheet with unit tests UT-01 to UT-07 for receipt/issue amounts."
+      ],
+      [
+       "My work",
+       "Not logged in this folder. NOTES.md lists the manual steps (creating ZRM07MLBD, transaction ZMB5B in SE93, pasting in SE38). kpmg/zmm_rm07mlbd/ISSUES.md 15/09/26 reports the amounts as 'fine in ZMB5B', i.e. the program was run in a system by the consultant."
+      ],
+      [
+       "Result",
+       "Completed - Only the main program changed; the SAP standard includes are kept under their standard names and unchanged; Scope held to the FS: ANFWERT / ENDWERT deliberately not delivered because MBEW-SALK3 does not exist per storage location"
+      ],
+      [
+       "Timeline",
+       "not stated to not stated; 4 active AI-session day(s), 6 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmb5b; kpmg/zmb5b/ISSUES.md; kpmg/zmb5b/NOTES.md; kpmg/zmb5b/docs/TS_ZMB5B.md; kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-067  ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom MB5B copy"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZMM_RM07MLBD (report, existing custom copy of RM07MLBD); ZMM_MB5B_NEW (transaction); ZMM_RM07MLDD (include, untouched); ZMM_RM07MLBD_FORM_01 (include, untouched); ZMM_RM07MLBD_FORM_02 (include, untouched); RM07MLBD_CUST_FIELDS (standard include)"
+      ],
+      [
+       "Business requirement",
+       "Bring the ZMB5B receipt amount / issue amount and the DMBTR detail column for the storage-location view into the existing custom transaction ZMM_MB5B_NEW 'so one report serves both'."
+      ],
+      [
+       "Technical challenge",
+       "This copy predates the standard line that forces gv_newdb = abap_false, so on HANA the BAdI RM07MLBD_DBSYS_OPT routes through the stored-procedure path and skips the classic aggregation - the new amounts came out blank."
+      ],
+      [
+       "What AI did",
+       "Reconstructed the five objects from the SE38 print listing (drafts/parsed), ported the ZMB5B units into the main program only (5,960 -> 6,137 lines at first delivery) and as a paste sheet of named blocks with unit tests. Diagnosed the blank amounts as the HANA BAdI code path and added unit 11 (gv_newdb = abap_false for the storage-location view only). Deliberately did not port the header-block values because that would reverse the original author's 'WITHOUT VALUE VIEW' design and bypass the ZMB5B_NEW1 check."
+      ],
+      [
+       "My work",
+       "Arnav supplied the SE38 print of 15/09/26, applied and activated the port, and reported 'Amounts blank in ZMM_MB5B_NEW after the port, fine in ZMB5B'. Pasting the units in SE38 is manual."
+      ],
+      [
+       "Result",
+       "Completed - Main program only; the three Z includes are untouched; Delivered as named paste blocks to avoid SE38 wrapping the existing over-length lines of a whole-file paste"
+      ],
+      [
+       "Timeline",
+       "15/09/26 to 15/09/26; 1 active AI-session day(s), 5 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_rm07mlbd; kpmg/zmm_rm07mlbd/ISSUES.md; kpmg/zmm_rm07mlbd/NOTES.md; kpmg/zmm_rm07mlbd/ZMM_RM07MLBD_units.abap; git log -- kpmg/zmm_rm07mlbd"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-068  PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ME_PROCESS_PO_CUST (classic BAdI, method IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER of the existing implementation); ZPO_VALIDITY_DOCTYPE (TVARVC variable - part of the withdrawn approach); NBF (field selection key, OMF4); ZBRD (field selection key)"
+      ],
+      [
+       "Business requirement",
+       "The PO header fields Validity Start / Validity End (EKKO-KDATB / KDATE) must be input-ready for PO document type SBP only, in SAP GUI as in Fiori; no validation is wanted."
+      ],
+      [
+       "Technical challenge",
+       "The status of a standard field is the most restrictive of the merged field-selection keys (transaction, activity, document type, release), and the BAdI method FIELDSELECTION_HEADER only ever receives customer metafields, never the standard metafields 37/38 - so it cannot show or hide these fields."
+      ],
+      [
+       "What AI did",
+       "First delivered a FIELDSELECTION_HEADER method body that hides the two fields unless the document type is listed in TVARVC ZPO_VALIDITY_DOCTYPE, then corrected the metafield constants. After Arnav's debugger finding, concluded that the BAdI cannot reach standard metafields, located the cause in OMF4 key NBF (the two fields have no option ticked = Hide; T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to [contact]. The withdrawn code is kept as the record of why."
+      ],
+      [
+       "My work",
+       "Arnav supplied the existing method body (original/), checked type group MMMFD, debugged FIELDSELECTION_HEADER ('CH_FIELDSELECTION holds only customer metafields (90000121\u201390000141)') and checked OMF4 / T161. The customizing change is for the functional consultant; sending the mail is manual."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Root cause proven in the debugger instead of shipping a change that could not work; Document types read from TVARVC rather than hardcoded (in the withdrawn version)"
+      ],
+      [
+       "Timeline",
+       "12/10/26 to 12/10/26; 1 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md; kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap; git log / git show..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-069  WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZSD_MIS_CUSTOMER (report - specified in the FS, not built); ZSD_CUST_SDFI_DATA (custom table - specified, not built); ZSD_PAINT_CUSTGRP2 / ZSD_PAINT_OLDCUSTGRP2 (STVARV variables - specified);"
+      ],
+      [
+       "Business requirement",
+       "An ALV report with one row per customer and 80 columns (customer master and sales-officer hierarchy, sales / returns / collections for several periods, outstanding and overdue, credit limit, exception approval, legal status, security deposits) and a custom table, maintained by the user, for everything 'not available in SAP'."
+      ],
+      [
+       "Technical challenge",
+       "Roughly a third of the columns are specified as 'fetch from Z report X' for seven existing Z reports whose source was not supplied, and the FS and the logic sheet disagree on the Z table (18 annual fields vs a 94-column monthly layout with misspelt and duplicate field names)."
+      ],
+      [
+       "What AI did",
+       "A feasibility check dated 21/09/26 with the verdict 'Not buildable end to end from what was supplied. Roughly half of it is', a classification of all 80 columns by source ('about 44 columns buildable now, about 36 blocked'), 21 numbered queries (15 blocking) and design recommendations (a narrow keyed table instead of 94 columns; read the underlying tables rather than SUBMIT seven reports). No code."
+      ],
+      [
+       "My work",
+       "Arnav supplied the FS and the two logic sheets on 21/09/26; the query list is for him to send to the functional team. kpmg/timesheet books 4 h on 21/09 (FS review, feasibility assessment and query list)."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Every one of the 80 output columns classified by source and by whether it can be built now; Defects in the proposed Z table found before build (duplicate / misspelt field names, amounts as length 30, text in a numeric field, no key, no MANDT)"
+      ],
+      [
+       "Timeline",
+       "21/09/26 to 21/09/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "kpmg/zsd_mis_customer; kpmg/zsd_mis_customer/ISSUES.md; kpmg/zsd_mis_customer/NOTES.md; kpmg/zsd_mis_customer/FS_QUERIES.md; kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h2",
+     "text": "Common (all projects) - 5 further use cases"
+    },
+    {
+     "t": "h3",
+     "text": "UC-070  AI delivery toolkit: rulebook, release-constraint memory, 7 workflow skills, sync / audit scripts"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZABAPGIT_STANDALONE (program; abapGit offline import route described in the skills); ZR_PROG_DOWNLOAD (report; named as the download helper)"
+      ],
+      [
+       "Business requirement",
+       "Issues arrive by mail daily for two concurrent projects, and the SAP systems cannot be reached by the assistant, so every fix travels by paste or ZIP and is verified by hand. The workflow needs standing rules, a memory of what already failed on these systems, and repeatable procedures so that each session starts from the same kn..."
+      ],
+      [
+       "Technical challenge",
+       "Sessions run in an ephemeral container whose memory directory does not survive, so anything to be recalled must be committed to the repo. The target landscape is an older S/4 release where much generated CDS / RAP code does not activate, source lines wrap on paste, hand-written abapGit XML is order-sensitive, and the working cop..."
+      ],
+      [
+       "What AI did",
+       "The assets were built and extended in AI-assisted sessions: 39 of the 55 commits touching CLAUDE.md, MEMORY.md, .claude/ and scripts/ carry a Claude co-author trailer and 10 are authored as Claude. They comprise seven skills (triage, fix-issue, ship-fix, from-fs, atc-fix with 31 rules, status, solve; 1,038 lines) and a /sync command;"
+      ],
+      [
+       "My work",
+       "Arnav verifies every object before it goes into SAP and pastes activation errors back; several rules record his corrections (M-25: 'Arnav caught it: \"we did not use this annotation\"'; M-03: his report of what is on his screen outranks the repo copy)."
+      ],
+      [
+       "Result",
+       "Completed - 56 release constraints, each tied to the exact error message and the fix that worked on the system, applied before code is written; 31 past mistakes written up, each with the rule it produced"
+      ],
+      [
+       "Timeline",
+       "23/08/26 to 12/11/26; 18 active AI-session day(s), 80 commits"
+      ],
+      [
+       "Evidence",
+       "(repo tooling); CLAUDE.md; MEMORY.md (sections 1-10; sections 4 and 5 read in full); .claude/skills/atc-fix/SKILL.md; .claude/skills/fix-issue/SKILL.md"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-071  ZR_FIND_ENH: enhancement finder for the call tree of a function module, class method or program"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZR_FIND_ENH (report); MODSAP (table; read); MODACT (table; read); SXC_EXIT (table; read); SEOMETAREL (table; read); WBCROSSGT (where-used index table; read)"
+      ],
+      [
+       "Business requirement",
+       "A developer needs to know which enhancement options exist in a standard function module including the function modules, forms and methods it calls, without walking the code by hand: customer exits, classic and new BAdIs, enhancement points and sections, BTE events, screen exits, USEREXIT forms and optionally implicit options."
+      ],
+      [
+       "Technical challenge",
+       "Static analysis of ABAP source that follows CALL FUNCTION, PERFORM and method calls down to a chosen depth, resolves instance method calls through the where-used index, and maps each hit to its SMOD / CMOD project, BAdI name and implementations. Dynamic calls, SUBMIT, RFC destinations and local classes cannot be followed."
+      ],
+      [
+       "What AI did",
+       "ISSUES.md records one entry, 'Initial version' on 07/10/26 (commit ec31c08, co-authored by Claude): a 1,169-line report with ALV output. NOTES.md documents the nine enhancement types it detects and from what, the limits of static analysis, a runtime cross-check by debugger breakpoints, the selection texts, and three table semantics that could not be verified offline and are marked ASSUMPTION in the code."
+      ],
+      [
+       "My work",
+       "Paste into SE38 and maintenance of two text symbols and twelve selection texts are manual steps listed in NOTES.md."
+      ],
+      [
+       "Result",
+       "Completed - Read-only report; Call path shown per finding, with depth and maximum-routine limits to bound the scan"
+      ],
+      [
+       "Timeline",
+       "07/10/26 to 07/10/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "tools/zr_find_enh; tools/zr_find_enh/ISSUES.md; tools/zr_find_enh/NOTES.md; tools/zr_find_enh/ZR_FIND_ENH.abap; git log -- tools/zr_find_enh (commit ec31c08, 2026-10-07)"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-072  abapGit offline-ZIP delivery path: DDIC and report pilots, XML element-order root cause"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZTEST_T001 (report)"
+      ],
+      [
+       "Business requirement",
+       "Prove that the abapGit offline-ZIP (or online-clone) import path works on a system with no ADT connection, with the smallest possible repository, before risking a real object on it."
+      ],
+      [
+       "Technical challenge",
+       "abapGit deserialises with CALL TRANSFORMATION id, which walks zif_abapgit_sap_report=>ty_progdir in component order and rejects out-of-order elements; the hand-written XML had NAME, SUBC, FIXPT, VARCL, UCCHECK instead of NAME, VARCL, SUBC, FIXPT, UCCHECK, which short-dumps with XML_FORMAT_ERROR / CX_XSLT_FORMAT_ERROR."
+      ],
+      [
+       "What AI did",
+       "The folder holds a pilot abapGit repository (.abapgit.xml, src/ztest_t001.prog.abap, src/ztest_t001.prog.xml, README.md with offline and online import steps); On 27/08/26, while the same dump was being debugged on kpmg/zfi_tds_cl34, the cause was traced to the PROGDIR element order in the hand-written XML; the file was reordered, the ZIP rebuilt and the rule recorded for all later ZIPs (commit c666c03)."
+      ],
+      [
+       "My work",
+       "Import into SAP via ZABAPGIT_STANDALONE is a manual step; no successful import of this pilot is recorded (CLAUDE.md: 'pilot \u2014 never actually imported successfully; do not cite it as proof the ZIP path works')."
+      ],
+      [
+       "Result",
+       "Completed - Root cause of the abapGit XML_FORMAT_ERROR dump found (PROGDIR element order must follow ty_progdir) and turned into a standing rule; NOTES.md adds a verification step: after the pull the abapGit diff / stage view must show zero local changes"
+      ],
+      [
+       "Timeline",
+       "27/08/26 to 27/08/26; 3 active AI-session day(s), 6 commits"
+      ],
+      [
+       "Evidence",
+       "ovl/ztest_t001; ovl/ztest_t001/ISSUES.md; ovl/ztest_t001/NOTES.md; ovl/ztest_t001/README.md; ovl/ztest_t001/src/ztest_t001.prog.xml"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-073  ZR_ICF_URL_LIST: every ICF service URL of the system as a flat list for the CPI team"
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "ZR_ICF_URL_LIST (report); ICFSERVICE (table; read)"
+      ],
+      [
+       "Business requirement",
+       "The CPI integration team needs the complete list of valid service URLs of the system. SICF only shows a tree that is expanded node by node, so a report has to produce one row per URL that can be exported to a spreadsheet."
+      ],
+      [
+       "Technical challenge",
+       "ICFSERVICE stores each node with its parent GUID, not its path, so the report walks the parent chain to rebuild the full path, decides whether the whole chain above a node is active, and leaves the virtual host out of the URL. How virtual hosts are stored is an assumption that could not be checked offline."
+      ],
+      [
+       "What AI did",
+       "ISSUES.md records one entry, 'Initial version' on 02/11/26 (commit ca269bf, co-authored by Claude): a 298-line report that flattens ICFSERVICE into one URL per row with active-chain and end-node flags, optional base URL prefix and ALV export. NOTES.md gives the shipping steps, text elements, run variants and a first-run check for the virtual-host assumption."
+      ],
+      [
+       "My work",
+       "Arnav pasted the report into SE38, maintained the text elements and ran it for the CPI team."
+      ],
+      [
+       "Result",
+       "Completed - Read-only report; Flag for 'active end to end' so only URLs that actually answer are listed by default"
+      ],
+      [
+       "Timeline",
+       "02/11/26 to 02/11/26; 1 active AI-session day(s), 1 commits"
+      ],
+      [
+       "Evidence",
+       "tools/zr_icf_url_list; tools/zr_icf_url_list/ISSUES.md; tools/zr_icf_url_list/NOTES.md; tools/zr_icf_url_list/ZR_ICF_URL_LIST.abap; git log -- tools/zr_icf_url_list (commit ca269bf,..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-074  Research and management proposal: creating SAP documents from Microsoft Teams / Copilot or Claude through the..."
+    },
+    {
+     "t": "table",
+     "widths": [
+      20,
+      80
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "SAP objects",
+       "API_PURCHASEREQ_PROCESS_SRV (standard OData API; proposed); API_PURCHASEORDER_PROCESS_SRV (standard OData API; proposed); API_BUSINESS_PARTNER (standard OData API; proposed); BAPI_PR_CREATE (BAPI; proposed); BAPI_PO_CREATE1 (BAPI; proposed); BAPI_PO_RELEASE (BAPI; proposed)"
+      ],
+      [
+       "Business requirement",
+       "Business users want to raise purchase requisitions, create and release purchase orders, check status and maintain vendors from a chat in Microsoft Teams without opening SAP GUI, with the document posted under the user's own identity and authorisations."
+      ],
+      [
+       "Technical challenge",
+       "SAP Help, SAP Community and Microsoft Learn were blocked from the research container and had to be read through GitHub mirrors or search summaries."
+      ],
+      [
+       "What AI did",
+       "The proposal itself lists in section 12 the vendor pages that must be opened by hand before the document leaves Diligent."
+      ],
+      [
+       "My work",
+       "Arnav asked about the two routes and is named as the author of the proposal and brief. The verification checklist in section 12 and all six decisions and approvals in section 11 are left to people. Nothing was built or connected."
+      ],
+      [
+       "Result",
+       "Completed - analysis / root cause delivered - Sources listed for each claim; An explicit verification checklist (section 12) names eight items to confirm by hand before external circulation"
+      ],
+      [
+       "Timeline",
+       "27/09/26 to 27/09/26; 1 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Evidence",
+       "research/copilot-btp-mcp; research/copilot-btp-mcp/README.md; research/copilot-btp-mcp/Teams_SAP_Automation_Proposal_v1.0.md;..."
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h1",
+     "text": "Annex B - ATC Remediation Register",
+     "pageBreak": true
+    },
+    {
+     "t": "table",
+     "caption": "Corrected program includes (ONGC)",
+     "fontSize": 7.5,
+     "widths": [
+      30,
+      26,
+      16,
+      12,
+      16
+     ],
+     "numeric": [
+      3,
+      4
+     ],
+     "header": [
+      "Include",
+      "Parent program",
+      "Package",
+      "Lines",
+      "Correction blocks"
+     ],
+     "rows": [
+      [
+       "ZFI_VOUCHER_PRINT",
+       "ZFI_VOUCHER_PRINT",
+       "ZUFSO_TO_ICE",
+       "1,804",
+       "31"
+      ],
+      [
+       "MZMMVENDORF01",
+       "SAPMZMMVENDOR",
+       "ZMM_OTH",
+       "12,086",
+       "22"
+      ],
+      [
+       "ZZRBUS2105",
+       "ZZRBUS2105",
+       "ZMM_OTH",
+       "1,696",
+       "20"
+      ],
+      [
+       "ZF_FILL_MISSING_AUGGJ_NGLM",
+       "ZF_FILL_MISSING_AUGGJ_NGLM",
+       "ZFI_GL",
+       "1,408",
+       "13"
+      ],
+      [
+       "ZPME_SFORM_REPORT",
+       "ZPME_SFORM_REPORT",
+       "ZEHS_OH",
+       "292",
+       "12"
+      ],
+      [
+       "ZJV_SAPF100",
+       "ZJV_SAPF100",
+       "ZJVA_OTH",
+       "4,258",
+       "10"
+      ],
+      [
+       "SAPMZFI_VPAN_MAINTAINO",
+       "SAPMZFI_VPAN_MAINTAIN",
+       "ZFI_OTH",
+       "329",
+       "6"
+      ],
+      [
+       "MZMMVENDORI01",
+       "SAPMZMMVENDOR",
+       "ZMM_OTH",
+       "9,666",
+       "5"
+      ],
+      [
+       "MZMMVENDORO01",
+       "SAPMZMMVENDOR",
+       "ZMM_OTH",
+       "4,799",
+       "5"
+      ],
+      [
+       "ZRCCWFL01",
+       "ZRCCWFL01",
+       "ZPM_LDM",
+       "374",
+       "5"
+      ],
+      [
+       "MZMMVENDORTOP",
+       "SAPMZMMVENDOR",
+       "ZMM_OTH",
+       "1,232",
+       "4"
+      ],
+      [
+       "ZFI_UPDATE_KIDNO",
+       "ZFI_UPDATE_KIDNO",
+       "ZFI_OTH",
+       "881",
+       "4"
+      ],
+      [
+       "ZF_CORR_PSWSL",
+       "ZF_CORR_PSWSL",
+       "ZGEN_00",
+       "275",
+       "4"
+      ],
+      [
+       "Z_REVERSE_CLEARING",
+       "Z_REVERSE_CLEARING",
+       "ZFI_AR",
+       "424",
+       "4"
+      ],
+      [
+       "MZMMCODREQ_ERROR_RESETF01",
+       "SAPMZMMCODREQ_ERROR_RESET",
+       "ZMM_OTH",
+       "6,425",
+       "3"
+      ],
+      [
+       "ZF_CHECK_OI_BALANCE_EXT",
+       "ZF_CHECK_OI_BALANCE_EXT",
+       "ZFI_GL",
+       "1,232",
+       "3"
+      ],
+      [
+       "ZF_RESET_CLR",
+       "ZF_RESET_CLR",
+       "ZFI_GL",
+       "2,648",
+       "3"
+      ],
+      [
+       "ZRIWFWA01",
+       "ZRIWFWA01",
+       "ZPM_WCM",
+       "1,913",
+       "3"
+      ],
+      [
+       "ZSD_CORRECT_RFBSK",
+       "ZSD_CORRECT_RFBSK",
+       "ZSD_BL",
+       "94",
+       "3"
+      ],
+      [
+       "Z_CORR_PRCTR2",
+       "Z_CORR_PRCTR2",
+       "ZCO_PCA",
+       "656",
+       "3"
+      ],
+      [
+       "MZPZ9920_MED_INPATIENT_F01",
+       "SAPMZPZ9920_MED_INPATIENT",
+       "ZHR_DEV",
+       "7,428",
+       "2"
+      ],
+      [
+       "ZFI_BCM_REJREC",
+       "ZFI_BCM_REJREC",
+       "ZFI_OTH",
+       "4,417",
+       "2"
+      ],
+      [
+       "ZFI_CHNG_PYBLCK",
+       "ZFI_CHNG_PYBLCK",
+       "ZFI_OTH",
+       "2,351",
+       "2"
+      ],
+      [
+       "ZFI_CHNG_PYBLCKD",
+       "ZFI_CHNG_PYBLCKD",
+       "ZFI_OTH",
+       "1,802",
+       "2"
+      ],
+      [
+       "ZFI_CP_MAS_VEN_E0001",
+       "ZFI_CP_MASS_VEN_PAY",
+       "ZFI_OTH",
+       "867",
+       "2"
+      ],
+      [
+       "ZFI_REM_PYBLCK",
+       "ZFI_REM_PYBLCK",
+       "ZFI_OTH",
+       "4,563",
+       "2"
+      ],
+      [
+       "ZFI_REP_BLOCK",
+       "ZFI_REP_BLOCK",
+       "ZFI_OTH",
+       "1,549",
+       "2"
+      ],
+      [
+       "ZFI_TAX_CAPEX_POSTING_F01",
+       "ZFI_TAX_CAPEX_POSTING",
+       "ZFI_OTH",
+       "434",
+       "2"
+      ],
+      [
+       "ZFI_TAX_SEC42_AMORT_SCH_F01",
+       "ZFI_TAX_SEC42_AMORT_SCH",
+       "ZFI_OTH",
+       "1,072",
+       "2"
+      ],
+      [
+       "Z_CORR_PRCTR",
+       "Z_CORR_PRCTR",
+       "ZCO_PCA",
+       "651",
+       "2"
+      ],
+      [
+       "Z_CORR_PRCTR_OVL",
+       "Z_CORR_PRCTR_OVL",
+       "ZCO_PCA",
+       "651",
+       "2"
+      ],
+      [
+       "MZMMCODREQF01",
+       "SAPMZMMCODREQ",
+       "ZMM_OTH",
+       "9,403",
+       "1"
+      ],
+      [
+       "MZMMCODREQO01",
+       "SAPMZMMCODREQ",
+       "ZMM_OTH",
+       "3,545",
+       "1"
+      ],
+      [
+       "MZPSJVCCFCFORMS_GET_TOTALS_F01",
+       "SAPMZPSJVCCFCFORMS",
+       "ZJVA_OTH",
+       "93",
+       "1"
+      ],
+      [
+       "MZPSJVCCFCFORMS_USER_COMMANI01",
+       "SAPMZPSJVCCFCFORMS",
+       "ZJVA_OTH",
+       "183",
+       "1"
+      ],
+      [
+       "MZPZ9920_MED_INPATIENT_I01",
+       "SAPMZPZ9920_MED_INPATIENT",
+       "ZHR_DEV",
+       "2,635",
+       "1"
+      ],
+      [
+       "SAPMZFI_VPAN_MAINTAINO_BAK",
+       "SAPMZFI_VPAN_MAINTAIN_BAK",
+       "ZFI_OTH",
+       "226",
+       "1"
+      ],
+      [
+       "ZFCLEAR",
+       "ZFCLEAR",
+       "ZFI_GL",
+       "297",
+       "1"
+      ],
+      [
+       "ZFI_JV_TB",
+       "ZFI_JV_TB",
+       "ZFI_OTH",
+       "2,076",
+       "1"
+      ],
+      [
+       "ZFI_RFSEPA03",
+       "ZFI_RFSEPA03",
+       "ZFI_OTH",
+       "396",
+       "1"
+      ],
+      [
+       "ZFI_TAX_CAPEX_POSTING_E01",
+       "ZFI_TAX_CAPEX_POSTING",
+       "ZFI_OTH",
+       "136",
+       "1"
+      ],
+      [
+       "ZFI_TAX_CREDIT_REPORT",
+       "ZFI_TAX_CREDIT_REPORT",
+       "ZFI_OTH",
+       "1,078",
+       "1"
+      ],
+      [
+       "ZFI_TAX_POSTING_E01",
+       "ZFI_TAX_POSTING",
+       "ZFI_OTH",
+       "139",
+       "1"
+      ],
+      [
+       "ZFI_TAX_POSTING_F01",
+       "ZFI_TAX_POSTING",
+       "ZFI_OTH",
+       "364",
+       "1"
+      ],
+      [
+       "ZFI_UPDATE_SECO",
+       "ZFI_UPDATE_SECO",
+       "ZFI_OTH",
+       "81",
+       "1"
+      ],
+      [
+       "ZF_EDIT_CLEARING",
+       "ZF_EDIT_CLEARING",
+       "ZGEN_00",
+       "217",
+       "1"
+      ],
+      [
+       "ZF_RESET_CLEARING",
+       "ZF_RESET_CLEARING",
+       "ZCFM",
+       "398",
+       "1"
+      ],
+      [
+       "ZJVC_LOG_REPORT",
+       "ZJVC_LOG_REPORT",
+       "ZFI_OTH",
+       "303",
+       "1"
+      ],
+      [
+       "ZRIWFWD01",
+       "ZRIWFWD01",
+       "ZPM_WCM",
+       "1,219",
+       "1"
+      ],
+      [
+       "ZR_JV_POST",
+       "ZR_JV_POST",
+       "ZFI_OTH",
+       "2,201",
+       "1"
+      ],
+      [
+       "ZSD_INVOICE_VAPEXP_DP",
+       "ZSD_INVOICE_VAPEXP_DP",
+       "ZSD_BL",
+       "2,584",
+       "1"
+      ]
+     ]
+    },
+    {
+     "t": "table",
+     "caption": "All reusable correction patterns",
+     "fontSize": 7.5,
+     "widths": [
+      34,
+      66
+     ],
+     "header": [
+      "Finding family",
+      "Correction pattern"
+     ],
+     "rows": [
+      [
+       "NOORDER - SELECT SINGLE possibly not unique",
+       "Rebuild as SELECT <f> FROM <t> WHERE <c> ORDER BY PRIMARY KEY INTO @tgt UP TO 1 ROWS. ENDSELECT. - strip SINGLE; on a projection ORDER BY the selected key fields."
+      ],
+      [
+       "NOORDER - former cluster/pool table or OPEN CURSOR without ORDER BY",
+       "Add ORDER BY PRIMARY KEY (SELECT *) or ORDER BY <selected key fields>; CDPOS/CDHDR cursor paging is kept, only ORDER BY PRIMARY KEY added."
+      ],
+      [
+       "NOORDER - empty SELECT/ENDSELECT",
+       "SELECT SINGLE @abap_true FROM t WHERE ... INTO @DATA(lv_exists), keeping the sy-subrc logic (earlier disposition: remove the leftover)."
+      ],
+      [
+       "NOORDER - READ ... BINARY SEARCH without SORT",
+       "Insert SORT itab BY <WITH KEY fields> before the enclosing LOOP (dedupe identical SORT)."
+      ],
+      [
+       "NOORDER - DELETE ADJACENT DUPLICATES / AT NEW / AT END OF / ON CHANGE OF",
+       "SORT before the loop on exactly the compared fields (plain SORT if none), placed outside any loop."
+      ],
+      [
+       "NOORDER - READ TABLE ... INDEX 1 / LOOP ... EXIT for result",
+       "Inline #EC CI_NOORDER pseudo-comment, no begin/end markers."
+      ],
+      [
+       "NOORDER - WRITE or EXIT/RETURN/LEAVE inside SELECT...ENDSELECT",
+       "Add ORDER BY to the enclosing SELECT (scan upward) or close with #EC CI_NOORDER on the reported line; never append ORDER BY at the finding line."
+      ],
+      [
+       "NOORDER on a FOR ALL ENTRIES SELECT",
+       "#EC CI_NOORDER instead of ORDER BY."
+      ],
+      [
+       "NOORDER - ALV factory result",
+       "SORT t_table."
+      ],
+      [
+       "Field Length Extension - conflict messages",
+       "CONV #( ) to the MATNR / amount type or retype the variable to the field's data element, then #EC CI_FLDEXT_OK[note] as resolution marker."
+      ],
+      [
+       "Field Length Extension - generic messages",
+       "Pragma only: #EC CI_FLDEXT_OK[2215424 | 2610650]."
+      ],
+      [
+       "Field Length Extension - IMPORT issue",
+       "Add ACCEPTING PADDING."
+      ],
+      [
+       "Field Length Extension - Offset/Length access",
+       "Rework the offset access; if no clean fix, #EC CI_FLDEXT_OK[2215424]."
+      ],
+      [
+       "Field Length Extension - type used by RFC-function parameter",
+       "KB is contradictory: false positive / do not touch (L192, L414) versus manual review in SE37 (L536). Gated question in HO section 8."
+      ],
+      [
+       "Field length in disguise on released BAPIs",
+       "Pass MATERIAL_LONG or CONV #( ) the value only where a narrower value is moved into the BAPI structure; else #EC CI_USAGE_OK / CI_FLDEXT_OK[note] alone. BAPI is not replaced."
+      ],
+      [
+       "Field length mapper classes",
+       "CL_MATNR_CHK_MAPPER=>CONVERT_ON_OUTPUT / CONVERT_ON_INPUT, cl_cls_chk_mapper=>convert_char_value_on_output/input, CONV DMBTR( )."
+      ],
+      [
+       "Amount Field Length Extension (note 2610650)",
+       "CONV #( ) where an amount goes to a non-extended target, otherwise #EC CI_FLDEXT_OK[2610650]."
+      ],
+      [
+       "Material number extension (note 2215424)",
+       "Real fix only where code truncates; otherwise reviewed #EC CI_FLDEXT_OK[2215424]."
+      ],
+      [
+       "Segmentation field length (note 2522971)",
+       "#EC CI_FLDEXT_OK[2522971]."
+      ],
+      [
+       "MATNR 40-char selection screen",
+       "PARAMETERS ... VISIBLE LENGTH 18, or split onto its own BEGIN/END OF LINE."
+      ],
+      [
+       "MOVE-CORRESPONDING from ANY TABLE (FLE remediation side effect)",
+       "Loop row by row into a work area LIKE LINE OF the target, then APPEND."
+      ],
+      [
+       "VBTYP - SD document category (note 2198647)",
+       "Retype to VBTYPL (keep the field name), move constant comparisons to IF_SD_DOC_CATEGORY (EQ) / CL_SD_DOC_CATEGORY_UTIL=>rg_*( ) (IN), remove INCLUDE RVVBTYP."
+      ],
+      [
+       "VBUK / VBUP / LIKPUK status reads",
+       "Read V_VBUK_S4 / V_VBUP_S4 in strict Open SQL, or the status fields on VBAK/VBAP/LIKP/LIPS; LIKPUK -> I_DeliveryDocument."
+      ],
+      [
+       "KONV -> PRCD_ELEMENTS",
+       "FROM v_konv / v_konv_cds in strict Open SQL, drop CLIENT SPECIFIED and mandt."
+      ],
+      [
+       "BSEG read -> I_OperationalAcctgDocItem",
+       "Field-aliased SELECT from the CDS (element AS bseg field), absolute-amount elements plus SHKZG, strict SQL; SELECT * / ENDSELECT / UP TO stay on BSEG with #EC CI_DB_OPERATION_OK."
+      ],
+      [
+       "FAGLFLEXA / ACDOCA -> I_GLAccountLineItem",
+       "Field map with rldnr=SourceLedger filter '0L'."
+      ],
+      [
+       "VBFA document flow",
+       "Read I_SDDocumentMultiLevelProcFlow (26 mapped fields); writes via RV_DOCUMENT_FLOW_UPDATE_U or fit-gap."
+      ],
+      [
+       "VBAP (+VBUP) -> I_SalesDocumentItem",
+       "Field-aliased CDS read; status fields built in so the VBUP join is dropped (ABGRU=SalesDocumentRjcnReason, WERKS=Plant)."
+      ],
+      [
+       "VBRK / VBRP billing",
+       "Add DRAFT = SPACE to the WHERE, or read I_BillingDocumentBasic / I_BillingDocumentItemBasic; VBRK-BUPLA stays on the table."
+      ],
+      [
+       "Master data reads KNA1 / LFA1 / KNVV / VBAK-KNUMV",
+       "I_Customer, I_Supplier, I_CustomerSalesArea, I_SalesDocument.SalesDocumentCondition (KNA1-LZONE not exposed -> keep table)."
+      ],
+      [
+       "J_1BBRANCH -> P_BUSINESSPLACE (note 3404390)",
+       "FROM table-name swap (identical field names); TYPE j_1bbranch-<f> -> p_businessplace-<f>."
+      ],
+      [
+       "J_1IMOVEND / J_1IMOCUST -> LFA1 / KNA1 (note 2877717)",
+       "FROM table-name swap plus TYPE retype. Labelled a cipla disposition and 'gated' in HO section 8, yet 34 August blocks in the OVL files apply J_1IMOVEND -> LFA1."
+      ],
+      [
+       "V_OLR3_VBAX -> VBAK",
+       "FROM swap, no aliasing."
+      ],
+      [
+       "Material documents and valuation (notes 2206980, 2337368)",
+       "Reads via NSDM_V_MSEG / NSDM_V_MARC / NSDM_V_MBEW; a DDIC view on MKPF/MSEG must be redefined on a MATDOC-based CDS."
+      ],
+      [
+       "KNKK / KNKA credit management -> FSCM (note 2227014)",
+       "TYPE knkk-<f> decouple to the data element; reads via CVI_CUST_LINK -> BUT000 -> UKMBP_CMS_SGM; writes via CL_UKM_FACADE; credit team must validate."
+      ],
+      [
+       "Credit LIS S066 / S067 (note 2659692)",
+       "Read UKM_ITEM / FM UKM_COMMTS_READ."
+      ],
+      [
+       "Pricing / condition technique (note 2220005)",
+       "VAKEY -> VAKEY_LONG; value reads via cl_cond_vakey_srv=>determine_vakey_from_db; KALKS reviewed pseudo; DZAEHK -> Z data element; NACH field refs retyped to NAST."
+      ],
+      [
+       "MRP planning file MDVM/MDVL/DBVM/DBVL (note 2227059)",
+       "Read PPH_DBVM; TYPE mdvm-<f> decoupled to the data element."
+      ],
+      [
+       "Data element / structure token swaps",
+       "CHAR02 -> CHAR2; FIP_S_BWART_RANGE -> BWART_RANGE, FIP_T_BWART_RANGE -> BWART_T_RANGE; CKMLMV011 -> MLRUNLIST."
+      ],
+      [
+       "T012K house bank (notes 1976487, 2870766)",
+       "Reads via FCLM_BAM_ACLINK2 / CL_FCLM_BAM_BSMCUST_API; writes are fit-gap (no released API)."
+      ],
+      [
+       "Foreign trade EIKP / EIPO (notes 2223144, 3482527)",
+       "Redirect reads to ITM_* fields on LIKP/LIPS/VBRK/VBRP/EKPO; EXPIMP_POSTING stays fit-gap."
+      ],
+      [
+       "LIS S025 / S021-S028 (note 2268063)",
+       "Manual rework onto analytics CDS views."
+      ],
+      [
+       "SKA1 / SKB1 / CSKB / T001",
+       "KB (cipla): pseudo comment. OVL mapping listed in COPILOT section 4.2: SKA1 -> I_GLAccountInChartOfAccounts, SKB1 and CSKB -> I_GLAccountInCompanyCode (9 such CDS reads are in the corrected files)."
+      ],
+      [
+       "Type-reference decouple",
+       "TYPE tab-field -> TYPE <data element> only if the note removed that field and a data element of that exact name exists; otherwise leave or retype to another valid table."
+      ],
+      [
+       "Non-strategic / compatibility-scope / orphaned-object notes",
+       "Reviewed #EC CI_USAGE_OK[note]; functional move handled separately."
+      ],
+      [
+       "Simplified transactions in literals (P3)",
+       "Pragma on the quoted literal only."
+      ],
+      [
+       "DR_GET_COUNTRY_NAME (note 2862992)",
+       "SELECT SINGLE landx FROM t005t WHERE spras = l AND land1 = c."
+      ],
+      [
+       "LAST_DAY_OF_MONTHS (note 2296016)",
+       "FM-name swap to RP_LAST_DAY_OF_MONTHS, fallback pseudo."
+      ],
+      [
+       "Currency conversion FMs (note 2340247)",
+       "BAPI_CURRENCY_CONV_TO_INTERNAL; Z copy of the SAP_TO_DISPLAY FM. In the OVL file ZFI_VOUCHER_PRINT the three calls carry #EC CI_USAGE_OK[2340247] instead."
+      ],
+      [
+       "IS-Media FMs ISP_* (note 2469385)",
+       "Native ABAP (TRANSLATE, date FMs) or the FI_ variant."
+      ],
+      [
+       "BAPI successor with different interface",
+       "Wrapper pattern: call BAPI_PO_GETDETAIL1 on new structures, MOVE-CORRESPONDING back to the old work areas; BAPISDORDER_GETDETAILEDLIST."
+      ],
+      [
+       "Customer/vendor display transactions XK03 / XD03 / VD02",
+       "CVI_VEND_LINK / CVI_CUST_LINK partner lookup plus CL_BUPA_NAVIGATION_REQUEST navigation."
+      ],
+      [
+       "BDC / CALL TRANSACTION -> BAPI",
+       "Worked example MSC1 -> BAPI_BATCH_CREATE (+ BAPI_OBJCL_GETDETAIL / _CREATE, COMMIT, BAPIRET2 -> bdcmsgcoll); XK01 -> VMD_EI_API, VA01 -> BAPI_SALESORDER_CREATEFROMDAT2. Convert-or-leave is an open question for OVL."
+      ],
+      [
+       "MRP functions",
+       "Functional re-implementation (PPH_MRP_RUN_BADI=>MDPS_ADJUST); pseudo for MD_STOCK as a one-batch P1 exception."
+      ],
+      [
+       "Legacy statutory reports RFUMSV00 (note 2480067)",
+       "Fit-gap, no code fix."
+      ],
+      [
+       "DML write on a simplified table",
+       "Use the released API (BAPI_MATERIAL_SAVEDATA, BAPI_MATVAL_PRICE_CHANGE, CMD_EI_API / VMD_EI_API, GL_ACCT_MASTER_SAVE, FI_DOCUMENT_CHANGE, BAPI_ACC_DOCUMENT_POST, BAPI_OUTB_DELIVERY_CHANGE, VB_UPDATE_BATCH); never swap the table; no API -> leave and flag..."
+      ],
+      [
+       "BPGE SELECT (notes 2226072 / 2226048)",
+       "#EC CI_DB_OPERATION_OK[note] (P1 pseudo approved for one cipla batch only)."
+      ],
+      [
+       "SELECT * or JOIN on a simplified table",
+       "Keep the retained table plus #EC CI_DB_OPERATION_OK; never rewrite to CDS."
+      ],
+      [
+       "Critical statement - Native SQL",
+       "Rewrite to Open SQL where practical, else #EC CI_EXECSQL."
+      ],
+      [
+       "Critical statement - database hints",
+       "Remove non-HANA hints and re-emit the terminating period; keep %_HINTS HDB."
+      ],
+      [
+       "ADBC interface",
+       "#EC CI_ADBC_US."
+      ],
+      [
+       "DDIC view based on a simplified table",
+       "Cannot be pseudo-commented; redefine the view on the successor / MATDOC-based CDS (DDIC task)."
+      ],
+      [
+       "CLIENT SPECIFIED on a compatibility view",
+       "Drop CLIENT SPECIFIED and the mandt condition; leave it on real transparent tables."
+      ],
+      [
+       "Strict Open SQL form",
+       "Comma-separated field and ORDER BY lists, @ on right-hand operands only, clause order FROM - FAE - WHERE - ORDER BY - INTO - UP TO."
+      ],
+      [
+       "ORDER BY PRIMARY KEY validity",
+       "On a projection use ORDER BY <explicit key fields> or drop it."
+      ],
+      [
+       "UP TO n ROWS placement and SINGLE removal",
+       "Non-strict: UP TO right after the field list; strict: INTO @tgt UP TO 1 ROWS last; always strip the SINGLE keyword."
+      ],
+      [
+       "Pseudo-comment mechanics",
+       "Token starts with a double quote; one per line; inside an existing comment; no markers for a pure pseudo; no P1 pseudo without approval."
+      ],
+      [
+       "Change-marker mechanics",
+       "Comment old code, never delete; never double-wrap; match the marker format already in the file; author tag SAP_ABAP for OVL."
+      ],
+      [
+       "Worklist handling",
+       "Locate the statement by content, not by worklist line; cross-check the object against the worklist before rewriting."
+      ],
+      [
+       "Editing-engine safety and post-edit verification",
+       "rstrip before endswith('.'); skip comment lines; length-preserving literal mask; inline pseudo first then real fixes bottom-up; verify IF/ENDIF, LOOP/ENDLOOP, FORM/ENDFORM, markers and scan for @@ and double commas."
+      ],
+      [
+       "FOR ALL ENTRIES guard",
+       "IF driver IS NOT INITIAL around every FOR ALL ENTRIES."
+      ],
+      [
+       "Runtime dump DBSQL_STMNT_TOO_LARGE",
+       "Guarded FOR ALL ENTRIES on a de-duplicated driver."
+      ],
+      [
+       "Runtime dump TSV_TNEW_PAGE_ALLOC_FAILED",
+       "Narrow fields, add the real filter, add the guard, narrow the itab type."
+      ],
+      [
+       "Performance patterns",
+       "SORT + BINARY SEARCH when safe; skip reads whose result is unused; no blanket CDS wrapping; no bulk BOM FM exists."
+      ],
+      [
+       "FBL5N -> FBL5H",
+       "Parameter map; moderate rework, does not by itself remove the memory risk."
+      ],
+      [
+       "Scope and disposition rules",
+       "Decide per project; fit-gap reserved for T012K writes, removed foreign trade, DRC reports; 'Missing include' left manual."
+      ]
+     ]
+    },
+    {
+     "t": "h1",
+     "text": "Annex C - Effort Calculation and Assumptions",
+     "pageBreak": true
+    },
+    {
+     "t": "table",
+     "caption": "Conventional effort baseline by work type and complexity (hours)",
+     "widths": [
+      40,
+      15,
+      15,
+      15,
+      15
+     ],
+     "numeric": [
+      1,
+      2,
+      3,
+      4
+     ],
+     "header": [
+      "Work type",
+      "Low",
+      "Medium",
+      "High",
+      "Very High"
+     ],
+     "rows": [
+      [
+       "New development",
+       "6",
+       "14",
+       "25",
+       "42"
+      ],
+      [
+       "Enhancement / change request",
+       "3",
+       "7",
+       "14",
+       "25"
+      ],
+      [
+       "Bug fix / root-cause analysis",
+       "2",
+       "4",
+       "8",
+       "14"
+      ],
+      [
+       "S/4HANA remediation (per object)",
+       "2",
+       "6",
+       "11",
+       "20"
+      ],
+      [
+       "Analysis / feasibility / design",
+       "1",
+       "4",
+       "7",
+       "11"
+      ],
+      [
+       "Automation utility / developer tool",
+       "3",
+       "7",
+       "14",
+       "22"
+      ],
+      [
+       "Documentation only",
+       "1",
+       "2",
+       "4",
+       "7"
+      ]
+     ]
+    },
+    {
+     "t": "bullets",
+     "items": [
+      "Working time counted: 69 days from 19/08/26 (weekdays after 4 days leave, plus 6 weekend days) x 8 h = 552 h, plus dated work from 20/07/26 recorded in the session records and work log.",
+      "Distribution: half by measured AI session time per object (commit timestamps), half by the size of the development; a minimum per use case covers prompting, review, activation and unit testing.",
+      "Effort saved = without AI - with AI;  reduction = saved / without AI;  man-days = saved / 8;  productivity improvement = without / with - 1.",
+      "ATC baseline from the correction blocks applied: 7 / 18 / 28 minutes per pragma / replace / new-code block, 0.2 h per include, 6 h packaging."
+     ]
+    },
+    {
+     "t": "table",
+     "caption": "Worked example - JIB Status dashboard",
+     "widths": [
+      50,
+      50
+     ],
+     "numeric": [
+      1
+     ],
+     "header": [
+      "Step",
+      "Value"
+     ],
+     "rows": [
+      [
+       "Effort without AI (Very High new development)",
+       "42 h"
+      ],
+      [
+       "Actual effort with AI",
+       "21 h"
+      ],
+      [
+       "Effort saved",
+       "21 h"
+      ],
+      [
+       "Effort reduction",
+       "50%"
+      ],
+      [
+       "Man-days saved",
+       "2.6"
+      ]
+     ]
+    },
+    {
+     "t": "h1",
+     "text": "Annex D - Technical Documentation Produced",
+     "pageBreak": false
+    },
+    {
+     "t": "table",
+     "fontSize": 7.5,
+     "widths": [
+      18,
+      82
+     ],
+     "header": [
+      "Project",
+      "Technical specification"
+     ],
+     "rows": [
+      [
+       "Astral (KPMG)",
+       "kpmg/zfi_tds_cl34/docs/TS_337_ZFI_TDS_CL34_Astral.doc"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zfi_tds_cl34/docs/TS_337_ZFI_TDS_CL34_Astral.docx"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zfi_tds_cl34/docs/TS_ZFI_TDS_CL34.md"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zmb5b/docs/TS_ZMB5B.docx"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zmb5b/docs/TS_ZMB5B.md"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.docx"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zpp_forecast_paints/docs/TS_ZFORECAST_Paints.docx"
+      ],
+      [
+       "Astral (KPMG)",
+       "kpmg/zpp_forecast_paints/docs/TS_ZFORECAST_Paints.md"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zfi_acdoca_jva_align/TS_ZFI_ACDOCA_JVA_ALIGN.md"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zfi_acdoca_jvso1_recon/TS_ZFI_ACDOCA_JVSO1_RECON.docx"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zfi_acdoca_jvso1_recon/TS_ZFI_ACDOCA_JVSO1_RECON.md"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.docx"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.md"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zgr_fsitem_remap/TS_ZGR_FSITEM_REMAP.docx"
+      ],
+      [
+       "ONGC (OVL)",
+       "ovl/zgr_fsitem_remap/TS_ZGR_FSITEM_REMAP.md"
+      ]
+     ]
+    },
+    {
+     "t": "p",
+     "text": "Plus 371 issue-log entries (issue, cause, fix) and a technical notes file for every object."
     }
    ]
   }

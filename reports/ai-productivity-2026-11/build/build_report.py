@@ -40,9 +40,13 @@ h1 = lambda text: dict(t="h1", text=text, pageBreak=text.startswith(BREAK))
 h3 = lambda text: dict(t="h3", text=text)
 
 
+KEYED = {"ovl/zfi_jib_status", "ovl/atc"}
+
+
 def key_items(rows, n, skip=()):
     out = []
     for o in sorted([o for o in rows if o["folder"] not in skip], key=lambda o: -o["saved_h"])[:n]:
+        KEYED.add(o["folder"])
         out += [h3(o["title"].split(" - ")[0] if len(o["title"]) > 70 else o["title"]),
                 p(f"**Problem.** {short(o['requirement'], 260)}", after=60),
                 p(f"**What AI did.** {short(o['ai'], 330)}", after=60),
@@ -60,19 +64,15 @@ def uc_table(name):
 
 
 # ------------------------------------------------------------------ mail draft
-mail = f"""Subject: AI utilisation in SAP ABAP delivery - PAL, ONGC (OVL) and Astral (KPMG), cut-off 19 Nov 2026
+mail = f"""Subject: AI Utilisation Report - SAP ABAP Delivery (PAL, ONGC (OVL), Astral (KPMG))
 
 Dear [Manager name],
 
-As requested in your mail of 19 November, please find attached my report on AI utilisation in SAP ABAP delivery (20 July - 19 November 2026). The AI tool used is Claude Code (Anthropic).
+Please find attached my AI utilisation report for SAP ABAP delivery across PAL, ONGC (OVL) and Astral (KPMG), covering July to November 2026, along with the detailed use-case register and the success-story deck.
 
-- {S['n_counted']} AI-assisted developments completed: ONGC (OVL) {BP['ONGC (OVL)']['n']}, Astral (KPMG) {BP['Astral (KPMG)']['n']}, PAL {BP['PAL']['n']}, common tools {BP['Common (all projects)']['n']}.
-- {COMMITS} commits in under four months, including {M['Weekend days with AI-assisted work']} weekend days; {M['Lines of ABAP / CDS / script code added in AI commits']:,} lines of code; {M['Technical specification files produced']} technical specifications.
-- Key applications: ONGC JIB Status dashboard (client-confirmed), DPR Fiori dashboard and CPI interface, PAL FB70 credit-memo approval workflow, Astral ZFORECAST and Exceptional Approval.
-- ATC (ONGC): 847 findings remediated across 51 includes with 76 reusable correction patterns.
-- Effort: {h(S['actual'])} h of my working time against {h(S['baseline'])} h conventional - {md(S['saved'])} man-days saved ({pc(S['red'])}).
+In brief: {S['n_counted']} AI-assisted developments completed, {COMMITS} commits, and about {md(S['saved'])} man-days saved ({pc(S['red'])} effort reduction).
 
-The use-case register (Excel) and the success-story deck are attached with the report.
+Kindly review and let me know if you need any further detail.
 
 Thanks & Regards,
 Arnav Johri | Associate Consultant | Diligent Global
@@ -217,6 +217,58 @@ blocks = [
         "The approach is repeatable - the same loop and toolkit worked on PAL, ONGC and Astral, across reports, CDS / RAP, workflow, enhancements and ATC.",
         "Next steps: share the AI delivery toolkit with the team, reuse the dashboard pattern for further cards, apply the ATC patterns to the next remediation wave."]),
 ]
+# ------------------------------------------------------------------ annexes
+import subprocess
+REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+
+
+def card(o):
+    rows = [["SAP objects", o["objects"]], ["Business requirement", o["requirement"]], ["Technical challenge", o["challenge"]],
+            ["What AI did", o["ai"]], ["My work", o["manual"] or "Review, activation, testing and functional sign-off"],
+            ["Result", f"{o['status']}" + (f" - {o['quality']}" if o["quality"] else "")], ["Timeline", o["impact"]],
+            ["Evidence", o["folder"] + "; " + short(o["evidence"], 160)]]
+    return [dict(t="h3", text=f"{o['id']}  {short(o['title'], 110)}"),
+            dict(t="table", widths=[20, 80], header=["Field", "Detail"], rows=rows, boldFirst=True, fontSize=7.5, cantSplit=True)]
+
+
+annex = [dict(t="h1", text="Annex A - Detailed AI Use Case Register", pageBreak=True),
+         p("Every use case not already described in sections 4 to 6, 8 and 13, by project. Hours per use case are in the project tables of sections 4 to 6.")]
+for x in ALL:
+    rest = [o for o in rows_of(x) if o["folder"] not in KEYED]
+    if rest:
+        annex.append(dict(t="h2", text=f"{x} - {len(rest)} further use cases"))
+        for o in rest:
+            annex += card(o)
+progs = sorted(ATC["corrected_programs"], key=lambda q: -(q.get("boc_blocks_dated_08_08_2026") or 0))
+annex += [dict(t="h1", text="Annex B - ATC Remediation Register", pageBreak=True),
+          dict(t="table", caption="Corrected program includes (ONGC)", fontSize=7.5, widths=[30, 26, 16, 12, 16], numeric=[3, 4],
+               header=["Include", "Parent program", "Package", "Lines", "Correction blocks"],
+               rows=[[q["object"], str(q.get("parent") or ""), str(q.get("package") or ""), f"{q.get('lines') or 0:,}",
+                      str(q.get("boc_blocks_dated_08_08_2026") or 0)] for q in progs]),
+          dict(t="table", caption="All reusable correction patterns", fontSize=7.5, widths=[34, 66], header=["Finding family", "Correction pattern"],
+               rows=[[x["category"], short(str(x.get("typical_fix", "")), 260)] for x in ATC["finding_categories_resolved"]])]
+annex += [dict(t="h1", text="Annex C - Effort Calculation and Assumptions", pageBreak=True),
+          dict(t="table", caption="Conventional effort baseline by work type and complexity (hours)", widths=[40, 15, 15, 15, 15], numeric=[1, 2, 3, 4],
+               header=["Work type", "Low", "Medium", "High", "Very High"],
+               rows=[[R["rubric_label"][k]] + [str(v) for v in R["rubric"][k]] for k in R["rubric"]]),
+          bl([f"Working time counted: {S['working_days']} days from 19/08/26 (weekdays after 4 days leave, plus 6 weekend days) x 8 h = {h(S['budget'])} h, "
+              "plus dated work from 20/07/26 recorded in the session records and work log.",
+              "Distribution: half by measured AI session time per object (commit timestamps), half by the size of the development; "
+              "a minimum per use case covers prompting, review, activation and unit testing.",
+              "Effort saved = without AI - with AI;  reduction = saved / without AI;  man-days = saved / 8;  productivity improvement = without / with - 1.",
+              "ATC baseline from the correction blocks applied: 7 / 18 / 28 minutes per pragma / replace / new-code block, 0.2 h per include, 6 h packaging."]),
+          dict(t="table", caption="Worked example - JIB Status dashboard", widths=[50, 50], numeric=[1], header=["Step", "Value"],
+               rows=[["Effort without AI (Very High new development)", f"{h(J['baseline_h'])} h"], ["Actual effort with AI", f"{h(J['actual_h'])} h"],
+                     ["Effort saved", f"{h(J['saved_h'])} h"], ["Effort reduction", pc(J["red"])], ["Man-days saved", f"{J['saved_h'] / 8:.1f}"]])]
+ts = [l for l in subprocess.run(["git", "-C", REPO, "ls-files"], capture_output=True, text=True).stdout.splitlines()
+      if os.path.basename(l).startswith(("TS_", "TS ")) and not l.startswith(("gail/", "mwc/", "rws/"))]
+proj = lambda l: {"ovl": "ONGC (OVL)", "pal": "PAL", "kpmg": "Astral (KPMG)"}.get(l.split("/")[0], "Common")
+annex += [dict(t="h1", text="Annex D - Technical Documentation Produced", pageBreak=False),
+          dict(t="table", fontSize=7.5, widths=[18, 82], header=["Project", "Technical specification"],
+               rows=[[proj(l), l] for l in sorted(ts, key=lambda l: (proj(l), l))]),
+          p(f"Plus {M['Issue-log entries written (issue -> cause -> fix)']} issue-log entries (issue, cause, fix) and a technical notes file for every object.")]
+blocks += annex
+
 doc = dict(title="SAP ABAP AI Utilisation, Productivity Improvement & Delivery Efficiency Report",
            header="SAP ABAP AI utilisation report  |  PAL  |  ONGC (OVL)  |  Astral (KPMG)  |  19 November 2026",
            footer="Arnav Johri, Associate Consultant, Diligent Global", author="Arnav Johri", sections=[dict(blocks=blocks)])
