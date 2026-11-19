@@ -437,6 +437,12 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "AS
         o["manual"] = "Arnav pasted the report into SE38, maintained the text elements and ran it for the CPI team."
     o["status"] = "Completed" if o["tier"] == "D" else "Completed - analysis / root cause delivered"
     o["open"] = ""
+    if "not stated" in f"{o['first']}{o['last']}":
+        ks = [k["folder"]] + k["merged"]
+        iso = sorted(d for x in ks for d in (gp(x, "first"), gp(x, "last")) if d)
+        if iso:
+            fmt = lambda d: f"{d[8:10]}/{d[5:7]}/{d[2:4]}"
+            o["first"], o["last"] = fmt(iso[0]), fmt(iso[-1])
     o["impact"] = (f"{o['first']} to {o['last']}; {o['active_days']} active AI-session day(s), {o['commits']} commits"
                    if o["commits"] else f"{o['first']} to {o['last']} (work-log dates)")
     out.append(o)

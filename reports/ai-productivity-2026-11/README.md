@@ -5,10 +5,10 @@ Projects: PAL | ONGC (OVL) | Astral (KPMG).
 
 | File | Deliverable |
 |---|---|
-| `AI_Utilisation_Report.docx` / `.pdf` | The report — 16 pages, Deliverable-1 headings, each figure once, two charts |
-| `AI_Use_Case_Register.xlsx` | Register with live formulas: Dashboard, Master Register, PAL, ONGC (OVL), Astral (KPMG), Common, ATC, Automation, Assumptions, AI Usage, Evidence |
-| `AI_Success_Story_JIB_Status.pptx` | 7-slide case study — ONGC Videsh JIB Status dashboard |
-| `Management_Summary_Email.md` | Mail draft (fill in the manager's name; sending stays manual) |
+| `AI_Utilisation_Report.docx` / `.pdf` | Deliverables 1, 3 and 5 — report under the Deliverable-1 headings with timeline, charts, ATC correction examples and full case study, plus Annex A use-case register, B ATC register, C effort calculation, D technical documentation, E evidence and estimation annexure (66 pages) |
+| `AI_Use_Case_Register.xlsx` | Deliverable 2 — register with live formulas: Dashboard, Master Register, PAL, ONGC (OVL), Astral (KPMG), Common, ATC, Automation, Assumptions, AI Usage, Evidence |
+| `AI_Success_Story_JIB_Status.pptx` | Deliverable 4 — 7-slide case study — ONGC Videsh JIB Status dashboard |
+| `Management_Summary_Email.md` | Deliverable 3 — cover mail with the email-ready summary (fill in the manager's name; sending stays manual) |
 
 ## Headline
 

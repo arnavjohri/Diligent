@@ -2,7 +2,7 @@
  "metrics": [
   [
    "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-   870,
+   873,
    "git rev-list --all --count"
   ],
   [
@@ -27,7 +27,7 @@
   ],
   [
    "Commits made after 19:00 or before 07:00 IST",
-   34,
+   37,
    "git commit timestamps (IST)"
   ],
   [
@@ -37,7 +37,7 @@
   ],
   [
    "Average commits per active day",
-   15.0,
+   15.1,
    "Total commits / active days"
   ],
   [
@@ -67,12 +67,12 @@
   ],
   [
    "Commits in the repository (all branches, non-merge)",
-   799,
+   802,
    "git log --all --no-merges"
   ],
   [
    "  of which AI co-authored or AI-authored",
-   729,
+   732,
    "Co-Authored-By: Claude trailer or author 'Claude'"
   ],
   [
@@ -137,7 +137,7 @@
   ]
  ],
  "highlights": [
-  "870 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
+  "873 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
   "Three engagements in parallel - PAL, ONGC Videsh (OVL) and Astral (KPMG) - on 58 active days including 6 weekends; peak day 22/10 with 68 commits over 12.5 hours.",
   "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
   "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",

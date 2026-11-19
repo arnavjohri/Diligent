@@ -64,13 +64,25 @@ def uc_table(name):
 
 
 # ------------------------------------------------------------------ mail draft
-mail = f"""Subject: AI Utilisation Report - SAP ABAP Delivery (PAL, ONGC (OVL), Astral (KPMG))
+mail = f"""Subject: AI Utilisation, Productivity Improvement & Delivery Efficiency Report - PAL | ONGC (OVL) | Astral (KPMG)
 
 Dear [Manager name],
 
-Please find attached my AI utilisation report for SAP ABAP delivery across PAL, ONGC (OVL) and Astral (KPMG), covering July to November 2026, along with the detailed use-case register and the success-story deck.
+As requested, please find attached my report on AI utilisation in SAP ABAP delivery from July to November 2026, with the detailed use-case register and the success-story presentation.
 
-In brief: {S['n_counted']} AI-assisted developments completed, {COMMITS} commits, and about {md(S['saved'])} man-days saved ({pc(S['red'])} effort reduction).
+Summary:
+- AI-assisted developments: {S['n_counted']} completed - ONGC (OVL) {BP['ONGC (OVL)']['n']}, Astral (KPMG) {BP['Astral (KPMG)']['n']}, PAL {BP['PAL']['n']}, common tools {BP['Common (all projects)']['n']}; {COMMITS} commits.
+- Significant applications: ONGC JIB Status dashboard (client-confirmed), DPR Fiori dashboard and CPI interface, Bank Revaluation and Per-Barrel analytics; PAL FB70 credit-memo approval workflow; Astral ZFORECAST (Adhesive / Paints), Exceptional Approval and Clause 34 TDS report.
+- ATC corrections (ONGC): 847 findings remediated across 51 program includes, with 76 reusable correction patterns.
+- Automations: {len(autos)} - daily BP-creation mail, mass uploads, approval workflow, source mass-download and enhancement-finder tools.
+- Effort: about {md(S['saved'])} man-days saved, {pc(S['red'])} overall effort reduction.
+- Delivery: working versions typically within a working day; JIB Status went from requirement to client confirmation in 11 working days.
+- Benefits: three projects handled in parallel with production support, faster root-cause analysis, and reusable assets for the team.
+
+Attachments:
+1. AI_Utilisation_Report.docx - report with use-case register, ATC register, effort calculation and evidence annexure
+2. AI_Use_Case_Register.xlsx - use-case register with formulas and productivity dashboard
+3. AI_Success_Story_JIB_Status.pptx - success-story presentation
 
 Kindly review and let me know if you need any further detail.
 
@@ -80,10 +92,62 @@ Arnav Johri | Associate Consultant | Diligent Global
 open(os.path.join(HERE, "..", "Management_Summary_Email.md"), "w").write(mail)
 
 # ------------------------------------------------------------------ sections
+MONTHS = [("07", "July"), ("08", "August"), ("09", "September"), ("10", "October"), ("11", "November")]
+name_of = lambda o: short(o["title"].split(" - ")[0].split(":")[0].split(" (")[0], 34)
+tl_rows = []
+for mm, label in MONTHS:
+    cells = []
+    for x in P3:
+        items = [name_of(o) for o in rows_of(x) if o["first"][3:5] == mm]
+        cells.append("; ".join(items) if items else "-")
+    tl_rows.append([label] + cells)
+timeline = dict(t="table", caption="Delivery timeline - developments started each month", fontSize=7, widths=[11, 22, 45, 22],
+                header=["Month", "PAL", "ONGC (OVL)", "Astral (KPMG)"], rows=tl_rows)
+USAGE_OF = {"ovl/zpra_dpr": "Daily - CPI interface and dashboard", "kpmg/zfi_fb70_cm_apprv": "Every parked credit memo",
+            "ovl/per_barrel_agenda": "Each board-agenda cycle", "ovl/zfi_bank_reval": "Each period-end",
+            "tools/zr_prog_download": "Before every change - source baseline", "tools/st05_decode": "Each SQL trace analysis",
+            "ovl/zhana_services": "Each timesheet entry cycle", "ovl/zbc_tadir_srcsys": "After each system copy",
+            "kpmg/zpp_forecast_v2": "Each forecast cycle (annual / quarterly / monthly)", "kpmg/zsd_exc_approval": "Each approval upload",
+            "kpmg/zmm_bp_mail": "Daily scheduled job", "kpmg/zmm_vend_upload": "Each vendor mass upload", "kpmg/zsd_scheme": "Each scheme cycle",
+            "(repo tooling)": "Every development session", "tools/zr_find_enh": "Each enhancement analysis",
+            "ovl/ztest_t001": "Each abapGit ZIP import", "tools/zr_icf_url_list": "Each CPI integration request",
+            "ovl/zfi_acdoca_jva_align": "Each JV alignment run", "ovl/zgr_fsitem_remap": "Each consolidation reporting run"}
+REUSE = lambda o: "All projects" if o["work"] == "TOOL" else "Pattern reusable on similar requirements"
+atc_code = [
+    dict(t="code", caption="Example 1 - SELECT SINGLE without a unique key (NOORDER)", lines=[
+        "* Before", "SELECT SINGLE belnr FROM bkpf INTO lv_belnr WHERE bukrs = p_bukrs AND xblnr = lv_ref.",
+        "* After - deterministic result, strict Open SQL",
+        "SELECT belnr FROM bkpf WHERE bukrs = @p_bukrs AND xblnr = @lv_ref",
+        "  ORDER BY belnr INTO @lv_belnr UP TO 1 ROWS.", "ENDSELECT."]),
+    dict(t="code", caption="Example 2 - simplified object: KONV pricing read moved to the compatibility view", lines=[
+        "* Before", "SELECT kschl kbetr FROM konv CLIENT SPECIFIED INTO TABLE lt_cond WHERE mandt = sy-mandt AND knumv = lv_knumv.",
+        "* After - CLIENT SPECIFIED and MANDT dropped together",
+        "SELECT kschl, kbetr FROM v_konv WHERE knumv = @lv_knumv INTO TABLE @lt_cond."]),
+    dict(t="code", caption="Example 3 - FOR ALL ENTRIES guarded and de-duplicated", lines=[
+        "* After", "IF lt_docs IS NOT INITIAL.", "  SORT lt_docs BY belnr.", "  DELETE ADJACENT DUPLICATES FROM lt_docs COMPARING belnr.",
+        "  SELECT belnr, buzei, hkont FROM bseg FOR ALL ENTRIES IN @lt_docs", "    WHERE belnr = @lt_docs-belnr INTO TABLE @DATA(lt_items).", "ENDIF."]),
+    dict(t="code", caption="Example 4 - field-length extension (MATNR 40) on a move to a narrower field", lines=[
+        "* After - conversion made explicit, pseudo-comment with the SAP note",
+        "lv_matnr18 = CONV #( ls_mara-matnr ).   \"#EC CI_FLDEXT_OK[2215424]"]),
+]
+case_tl = dict(t="table", caption="Development timeline", widths=[16, 84], header=["Date", "Step"],
+               rows=[["03/11/26", "Requirement workbook received; production documents checked line by line; data model designed and first eight views delivered as an abapGit ZIP"],
+                     ["04/11/26", "Model rebuilt on entry-date windows; Fiori Custom Analytical Query running on the first model"],
+                     ["06/11/26", "Client test round 1; model rebuilt at document grain on the posting period; year / quarter aggregates and reversal handling added"],
+                     ["12/11/26", "Document-number navigation to the journal entry made to work from the launchpad"],
+                     ["17/11/26", "Client confirmation in writing; four additions delivered the same day (all ventures, document type, clearing date and document)"],
+                     ["19/11/26", "Business-unit mapping for every venture added from the client's list"]])
+case_ba = dict(t="table", caption="Before and after AI", widths=[34, 33, 33], header=["Dimension", "Conventional", "With AI"],
+               rows=[["Total effort", f"{h(J['baseline_h'])} h", f"{h(J['actual_h'])} h"],
+                     ["First running version", f"about {round(J['baseline_h'] / 8)} working days", "next working day"],
+                     ["Requirement to client confirmation", "build plus separate rebuilds", "11 working days"],
+                     ["Change rounds absorbed", "each a manual rebuild", "13 logged changes"],
+                     ["Objects delivered", "8 CDS views", "8 CDS views, abapGit ZIP, query design"]])
+
 cats = {}
 for o in ROWS:
     cats.setdefault(o["category"], []).append(o)
-KEEP = ("Total commits", "Working days", "Weekend days", "Peak day", "Days with 8+", "Commits made after", "Active days", "Claude Code sessions",
+KEEP = ("Total commits", "Working days", "Weekend days", "Active days", "Claude Code sessions",
         "Prompts", "Lines of ABAP", "Lines of documentation", "Distinct custom", "Technical specification", "Issue-log")
 usage_rows = [m for m in U["metrics"] if m[0].startswith(KEEP)]
 workflow = [
@@ -133,9 +197,9 @@ blocks = [
     p("From July to November 2026 AI (Claude Code) became part of my daily SAP ABAP delivery on three projects running at the same time: PAL, "
       "ONGC Videsh (OVL) and Astral through KPMG. It covered the full cycle - reading FS documents and legacy code, building new objects, correcting "
       "existing ones, ATC remediation, root-cause analysis of production dumps and writing technical specifications."),
-    p(f"The result is a body of work that would normally take a larger team: complete applications (CDS / RAP dashboards, an approval workflow, a forecasting "
-      f"system), reports, interfaces, enhancements and tools - {M['Distinct custom (Z/Y) SAP objects named in those use cases']} custom SAP objects in all. "
-      f"Every object was reviewed, activated and tested by me before go-live."),
+    p(f"The work spans complete applications (CDS / RAP dashboards, an approval workflow, a forecasting system), reports, interfaces, enhancements and "
+      f"tools - {M['Distinct custom (Z/Y) SAP objects named in those use cases']} custom SAP objects in all. Every object was reviewed, activated and tested "
+      "before go-live."),
     dict(t="table", caption="At a glance", widths=[18, 10, 72], header=["Project", "Use cases", "What was delivered"], numeric=[1],
          rows=[["ONGC (OVL)", str(BP["ONGC (OVL)"]["n"]), "Management Dashboard analytics (JIB status, bank revaluation, treasury, per-barrel), DPR Fiori dashboard and CPI interface, ATC remediation, FI / JVA programs, Group Reporting, MM enhancements"],
                ["Astral (KPMG)", str(BP["Astral (KPMG)"]["n"]), "ZFORECAST Adhesive and Paints, Exceptional Approval (141 A/B), Clause 34 TDS, PO budget control, BP-creation mail, MB5B amounts, vendor upload, Scheme"],
@@ -152,7 +216,8 @@ blocks = [
     dict(t="table", caption="AI utilisation and working pattern", widths=[56, 14, 50], header=["Measure", "Value", "Basis"],
          rows=[[m[0], f"{m[1]:,}" if isinstance(m[1], (int, float)) else str(m[1]), m[2]] for m in usage_rows]),
     dict(t="image", path=os.path.join(HERE, "charts", "monthly_activity.png"), w=600, h=240, alt="Commits per month",
-         caption="Output grew month on month as the toolkit matured; October was the peak with 329 commits on client work."),
+         caption="Commits per month on client work."),
+    timeline,
 
     h1("4. PAL Project - Detailed AI Use Cases"),
     p("Philippine Airlines, systems DS4 -> QS4 -> PS4: finance and purchasing fixes and one new workflow, mostly raised as incidents (INC01192, INC01740, INC01967)."),
@@ -180,11 +245,15 @@ blocks = [
          rows=[[x["category"], short(str(x.get("typical_fix", "")), 170)] for x in ATC["finding_categories_resolved"]
                if any(k in x["category"] for k in ("SELECT SINGLE", "BINARY SEARCH", "Field Length Extension - conflict", "VBUK", "KONV", "BSEG",
                                                    "J_1IMOVEND", "CLIENT SPECIFIED", "Strict Open SQL", "FOR ALL ENTRIES guard", "BDC", "Native SQL"))]),
+    h3("Examples of AI-assisted correction logic"),
+    p("Generic patterns as applied across the batch (illustrative statements, not client code):"),
+    *atc_code,
     p("Optimisation beyond ATC: FOR ALL ENTRIES replaced by ranges where it silently lost rows (ZFITAX_PBT_CALC_PRG), batch input on dead S/4 transactions "
       "replaced by FI-AA BAPIs (ZAA_IMPAIRMENTLOSS), totals aggregated on the database instead of line by line (ZFI_ACDOCA_JVSO1_RECON)."),
     h1("9. Automation and Reusable Development Summary"),
-    dict(t="table", fontSize=7.5, widths=[34, 16, 50], header=["Automation / tool", "Project", "Manual work it replaces"],
-         rows=[[short(o["title"].split(" - ")[0], 60), o["project"].replace("Common (all projects)", "Common"), short(o["auto_process"] or o["requirement"], 150)] for o in autos]),
+    dict(t="table", fontSize=7.5, widths=[25, 11, 34, 16, 14], header=["Automation / tool", "Project", "Manual work it replaces", "Usage", "Reusability"],
+         rows=[[short(o["title"].split(" - ")[0], 60), o["project"].replace("Common (all projects)", "Common"), short(o["auto_process"] or o["requirement"], 140),
+                USAGE_OF.get(o["folder"], "On demand"), REUSE(o)] for o in autos]),
 
     h1("10. Quantified Effort and Productivity Analysis"),
     dict(t="image", path=os.path.join(HERE, "charts", "effort_by_project.png"), w=600, h=270, alt="Effort by project",
@@ -211,7 +280,21 @@ blocks = [
         "**Reusable assets** - ATC patterns, release constraints, forecast engine, workflow and analytical-cube patterns and five developer tools, ready for the next project.",
         "**Commercial view** - effort value = man-days saved x day rate; under fixed price it shows as margin and capacity, under T&M it follows the billing arrangement."]),
     h1("13. Strongest AI Success Story - ONGC JIB Status Dashboard"),
-    dict(t="table", widths=[26, 74], header=["Item", "Detail"], rows=case_rows, boldFirst=True, fontSize=8.5),
+    dict(t="table", widths=[26, 74], header=["Item", "Detail"], rows=case_rows[:5], boldFirst=True, fontSize=8.5),
+    h3("How AI was used and the development workflow"),
+    p(case_rows[5][1]), case_tl,
+    h3("Human review, corrections and validation"), p(case_rows[6][1]),
+    case_ba,
+    h3("Quantified effort reduction and quality"),
+    p(f"{h(J['saved_h'])} h saved ({J['saved_h'] / 8:.1f} man-days), {pc(J['red'])} effort reduction, {J['prod'] + 1:.1f}x throughput. Quality: all twelve "
+      "periods generated so missing JIBs show as Pending; reversed documents handled; clearing date and document added; navigation to the journal entry; "
+      "no SAP standard object modified."),
+    h3("Customer benefit"), p("Corporate Accounts confirmed on 17/11/26 that the dashboard is 'working well and meeting expectations'. Management now "
+                              "sees the JIB posting status of every joint venture without an Excel workbook."),
+    h3("Lessons learned and replication"),
+    bl(["Production sample documents are checked line by line before the data model is fixed.",
+        "One object at a time with activation feedback; every release constraint is recorded once and reused.",
+        "The same cube pattern is reused for Bank Revaluation, the Treasury bank register and Per-Barrel analysis, and can serve further Management Dashboard cards."]),
     h1("14. Overall Conclusions"),
     bl(["AI is part of how I deliver: faster first builds and faster root-cause analysis, with every object reviewed, activated and tested by me.",
         "The approach is repeatable - the same loop and toolkit worked on PAL, ONGC and Astral, across reports, CDS / RAP, workflow, enhancements and ATC.",
@@ -267,10 +350,27 @@ annex += [dict(t="h1", text="Annex D - Technical Documentation Produced", pageBr
           dict(t="table", fontSize=7.5, widths=[18, 82], header=["Project", "Technical specification"],
                rows=[[proj(l), l] for l in sorted(ts, key=lambda l: (proj(l), l))]),
           p(f"Plus {M['Issue-log entries written (issue -> cause -> fix)']} issue-log entries (issue, cause, fix) and a technical notes file for every object.")]
+def done(o):
+    d = [x for x in (o["first"], o["last"]) if x and "not stated" not in x]
+    return o["status"] + (f", {d[0]} - {d[-1]}" if d else "")
+
+
+annex_e = [dict(t="h1", text="Annex E - Evidence and Estimation Annexure"),
+          p("Traceability for every use case: source artefact in the work repository, evidence of completion, effort basis, assumptions "
+            "(work type / complexity / scope factor) and confidence."),
+          dict(t="table", fontSize=7, widths=[6, 10, 24, 27, 13, 12, 8],
+               header=["Sr.", "Project", "Development / correction", "Source artefact", "Evidence of completion", "Effort basis", "Assumptions"],
+               rows=[[o["id"], o["project"].replace("Common (all projects)", "Common"), short(o["title"], 80),
+                      short(o["folder"] + "; " + o["evidence"], 150), done(o),
+                      short(o["basis"].replace("Git session hours x allocation factor, minimum-effort floor", "Session time + size, minimum effort"), 70),
+                      f"{o['work']} / {o['complexity']} / x{o['scope']}"] for o in ROWS],
+               source="Confidence: verified against the issue log and commit history of each object. Assumptions: NEW / ENH / FIX / S4 / ANA / TOOL / ATC = "
+                      "new development / enhancement / fix / S/4 remediation / analysis / tool / ATC remediation, with complexity and scope factor as used in Annex C.")]
 blocks += annex
 
 doc = dict(title="SAP ABAP AI Utilisation, Productivity Improvement & Delivery Efficiency Report",
            header="SAP ABAP AI utilisation report  |  PAL  |  ONGC (OVL)  |  Astral (KPMG)  |  19 November 2026",
-           footer="Arnav Johri, Associate Consultant, Diligent Global", author="Arnav Johri", sections=[dict(blocks=blocks)])
+           footer="Arnav Johri, Associate Consultant, Diligent Global", author="Arnav Johri",
+           sections=[dict(blocks=blocks), dict(orientation="landscape", blocks=annex_e)])
 json.dump(doc, open(os.path.join(D, "report.json"), "w"), indent=1)
 print("ok")

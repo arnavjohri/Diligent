@@ -1209,8 +1209,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "19/08/26",
+   "last": "19/08/26",
    "commits": 1,
    "active_days": 1,
    "lines": 0,
@@ -1222,7 +1222,7 @@
    "auto_process": "not stated - the interface loads FX rates from CPI into TCURR, but the handover does not say how rates were maintained before",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor",
-   "impact": "not stated to not stated; 1 active AI-session day(s), 1 commits"
+   "impact": "19/08/26 to 19/08/26; 1 active AI-session day(s), 1 commits"
   },
   {
    "id": "UC-025",
@@ -1311,8 +1311,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "23/08/26",
+   "last": "07/09/26",
    "commits": 2,
    "active_days": 2,
    "lines": 714,
@@ -1324,7 +1324,7 @@
    "auto_process": "not stated",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor",
-   "impact": "not stated to not stated; 2 active AI-session day(s), 2 commits"
+   "impact": "23/08/26 to 07/09/26; 2 active AI-session day(s), 2 commits"
   },
   {
    "id": "UC-027",
@@ -1974,8 +1974,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "23/08/26",
+   "last": "07/09/26",
    "commits": 2,
    "active_days": 2,
    "lines": 5821,
@@ -1987,7 +1987,7 @@
    "auto_process": "not stated",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor",
-   "impact": "not stated to not stated; 2 active AI-session day(s), 2 commits"
+   "impact": "23/08/26 to 07/09/26; 2 active AI-session day(s), 2 commits"
   },
   {
    "id": "UC-040",
@@ -2994,8 +2994,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "19/08/26",
+   "last": "07/09/26",
    "commits": 3,
    "active_days": 3,
    "lines": 3579,
@@ -3007,7 +3007,7 @@
    "auto_process": "Entering schemes one at a time (ZSD_SCHEME_UPLOAD mass upload) and calculating and posting scheme credit notes per customer and period (the files do not describe the previous manual procedure)",
    "auto_freq": "docs/Scheme_Pipes_Assumptions_and_Queries.docx A02: 'Scheme Type (Daily / Monthly / Quarterly / Half-Yearly / Yearly) defines the settlement periodicity.'",
    "basis": "Git session hours x allocation factor, minimum-effort floor",
-   "impact": "not stated to not stated; 3 active AI-session day(s), 3 commits"
+   "impact": "19/08/26 to 07/09/26; 3 active AI-session day(s), 3 commits"
   },
   {
    "id": "UC-060",
@@ -3198,8 +3198,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "23/08/26",
+   "last": "07/09/26",
    "commits": 13,
    "active_days": 4,
    "lines": 1666,
@@ -3211,7 +3211,7 @@
    "auto_process": "not stated",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor",
-   "impact": "not stated to not stated; 4 active AI-session day(s), 13 commits"
+   "impact": "23/08/26 to 07/09/26; 4 active AI-session day(s), 13 commits"
   },
   {
    "id": "UC-064",
@@ -3249,8 +3249,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "19/08/26",
+   "last": "07/09/26",
    "commits": 4,
    "active_days": 3,
    "lines": 2601,
@@ -3262,7 +3262,7 @@
    "auto_process": "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it restartable and adds extend/change handling)",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor + 16 h dated pre-repository days",
-   "impact": "not stated to not stated; 3 active AI-session day(s), 4 commits"
+   "impact": "19/08/26 to 07/09/26; 3 active AI-session day(s), 4 commits"
   },
   {
    "id": "UC-065",
@@ -3351,8 +3351,8 @@
    "tier_label": "D - Development completed",
    "counted": true,
    "confidence": "Verified",
-   "first": "not stated",
-   "last": "not stated",
+   "first": "19/08/26",
+   "last": "07/09/26",
    "commits": 6,
    "active_days": 4,
    "lines": 6652,
@@ -3364,7 +3364,7 @@
    "auto_process": "not stated",
    "auto_freq": "not stated",
    "basis": "Git session hours x allocation factor, minimum-effort floor + 8 h dated pre-repository days",
-   "impact": "not stated to not stated; 4 active AI-session day(s), 6 commits"
+   "impact": "19/08/26 to 07/09/26; 4 active AI-session day(s), 6 commits"
   },
   {
    "id": "UC-067",

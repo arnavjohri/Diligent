@@ -172,6 +172,16 @@ function block(b, orientation) {
       return [kpis(b, orientation), para("", { after: 120 })];
     case "toc":
       return [new TableOfContents("Contents", { hyperlink: true, headingStyleRange: "1-2" })];
+    case "code":
+      return [
+        ...(b.caption ? [para(b.caption, { size: 17, bold: true, color: ACCENT, after: 40, before: 120, keepNext: true })] : []),
+        ...b.lines.map((ln, i) => new Paragraph({
+          spacing: { before: 0, after: 0, line: 228 }, keepNext: i < b.lines.length - 1, keepLines: true,
+          shading: { type: ShadingType.CLEAR, color: "auto", fill: "F4F6F7" }, indent: { left: 140, right: 140 },
+          children: [new TextRun({ text: ln.length ? ln : " ", font: "Courier New", size: 15, color: ln.trim().startsWith('"') || ln.trim().startsWith("*") ? MUTED : INK })],
+        })),
+        para("", { after: 80 }),
+      ];
     case "image":
       return [
         new Paragraph({ spacing: { before: 120, after: 40 }, alignment: AlignmentType.CENTER, keepNext: true,

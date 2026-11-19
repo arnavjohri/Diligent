@@ -41,7 +41,7 @@
        "note": "completed across 3 projects"
       },
       {
-       "value": "870",
+       "value": "873",
        "label": "Commits",
        "note": "in under four months"
       },
@@ -63,7 +63,7 @@
     },
     {
      "t": "p",
-     "text": "The result is a body of work that would normally take a larger team: complete applications (CDS / RAP dashboards, an approval workflow, a forecasting system), reports, interfaces, enhancements and tools - 312 custom SAP objects in all. Every object was reviewed, activated and tested by me before go-live."
+     "text": "The work spans complete applications (CDS / RAP dashboards, an approval workflow, a forecasting system), reports, interfaces, enhancements and tools - 312 custom SAP objects in all. Every object was reviewed, activated and tested before go-live."
     },
     {
      "t": "table",
@@ -113,7 +113,7 @@
      "t": "bullets",
      "items": [
       "My work repository - one folder per SAP object for each project, with its issue log (issue, cause, fix), technical notes and delivered source.",
-      "Git history of every branch - 870 commits between 19/08 and 19/11/26 - and Claude Code session records from 20/07/26 (30 sessions, 557 prompts).",
+      "Git history of every branch - 873 commits between 19/08 and 19/11/26 - and Claude Code session records from 20/07/26 (30 sessions, 557 prompts).",
       "The August OVL work log, ATC exports and knowledge base, FS and TS documents, client test feedback and mail threads."
      ]
     },
@@ -152,7 +152,7 @@
      "rows": [
       [
        "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-       "870",
+       "873",
        "git rev-list --all --count"
       ],
       [
@@ -164,21 +164,6 @@
        "Weekend days with AI-assisted work",
        "6",
        "git commit dates: 23/08, 29/08, 05/09, 13/09, 27/09, 10/10"
-      ],
-      [
-       "Peak day (22/10/26): commits",
-       "68",
-       "work from 09:37 to 22:08 IST (12.5 h)"
-      ],
-      [
-       "Days with 8+ hours between first and last commit",
-       "6",
-       "git commit timestamps (IST)"
-      ],
-      [
-       "Commits made after 19:00 or before 07:00 IST",
-       "34",
-       "git commit timestamps (IST)"
       ],
       [
        "Claude Code sessions, 20/07 - 15/08/26",
@@ -228,7 +213,56 @@
      "w": 600,
      "h": 240,
      "alt": "Commits per month",
-     "caption": "Output grew month on month as the toolkit matured; October was the peak with 329 commits on client work."
+     "caption": "Commits per month on client work."
+    },
+    {
+     "t": "table",
+     "caption": "Delivery timeline - developments started each month",
+     "fontSize": 7,
+     "widths": [
+      11,
+      22,
+      45,
+      22
+     ],
+     "header": [
+      "Month",
+      "PAL",
+      "ONGC (OVL)",
+      "Astral (KPMG)"
+     ],
+     "rows": [
+      [
+       "July",
+       "-",
+       "Fiori PR/PO validations",
+       "-"
+      ],
+      [
+       "August",
+       "-",
+       "ATC S/4HANA-readiness remediation; Five Fiori List Report RAP apps...; ZAA_IMPARMENTLOSS / SAPMZAAIMP...; ZF01_EXCHANGE_RATE; ZMMME35K; JV transfer programs; ZFI_BNK_APP1 bank batch approval...; ZFI_JV_TB; ZMMEMD; ZMMIMS; ZMM_VMS vendor creation; ZFI_BNK_APP; CJ88 settlement reversal; ZFI_CP_MASS_VEN_PAY",
+       "ZFORECAST; Scheme; TDS Report; Budget control on indirect...; ZMM_VEND_UPLOAD / ZMM_VEND_MASTER; ZMB5B / ZRM07MLBD"
+      ],
+      [
+       "September",
+       "FB70 customer credit memo; PAL 'Upload General Journal...; SD-FI customer line text; PAL Ariba Sourcing to S/4...",
+       "ZPRA Daily Production Report; ZFI_PL; Fiori F1592 Asset Master Worklist; Group Reporting data release",
+       "WRICEF 141 A/B; ZMM_BP_CREATE_MAIL; ZMM_RM07MLBD / ZMM_MB5B_NEW; WRICEF 147"
+      ],
+      [
+       "October",
+       "PAL customer invoice / credit...; PAL invoice-upload utility class",
+       "Bank Revaluation report for Group...; Fiori Manage Purchase Orders; ZFI_ACDOCA_JVSO1_RECON; ZCL_GR_JE_POST; ZFI_CNB_BRS / ZFI_CNB_BRS1; ARMS end-user authorisation...; BAdI ME_PROCESS_PO_CUST method...; ZHANA_SERVICES_PRG 'SAP...; ZSAP_CONSUMPTION_REPORT; ZSAP_TIMESHEET_FORM_PRG timesheet...; ZR_PROG_DOWNLOAD; ZFI_ACDOCA_VNAME_UPD; ZBC_TADIR_SRCSYS_CHANGE; ZMM_TMS_STATUS Tender Monitoring...; ZFIBRS bank book upload; ZFITAX_PBT_CALC_PRG; ZJV_BAPI_BALUPLOAD1 JV G/L...; SAP standard JVA correction tool...; Group Reporting group journal...; FBV0 posting error CORE_GJ 912 on...; Custom PR release workflow...; FAGL_SETTINGS *_RESTRICT_MIG; ZFI_FBL3N_ACDOCA_U",
+       "ZFORECAST; PO header Validity Start / End..."
+      ],
+      [
+       "November",
+       "-",
+       "ZFI_JIB_STATUS; Per Barrel Analysis; ZFI_ACDOCA_JVA_ALIGN; Group Reporting; Group Reporting; ZFI_TR_BANKACCT; st05_decode.py; Reference program Z_JVA_ALIGNMENT; Provisional Capex / Opex...",
+       "-"
+      ]
+     ]
     },
     {
      "t": "h1",
@@ -1309,6 +1343,57 @@
      ]
     },
     {
+     "t": "h3",
+     "text": "Examples of AI-assisted correction logic"
+    },
+    {
+     "t": "p",
+     "text": "Generic patterns as applied across the batch (illustrative statements, not client code):"
+    },
+    {
+     "t": "code",
+     "caption": "Example 1 - SELECT SINGLE without a unique key (NOORDER)",
+     "lines": [
+      "* Before",
+      "SELECT SINGLE belnr FROM bkpf INTO lv_belnr WHERE bukrs = p_bukrs AND xblnr = lv_ref.",
+      "* After - deterministic result, strict Open SQL",
+      "SELECT belnr FROM bkpf WHERE bukrs = @p_bukrs AND xblnr = @lv_ref",
+      "  ORDER BY belnr INTO @lv_belnr UP TO 1 ROWS.",
+      "ENDSELECT."
+     ]
+    },
+    {
+     "t": "code",
+     "caption": "Example 2 - simplified object: KONV pricing read moved to the compatibility view",
+     "lines": [
+      "* Before",
+      "SELECT kschl kbetr FROM konv CLIENT SPECIFIED INTO TABLE lt_cond WHERE mandt = sy-mandt AND knumv = lv_knumv.",
+      "* After - CLIENT SPECIFIED and MANDT dropped together",
+      "SELECT kschl, kbetr FROM v_konv WHERE knumv = @lv_knumv INTO TABLE @lt_cond."
+     ]
+    },
+    {
+     "t": "code",
+     "caption": "Example 3 - FOR ALL ENTRIES guarded and de-duplicated",
+     "lines": [
+      "* After",
+      "IF lt_docs IS NOT INITIAL.",
+      "  SORT lt_docs BY belnr.",
+      "  DELETE ADJACENT DUPLICATES FROM lt_docs COMPARING belnr.",
+      "  SELECT belnr, buzei, hkont FROM bseg FOR ALL ENTRIES IN @lt_docs",
+      "    WHERE belnr = @lt_docs-belnr INTO TABLE @DATA(lt_items).",
+      "ENDIF."
+     ]
+    },
+    {
+     "t": "code",
+     "caption": "Example 4 - field-length extension (MATNR 40) on a move to a narrower field",
+     "lines": [
+      "* After - conversion made explicit, pseudo-comment with the SAP note",
+      "lv_matnr18 = CONV #( ls_mara-matnr ).   \"#EC CI_FLDEXT_OK[2215424]"
+     ]
+    },
+    {
      "t": "p",
      "text": "Optimisation beyond ATC: FOR ALL ENTRIES replaced by ranges where it silently lost rows (ZFITAX_PBT_CALC_PRG), batch input on dead S/4 transactions replaced by FI-AA BAPIs (ZAA_IMPAIRMENTLOSS), totals aggregated on the database instead of line by line (ZFI_ACDOCA_JVSO1_RECON)."
     },
@@ -1321,100 +1406,138 @@
      "t": "table",
      "fontSize": 7.5,
      "widths": [
+      25,
+      11,
       34,
       16,
-      50
+      14
      ],
      "header": [
       "Automation / tool",
       "Project",
-      "Manual work it replaces"
+      "Manual work it replaces",
+      "Usage",
+      "Reusability"
      ],
      "rows": [
       [
        "FB70 customer credit memo (DG) approval on the GL...",
        "PAL",
-       "Approval routing and automatic posting of parked FB70 customer credit memos, plus notification mails at each approval stage (the files do not..."
+       "Approval routing and automatic posting of parked FB70 customer credit memos, plus notification mails at each approval stage (the files do...",
+       "Every parked credit memo",
+       "Pattern reusable on similar requirements"
       ],
       [
        "ZPRA Daily Production Report: RAP app, Fiori dashboard and...",
        "ONGC (OVL)",
-       "Manual keying of daily production per asset in PRD (reconciliation/2026-10-25/README.md: 'PRD rows were keyed per asset by the asset users ..."
+       "Manual keying of daily production per asset in PRD (reconciliation/2026-10-25/README.md: 'PRD rows were keyed per asset by the asset users...",
+       "Daily - CPI interface and dashboard",
+       "Pattern reusable on similar requirements"
       ],
       [
        "Per Barrel Analysis (board agenda) as CDS cube + Custom...",
        "ONGC (OVL)",
-       "The Excel \"Per Barrel Analysis\" workbook built from 15 ZFI_PL extract files (NOTES.md: \"the workbook as it is, fed by one export of this query in..."
+       "The Excel \"Per Barrel Analysis\" workbook built from 15 ZFI_PL extract files (NOTES.md: \"the workbook as it is, fed by one export of this...",
+       "Each board-agenda cycle",
+       "Pattern reusable on similar requirements"
       ],
       [
        "Bank Revaluation report for Group Reporting",
        "ONGC (OVL)",
-       "Period-end bank revaluation Excel sheet in which the PI share per G/L was 'hardcoded' and the exchange rate taken from OB08"
+       "Period-end bank revaluation Excel sheet in which the PI share per G/L was 'hardcoded' and the exchange rate taken from OB08",
+       "Each period-end",
+       "Pattern reusable on similar requirements"
       ],
       [
        "ZHANA_SERVICES_PRG 'SAP Timesheet' module pool",
        "ONGC (OVL)",
-       "Keying every timesheet row by hand in the table control of screen 9002 - rows can now be filled in Excel and uploaded (ISSUES.md: 'user keys one row,..."
+       "Keying every timesheet row by hand in the table control of screen 9002 - rows can now be filled in Excel and uploaded (ISSUES.md: 'user...",
+       "Each timesheet entry cycle",
+       "Pattern reusable on similar requirements"
       ],
       [
        "ZR_PROG_DOWNLOAD: mass download of ABAP sources with the...",
        "ONGC (OVL)",
-       "Downloading sources one object at a time from SE80 / SE38 (print with includes, or copy-paste of each include) from systems that have no ADT..."
+       "Downloading sources one object at a time from SE80 / SE38 (print with includes, or copy-paste of each include) from systems that have no...",
+       "Before every change - source baseline",
+       "All projects"
       ],
       [
        "ZBC_TADIR_SRCSYS_CHANGE",
        "ONGC (OVL)",
-       "Changing the original system object by object in SE03 -> Object Directory -> Change Object Directory Entries (NOTES.md: \"Standard alternative for a..."
+       "Changing the original system object by object in SE03 -> Object Directory -> Change Object Directory Entries (NOTES.md: \"Standard...",
+       "After each system copy",
+       "All projects"
       ],
       [
        "st05_decode.py: offline decoder for ST05 binary trace...",
        "ONGC (OVL)",
-       "Reading an ST05 trace inside SAP GUI on the traced system; the script lets a binary export be analysed offline."
+       "Reading an ST05 trace inside SAP GUI on the traced system; the script lets a binary export be analysed offline.",
+       "Each SQL trace analysis",
+       "All projects"
       ],
       [
        "ZFORECAST (Adhesive) v2",
        "Astral (KPMG)",
-       "Row-by-row SM30 maintenance of product category, material tracking, exclusions, legacy sales history and business forecasts, replaced by the..."
+       "Row-by-row SM30 maintenance of product category, material tracking, exclusions, legacy sales history and business forecasts, replaced by...",
+       "Each forecast cycle (annual / quarterly / monthly)",
+       "Pattern reusable on similar requirements"
       ],
       [
        "Scheme (Pipes)",
        "Astral (KPMG)",
-       "Entering schemes one at a time (ZSD_SCHEME_UPLOAD mass upload) and calculating and posting scheme credit notes per customer and period (the files do..."
+       "Entering schemes one at a time (ZSD_SCHEME_UPLOAD mass upload) and calculating and posting scheme credit notes per customer and period (the...",
+       "Each scheme cycle",
+       "Pattern reusable on similar requirements"
       ],
       [
        "WRICEF 141 A/B",
        "Astral (KPMG)",
-       "Row-by-row entry of exceptional-approval records for Paints through table maintenance, replaced by ZSD_EXP_PAINTS_UPLOAD ('Upload / change program..."
+       "Row-by-row entry of exceptional-approval records for Paints through table maintenance, replaced by ZSD_EXP_PAINTS_UPLOAD ('Upload / change...",
+       "Each approval upload",
+       "Pattern reusable on similar requirements"
       ],
       [
        "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER",
        "Astral (KPMG)",
-       "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it restartable..."
+       "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it...",
+       "Each vendor mass upload",
+       "Pattern reusable on similar requirements"
       ],
       [
        "ZMM_BP_CREATE_MAIL",
        "Astral (KPMG)",
-       "Informing MDM, the supplier manager and the supplier contact that a new supplier BP was created (the files do not describe how this was done before)"
+       "Informing MDM, the supplier manager and the supplier contact that a new supplier BP was created (the files do not describe how this was...",
+       "Daily scheduled job",
+       "Pattern reusable on similar requirements"
       ],
       [
        "AI delivery toolkit: rulebook, release-constraint memory, 7...",
        "Common",
-       "Manual commit / pull / push (sync.sh and hooks), manual filing and comparison of SE80 downloads (save-original.sh), manual review of sources against..."
+       "Manual commit / pull / push (sync.sh and hooks), manual filing and comparison of SE80 downloads (save-original.sh), manual review of...",
+       "Every development session",
+       "All projects"
       ],
       [
        "ZR_FIND_ENH: enhancement finder for the call tree of a...",
        "Common",
-       "Searching a standard function module and its nested calls for exits, BAdIs and enhancement points by reading the code in SE80 or by debugger..."
+       "Searching a standard function module and its nested calls for exits, BAdIs and enhancement points by reading the code in SE80 or by...",
+       "Each enhancement analysis",
+       "All projects"
       ],
       [
        "abapGit offline-ZIP delivery path: DDIC and report pilots,...",
        "Common",
-       "Intended to prove the ZIP import path as an alternative to copy-paste from SE80; not achieved with this pilot (never imported)"
+       "Intended to prove the ZIP import path as an alternative to copy-paste from SE80; not achieved with this pilot (never imported)",
+       "Each abapGit ZIP import",
+       "All projects"
       ],
       [
        "ZR_ICF_URL_LIST: every ICF service URL of the system as a...",
        "Common",
-       "Expanding the SICF service tree node by node and writing out the URL paths by hand (ISSUES.md: 'SICF only shows a tree')."
+       "Expanding the SICF service tree node by node and writing out the URL paths by hand (ISSUES.md: 'SICF only shows a tree').",
+       "Each CPI integration request",
+       "All projects"
       ]
      ]
     },
@@ -1636,34 +1759,133 @@
       [
        "Conventional approach",
        "SE16N data analysis, view-by-view design by trial activation, a rebuild after each client test."
-      ],
-      [
-       "How AI was used",
-       "Read the requirement workbook and production samples, designed the data model, wrote all eight views and the ZIP, rebuilt the model on each round of client feedback."
-      ],
-      [
-       "Human review and validation",
-       "Document-type set confirmed in GS03 / SE16N; each version imported, activated and checked against production documents; client tests relayed; launchpad navigation set."
-      ],
-      [
-       "Timeline",
-       "Requirement 03/11/26 -> first query running 04/11 -> client test 06/11 -> navigation 12/11 -> written client confirmation 17/11 (11 working days, four additions included)."
-      ],
-      [
-       "Effort",
-       "42 h conventional -> 21 h with AI: 21 h saved, 50% less effort."
-      ],
-      [
-       "Client feedback",
-       "Corporate Accounts, 17/11/26: 'working well and meeting expectations'."
-      ],
-      [
-       "Replication",
-       "The same cube pattern now serves Bank Revaluation, the Treasury bank register and Per-Barrel analysis."
       ]
      ],
      "boldFirst": true,
      "fontSize": 8.5
+    },
+    {
+     "t": "h3",
+     "text": "How AI was used and the development workflow"
+    },
+    {
+     "t": "p",
+     "text": "Read the requirement workbook and production samples, designed the data model, wrote all eight views and the ZIP, rebuilt the model on each round of client feedback."
+    },
+    {
+     "t": "table",
+     "caption": "Development timeline",
+     "widths": [
+      16,
+      84
+     ],
+     "header": [
+      "Date",
+      "Step"
+     ],
+     "rows": [
+      [
+       "03/11/26",
+       "Requirement workbook received; production documents checked line by line; data model designed and first eight views delivered as an abapGit ZIP"
+      ],
+      [
+       "04/11/26",
+       "Model rebuilt on entry-date windows; Fiori Custom Analytical Query running on the first model"
+      ],
+      [
+       "06/11/26",
+       "Client test round 1; model rebuilt at document grain on the posting period; year / quarter aggregates and reversal handling added"
+      ],
+      [
+       "12/11/26",
+       "Document-number navigation to the journal entry made to work from the launchpad"
+      ],
+      [
+       "17/11/26",
+       "Client confirmation in writing; four additions delivered the same day (all ventures, document type, clearing date and document)"
+      ],
+      [
+       "19/11/26",
+       "Business-unit mapping for every venture added from the client's list"
+      ]
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Human review, corrections and validation"
+    },
+    {
+     "t": "p",
+     "text": "Document-type set confirmed in GS03 / SE16N; each version imported, activated and checked against production documents; client tests relayed; launchpad navigation set."
+    },
+    {
+     "t": "table",
+     "caption": "Before and after AI",
+     "widths": [
+      34,
+      33,
+      33
+     ],
+     "header": [
+      "Dimension",
+      "Conventional",
+      "With AI"
+     ],
+     "rows": [
+      [
+       "Total effort",
+       "42 h",
+       "21 h"
+      ],
+      [
+       "First running version",
+       "about 5 working days",
+       "next working day"
+      ],
+      [
+       "Requirement to client confirmation",
+       "build plus separate rebuilds",
+       "11 working days"
+      ],
+      [
+       "Change rounds absorbed",
+       "each a manual rebuild",
+       "13 logged changes"
+      ],
+      [
+       "Objects delivered",
+       "8 CDS views",
+       "8 CDS views, abapGit ZIP, query design"
+      ]
+     ]
+    },
+    {
+     "t": "h3",
+     "text": "Quantified effort reduction and quality"
+    },
+    {
+     "t": "p",
+     "text": "21 h saved (2.6 man-days), 50% effort reduction, 2.0x throughput. Quality: all twelve periods generated so missing JIBs show as Pending; reversed documents handled; clearing date and document added; navigation to the journal entry; no SAP standard object modified."
+    },
+    {
+     "t": "h3",
+     "text": "Customer benefit"
+    },
+    {
+     "t": "p",
+     "text": "Corporate Accounts confirmed on 17/11/26 that the dashboard is 'working well and meeting expectations'. Management now sees the JIB posting status of every joint venture without an Excel workbook."
+    },
+    {
+     "t": "h3",
+     "text": "Lessons learned and replication"
+    },
+    {
+     "t": "bullets",
+     "items": [
+      "Production sample documents are checked line by line before the data model is fixed.",
+      "One object at a time with activation feedback; every release constraint is recorded once and reused.",
+      "The same cube pattern is reused for Bank Revaluation, the Treasury bank register and Per-Barrel analysis, and can serve further Management Dashboard cards."
+     ]
     },
     {
      "t": "h1",
@@ -2464,7 +2686,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 1 active AI-session day(s), 1 commits"
+       "19/08/26 to 19/08/26; 1 active AI-session day(s), 1 commits"
       ],
       [
        "Evidence",
@@ -2568,7 +2790,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 2 active AI-session day(s), 2 commits"
+       "23/08/26 to 07/09/26; 2 active AI-session day(s), 2 commits"
       ],
       [
        "Evidence",
@@ -3244,7 +3466,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 2 active AI-session day(s), 2 commits"
+       "23/08/26 to 07/09/26; 2 active AI-session day(s), 2 commits"
       ],
       [
        "Evidence",
@@ -4340,7 +4562,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 4 active AI-session day(s), 13 commits"
+       "23/08/26 to 07/09/26; 4 active AI-session day(s), 13 commits"
       ],
       [
        "Evidence",
@@ -4392,7 +4614,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 3 active AI-session day(s), 4 commits"
+       "19/08/26 to 07/09/26; 3 active AI-session day(s), 4 commits"
       ],
       [
        "Evidence",
@@ -4496,7 +4718,7 @@
       ],
       [
        "Timeline",
-       "not stated to not stated; 4 active AI-session day(s), 6 commits"
+       "19/08/26 to 07/09/26; 4 active AI-session day(s), 6 commits"
       ],
       [
        "Evidence",
@@ -5849,6 +6071,710 @@
     {
      "t": "p",
      "text": "Plus 371 issue-log entries (issue, cause, fix) and a technical notes file for every object."
+    }
+   ]
+  },
+  {
+   "orientation": "landscape",
+   "blocks": [
+    {
+     "t": "h1",
+     "text": "Annex E - Evidence and Estimation Annexure"
+    },
+    {
+     "t": "p",
+     "text": "Traceability for every use case: source artefact in the work repository, evidence of completion, effort basis, assumptions (work type / complexity / scope factor) and confidence."
+    },
+    {
+     "t": "table",
+     "fontSize": 7,
+     "widths": [
+      6,
+      10,
+      24,
+      27,
+      13,
+      12,
+      8
+     ],
+     "header": [
+      "Sr.",
+      "Project",
+      "Development / correction",
+      "Source artefact",
+      "Evidence of completion",
+      "Effort basis",
+      "Assumptions"
+     ],
+     "rows": [
+      [
+       "UC-001",
+       "PAL",
+       "FB70 customer credit memo (DG) approval on the GL journal-entry verification...",
+       "kpmg/zfi_fb70_cm_apprv; kpmg/zfi_fb70_cm_apprv/ISSUES.md; kpmg/zfi_fb70_cm_apprv/NOTES.md; kpmg/zfi_fb70_cm_apprv/docs/00_DESIGN.md;...",
+       "Completed, 30/09/26 - 30/10/26",
+       "Session time + size, minimum effort",
+       "NEW / Very High / x1.25"
+      ],
+      [
+       "UC-002",
+       "PAL",
+       "PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and...",
+       "pal/zinv_gl_upload; pal/zinv_gl_upload/ISSUES.md; pal/zinv_gl_upload/NOTES.md; pal/zinv_gl_upload/UPDATE_AMOUNT.abap;...",
+       "Completed, 29/09/26 - 14/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Very High / x1"
+      ],
+      [
+       "UC-003",
+       "PAL",
+       "PAL customer invoice / credit memo / debit memo forms: PDF mailed by the...",
+       "pal/zfi03custinv1; pal/zfi03custinv1/ISSUES.md; pal/zfi03custinv1/NOTES.md; pal/zfi03custinv1/ZFI_03_CUSTINV_FORM.abap;...",
+       "Completed, 10/10/26 - 13/10/26",
+       "Session time + size, minimum effort",
+       "FIX / High / x1"
+      ],
+      [
+       "UC-004",
+       "PAL",
+       "SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori...",
+       "pal/zsd_fi_sgtxt; pal/zsd_fi_sgtxt/ISSUES.md (branch claude/charming-thompson-6lsel8); pal/zsd_fi_sgtxt/NOTES.md",
+       "Completed, 21/09/26 - 23/09/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-005",
+       "PAL",
+       "PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding...",
+       "pal/zmm_po_noround; pal/zmm_po_noround/ISSUES.md; pal/zmm_po_noround/NOTES.md; pal/zmm_po_noround/ZCL_IM_MM_BAPI_PO_NOROUND.abap; git log --all (6...",
+       "Completed, 17/09/26 - 17/09/26",
+       "Session time + size, minimum effort",
+       "NEW / Low / x1"
+      ],
+      [
+       "UC-006",
+       "PAL",
+       "PAL invoice-upload utility class: local and group currency validated...",
+       "pal/zcl_inv_utility; pal/zcl_inv_utility/ISSUES.md; pal/zcl_inv_utility/NOTES.md; pal/zcl_inv_utility/ZCL_INV_UTILITY.abap;...",
+       "Completed, 12/10/26 - 12/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-007",
+       "ONGC (OVL)",
+       "ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix",
+       "ovl/zpra_dpr; ovl/zpra_dpr/ISSUES.md; ovl/zpra_dpr/dashboard/README.md; ovl/zpra_dpr/dashboard/HANDOVER.md;...",
+       "Completed, 23/09/26 - 27/10/26",
+       "Session time + size, minimum effort + 22 h dated pre-repository days",
+       "NEW / Very High / x2.0"
+      ],
+      [
+       "UC-008",
+       "ONGC (OVL)",
+       "ATC S/4HANA-readiness remediation: 51 program includes in 14 packages",
+       "ovl/atc; ovl/atc/ATC_HANDOVER.md; ovl/atc/AUDIT-2026-08-23.md; ovl/atc/kb/ATC_S4_COMPLETE_KNOWLEDGE_BASE.md; ovl/atc/corrections/",
+       "Completed, 05/08/26 - 25/08/26",
+       "Session time + size, minimum effort + 28 h dated pre-repository days...",
+       "ATC / Very High / x1"
+      ],
+      [
+       "UC-009",
+       "ONGC (OVL)",
+       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical...",
+       "ovl/zfi_jib_status; ovl/zfi_jib_status/ISSUES.md; ovl/zfi_jib_status/NOTES.md; ovl/zfi_jib_status/MAIL-2026-11-04-ui-tile.md;...",
+       "Completed, 03/11/26 - 19/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Very High / x1"
+      ],
+      [
+       "UC-010",
+       "ONGC (OVL)",
+       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on...",
+       "ovl/per_barrel_agenda; ovl/per_barrel_agenda/ISSUES.md; ovl/per_barrel_agenda/NOTES.md; ovl/per_barrel_agenda/docs/PBA_sheet_to_CDS_mapping.md;...",
+       "Completed, 10/11/26 - 12/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Very High / x1"
+      ],
+      [
+       "UC-011",
+       "ONGC (OVL)",
+       "Bank Revaluation report for Group Reporting - mapping table, three CDS views...",
+       "ovl/zfi_bank_reval; ovl/zfi_bank_reval/ISSUES.md; ovl/zfi_bank_reval/NOTES.md; ovl/zfi_bank_reval/RECON_2026-11-18.md;...",
+       "Completed, 28/10/26 - 18/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Very High / x1"
+      ],
+      [
+       "UC-012",
+       "ONGC (OVL)",
+       "Five Fiori List Report RAP apps for MM tender reports on one service",
+       "ovl/mm-fiori + work log 10-14/08; ovl/_engagement/WORKLOG_2026-08.md (11-14/08); COPILOT_CONTEXT_HANDOFF.md 5.7; ovl/mm-fiori/ (source prints)",
+       "Completed, 11/08/26 - 14/08/26",
+       "Work log: 5 points over 4 days (2 h per point)",
+       "NEW / High / x1.5"
+      ],
+      [
+       "UC-013",
+       "ONGC (OVL)",
+       "Fiori Manage Purchase Orders: custom EKKO fields on the PO header - CDS...",
+       "ovl/zmm_purchdoc_cds_ext; ovl/zmm_purchdoc_cds_ext/ISSUES.md; ovl/zmm_purchdoc_cds_ext/NOTES.md; ovl/zmm_purchdoc_cds_ext/F4_FIELD_INVENTORY.md;...",
+       "Completed, 19/10/26 - 28/10/26",
+       "Session time + size, minimum effort",
+       "ENH / Very High / x1.25"
+      ],
+      [
+       "UC-014",
+       "ONGC (OVL)",
+       "ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture /...",
+       "ovl/zfi_acdoca_jva_align; ovl/zfi_acdoca_jva_align/ISSUES.md; ovl/zfi_acdoca_jva_align/NOTES.md; ovl/zfi_acdoca_jva_align/ASSUMPTIONS_AND_QUERIES.md;...",
+       "Completed, 02/11/26 - 03/11/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1"
+      ],
+      [
+       "UC-015",
+       "ONGC (OVL)",
+       "Group Reporting: FS item remap per consolidation unit - mapping table, customer...",
+       "ovl/zgr_fsitem_remap; ovl/zgr_fsitem_remap/ISSUES.md; ovl/zgr_fsitem_remap/NOTES.md; ovl/zgr_fsitem_remap/ASSUMPTIONS_AND_QUERIES.md;...",
+       "Completed, 06/11/26 - 06/11/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1"
+      ],
+      [
+       "UC-016",
+       "ONGC (OVL)",
+       "Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks,...",
+       "ovl/_engagement (work log 03-04/08) + handoff 5.5; ovl/_engagement/WORKLOG_2026-08.md (03-04/08); COPILOT_CONTEXT_HANDOFF.md 5.5",
+       "Completed, 28/07/26 - 04/08/26",
+       "Handoff 5.5 (28/07-04/08) and work log: 6 dated days x 4 h",
+       "ENH / Very High / x1"
+      ],
+      [
+       "UC-017",
+       "ONGC (OVL)",
+       "ZAA_IMPARMENTLOSS / SAPMZAAIMP impairment and write-back posting - ABAA/ABZU...",
+       "ovl/zaa_impairmentloss; ovl/zaa_impairmentloss/ISSUES.md; ovl/zaa_impairmentloss/NOTES.md; ovl/zaa_impairmentloss/MAIL_functional_2026-08-27.md;...",
+       "Completed, 27/08/26 - 27/08/26",
+       "Session time + size, minimum effort",
+       "S4 / Very High / x1"
+      ],
+      [
+       "UC-018",
+       "ONGC (OVL)",
+       "ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV...",
+       "ovl/zfi_acdoca_jvso1_recon; ovl/zfi_acdoca_jvso1_recon/ISSUES.md; ovl/zfi_acdoca_jvso1_recon/NOTES.md;...",
+       "Completed, 19/10/26 - 02/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-019",
+       "ONGC (OVL)",
+       "ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU)...",
+       "ovl/zcl_gr_je_post; ovl/zcl_gr_je_post/ISSUES.md; ovl/zcl_gr_je_post/NOTES.md; ovl/zcl_gr_je_post/ZCL_GR_JE_POST.abap;...",
+       "Completed, 22/10/26 - 22/10/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-020",
+       "ONGC (OVL)",
+       "Group Reporting: where the CXCD currency translation task log reads its data...",
+       "ovl/zgr_ct_tasklog; ovl/zgr_ct_tasklog/ISSUES.md; ovl/zgr_ct_tasklog/NOTES.md; ovl/zgr_ct_tasklog/ZGR_CT_TASKLOG.abap;...",
+       "Completed, 06/11/26 - 06/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-021",
+       "ONGC (OVL)",
+       "ZFI_TR_BANKACCT - Treasury register of the company's own bank accounts for the...",
+       "ovl/zfi_tr_bankacct; ovl/zfi_tr_bankacct/ISSUES.md; ovl/zfi_tr_bankacct/NOTES.md; ovl/zfi_tr_bankacct/ASSUMPTIONS_AND_QUERIES.md;...",
+       "Completed, 03/11/26 - 03/11/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-022",
+       "ONGC (OVL)",
+       "ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header...",
+       "ovl/zfi_cnb_brs; ovl/zfi_cnb_brs/ISSUES.md; ovl/zfi_cnb_brs/NOTES.md; ovl/zfi_cnb_brs/ZFI_CNB_BRS1_TEXTS.md; ovl/zfi_cnb_brs/ZFI_CNB_BRS1.abap",
+       "Completed, 09/10/26 - 06/11/26",
+       "Session time + size, minimum effort",
+       "ENH / High / x1"
+      ],
+      [
+       "UC-023",
+       "ONGC (OVL)",
+       "ARMS end-user authorisation request tool - TWO pieces: (1) analysis of...",
+       "ovl/zmm_arms; ovl/zmm_arms/ISSUES.md; ovl/zmm_arms/NOTES.md; ovl/zmm_arms/ROLE_RENAME.md; ovl/zmm_arms/TCODE_COMPARE.md",
+       "Completed, 05/10/26 - 26/10/26",
+       "Session time + size, minimum effort",
+       "ENH / High / x1"
+      ],
+      [
+       "UC-024",
+       "ONGC (OVL)",
+       "ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway...",
+       "ovl/zf01_exchange_rate; ovl/zf01_exchange_rate/docs/ZF01_EXCHANGE_RATE_HANDOVER.md; ovl/_engagement/WORKLOG_2026-08.md; COPILOT_CONTEXT_HANDOFF.md;...",
+       "Completed, 19/08/26 - 19/08/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-025",
+       "ONGC (OVL)",
+       "ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis -...",
+       "ovl/zfi_pl; ovl/zfi_pl/ISSUES.md; ovl/zfi_pl/NOTES.md; ovl/zfi_pl/PATCH_secc_exclusion.abap; ovl/zfi_pl/PATCH_jvso1_to_jv_jvso1_acdoca.abap",
+       "Completed, 27/09/26 - 10/11/26",
+       "Session time + size, minimum effort",
+       "S4 / High / x1"
+      ],
+      [
+       "UC-026",
+       "ONGC (OVL)",
+       "ZMMME35K - contract release not working after ECC -> S/4 conversion (root cause...",
+       "kpmg/zmm_me35k_release; kpmg/zmm_me35k_release/ISSUES.md; kpmg/zmm_me35k_release/NOTES.md; kpmg/zmm_me35k_release/README.md;...",
+       "Completed, 23/08/26 - 07/09/26",
+       "Session time + size, minimum effort",
+       "S4 / High / x1"
+      ],
+      [
+       "UC-027",
+       "ONGC (OVL)",
+       "Fiori F1592 Asset Master Worklist: Custodian / JV fields via CDS extension",
+       "ovl/f1592_asset_worklist; ovl/f1592_asset_worklist/ISSUES.md (branch claude/standard-field-cds-extend-d8xpij); ovl/asset_fiori_fields/ANALYSIS.md",
+       "Completed, 01/09/26 - 01/09/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1.25"
+      ],
+      [
+       "UC-028",
+       "ONGC (OVL)",
+       "JV transfer programs: GL derivation keyed by JV, offset profit centre from...",
+       "ovl/ocv-to-ovl-transfer + work log 13-14/08; ovl/_engagement/WORKLOG_2026-08.md (13-14/08); COPILOT_CONTEXT_HANDOFF.md 5.8; ovl/ocv-to-ovl-transfer/",
+       "Completed, 13/08/26 - 14/08/26",
+       "Work log: 1.5 points (2 h per point)",
+       "ENH / Medium / x1.25"
+      ],
+      [
+       "UC-029",
+       "ONGC (OVL)",
+       "BAdI ME_PROCESS_PO_CUST method CHECK - PO validity-date rule made a warning in...",
+       "ovl/me_process_po_cust; ovl/me_process_po_cust/ISSUES.md; ovl/me_process_po_cust/NOTES.md;...",
+       "Completed, 27/10/26 - 28/10/26",
+       "Session time + size, minimum effort",
+       "FIX / High / x1"
+      ],
+      [
+       "UC-030",
+       "ONGC (OVL)",
+       "ZFI_BNK_APP1 bank batch approval / digital signature - one click by the second...",
+       "ovl/zbnk_app1; ovl/zbnk_app1/ISSUES.md; ovl/zbnk_app1/NOTES.md; ovl/zbnk_app1/MAIL-2026-08-27.md; ovl/zbnk_app1/ZFI_BNK_APP1_F01.abap",
+       "Completed, 27/08/26 - 27/08/26",
+       "Session time + size, minimum effort",
+       "FIX / High / x1"
+      ],
+      [
+       "UC-031",
+       "ONGC (OVL)",
+       "ZFI_JV_TB (ZJVTB) Joint Venture Trial Balance - three issues: venture column...",
+       "ovl/zfi_jv_tb; ovl/zfi_jv_tb/ISSUES.md; ovl/zfi_jv_tb/NOTES.md; ovl/zfi_jv_tb/PATCH-2026-09-28-issue3-obs1.abap;...",
+       "Completed, 26/08/26 - 28/09/26",
+       "Session time + size, minimum effort",
+       "FIX / High / x1"
+      ],
+      [
+       "UC-032",
+       "ONGC (OVL)",
+       "ZHANA_SERVICES_PRG 'SAP Timesheet' module pool - CR: Excel download / upload of...",
+       "ovl/zhana_services; ovl/zhana_services/ISSUES.md; ovl/zhana_services/NOTES.md; ovl/zhana_services/ZHANA_SERVICES_PRG_MAILF01.abap; git log --...",
+       "Completed, 05/10/26 - 16/10/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-033",
+       "ONGC (OVL)",
+       "ZSAP_CONSUMPTION_REPORT (tcode ZCON / copy ZCON1) - consumed-till-date columns,...",
+       "ovl/zsap_consumption_report; ovl/zsap_consumption_report/ISSUES.md; ovl/zsap_consumption_report/NOTES.md; ovl/zsap_consumption_report/TESTCASE.md;...",
+       "Completed, 06/10/26 - 16/10/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-034",
+       "ONGC (OVL)",
+       "ZSAP_TIMESHEET_FORM_PRG timesheet print (running copy...",
+       "ovl/zsap_timesheet_form_prg; ovl/zsap_timesheet_form_prg/ISSUES.md; ovl/zsap_timesheet_form_prg/NOTES.md;...",
+       "Completed, 06/10/26 - 06/10/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-035",
+       "ONGC (OVL)",
+       "ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree...",
+       "tools/zr_prog_download; tools/zr_prog_download/ISSUES.md; tools/zr_prog_download/NOTES.md; tools/zr_prog_download/ZR_PROG_DOWNLOAD.abap;...",
+       "Completed, 19/10/26 - 19/10/26",
+       "Session time + size, minimum effort + 4 h dated pre-repository days",
+       "TOOL / Medium / x1"
+      ],
+      [
+       "UC-036",
+       "ONGC (OVL)",
+       "ZMMEMD (SAPMZMMEMD): LOA number in Change / Display popups with new search...",
+       "ovl/mm-fiori + work log 10-11/08; ovl/_engagement/WORKLOG_2026-08.md (10-11/08); COPILOT_CONTEXT_HANDOFF.md 5.7",
+       "Completed, 10/08/26 - 11/08/26",
+       "Work log: 2 points (2 h per point)",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-037",
+       "ONGC (OVL)",
+       "ZFI_ACDOCA_VNAME_UPD - one-off back-fill of custom field ZZ1_VNAME from VNAME...",
+       "ovl/zfi_acdoca_vname_upd; ovl/zfi_acdoca_vname_upd/ISSUES.md; ovl/zfi_acdoca_vname_upd/NOTES.md; ovl/zfi_acdoca_vname_upd/ZFI_ACDOCA_VNAME_UPD.abap",
+       "Completed, 16/10/26 - 16/10/26",
+       "Session time + size, minimum effort",
+       "NEW / Low / x1"
+      ],
+      [
+       "UC-038",
+       "ONGC (OVL)",
+       "Group Reporting data release: expose Venture (ZZ1_VNAME_COB and standard...",
+       "ovl/gr_venture_release; ovl/gr_venture_release/ISSUES.md; ovl/gr_venture_release/NOTES.md;...",
+       "Completed, 28/09/26 - 05/10/26",
+       "Session time + size, minimum effort",
+       "ENH / Low / x1.5"
+      ],
+      [
+       "UC-039",
+       "ONGC (OVL)",
+       "ZMMIMS (SAPMZMMIMS) - GeM Invoice No. F4 correction and automatic display...",
+       "kpmg/zmmims; kpmg/zmmims/ISSUES.md; kpmg/zmmims/NOTES.md; kpmg/zmmims/MZMMIMSI01_GET_GEMINV.abap; kpmg/zmmims/ZMMIMS_GEM_INV_AUTO_DISPLAY.abap",
+       "Completed, 23/08/26 - 07/09/26",
+       "Session time + size, minimum effort",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-040",
+       "ONGC (OVL)",
+       "ZMM_VMS vendor creation: number-range error in Mock-2, GST classification query",
+       ".archive/INBOX_2026-08-23.md + work log 21/08; ovl/_engagement/WORKLOG_2026-08.md (21/08); .archive/INBOX_2026-08-23.md",
+       "Completed, 20/08/26 - 21/08/26",
+       "Work log: 1 point (2 h)",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-041",
+       "ONGC (OVL)",
+       "ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ ->...",
+       "ovl/zbc_tadir_srcsys; ovl/zbc_tadir_srcsys/ISSUES.md; ovl/zbc_tadir_srcsys/NOTES.md; ovl/zbc_tadir_srcsys/ZBC_TADIR_SRCSYS_CHANGE.abap",
+       "Completed, 05/10/26 - 05/10/26",
+       "Session time + size, minimum effort",
+       "TOOL / Low / x1"
+      ],
+      [
+       "UC-042",
+       "ONGC (OVL)",
+       "st05_decode.py: offline decoder for ST05 binary trace exports (.trc)",
+       "tools/st05_decode; tools/st05_decode/st05_decode.py; ovl/zgr_ct_tasklog/ISSUES.md; ovl/zgr_ct_tasklog/NOTES.md;...",
+       "Completed, 06/11/26 - 06/11/26",
+       "Session time + size, minimum effort",
+       "TOOL / Low / x1"
+      ],
+      [
+       "UC-043",
+       "ONGC (OVL)",
+       "ZFI_BNK_APP (tcode ZBNK_APP2) bank payment file monitor - dead Back/Exit/Cancel...",
+       "ovl/zbnk_app2; ovl/zbnk_app2/ISSUES.md; ovl/zbnk_app2/NOTES.md; ovl/zbnk_app2/ZFI_BNK_APP_I01.abap; ovl/zbnk_app2/ZFI_BNK_APP_OUTPUTO01.abap",
+       "Completed, 27/08/26 - 27/08/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-044",
+       "ONGC (OVL)",
+       "ZMM_TMS_STATUS Tender Monitoring Status report - Excel export from the ALV...",
+       "ovl/zmm_tms_status; ovl/zmm_tms_status/ISSUES.md; ovl/zmm_tms_status/NOTES.md; ovl/zmm_tms_status/ZMM_TMS_STATUS.abap; git log -- ovl/zmm_tms_status...",
+       "Completed, 28/10/26 - 28/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-045",
+       "ONGC (OVL)",
+       "ZFIBRS bank book upload (BRS) - upload error diagnosis and Excel upload...",
+       "ovl/zfibrs; ovl/zfibrs/ISSUES.md; ovl/zfibrs/NOTES.md; ovl/zfibrs/samples/bankbook_2026-09.txt",
+       "Completed, 09/10/26 - 09/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-046",
+       "ONGC (OVL)",
+       "ZFITAX_PBT_CALC_PRG - FAGLFLEXT read drops rows (FOR ALL ENTRIES implicit...",
+       "ovl/zfitax_pbt_calc_prg; ovl/zfitax_pbt_calc_prg/ISSUES.md; ovl/zfitax_pbt_calc_prg/NOTES.md; ovl/zfitax_pbt_calc_prg/PATCH_FAGLFLEXT_FAE.abap",
+       "Completed, 29/10/26 - 29/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-047",
+       "ONGC (OVL)",
+       "ZJV_BAPI_BALUPLOAD1 JV G/L balance upload - XREF1 from the upload file not...",
+       "ovl/zjv_bapi_balupload1; ovl/zjv_bapi_balupload1/ISSUES.md; ovl/zjv_bapi_balupload1/NOTES.md; ovl/zjv_bapi_balupload1/ZJV_BAPI_BALUPLOAD1.abap;...",
+       "Completed, 14/10/26 - 14/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-048",
+       "ONGC (OVL)",
+       "SAP standard JVA correction tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA - how it...",
+       "ovl/rgjv_update_acc_data_in_acdoca; ovl/rgjv_update_acc_data_in_acdoca/ISSUES.md; ovl/rgjv_update_acc_data_in_acdoca/NOTES.md",
+       "Completed - analysis / root cause delivered, 19/10/26 - 23/10/26",
+       "Session time + size, minimum effort",
+       "ANA / High / x1"
+      ],
+      [
+       "UC-049",
+       "ONGC (OVL)",
+       "Reference program Z_JVA_ALIGNMENT (from another landscape) - analysis and OVL...",
+       "ovl/z_jva_alignment; ovl/z_jva_alignment/ISSUES.md; ovl/z_jva_alignment/NOTES.md; ovl/z_jva_alignment/original/Z_JVA_ALIGNMENT.abap",
+       "Completed - analysis / root cause delivered, 02/11/26 - 02/11/26",
+       "Session time + size, minimum effort",
+       "ANA / High / x1"
+      ],
+      [
+       "UC-050",
+       "ONGC (OVL)",
+       "Group Reporting group journal entry APIs - research trail...",
+       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md;...",
+       "Completed - analysis / root cause delivered, 22/10/26 - 22/10/26",
+       "Session time + size, minimum effort",
+       "ANA / High / x1"
+      ],
+      [
+       "UC-051",
+       "ONGC (OVL)",
+       "CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP...",
+       "ovl/cj88_flq; ovl/cj88_flq/ISSUES.md; ovl/cj88_flq/NOTES.md; ovl/cj88_flq/evidence/ST22_RAISE_EXCEPTION_20260826_154256.txt;...",
+       "Completed - analysis / root cause delivered, 26/08/26 - 26/08/26",
+       "Session time + size, minimum effort",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-052",
+       "ONGC (OVL)",
+       "FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause...",
+       "ovl/fbv0_core_gj_912; ovl/fbv0_core_gj_912/ISSUES.md; ovl/fbv0_core_gj_912/NOTES.md",
+       "Completed - analysis / root cause delivered, 08/10/26 - 08/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-053",
+       "ONGC (OVL)",
+       "ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation -...",
+       "ovl/zfi_cp_mass_ven_pay; ovl/zfi_cp_mass_ven_pay/ISSUES.md; ovl/zfi_cp_mass_ven_pay/NOTES.md; ovl/_engagement/WORKLOG_2026-08.md",
+       "Completed - analysis / root cause delivered, 31/08/26 - 31/08/26",
+       "Session time + size, minimum effort",
+       "FIX / Medium / x1"
+      ],
+      [
+       "UC-054",
+       "ONGC (OVL)",
+       "Provisional Capex / Opex fortnightly punching - FS assessment and design sketch...",
+       "ovl/capex_provisional; ovl/capex_provisional/NOTES.md",
+       "Completed - analysis / root cause delivered, 18/11/26 - 18/11/26",
+       "Session time + size, minimum effort",
+       "ANA / Medium / x1"
+      ],
+      [
+       "UC-055",
+       "ONGC (OVL)",
+       "Custom PR release workflow WS90900008 in ERROR - agent rule AC90900002 returns...",
+       "ovl/wf_pr_release_ws90900008; ovl/wf_pr_release_ws90900008/ISSUES.md; ovl/wf_pr_release_ws90900008/NOTES.md",
+       "Completed - analysis / root cause delivered, 28/10/26 - 28/10/26",
+       "Session time + size, minimum effort",
+       "FIX / Low / x1"
+      ],
+      [
+       "UC-056",
+       "ONGC (OVL)",
+       "FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in...",
+       "ovl/fagl_settings_restrict_mig; ovl/fagl_settings_restrict_mig/ISSUES.md; ovl/fagl_settings_restrict_mig/NOTES.md",
+       "Completed - analysis / root cause delivered, 19/10/26 - 23/10/26",
+       "Session time + size, minimum effort",
+       "ANA / Low / x1"
+      ],
+      [
+       "UC-057",
+       "ONGC (OVL)",
+       "ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends...",
+       "ovl/zfi_fbl3n_acdoca_u; ovl/zfi_fbl3n_acdoca_u/ISSUES.md; ovl/zfi_fbl3n_acdoca_u/NOTES.md; ovl/zfi_fbl3n_acdoca_u/ZCL_IM_FI_FBL3N_ACDOCA_U.abap",
+       "Completed, 19/10/26 - 19/10/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-058",
+       "Astral (KPMG)",
+       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation,...",
+       "kpmg/zpp_forecast_v2; kpmg/zpp_forecast_v2/ISSUES.md; kpmg/zpp_forecast_v2/NOTES.md; kpmg/zpp_forecast_v2/00_TECHNICAL_OBJECTS.md;...",
+       "Completed, 21/08/26 - 22/10/26",
+       "Session time + size, minimum effort + 20 h dated pre-repository days",
+       "NEW / Very High / x1.5"
+      ],
+      [
+       "UC-059",
+       "Astral (KPMG)",
+       "Scheme (Pipes) - scheme master transaction, settlement with credit-note...",
+       "kpmg/zsd_scheme; kpmg/zsd_scheme/ISSUES.md; kpmg/zsd_scheme/NOTES.md; kpmg/zsd_scheme/docs/00_TECHNICAL_OBJECTS.md;...",
+       "Completed, 19/08/26 - 07/09/26",
+       "Session time + size, minimum effort",
+       "NEW / Very High / x1"
+      ],
+      [
+       "UC-060",
+       "Astral (KPMG)",
+       "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the...",
+       "kpmg/zsd_exc_approval; kpmg/zsd_exc_approval/ISSUES.md; kpmg/zsd_exc_approval/NOTES.md; kpmg/zsd_exc_approval/ABAPGIT_UPLOAD_STEPS.md;...",
+       "Completed, 02/09/26 - 05/10/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1.5"
+      ],
+      [
+       "UC-061",
+       "Astral (KPMG)",
+       "ZFORECAST (Paints) - forecast generation for the Paints division on top of the...",
+       "kpmg/zpp_forecast_paints; kpmg/zpp_forecast_paints/ISSUES.md; kpmg/zpp_forecast_paints/NOTES.md; kpmg/zpp_forecast_paints/HANDOVER.md;...",
+       "Completed, 19/10/26 - 23/10/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1.25"
+      ],
+      [
+       "UC-062",
+       "Astral (KPMG)",
+       "TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')",
+       "kpmg/zfi_tds_cl34; kpmg/zfi_tds_cl34/ISSUES.md; kpmg/zfi_tds_cl34/NOTES.md; kpmg/zfi_tds_cl34/BUILD_BRIEF.md; kpmg/zfi_tds_cl34/docs/QUERIES.md",
+       "Completed, 26/08/26 - 29/09/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1"
+      ],
+      [
+       "UC-063",
+       "Astral (KPMG)",
+       "Budget control on indirect purchase - PO budget check with budget table (WRICEF...",
+       "kpmg/zmm_po_budget; kpmg/zmm_po_budget/ISSUES.md; kpmg/zmm_po_budget/NOTES.md; kpmg/zmm_po_budget/MANUAL_STEPS.md;...",
+       "Completed, 23/08/26 - 07/09/26",
+       "Session time + size, minimum effort",
+       "NEW / High / x1"
+      ],
+      [
+       "UC-064",
+       "Astral (KPMG)",
+       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload...",
+       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md;...",
+       "Completed, 19/08/26 - 07/09/26",
+       "Session time + size, minimum effort + 16 h dated pre-repository days",
+       "ENH / Very High / x1"
+      ],
+      [
+       "UC-065",
+       "Astral (KPMG)",
+       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
+       "kpmg/zmm_bp_mail; kpmg/zmm_bp_mail/ISSUES.md; kpmg/zmm_bp_mail/NOTES.md; kpmg/zmm_bp_mail/QUERIES.md; kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md",
+       "Completed, 22/09/26 - 05/10/26",
+       "Session time + size, minimum effort",
+       "NEW / Medium / x1"
+      ],
+      [
+       "UC-066",
+       "Astral (KPMG)",
+       "ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for...",
+       "kpmg/zmb5b; kpmg/zmb5b/ISSUES.md; kpmg/zmb5b/NOTES.md; kpmg/zmb5b/docs/TS_ZMB5B.md; kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap",
+       "Completed, 19/08/26 - 07/09/26",
+       "Session time + size, minimum effort + 8 h dated pre-repository days",
+       "ENH / High / x1"
+      ],
+      [
+       "UC-067",
+       "Astral (KPMG)",
+       "ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the...",
+       "kpmg/zmm_rm07mlbd; kpmg/zmm_rm07mlbd/ISSUES.md; kpmg/zmm_rm07mlbd/NOTES.md; kpmg/zmm_rm07mlbd/ZMM_RM07MLBD_units.abap; git log -- kpmg/zmm_rm07mlbd",
+       "Completed, 15/09/26 - 15/09/26",
+       "Session time + size, minimum effort",
+       "ENH / Medium / x1"
+      ],
+      [
+       "UC-068",
+       "Astral (KPMG)",
+       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt...",
+       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md;...",
+       "Completed - analysis / root cause delivered, 12/10/26 - 12/10/26",
+       "Session time + size, minimum effort",
+       "ANA / Medium / x1"
+      ],
+      [
+       "UC-069",
+       "Astral (KPMG)",
+       "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility...",
+       "kpmg/zsd_mis_customer; kpmg/zsd_mis_customer/ISSUES.md; kpmg/zsd_mis_customer/NOTES.md; kpmg/zsd_mis_customer/FS_QUERIES.md;...",
+       "Completed - analysis / root cause delivered, 21/09/26 - 21/09/26",
+       "Session time + size, minimum effort",
+       "ANA / Medium / x1"
+      ],
+      [
+       "UC-070",
+       "Common",
+       "AI delivery toolkit: rulebook, release-constraint memory, 7 workflow skills,...",
+       "(repo tooling); CLAUDE.md; MEMORY.md (sections 1-10; sections 4 and 5 read in full); .claude/skills/atc-fix/SKILL.md;...",
+       "Completed, 23/08/26 - 12/11/26",
+       "Session time + size, minimum effort",
+       "TOOL / Very High / x1"
+      ],
+      [
+       "UC-071",
+       "Common",
+       "ZR_FIND_ENH: enhancement finder for the call tree of a function module, class...",
+       "tools/zr_find_enh; tools/zr_find_enh/ISSUES.md; tools/zr_find_enh/NOTES.md; tools/zr_find_enh/ZR_FIND_ENH.abap; git log -- tools/zr_find_enh (commit...",
+       "Completed, 07/10/26 - 07/10/26",
+       "Session time + size, minimum effort",
+       "TOOL / High / x1"
+      ],
+      [
+       "UC-072",
+       "Common",
+       "abapGit offline-ZIP delivery path: DDIC and report pilots, XML element-order...",
+       "ovl/ztest_t001; ovl/ztest_t001/ISSUES.md; ovl/ztest_t001/NOTES.md; ovl/ztest_t001/README.md; ovl/ztest_t001/src/ztest_t001.prog.xml",
+       "Completed, 27/08/26 - 27/08/26",
+       "Session time + size, minimum effort",
+       "TOOL / Medium / x1"
+      ],
+      [
+       "UC-073",
+       "Common",
+       "ZR_ICF_URL_LIST: every ICF service URL of the system as a flat list for the CPI...",
+       "tools/zr_icf_url_list; tools/zr_icf_url_list/ISSUES.md; tools/zr_icf_url_list/NOTES.md; tools/zr_icf_url_list/ZR_ICF_URL_LIST.abap; git log --...",
+       "Completed, 02/11/26 - 02/11/26",
+       "Session time + size, minimum effort",
+       "TOOL / Low / x1"
+      ],
+      [
+       "UC-074",
+       "Common",
+       "Research and management proposal: creating SAP documents from Microsoft Teams /...",
+       "research/copilot-btp-mcp; research/copilot-btp-mcp/README.md; research/copilot-btp-mcp/Teams_SAP_Automation_Proposal_v1.0.md;...",
+       "Completed - analysis / root cause delivered, 27/09/26 - 27/09/26",
+       "Session time + size, minimum effort",
+       "ANA / High / x1"
+      ]
+     ],
+     "source": "Confidence: verified against the issue log and commit history of each object. Assumptions: NEW / ENH / FIX / S4 / ANA / TOOL / ATC = new development / enhancement / fix / S/4 remediation / analysis / tool / ATC remediation, with complexity and scope factor as used in Annex C."
     }
    ]
   }
