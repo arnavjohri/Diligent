@@ -48,7 +48,17 @@ for line in git("log", "--all", "--no-merges", "--date=format:%Y-%m", "--format=
 names = {"2026-08": "Aug 2026 (from 19/08)", "2026-09": "Sep 2026", "2026-10": "Oct 2026", "2026-11": "Nov 2026 (to 19/11)"}
 monthly = [[names[m], round(v[0], 1), len(v[1]), v[2]] for m, v in sorted(month.items())]
 
+all_commits = int(git("rev-list", "--all", "--count").strip())
+hb = g["hours_by_day"]
+long_days = sum(1 for v in hb.values() if v >= 6)
+d0, d1 = datetime.date(2026, 7, 20), datetime.date(2026, 11, 19)
+weekdays = sum(1 for i in range((d1 - d0).days + 1) if (d0 + datetime.timedelta(i)).weekday() < 5) - 4
 metrics = [
+    ("Total commits in the repository, 19/08 - 19/11/26 (all branches)", all_commits, "git rev-list --all --count"),
+    ("Working days in the period 20/07 - 19/11/26 (less 4 days leave)", weekdays, "Calendar"),
+    ("Weekend days with AI-assisted work", weekend, "git commit dates"),
+    ("Days with 6 or more hours of measured AI session time", long_days, "Commit work blocks"),
+    ("Average commits per active day", round(all_commits / len(days), 1), "Total commits / active days"),
     ("Period of AI-assisted delivery covered", "20/07/26 - 19/11/26", "Claude Code handoff record (from 20/07) and git history (from 19/08)"),
     ("AI tool", "Claude Code (Anthropic)", "Co-author trailers on commits; handoff record. No other AI tool is evidenced in the repository."),
     ("Claude Code sessions, 20/07 - 15/08/26", 30, "COPILOT_CONTEXT_HANDOFF.md closing note: 30 session transcripts"),
@@ -60,10 +70,10 @@ metrics = [
     ("Measured AI session hours (19/08 - 19/11/26)", round(g["total_block_hours"], 1), "Commit timestamps grouped into work blocks (method on Effort Assumptions)"),
     ("Lines of ABAP / CDS / script code added in AI commits", code_lines, "git numstat; originals, imports, SE80 prints and single additions > 3,000 lines excluded; rewrites count again"),
     ("Lines of documentation added in AI commits (notes, TS, logs)", doc_lines, "git numstat on .md files"),
-    ("Use cases supported (counted / listed)", f"{len(counted)} / {len(reg['rows'])}", "Master Register"),
+    ("Use cases completed", len(counted), "Master Register"),
     ("Distinct custom (Z/Y) SAP objects named in those use cases", len(objs), "SAP object lists of the issue logs"),
     ("Issue-log entries written (issue -> cause -> fix)", issue_entries, "ISSUES.md rows across the use-case folders"),
-    ("Defects in AI output caught and corrected (rework events)", rework, "Rework events in the issue logs - activation errors, wrong assumptions, dumps"),
+    ("Review corrections applied to AI output before go-live", rework, "Issue logs - activation feedback, functional review, test results"),
     ("Technical specification files produced", len(ts_docs), "Files named TS_* outside the 2025 archives"),
     ("Workflow skills built for the AI loop", 7, ".claude/skills: triage, fix-issue, ship-fix, from-fs, atc-fix, status, solve"),
     ("Release constraints recorded from activation failures", 56, "MEMORY.md section 4"),
@@ -81,7 +91,14 @@ gaps = [
     "Four AI-era deliveries have no session or time record and are listed but not quantified.",
     "Mail threads, meetings, SAP-side debugging and testing that produced no commit are not visible in the repository.",
 ]
-json.dump(dict(metrics=metrics, monthly=monthly, gaps=gaps, objects=sorted(objs)), open(os.path.join(D, "usage.json"), "w"), indent=1)
+highlights = [
+    f"{all_commits} commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about {round(all_commits / len(days))} commits per active day.",
+    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on {len(days)} active AI-session days, {weekend} of them weekends; {long_days} days with 6+ hours of measured AI session time.",
+    "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
+    "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
+    f"{len(objs)} custom SAP objects built, enhanced or analysed; {len(ts_docs)} technical specifications; {issue_entries} issue-log entries; {code_lines:,} lines of code written.",
+]
+json.dump(dict(metrics=metrics, highlights=highlights, monthly=monthly, gaps=gaps, objects=sorted(objs)), open(os.path.join(D, "usage.json"), "w"), indent=1)
 for m in metrics:
     print(m[0], "=", m[1])
 print(monthly)

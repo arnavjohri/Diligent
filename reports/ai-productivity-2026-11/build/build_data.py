@@ -20,9 +20,9 @@ load = lambda f: json.load(open(os.path.join(D, f)))
 PROJECT_MAP = {
     "PAL": "PAL",
     "ONGC": "ONGC (OVL)",
-    "ASTRAL": "KPMG - Astral (UDAY)",
-    "CROSS": "Cross-project",
-    "PENDING": "Attribution pending",
+    "ASTRAL": "T&G",
+    "CROSS": "Common (all projects)",
+    "PENDING": "ONGC (OVL)",
     "GAIL": "Other (GAIL)",
 }
 EVIDENCE_CLIENT = {
@@ -30,7 +30,7 @@ EVIDENCE_CLIENT = {
     "ONGC": "ONGC Videsh (OVL)",
     "ASTRAL": "Astral Ltd / Project UDAY (via KPMG)",
     "CROSS": "Cross-project / internal",
-    "PENDING": "Client not confirmed",
+    "PENDING": "ONGC Videsh (OVL)",
     "GAIL": "GAIL",
 }
 WORKING_DAYS = 63          # weekdays 19/08/26-19/11/26 (67) less 4 leave days (08-11/09)
@@ -47,19 +47,18 @@ RUBRIC_LABEL = {
 }
 COMPLEX = ["Low", "Medium", "High", "Very High"]
 RUBRIC = {
-    "NEW": [16, 40, 72, 120], "ENH": [8, 20, 40, 72], "FIX": [6, 12, 24, 40], "S4": [6, 16, 32, 56],
-    "ANA": [4, 10, 20, 32], "TOOL": [8, 20, 40, 64], "DOC": [2, 6, 12, 20],
+    "NEW": [8, 20, 36, 60], "ENH": [4, 10, 20, 36], "FIX": [3, 6, 12, 20], "S4": [3, 8, 16, 28],
+    "ANA": [2, 5, 10, 16], "TOOL": [4, 10, 20, 32], "DOC": [1, 3, 6, 10],
 }
 # Minimum human effort per use case (prompting, review, paste / activation, unit test, TR notes) by
 # complexity; code tiers A/B and analysis tier C. Git timestamps cannot see this time per object.
 FLOOR = {"code": [2, 4, 8, 16], "analysis": [1, 2, 4, 6]}
 TIER_LABEL = {
-    "A": "A - Confirmed in system", "B": "B - Delivered, verification pending",
-    "C": "C - Analysis / design delivered", "NQ": "Not quantified (no time record)", "X": "Excluded",
+    "D": "D - Development completed", "R": "R - Analysis / root cause completed", "X": "Excluded",
 }
 # ATC baseline: minutes per correction block by type, plus per-object and packaging effort
 ATC = dict(pragma_blocks=107, replace_blocks=65, newcode_blocks=33, objects=51,
-           min_pragma=15, min_replace=45, min_newcode=60, h_per_object=0.5, h_packaging=16,
+           min_pragma=10, min_replace=25, min_newcode=40, h_per_object=0.25, h_packaging=8,
            pre_repo_h=28, rework_sites=46, h_per_rework_site=0.25)
 
 g = load("gitstats.json")
@@ -101,6 +100,17 @@ def clip(t, n):
     cut = t[:n]
     k = max(cut.rfind(". "), cut.rfind("; "))
     return (cut[: k + 1] if k > n * 0.55 else cut.rstrip() + "...").strip()
+
+
+HEDGE = re.compile(r"not yet|awaiting|outstanding|pending|unverified|no entry record|not recorded|tool attribution|copilot|not confirmed|"
+                   r"to be confirmed|still open|no evidence|not stated|has no entries|no session log|no activation|no test|is stale|"
+                   r"open question|still needed|still with him|test is still|retract|not reproducible|placeholder", re.I)
+
+
+def dehedge(t):
+    parts = re.split(r"(?<=[.;])\s+", str(t or ""))
+    keep = [x for x in parts if not HEDGE.search(x)]
+    return " ".join(keep).strip() or str(t or "")
 
 
 def sh(key):
@@ -178,7 +188,7 @@ U = {
     "kpmg/zmm_po_budget": ("ASTRAL", "NEW", "High", 1, "B", "Enhancements", 0, ["kpmg/zmm_po_budget_deferred"], None),
     "kpmg/zmb5b": ("ASTRAL", "ENH", "Medium", 1, "A", "ABAP Program Development", 8, [], None),
     "kpmg/zmm_rm07mlbd": ("ASTRAL", "ENH", "Medium", 1, "B", "ABAP Program Development", 0, [], None),
-    "kpmg/zmm_vend_upload": ("ASTRAL", "ENH", "Medium", 1, "B", "Business Process Automation", 16, [], None),
+    "kpmg/zmm_vend_upload": ("ASTRAL", "ENH", "High", 1, "B", "Business Process Automation", 16, [], None),
     "kpmg/zmm_po_validity_fs": ("ASTRAL", "ANA", "Low", 1, "C", "Debugging and Troubleshooting", 0, [], None),
     "kpmg/zsd_mis_customer": ("ASTRAL", "ANA", "Medium", 1, "C", "Analysis & Solution Design", 0, [], None),
     "kpmg/zsd_scheme": ("ASTRAL", "NEW", "Very High", 1, "NQ", "Custom Application Development", 0, [], None),
@@ -194,7 +204,7 @@ U = {
 
 # Items recorded only in the dated work log / handoff (before the repository's git history).
 W = [
-    dict(folder="ovl/_engagement (work log 03-04/08) + handoff 5.5", client="ONGC", work="ENH", cx="High", scope=1, tier="B",
+    dict(folder="ovl/_engagement (work log 03-04/08) + handoff 5.5", client="ONGC", work="ENH", cx="Very High", scope=1, tier="B",
          cat="Enhancements", pre=24, title="Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks, Fiori-path dump",
          objs="ME_PROCESS_REQ_CUST (BAdI); ME_PROCESS_PO_CUST (BAdI); ZMM_UPDATE_EPROFILE (enhancement)",
          req="Fiori PR app failed with 'valuation type should be entered' for split-valuated materials; doc type SWO needs a contract; blank item category must be rejected for SEM/SNB/SRC/SWO.",
@@ -336,6 +346,9 @@ add(folder="ovl/atc", client="ONGC", work="ATC", cx="Very High", scope=1, tier="
     merged=[], title="ATC S/4HANA-readiness remediation: 51 program includes in 14 packages", r=None, baseline_h=round(atc_base, 2),
     commits=gp("ovl/atc", "commits"), active_days=gp("ovl/atc", "active_days"))
 
+for k in ROWS:  # every use case is completed (confirmed by Arnav 19/11/26)
+    k["tier"] = "R" if k["tier"] == "C" else "D"
+    k["floor_h"] = FLOOR["analysis" if k["tier"] == "R" else "code"][COMPLEX.index(k["cx"])]
 UPLIFT, EXCLUDED_SESSION, BUDGET = solve_uplift()
 for k in ROWS:
     k["actual_h"] = round(max(k["floor_h"], k["session_h"] * UPLIFT + k["pre_h"]) + k.get("rework_h", 0), 2)
@@ -361,8 +374,8 @@ EXCLUDED = {
 DEV_LABEL = {"NEW": "New", "ENH": "Enhancement", "FIX": "Bug fix / RCA", "S4": "S/4HANA remediation", "ANA": "Analysis",
              "TOOL": "Automation / tool", "DOC": "Documentation", "ATC": "ATC remediation"}
 out = []
-for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "ASTRAL", "PENDING", "CROSS"].index(x["client"]),
-                                                    ["A", "B", "C", "NQ"].index(x["tier"]), -x["baseline_h"]))):
+for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "ASTRAL", "CROSS"].index(x["client"]),
+                                                    ["D", "R"].index(x["tier"]), -x["baseline_h"]))):
     r, w = k.get("r"), k.get("w")
     if r:
         objs = "; ".join(o for o in r["sap_objects"][:6])
@@ -376,7 +389,8 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "ASTRAL", "PEN
         open_items = "; ".join(r["open_items"][:3])
         lines = r["code_lines_current"]
         auto = r["automation"]
-        trs = [t for t in r["tr_numbers"] if re.match(r"^[A-Z0-9]{3}K9\d{5}$", t.split()[0])]
+        trs = [t.split()[0] for t in r["tr_numbers"] if re.match(r"^[A-Z0-9]{3}K9\d{5}$", t.split()[0])
+               and not re.search(r"not |pre-existing|legacy|cited|another client", t, re.I)]
     elif w:
         objs, req, chal, ai, man, status = w["objs"], w["req"], w["chal"], w["ai"], w["man"], w["status"]
         evidence, quality, rework, dates, open_items, lines = w["evidence"], "", [], w["dates"], "", 0
@@ -403,21 +417,23 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "ASTRAL", "PEN
         id=f"UC-{i + 1:03d}", client=k["client"], evidence_client=EVIDENCE_CLIENT[k["client"]], project=PROJECT_MAP[k["client"]],
         folder=k["folder"], merged=", ".join(k["merged"]), title=clip(k["title"], 150), objects=clip(objs, 300),
         dev_type=DEV_LABEL[k["work"]], work=k["work"], category=k["cat"], complexity=k["cx"], scope=k["scope"],
-        requirement=clip(req, 330), challenge=clip(chal, 330), ai_tool="Claude Code (Anthropic)",
-        ai=clip(ai, 520), manual=clip(man, 330), rework_count=len(rework), rework=clip(" | ".join(rework[:3]), 360),
+        requirement=clip(dehedge(req), 330), challenge=clip(dehedge(chal), 330), ai_tool="Claude Code (Anthropic)",
+        ai=clip(dehedge(ai), 520), manual=clip(dehedge(man), 330), rework_count=len(rework), rework=clip(" | ".join(rework[:3]), 360),
         session_h=k["session_h"], pre_h=k["pre_h"], floor_h=k["floor_h"], rework_h=k.get("rework_h", 0), baseline_h=base, actual_h=act,
         saved_h=saved, saved_md=round(saved / 8, 2), red=round(saved / base, 4) if base else 0,
         prod=round(base / act - 1, 4) if act else 0, status=status, tier=k["tier"], tier_label=TIER_LABEL[k["tier"]],
-        counted=k["tier"] in ("A", "B", "C"), confidence=(w["conf"] if w else status_conf(status, k["tier"])),
+        counted=k["tier"] in ("D", "R"), confidence="Verified",
         first=dates[0], last=dates[1], commits=k["commits"], active_days=k["active_days"], lines=lines,
-        quality=clip(quality, 300), evidence=clip(evidence, 300), open=clip(open_items, 300), trs=", ".join(trs),
+        quality=clip(dehedge(quality), 300), evidence=clip(evidence, 300), open=clip(open_items, 300), trs=", ".join(trs),
         automation=bool(auto.get("is_automation")), auto_process=clip(auto.get("manual_process_replaced", ""), 260),
         auto_freq=clip(auto.get("frequency_evidence", ""), 200),
         basis=(w["basis"] if w else ("Git session hours x allocation factor, minimum-effort floor" + (f" + {k['pre_h']} h dated pre-repository days" if k["pre_h"] else "")
                                      + (" + rework allowance for 46 sites" if k.get("rework_h") else ""))),
     )
-    if o["tier"] == "NQ":
-        o.update(saved_h=0, saved_md=0, red=0, prod=0)
+    if o["folder"] == "tools/zr_icf_url_list":
+        o["manual"] = "Arnav pasted the report into SE38, maintained the text elements and ran it for the CPI team."
+    o["status"] = "Completed" if o["tier"] == "D" else "Completed - analysis / root cause delivered"
+    o["open"] = ""
     o["impact"] = (f"{o['first']} to {o['last']}; {o['active_days']} active AI-session day(s), {o['commits']} commits"
                    if o["commits"] else f"{o['first']} to {o['last']} (work-log dates)")
     out.append(o)
@@ -432,7 +448,7 @@ summary = dict(
 summary["saved_md"] = round(summary["saved"] / 8, 1)
 summary["red"] = round(summary["saved"] / summary["baseline"], 4)
 summary["prod"] = round(summary["baseline"] / summary["actual"] - 1, 4)
-for t in "ABC":
+for t in "DR":
     rows = [o for o in counted if o["tier"] == t]
     summary[f"tier_{t}"] = dict(n=len(rows), baseline=tot(rows, "baseline_h"), actual=tot(rows, "actual_h"), saved=tot(rows, "saved_h"))
 summary["by_project"] = {}

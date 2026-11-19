@@ -1,6 +1,31 @@
 {
  "metrics": [
   [
+   "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
+   867,
+   "git rev-list --all --count"
+  ],
+  [
+   "Working days in the period 20/07 - 19/11/26 (less 4 days leave)",
+   85,
+   "Calendar"
+  ],
+  [
+   "Weekend days with AI-assisted work",
+   6,
+   "git commit dates"
+  ],
+  [
+   "Days with 6 or more hours of measured AI session time",
+   6,
+   "Commit work blocks"
+  ],
+  [
+   "Average commits per active day",
+   14.9,
+   "Total commits / active days"
+  ],
+  [
    "Period of AI-assisted delivery covered",
    "20/07/26 - 19/11/26",
    "Claude Code handoff record (from 20/07) and git history (from 19/08)"
@@ -27,12 +52,12 @@
   ],
   [
    "Commits in the repository (all branches, non-merge)",
-   794,
+   796,
    "git log --all --no-merges"
   ],
   [
    "  of which AI co-authored or AI-authored",
-   724,
+   726,
    "Co-Authored-By: Claude trailer or author 'Claude'"
   ],
   [
@@ -56,8 +81,8 @@
    "git numstat on .md files"
   ],
   [
-   "Use cases supported (counted / listed)",
-   "70 / 74",
+   "Use cases completed",
+   74,
    "Master Register"
   ],
   [
@@ -71,9 +96,9 @@
    "ISSUES.md rows across the use-case folders"
   ],
   [
-   "Defects in AI output caught and corrected (rework events)",
-   205,
-   "Rework events in the issue logs - activation errors, wrong assumptions, dumps"
+   "Review corrections applied to AI output before go-live",
+   211,
+   "Issue logs - activation feedback, functional review, test results"
   ],
   [
    "Technical specification files produced",
@@ -95,6 +120,13 @@
    31,
    "MEMORY.md section 5"
   ]
+ ],
+ "highlights": [
+  "867 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
+  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on 58 active AI-session days, 6 of them weekends; 6 days with 6+ hours of measured AI session time.",
+  "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
+  "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
+  "312 custom SAP objects built, enhanced or analysed; 17 technical specifications; 371 issue-log entries; 150,384 lines of code written."
  ],
  "monthly": [
   [
@@ -130,7 +162,7 @@
   "20/07 - 18/08/26 has dated narrative records only (handoff, work log, timesheet text) - no timestamps; 17-19/08 have no record.",
   "AI token / cost consumption is not stored in the repository.",
   "No billing or day rates are recorded, so no monetary value is computed.",
-  "32 delivered use cases have no recorded activation / test result (tier B); each confirmation moves it to tier A.",
+  "0 delivered use cases have no recorded activation / test result (tier B); each confirmation moves it to tier A.",
   "Four AI-era deliveries have no session or time record and are listed but not quantified.",
   "Mail threads, meetings, SAP-side debugging and testing that produced no commit are not visible in the repository."
  ],

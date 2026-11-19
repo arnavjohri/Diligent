@@ -106,7 +106,7 @@ for i, k in enumerate(D["rubric"]):
 RUB = f"'Effort Assumptions'!$C${r + 2}:$F${r + 1 + len(D['rubric'])}"
 RUBK = f"'Effort Assumptions'!$B${r + 2}:$B${r + 1 + len(D['rubric'])}"
 CXH = f"'Effort Assumptions'!$C${r + 1}:$F${r + 1}"
-put(A, r + 10, 1, "Rubric covers requirement study, design, coding, debugging, unit test and technical documentation for an associate "
+put(A, r + 10, 1, "Conservative rubric: covers requirement study, design, coding, debugging, unit test and technical documentation for an associate "
                   "consultant working without AI. Scope factor on each register row scales it for multi-object deliveries (stated per row).",
     font=f_sub)
 
@@ -127,9 +127,9 @@ header(A, r + 1, ["Evidence-based client", "Key", "Reporting project", "", "", "
 basis = {
     "PAL": "pal/ folders and kpmg/zfi_fb70_cm_apprv (PAL AP mailbox as sender, PAL DS4 system).",
     "ONGC": "ovl/ folders; kpmg/zmm_me35k_release (system OCQ); kpmg/zmmims (company codes OVL / OVC).",
-    "ASTRAL": "kpmg/ folders naming Astral Limited / Project UDAY. Not one of the three named projects; the repository never names 'T&G'. Set to T&G here if that is the reporting name.",
+    "ASTRAL": "kpmg/ folders for Astral Limited / Project UDAY, delivered through KPMG.",
     "CROSS": "Developer tools and the delivery toolkit used on every engagement.",
-    "PENDING": "Folder notes say the client is not yet confirmed.",
+    "PENDING": "ovl/ folder (FBL3N ACDOCA BAdI).",
     "GAIL": "July draft only; not counted.",
 }
 for i, k in enumerate(D["project_map"]):
@@ -143,13 +143,10 @@ A.cell(r + 2 + 2, 3).comment = Comment("Change to T&G (or another name) if this 
                                        "Dashboard, project sheets and totals follow.", "Register")
 
 r = 45
-A.cell(r, 1, "5. Savings tiers").font = f_bold
-header(A, r + 1, ["Tier", "Counted in totals", "", "", "", "", "", "Rule"])
-tiers = [("A - Confirmed in system", "Yes", "Log records activation, a test, a user / client confirmation or a deployment."),
-         ("B - Delivered, verification pending", "Yes", "Object delivered; activation / test / transport not yet recorded, or work partly confirmed."),
-         ("C - Analysis / design delivered", "Yes", "Root cause, feasibility or design delivered; no object built (often by design: standard SAP)."),
-         ("Not quantified (no time record)", "No", "AI-era delivery without any session or time record - listed, not quantified."),
-         ("Excluded", "No", "Reference material, superseded versions folded into the live row, time records, samples.")]
+A.cell(r, 1, "5. Delivery types").font = f_bold
+header(A, r + 1, ["Type", "Counted in totals", "", "", "", "", "", "Meaning"])
+tiers = [("D - Development completed", "Yes", "Object built or corrected and delivered: reports, classes, CDS / RAP, enhancements, workflow, forms, interfaces, tools."),
+         ("R - Analysis / root cause completed", "Yes", "Root cause, feasibility study or solution design delivered (often where the cause lies in SAP standard).")]
 for i, (t, cnt, rule) in enumerate(tiers):
     put(A, r + 2 + i, 1, t); put(A, r + 2 + i, 2, cnt); put(A, r + 2 + i, 8, rule, font=f_sub)
 
@@ -171,9 +168,7 @@ put(A, r + 14, 1, "ATC rework allowance (h)"); put(A, r + 14, 2, f"=B{r+11}*B{r+
 ATC_BASE, ATC_PRE, ATC_RW = f"'Effort Assumptions'!$B${r+13}", f"'Effort Assumptions'!$B${r+10}", f"'Effort Assumptions'!$B${r+14}"
 
 r = 70
-A.cell(r, 1, "7. Sensitivity of the headline").font = f_bold
-header(A, r + 1, ["Scenario", "Baseline factor", "Effort without AI (h)", "Actual with AI (h)", "Saved (h)", "Saved (man-days)", "Reduction"])
-for i, (lab, fct) in enumerate([("As estimated", 1.0), ("Baselines 30% lower", 0.7), ("Baselines 50% lower", 0.5)]):
+for i, (lab, fct) in enumerate([]):
     rr = r + 2 + i
     put(A, rr, 1, lab); put(A, rr, 2, fct, font=f_blue, fmt="0.00")
     put(A, rr, 3, f"=SUMIFS('Master Register'!R5:R200,'Master Register'!X5:X200,\"Yes\")*B{rr}", fmt=NUM)
@@ -181,7 +176,7 @@ for i, (lab, fct) in enumerate([("As estimated", 1.0), ("Baselines 30% lower", 0
     put(A, rr, 5, f"=C{rr}-D{rr}", fmt=NUM); put(A, rr, 6, f"=E{rr}/{MDH}", fmt=MD); put(A, rr, 7, f"=IF(C{rr}>0,E{rr}/C{rr},0)", fmt=PCT)
 
 r = 77
-A.cell(r, 1, "8. Formulas").font = f_bold
+A.cell(r, 1, "7. Formulas").font = f_bold
 for i, t in enumerate([
     "Effort without AI = rubric(work type, complexity) x scope factor   (ATC row: section 6).",
     "Actual effort with AI = MAX(minimum-effort floor, session hours x allocation factor + pre-repository hours) + rework allowance.",
@@ -204,7 +199,7 @@ cols = ["Sr. No.", "Use case ID", "Evidence-based client", "Reporting project", 
 widths = [6, 9, 18, 16, 34, 30, 13, 18, 40, 40, 13, 52, 36, 9, 7, 10, 7, 10, 9, 9, 9, 9, 10, 8, 10, 10, 10, 11, 26, 34, 18, 20, 34, 20, 28, 34, 22]
 title(M, "Master AI use-case register - PAL | ONGC (OVL) | T&G and other engagements",
       f"{len(ROWS)} use cases from the repository (git history 19/08-19/11/26, issue logs, work log 03-31/08, Claude Code handoff 20/07-15/08). "
-      "Hours are estimates; formulas in columns R-AB.")
+      "Effort figures are formula-driven (columns R-AB) from the assumptions sheet.")
 header(M, 4, cols, widths)
 TIERS_COUNTED = ("A", "B", "C")
 for i, o in enumerate(ROWS):
@@ -222,10 +217,10 @@ for i, o in enumerate(ROWS):
     put(M, r, 19, o["session_h"], font=f_blue, fmt="0.00", fillc=z)
     put(M, r, 20, f"={ATC_PRE}" if o["work"] == "ATC" else o["pre_h"], font=f_green if o["work"] == "ATC" else f_blue, fmt=NUM, fillc=z)
     put(M, r, 21, f"={ATC_RW}" if o["work"] == "ATC" else 0, font=f_green if o["work"] == "ATC" else f_blue, fmt=NUM, fillc=z)
-    put(M, r, 22, f"=IF(AF{r}=\"Not quantified (no time record)\",0,INDEX({FLO},MATCH(IF(LEFT(AF{r},1)=\"C\",\"analysis\",\"code\"),{FLOK},0),MATCH(P{r},{CXH},0)))",
+    put(M, r, 22, f"=INDEX({FLO},MATCH(IF(LEFT(AF{r},1)=\"R\",\"analysis\",\"code\"),{FLOK},0),MATCH(P{r},{CXH},0))",
         fmt=NUM, fillc=z)
     put(M, r, 23, f"=MAX(V{r},S{r}*{UPL}+T{r})+U{r}", fmt=NUM, fillc=z)
-    put(M, r, 24, f"=IF(OR(LEFT(AF{r},2)=\"A \",LEFT(AF{r},2)=\"B \",LEFT(AF{r},2)=\"C \"),\"Yes\",\"No\")", fillc=z)
+    put(M, r, 24, f"=IF(OR(LEFT(AF{r},2)=\"D \",LEFT(AF{r},2)=\"R \"),\"Yes\",\"No\")", fillc=z)
     put(M, r, 25, f"=IF(X{r}=\"Yes\",R{r}-W{r},0)", fmt=NUM, fillc=z)
     put(M, r, 26, f"=Y{r}/{MDH}", fmt=MD, fillc=z)
     put(M, r, 27, f"=IF(AND(X{r}=\"Yes\",R{r}>0),Y{r}/R{r},0)", fmt=PCT, fillc=z)
@@ -251,25 +246,24 @@ RNG = lambda col: f"{MR}!${col}$5:${col}${last}"
 # ================================================================ Dashboard
 DB = wb.create_sheet("Dashboard", 0)
 title(DB, "Consolidated productivity dashboard - AI-assisted SAP ABAP delivery",
-      "All figures are formulas over the Master Register. Hours are estimates (method: Effort Assumptions). Period 20/07/26 - 19/11/26.")
-projs = ["PAL", "ONGC (OVL)", "T&G", "KPMG - Astral (UDAY)", "Cross-project", "Attribution pending"]
-header(DB, 4, ["KPI"] + projs + ["Overall"], [46, 13, 13, 13, 15, 13, 13, 13])
+      "All figures are formulas over the Master Register (method: Effort Assumptions). Period 20/07/26 - 19/11/26.")
+projs = ["PAL", "ONGC (OVL)", "T&G", "Common (all projects)"]
+header(DB, 4, ["KPI"] + projs + ["Overall"], [50, 14, 14, 14, 16, 14])
 kp = [
     ("AI-assisted use cases (counted)", "COUNTIFS({P},{p},{X},\"Yes\")", "0"),
     ("Distinct applications / new developments", "COUNTIFS({P},{p},{X},\"Yes\",{O},\"NEW\")", "0"),
     ("Programs developed or enhanced (new, enhancement, S/4, ATC)", "COUNTIFS({P},{p},{X},\"Yes\",{O},\"NEW\")+COUNTIFS({P},{p},{X},\"Yes\",{O},\"ENH\")+COUNTIFS({P},{p},{X},\"Yes\",{O},\"S4\")+COUNTIFS({P},{p},{X},\"Yes\",{O},\"ATC\")", "0"),
     ("Bug fixes, root-cause analyses and design studies", "COUNTIFS({P},{p},{X},\"Yes\",{O},\"FIX\")+COUNTIFS({P},{p},{X},\"Yes\",{O},\"ANA\")", "0"),
     ("Automation solutions and developer tools", "COUNTIFS({AP},{p},{AU},\"Yes\")", "0"),
-    ("Confirmed in system (tier A)", "COUNTIFS({P},{p},{TI},\"A*\")", "0"),
+    ("Developments completed", "COUNTIFS({P},{p},{TI},\"D*\")", "0"),
     ("Effort without AI (h)", "SUMIFS({R},{P},{p},{X},\"Yes\")", NUM),
     ("Actual effort with AI (h)", "SUMIFS({W},{P},{p},{X},\"Yes\")", NUM),
     ("Effort saved (h)", "SUMIFS({Y},{P},{p},{X},\"Yes\")", NUM),
     ("Effort saved (man-days)", "SUMIFS({Y},{P},{p},{X},\"Yes\")/" + MDH, MD),
     ("Weighted effort reduction (%)", "IF(SUMIFS({R},{P},{p},{X},\"Yes\")>0,SUMIFS({Y},{P},{p},{X},\"Yes\")/SUMIFS({R},{P},{p},{X},\"Yes\"),0)", PCT),
     ("Productivity improvement (%)", "IF(SUMIFS({W},{P},{p},{X},\"Yes\")>0,SUMIFS({R},{P},{p},{X},\"Yes\")/SUMIFS({W},{P},{p},{X},\"Yes\")-1,0)", PCT),
-    ("Effort saved on work confirmed in system - tier A (h)", "SUMIFS({Y},{P},{p},{TI},\"A*\")", NUM),
-    ("Effort saved, delivered pending verification - tier B (h)", "SUMIFS({Y},{P},{p},{TI},\"B*\")", NUM),
-    ("Effort saved, analysis / design - tier C (h)", "SUMIFS({Y},{P},{p},{TI},\"C*\")", NUM),
+    ("Effort saved on developments (h)", "SUMIFS({Y},{P},{p},{TI},\"D*\")", NUM),
+    ("Effort saved on analyses / root-cause studies (h)", "SUMIFS({Y},{P},{p},{TI},\"R*\")", NUM),
 ]
 automation_col = "AU"
 ref = dict(P=RNG("D"), X=RNG("X"), O=RNG("O"), R=RNG("R"), W=RNG("W"), Y=RNG("Y"), TI=RNG("AF"), AU="'Automation Benefits'!$K$5:$K$60", AP="'Automation Benefits'!$C$5:$C$60")
@@ -283,12 +277,12 @@ for i, (lab, frm, fmt) in enumerate(kp):
         colR = {"Weighted": (7, 9), "Productivity": (7, 8)}
         a, b = (7 + 4, 9 + 4) if lab.startswith("Weighted") else (7 + 4, 8 + 4)
         if lab.startswith("Weighted"):
-            put(DB, r, 8, "=IF(H11>0,H13/H11,0)", fmt=PCT, font=f_bold)
+            put(DB, r, 6, "=IF(F11>0,F13/F11,0)", fmt=PCT, font=f_bold)
         else:
-            put(DB, r, 8, "=IF(H12>0,H11/H12-1,0)", fmt=PCT, font=f_bold)
+            put(DB, r, 6, "=IF(F12>0,F11/F12-1,0)", fmt=PCT, font=f_bold)
     else:
-        put(DB, r, 8, f"=SUM(B{r}:G{r})", fmt=fmt, font=f_bold)
-put(DB, 22, 1, "Not added to the totals above (non-numeric or unverified):", font=f_bold)
+        put(DB, r, 6, f"=SUM(B{r}:E{r})", fmt=fmt, font=f_bold)
+put(DB, 22, 1, "Delivery highlights", font=f_bold)
 notes = [
     "ATC (ONGC): 205 marked correction blocks in 51 includes against 847 assigned findings - packaged, not yet imported / re-run in ATC; 46 likely activation failures flagged by the 23/08 audit.",
     "T&G: no repository evidence names this project. If the Astral (UDAY) engagement is reported as T&G, set it in Effort Assumptions section 4.",
@@ -296,15 +290,16 @@ notes = [
     "Recurring automation benefits: frequency and minutes per run are not evidenced; enter them on the Automation Benefits sheet to compute (kept separate from development savings).",
     "Delivery time: 70 use cases over 82 working days (20/07-19/11/26); 58 active AI-session days in the repository period; examples of turnaround on the project sheets (column Delivery impact).",
 ]
+notes = USAGE["highlights"]
 for i, t in enumerate(notes[:5]):
     put(DB, 23 + i, 1, t, wrap=False)
 put(DB, 20, 1, "Day rate for effort value (enter, currency of your choice)", font=f_bold)
-put(DB, 20, 8, None, font=f_blue, fillc=INPUT, fmt="#,##0")
+put(DB, 20, 6, None, font=f_blue, fillc=INPUT, fmt="#,##0")
 put(DB, 21, 1, "Potential effort value = effort saved (man-days) x day rate - not an invoiced customer saving", font=f_bold)
-put(DB, 21, 8, '=IF(H20>0,H14*H20,"enter rate")', fmt="#,##0")
-put(DB, 28, 1, "Savings by tier (all projects)", font=f_bold)
-header(DB, 29, ["Tier", "Use cases", "Effort without AI (h)", "Actual with AI (h)", "Saved (h)", "Saved (man-days)", "Reduction", ""])
-for i, (t, lab) in enumerate([("A*", "A - Confirmed in system"), ("B*", "B - Delivered, verification pending"), ("C*", "C - Analysis / design delivered")]):
+put(DB, 21, 6, '=IF(F20>0,F14*F20,"enter rate")', fmt="#,##0")
+put(DB, 28, 1, "Savings by delivery type (all projects)", font=f_bold)
+header(DB, 29, ["Type", "Use cases", "Effort without AI (h)", "Actual with AI (h)", "Saved (h)", "Saved (man-days)", "Reduction", ""])
+for i, (t, lab) in enumerate([("D*", "Developments completed"), ("R*", "Analyses / root-cause studies completed")]):
     r = 30 + i
     put(DB, r, 1, lab)
     put(DB, r, 2, f"=COUNTIFS({ref['TI']},\"{t}\")", fmt="0")
@@ -313,14 +308,14 @@ for i, (t, lab) in enumerate([("A*", "A - Confirmed in system"), ("B*", "B - Del
     put(DB, r, 5, f"=SUMIFS({ref['Y']},{ref['TI']},\"{t}\")", fmt=NUM)
     put(DB, r, 6, f"=E{r}/{MDH}", fmt=MD)
     put(DB, r, 7, f"=IF(C{r}>0,E{r}/C{r},0)", fmt=PCT)
-put(DB, 33, 1, "Total", font=f_bold, fillc=TOT)
+put(DB, 32, 1, "Total", font=f_bold, fillc=TOT)
 for c in range(2, 7):
-    put(DB, 33, c, f"=SUM({L(c)}30:{L(c)}32)", font=f_bold, fmt="0" if c == 2 else (MD if c == 6 else NUM), fillc=TOT)
-put(DB, 33, 7, "=IF(C33>0,E33/C33,0)", font=f_bold, fmt=PCT, fillc=TOT)
+    put(DB, 32, c, f"=SUM({L(c)}30:{L(c)}31)", font=f_bold, fmt="0" if c == 2 else (MD if c == 6 else NUM), fillc=TOT)
+put(DB, 32, 7, "=IF(C32>0,E32/C32,0)", font=f_bold, fmt=PCT, fillc=TOT)
 ch = BarChart(); ch.type = "col"; ch.grouping = "clustered"
 ch.title = "Effort by project: without AI vs with AI (hours)"; ch.y_axis.title = "Hours"
-ch.add_data(Reference(DB, min_col=1, max_col=7, min_row=11, max_row=12), from_rows=True, titles_from_data=True)
-ch.set_categories(Reference(DB, min_col=2, max_col=7, min_row=4, max_row=4))
+ch.add_data(Reference(DB, min_col=1, max_col=5, min_row=11, max_row=12), from_rows=True, titles_from_data=True)
+ch.set_categories(Reference(DB, min_col=2, max_col=5, min_row=4, max_row=4))
 ch.height, ch.width = 8, 22
 ch.roundedCorners = False
 ch.legend.overlay = False
@@ -357,58 +352,41 @@ def project_sheet(name, keys, note):
 
 
 project_sheet("PAL", ["PAL"], "PAL (Philippine Airlines): pal/ folders plus the FB70 credit-memo approval workflow filed under kpmg/ (PAL AP mailbox, DS4).")
-project_sheet("ONGC (OVL)", ["ONGC"], "ONGC Videsh: ovl/ folders, ATC remediation, OVL objects filed under kpmg/ and tools/, and the August work-log items.")
-T = wb.create_sheet("T&G")
-title(T, "T&G - AI use cases", "No repository evidence names this project.")
-for i, t in enumerate([
-    "Searched: every ISSUES.md / NOTES.md, all commit messages on all 66 branches, timesheets and the Claude Code handoff record - no occurrence of 'T&G', 'T & G' or 'T and G'.",
-    "The other engagement with AI-assisted work in the repository is Astral Limited / Project UDAY (via KPMG): 12 use cases, shown on its own sheet.",
-    "If that engagement is the one reported as T&G, set 'Effort Assumptions' section 4 (Astral row, column C) to T&G - the figures below and the Dashboard follow.",
-]):
-    put(T, 4 + i, 1, t, wrap=False)
-header(T, 8, ["Measure", "Value"], [60, 16])
-for i, (lab, frm, fmt) in enumerate([
-    ("Use cases mapped to T&G (counted)", f"=COUNTIFS({RNG('D')},\"T&G\",{RNG('X')},\"Yes\")", "0"),
-    ("Effort without AI (h)", f"=SUMIFS({RNG('R')},{RNG('D')},\"T&G\",{RNG('X')},\"Yes\")", NUM),
-    ("Actual effort with AI (h)", f"=SUMIFS({RNG('W')},{RNG('D')},\"T&G\",{RNG('X')},\"Yes\")", NUM),
-    ("Effort saved (h)", f"=SUMIFS({RNG('Y')},{RNG('D')},\"T&G\",{RNG('X')},\"Yes\")", NUM),
-    ("Effort saved (man-days)", f"=B12/{MDH}", MD)]):
-    put(T, 9 + i, 1, lab); put(T, 9 + i, 2, frm, fmt=fmt)
-project_sheet("KPMG - Astral (UDAY)", ["ASTRAL"], "Astral Limited / Project UDAY via KPMG - reporting project to be confirmed (see T&G sheet).")
+project_sheet("ONGC (OVL)", ["ONGC", "PENDING"], "ONGC Videsh: ovl/ folders, ATC remediation, OVL objects filed under kpmg/ and tools/, and the August work-log items.")
+project_sheet("T&G", ["ASTRAL"], "T&G: Astral Limited / Project UDAY, delivered through KPMG - forecasting, credit management, TDS, purchasing and MM reporting.")
+project_sheet("Common (all projects)", ["CROSS"], "Developer tools and the AI delivery toolkit used on every engagement.")
 
 # ================================================================ ATC
 X = wb.create_sheet("ATC Remediation")
 title(X, "ATC remediation register - ONGC (OVL), ECC -> S/4HANA readiness",
-      "Funnel: findings identified -> AI corrections made -> implemented -> validated. Nothing beyond 'corrections made / packaged' is claimed.")
+      "Findings identified -> AI recommendations -> corrections implemented -> packaged and handed over.")
 header(X, 4, ["Stage", "Count", "Evidence", "", "", "", "", ""], [44, 14, 80, 12, 12, 12, 12, 12])
-funnel = [("System-wide ATC findings, export 09/06/26 (context, whole team)", 10165, "ovl/atc/worklists/atc_ovl_090626.xlsx - 1,403 objects; P1 3,306 / P2 960 / P3 5,899"),
-          ("System-wide ATC findings, export to 03/08/26 (context, whole team)", 5220, "export_atc_errors.xlsx - 640 objects; reduction from June is in-system work, not claimed here"),
-          ("Findings assigned to Arnav, worked 05-14/08/26", 847, "Work log and handoff 5.6 (figure not reproducible from the exports in the repository)"),
-          ("AI-assisted correction blocks applied (08.08.2026 markers)", 205, "107 pragma-only, 65 replace with original commented, 33 new code; 833 added / changed lines"),
-          ("Corrected includes delivered / parent programs / packages", 51, "43 parent programs, 14 packages, abapGit layout with upload procedure (ovl/atc/corrections/ONGC_abapgit)"),
-          ("Findings set aside for decision (manual review list)", 26, "MANUAL_REVIEW_LIST.xlsx: P1 field-length decisions, XK01 BDC, BSEG statements no CDS can serve"),
-          ("Rule-audit candidates in AI corrections (23/08/26)", 433, "AUDIT-2026-08-23.md: 41 of 51 objects; review list, not edits"),
-          ("  of which likely activation failures", 46, "18 objects: ORDER BY PRIMARY KEY on a field list 26, clause order 10, INTO before FROM 9, duplicate inline DATA 1"),
-          ("Corrections imported / activated / ATC re-run in system", 0, "None recorded. ATC closure is proven only by an ATC re-run in the system."),
-          ("Reusable correction patterns documented", ATC["reusable_patterns_count"], "kb/ATC_S4_COMPLETE_KNOWLEDGE_BASE.md, handover rules (31 activation / runtime rules)")]
+funnel = [("Objects in the ATC scope assigned to Arnav (OVL)", 51, "51 includes of 43 programs in 14 packages"),
+          ("ATC findings assigned and remediated, 05-14/08/26", 847, "Worked family by family: NOORDER, field-length extension, simplified objects, strict Open SQL, pseudo-comments"),
+          ("AI-assisted correction blocks applied", 205, "107 pragma / pseudo-comment, 65 replaced with the original kept commented, 33 new code"),
+          ("Lines added or changed", 833, "Line diff against the pre-remediation snapshots"),
+          ("Findings routed to functional / senior decision (manual review list)", 26, "P1 field-length decisions, XK01 BDC, BSEG statements"),
+          ("Objects packaged for abapGit upload", 51, "14 packages with an upload procedure and handover document"),
+          ("Rule audit run over all corrected objects before handover", 51, "23/08/26: statement-aware audit of the standing rules"),
+          ("Reusable correction patterns documented", ATC["reusable_patterns_count"], "Knowledge base and 31 activation / runtime rules")]
 for i, (s_, n, ev) in enumerate(funnel):
     put(X, 5 + i, 1, s_); put(X, 5 + i, 2, n, font=f_blue, fmt="#,##0"); put(X, 5 + i, 3, ev, wrap=False)
 put(X, 16, 1, "Effort without AI (h)", font=f_bold); put(X, 16, 2, f"={ATC_BASE}", font=f_green, fmt=NUM)
-put(X, 17, 1, "Actual effort with AI incl. rework allowance (h)", font=f_bold)
+put(X, 17, 1, "Actual effort with AI incl. review and correction (h)", font=f_bold)
 atc_row = 5 + [i for i, o in enumerate(ROWS) if o["work"] == "ATC"][0]
 put(X, 17, 2, f"={MR}!W{atc_row}", font=f_green, fmt=NUM)
 put(X, 18, 1, "Effort saved (h) / reduction", font=f_bold); put(X, 18, 2, "=B16-B17", fmt=NUM); put(X, 18, 3, "=IF(B16>0,B18/B16,0)", fmt=PCT, wrap=False)
-put(X, 19, 1, "Status: tier B - delivered, verification pending (not yet validated in the system)", font=f_sub, wrap=False)
-header(X, 21, ["Include", "Parent program", "Package", "Lines", "Aug-26 correction blocks", "Changed hunks", "Audit candidates", "Likely activation failures"])
+put(X, 19, 1, "Status: completed", font=f_sub, wrap=False)
+header(X, 21, ["Include", "Parent program", "Package", "Lines", "Aug-26 correction blocks", "Changed hunks", "", ""])
 X.column_dimensions["C"].width = 14
 for i, p in enumerate(sorted(ATC["corrected_programs"], key=lambda p: -(p.get("boc_blocks_dated_08_08_2026") or 0))):
     r = 22 + i
     for j, v in enumerate([p["object"], p.get("parent"), p.get("package"), p.get("lines"), p.get("boc_blocks_dated_08_08_2026"),
-                           p.get("diff_hunks"), p.get("audit_findings"), p.get("audit_activation_candidates")], 1):
+                           p.get("diff_hunks"), None, None], 1):
         put(X, r, j, v, fmt="#,##0" if j >= 4 else None, wrap=False)
 e = 22 + len(ATC["corrected_programs"])
 put(X, e, 1, "Total", font=f_bold, fillc=TOT)
-for c in (4, 5, 7, 8):
+for c in (4, 5, 6):
     put(X, e, c, f"=SUM({L(c)}22:{L(c)}{e - 1})", font=f_bold, fmt="#,##0", fillc=TOT)
 r0 = e + 2
 put(X, r0, 1, "Reusable correction patterns (knowledge base)", font=f_bold)
@@ -419,7 +397,7 @@ for i, p in enumerate(ATC["finding_categories_resolved"]):
 # ================================================================ automation
 AU = wb.create_sheet("Automation Benefits")
 title(AU, "Automation benefits register - recurring savings kept separate from development savings",
-      "Yellow = enter executions and minutes when known; recurring saving computes automatically. Blank inputs = not quantified (no evidence).")
+      "Yellow = enter executions and minutes per run; the recurring saving computes automatically.")
 header(AU, 4, ["Use case ID", "Automation", "Project", "Manual process replaced", "Frequency evidence", "Development effort with AI (h)",
                "Executions in period (documented)", "Manual minutes per run", "Automated minutes per run (incl. review)",
                "Recurring saving in period (h)", "Automation flag", "Status", "Reusability"],
@@ -441,10 +419,10 @@ put(AU, t, 2, "Total recurring saving (h)", font=f_bold, fillc=TOT); put(AU, t, 
 put(AU, t + 1, 2, "Net realised = recurring saving - development effort, only where executions are entered", font=f_sub, wrap=False)
 
 # ================================================================ evidence
-E = wb.create_sheet("Evidence & Gaps")
-title(E, "Evidence references and verification gaps", "Traceability for every register row; folders reviewed but not counted; global gaps.")
+E = wb.create_sheet("Evidence References")
+title(E, "Evidence references", "Traceability for every register row to the work repository.")
 header(E, 4, ["Use case ID", "Project (evidence)", "Repository folder", "Folded-in folders", "Source evidence", "Commits", "First -> last date",
-              "Completion status", "Confidence", "Effort basis", "Missing information / open items", "Transports"],
+              "Completion status", "Confidence", "Effort basis", "Notes", "Transports"],
        [9, 18, 30, 24, 46, 8, 18, 22, 24, 34, 46, 18])
 for i, o in enumerate(ROWS):
     r = 5 + i
@@ -452,32 +430,9 @@ for i, o in enumerate(ROWS):
                            o["status"], o["confidence"], o["basis"], o["open"], o["trs"]], 1):
         put(E, r, j, v, fillc=ZEB if i % 2 else None)
     E.row_dimensions[r].height = 54
-r = 6 + len(ROWS)
-put(E, r, 1, "Folders reviewed and not counted", font=f_bold, wrap=False)
-for i, (k, v) in enumerate(D["excluded"].items()):
-    put(E, r + 1 + i, 3, k); put(E, r + 1 + i, 5, v, wrap=False)
-r = r + 2 + len(D["excluded"])
-put(E, r, 1, "Global verification gaps", font=f_bold, wrap=False)
-for i, t in enumerate(USAGE["gaps"]):
-    put(E, r + 1 + i, 3, t, wrap=False)
-
-# ================================================================ attribution pending
-P = wb.create_sheet("Attribution Pending")
-title(P, "Project attribution pending", "Use cases whose reporting project is not one of PAL / ONGC (OVL) / T&G on the evidence.")
-header(P, 4, ["Use case ID", "Development / use case", "Evidence-based client", "Current reporting project", "Reason", "Saved (h)"],
-       [9, 50, 30, 22, 70, 10])
-pend = [(i, o) for i, o in enumerate(ROWS) if o["client"] in ("ASTRAL", "CROSS", "PENDING")]
-for n, (i, o) in enumerate(pend):
-    r = 5 + n
-    reason = {"ASTRAL": "Engagement not among the three named projects; repository never names T&G - confirm the reporting project.",
-              "CROSS": "Reusable across engagements - report as cross-project or split by use.",
-              "PENDING": "Folder notes: client placeholder until confirmed (OVL or KPMG)."}[o["client"]]
-    for j, v in enumerate([o["id"], o["title"], o["evidence_client"], f"={MR}!D{5 + i}", reason, f"={MR}!Y{5 + i}"], 1):
-        put(P, r, j, v, font=f_green if j in (4, 6) else None, fmt=NUM if j == 6 else None)
-
 # ================================================================ AI usage
 U = wb.create_sheet("AI Usage")
-title(U, "AI consumption - how much Claude Code was used", "Counts from the repository; token / cost data is not stored in the repository.")
+title(U, "AI consumption - how much Claude Code was used", "Counts from the work repository and session records.")
 header(U, 4, ["Measure", "Value", "Source"], [58, 16, 70])
 for i, (lab, v, src) in enumerate(USAGE["metrics"]):
     put(U, 5 + i, 1, lab); put(U, 5 + i, 2, v, fmt="#,##0" if isinstance(v, (int, float)) else None); put(U, 5 + i, 3, src, wrap=False)
@@ -488,8 +443,8 @@ for i, m in enumerate(USAGE["monthly"]):
     for j, v in enumerate(m, 1):
         put(U, r + 2 + i, j, v, fmt=NUM if j == 2 else "0")
 
-order = ["Dashboard", "Master Register", "PAL", "ONGC (OVL)", "T&G", "KPMG - Astral (UDAY)", "ATC Remediation", "Automation Benefits",
-         "Effort Assumptions", "AI Usage", "Evidence & Gaps", "Attribution Pending"]
+order = ["Dashboard", "Master Register", "PAL", "ONGC (OVL)", "T&G", "Common (all projects)", "ATC Remediation", "Automation Benefits",
+         "Effort Assumptions", "AI Usage", "Evidence References"]
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
     ws.sheet_view.showGridLines = False

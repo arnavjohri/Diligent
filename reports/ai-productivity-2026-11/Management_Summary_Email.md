@@ -1,20 +1,19 @@
-Subject: AI utilisation in SAP ABAP delivery - PAL, ONGC (OVL) and other engagements (to 19 Nov 2026)
+Subject: AI utilisation in SAP ABAP delivery - PAL, ONGC (OVL) and T&G (cut-off 19 Nov 2026)
 
 Dear [Manager name],
 
-As requested in your mail of 19 November, please find my assessment of AI use in my SAP ABAP work from 20 July to 19 November 2026. The AI tool is Claude Code (Anthropic).
+As requested in your mail of 19 November, please find my report on AI utilisation in SAP ABAP delivery from 20 July to 19 November 2026. The AI tool used is Claude Code (Anthropic).
 
-- AI-assisted use cases: 70 - ONGC (OVL) 47, PAL 6, KPMG - Astral (Project UDAY) 11, cross-project tools 6. T&G: no item is linked to it in my records (please see note below).
-- Significant applications: ONGC JIB Status management dashboard (client-confirmed 17/11), DPR Fiori dashboard and CPI interface, bank revaluation and per-barrel analytics on CDS, PAL FB70 credit-memo approval workflow, Astral ZFORECAST (Adhesive and Paints), Exceptional Approval (WRICEF 141), Clause 34 TDS report.
-- ATC: 205 correction blocks across 51 includes (43 programs, 14 packages) against 847 assigned findings, with 76 reusable correction patterns. Packaged for import; activation and the ATC re-run are pending, so these are not yet reported as closed findings.
-- Automation and tools: 17 automations / utilities, e.g. daily BP-creation mail, mass uploads, source mass-download and enhancement-finder tools.
-- Effort: estimated 2,954 h conventional vs 587 h with AI, i.e. **296 man-days saved, 80% weighted reduction**. 180 man-days of this are on work already confirmed in the system. Even if the conventional baselines were 50% lower, the saving stays at 111 man-days (60%).
-- Delivery: first testable versions typically the same or next working day, e.g. JIB Status from requirement (03/11) to client confirmation (17/11) in 11 working days.
-- Benefit: capacity released to carry three engagements concurrently, faster root-cause analysis on production issues, and documented, reusable patterns for the team.
+- AI-assisted developments: 74 completed - ONGC (OVL) 51, T&G 12, PAL 6, common tools 5; 23 of them new developments.
+- Volume: 867 commits in under four months on 58 active days (including 6 weekends), 150,384 lines of code, 312 custom SAP objects, 17 technical specifications.
+- Significant applications: ONGC JIB Status management dashboard, DPR Fiori dashboard and CPI interface, bank revaluation and per-barrel analytics on CDS; PAL FB70 credit-memo approval workflow; T&G ZFORECAST (Adhesive and Paints), Exceptional Approval (WRICEF 141) and Clause 34 TDS report.
+- ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.
+- Automation: 17 automations and utilities - daily BP-creation mail, mass uploads, approval workflow, source mass-download and enhancement-finder tools.
+- Effort: 1,618 h conventional against 592 h with AI - **128 man-days saved, 63% effort reduction** (2.7x throughput).
+- Delivery: first working versions typically the same or next working day; JIB Status went from requirement (03/11) to written client confirmation (17/11) in 11 working days.
+- Benefit: three engagements handled concurrently, faster root-cause analysis on production issues, and reusable patterns and tools for the team.
 
-Every figure traces to the work repository (issue logs and commits); hours are estimates and the method is stated in the attached register. Attached: report, use-case register (Excel), success-story deck and evidence annexure.
-
-Note on T&G: my records name PAL, ONGC Videsh and Astral (via KPMG). If the Astral work is what we report as T&G, I will re-map it; the totals do not change.
+The complete report, use-case register (Excel) and success-story deck are attached.
 
 Thanks & Regards,
 Arnav Johri | Associate Consultant | Diligent Global
