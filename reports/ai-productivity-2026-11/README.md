@@ -4,6 +4,7 @@ Management submission on AI-assisted SAP ABAP delivery (Claude Code), 20/07/26 �
 
 | File | Deliverable |
 |---|---|
+| `AI_Utilisation_Complete_Report.docx` / `.pdf` | **Everything in one file** — mail text, full report, case-study slide text, every use case in full (Annex A), method, ATC includes, index (116 pages) |
 | `AI_Utilisation_Productivity_Report.docx` | 1 — project-wise assessment (39 pages; open in Word and accept *update fields* to fill the contents page) |
 | `AI_Use_Case_Register.xlsx` | 2 — register with live formulas: Dashboard, Master Register, PAL, ONGC (OVL), T&G, KPMG - Astral (UDAY), ATC, Automation, Assumptions, AI Usage, Evidence & Gaps, Attribution Pending |
 | `Management_Summary_Email.md` | 3 — mail draft to the manager (sending stays manual) |
@@ -28,7 +29,8 @@ reduction · 180 man-days of it on work confirmed in the system. At 50% lower ba
 ```
 cd reports/ai-productivity-2026-11/build
 python3 -I build_data.py && python3 -I build_usage.py && python3 -I build_xlsx.py ../AI_Use_Case_Register.xlsx
-python3 -I build_docs.py
+python3 -I build_docs.py && python3 -I build_combined.py
+NODE_PATH=<global node_modules with docx> node render_docx.js data/combined.json ../AI_Utilisation_Complete_Report.docx
 NODE_PATH=<global node_modules with docx> node render_docx.js data/report.json ../AI_Utilisation_Productivity_Report.docx
 NODE_PATH=<global node_modules with docx> node render_docx.js data/annexure.json ../Evidence_and_Estimation_Annexure.docx
 NODE_PATH=<node_modules with pptxgenjs, react-icons, react-dom, sharp> node build_pptx.js $PWD/../AI_Success_Story_JIB_Status.pptx <pptx skill>/scripts/apply_theme.js
