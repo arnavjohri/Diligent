@@ -94,15 +94,22 @@
 //                                  ProjectName falls back to the SAP
 //                                  venture text and Business Unit to
 //                                  'Unassigned' outside the four
+//   19.11.2026  Arnav Johri  <TR>  Business Unit by the venture's
+//                                  country prefix, from the client's
+//                                  list for every venture (ISSUES 13)
 //----------------------------------------------------------------------
-// ASSUMPTION: Business Unit and ProjectName are the requirement's fixed
-//   texts per venture ("shall be a freezed input"; "as mentioned in
-//   Excel"): AA2002 ACG and SD2002 Block 5A are MENA & CIS BU, MM2002
-//   A1, Myanmar and MM2012 A3, Myanmar are AP BU. For every other
-//   venture (in scope since 17/11/26) ProjectName is the T8JVT text and
-//   Business Unit reads 'Unassigned' until the client supplies the
-//   mapping - one WHEN line each here, or a Z table by SM30 if the list
-//   keeps growing. The T8JVT text is still exposed as SAP Venture Name.
+// ASSUMPTION: ProjectName is the requirement's fixed text for the four
+//   ventures of the workbook (AA2002 ACG, SD2002 Block 5A, MM2002 A1,
+//   Myanmar, MM2012 A3, Myanmar) and the T8JVT text for every other
+//   venture; the T8JVT text is also exposed as SAP Venture Name.
+// ASSUMPTION: Business Unit follows the first two characters of the
+//   venture code (the country): the client's list of 19/11/26 gave a BU
+//   for all 49 ventures of the report and every venture of a country
+//   carries the same BU, so the prefix is the rule - AA, SD, SK, IQ, IR,
+//   LY = MENA & CIS BU; BD, MM, VN, NZ, QA = AP BU; CL, CU = LAC BU;
+//   CP = Corporate; MZ = Mozambique BU; RU = Russia BU. A venture of a
+//   new country reads 'Unassigned' until its WHEN line is added. The
+//   list itself is filed as docs/BU_mapping_2026-11-19.md.
 // ASSUMPTION: fiscal year variant April-March for every company code
 //   (OVL: posting period 1 = April, confirmed on the PRD sample).
 // ASSUMPTION: a JIB for month X is the JM document whose posting period
@@ -218,16 +225,35 @@ define view ZI_JIB_STATUS_CUBE
       Venture.JointVentureName,
       @EndUserText.label: 'Venture Type'
       Venture.VentureType,
-      // 17/11/26: Business Unit of the added ventures = client's mapping,
-      // one WHEN per venture here once it is known
+      // 19/11/26: Business Unit by the venture's country prefix, from the
+      // client's list for every venture (ISSUES 13). The CASE per venture
+      // of 03/11 and 17/11 is kept below, commented out.
+//    case Venture.JointVenture
+//      when 'AA2002' then 'MENA & CIS BU'
+//      when 'SD2002' then 'MENA & CIS BU'
+//      when 'MM2002' then 'AP BU'
+//      when 'MM2012' then 'AP BU'
+//      else               'Unassigned'
+//    end                                              as BusinessUnit,
       @EndUserText.label: 'Business Unit'
-      case Venture.JointVenture
-        when 'AA2002' then 'MENA & CIS BU'
-        when 'SD2002' then 'MENA & CIS BU'
-        when 'MM2002' then 'AP BU'
-        when 'MM2012' then 'AP BU'
-//      else               'OTHER'
-        else               'Unassigned'
+      case substring( Venture.JointVenture, 1, 2 )
+        when 'AA' then 'MENA & CIS BU'
+        when 'SD' then 'MENA & CIS BU'
+        when 'SK' then 'MENA & CIS BU'
+        when 'IQ' then 'MENA & CIS BU'
+        when 'IR' then 'MENA & CIS BU'
+        when 'LY' then 'MENA & CIS BU'
+        when 'BD' then 'AP BU'
+        when 'MM' then 'AP BU'
+        when 'VN' then 'AP BU'
+        when 'NZ' then 'AP BU'
+        when 'QA' then 'AP BU'
+        when 'CL' then 'LAC BU'
+        when 'CU' then 'LAC BU'
+        when 'CP' then 'Corporate'
+        when 'MZ' then 'Mozambique BU'
+        when 'RU' then 'Russia BU'
+        else           'Unassigned'
       end                                              as BusinessUnit,
 
       // -- JIB status of the month ----------------------------------------

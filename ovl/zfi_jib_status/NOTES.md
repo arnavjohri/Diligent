@@ -240,9 +240,11 @@ Four objects changed or created, pasted one by one into ADT in this order, ZIP r
 | 4. Clearing Document | same | `max(augbl)`; both null while the JIB is open and on a Pending row — "filled only if cleared", as asked |
 
 Decisions still with the client: (a) list ventures that never had a JIB (would need the T8JV
-venture type); (b) Business Unit for the ventures beyond the four — the cube shows `Unassigned`
-until the mapping arrives (one WHEN per venture, or a Z table by SM30). A reversed JIB shows its
-reversal document (YH) as the clearing document; the Reversed column tells it from a payment.
+venture type). (b) **Business Unit — settled 19/11/26:** the client returned the FY 2025-26 export with
+the BU filled for all 49 ventures; it follows the country prefix of the venture code, so the cube
+derives it from `substring( JointVenture, 1, 2 )` (16 WHENs, `docs/BU_mapping_2026-11-19.md`,
+ISSUES 13). A reversed JIB shows its reversal document (YH) as the clearing document; the Reversed
+column tells it from a payment.
 
 **Custom Analytical Queries — what the GR consultant changes (nothing else moves).** The
 published query is `ZZ1_TWKWN9B2DSJV` (tile URL `bsa_query=2CZZ1_TWKWN9B2DSJV`); the name does not
