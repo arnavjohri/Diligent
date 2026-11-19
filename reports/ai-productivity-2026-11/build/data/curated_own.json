@@ -1,0 +1,82 @@
+{
+ "ovl/_engagement (work log 03-04/08) + handoff 5.5": {
+  "nick": "Fiori PR/PO validations",
+  "title": "Fiori PR and PO apps: valuation-type defaulting and document-type validations",
+  "objects": "ME_PROCESS_REQ_CUST (BAdI), ME_PROCESS_PO_CUST (BAdI), ZMM_UPDATE_EPROFILE (enhancement)",
+  "req": "The Fiori purchase requisition app stopped with 'valuation type should be entered' for split-valuated materials. Document type SWO also needed a mandatory contract, and a blank item category had to be rejected for SEM, SNB, SRC and SWO.",
+  "chal": "Classic BAdIs run on the OData path without SY-TCODE or SY-UCOMM, and a GUI-only global variable caused a field-symbol dump when the enhancement ran from Fiori.",
+  "ai": "Designed the valuation-type default from MBEW in PROCESS_ITEM for creation only and mirrored it into the PO BAdI. Wrote the SWO contract and item-category checks in CHECK, located and re-guarded the Fiori-path dump, and identified enhancement MM06E005 for the RFQ equivalent.",
+  "man": "The consultant implemented the changes in the BAdI implementations and verified the behaviour in the Fiori apps and in SAP GUI with the functional consultant.",
+  "res": "Split-valuated materials can be ordered from Fiori without entering a valuation type, and the document-type rules apply in Fiori and in GUI. The Fiori-path dump no longer occurs."
+ },
+ "ovl/mm-fiori + work log 10-14/08": {
+  "nick": "Fiori tender report apps",
+  "title": "Five Fiori List Report apps for MM tender reports on one OData service",
+  "objects": "ZCL_OVL_TRPT_LIST (class), ZCL_OVL_TRPT_DATA (class), ZC_OVL_SO_REG (CDS view), ZREP_TENDER_REGISTER (report)",
+  "req": "The MM tender reports ZMM_TENDER_REG, ZMMTENDERRPT, ZMMTMS and ZMM_VMS were to be offered as Fiori tiles, while the EMD transaction ZMMEMD stays a WebGUI tile.",
+  "chal": "ZMM_TENDER_REG returns three different layouts (22, 38 and 12 columns) by radio button and needs lookups on PA0002, T024 and LFA1, so custom entities with query provider classes were required.",
+  "ai": "Assessed the five transactions for Fiori fit, designed three List Report tiles for the tender register and built the custom entities and query providers, with all CDS objects on a single service definition and binding.",
+  "man": "The consultant validated each tile by exporting the CDS output and comparing it row by row with the GUI report, then took the apps through BTP deployment.",
+  "res": "Five List Report apps run on one service, each reconciled row by row against its GUI report before handover to the functional consultant."
+ },
+ "ovl/mm-fiori + work log 10-11/08": {
+  "nick": "ZMMEMD LOA number",
+  "title": "ZMMEMD EMD management: LOA number in the Change and Display popups with search help",
+  "objects": "SAPMZMMEMD (module pool), ZMM_EMDHDR (table)",
+  "req": "Users needed to select an EMD by LOA number in the Change and Display popups of the EMD management transaction.",
+  "chal": "The existing search help reads the EMD detail table, not the header that carries the LOA number, so a new elementary search help on the header table was needed.",
+  "ai": "Delivered the LOA number field for both popups with a new elementary search help on the EMD header table, plus four further fixes in the same module pool.",
+  "man": "The consultant created the search help in SE11, applied the screen and code changes in the module pool and tested both popups.",
+  "res": "EMD documents can be found by LOA number in both popups, with F4 help reading the header table."
+ },
+ "ovl/ocv-to-ovl-transfer + work log 13-14/08": {
+  "nick": "JV transfer programs",
+  "title": "JV transfer programs: G/L derivation keyed by JV, offset profit centre from mapping",
+  "objects": "ZR_JV_POST (report), ZJV_DOC_TRANSFER (report), ZOCV_OVL_TRANSFER (report), ZJV_MAP_COCODE (table)",
+  "req": "For the Colombia OCV to OVL transfers the receiving G/L had to be derived per joint venture, and the offset profit centre for vendor and G/L offset items was no longer to be hardcoded.",
+  "chal": "The derivation runs through five mapping tables on the JV ledger line items (JVSO1, ledgers 4A and 4C), and the same logic exists in more than one program.",
+  "ai": "Changed the receiving G/L derivation to sender G/L, company code and JV, moved the offset profit centre to a new PC_DEFAULT field on ZJV_MAP_COCODE, and applied the same mapping logic to ZJV_DOC_TRANSFER and ZOCV_OVL_TRANSFER.",
+  "man": "The consultant added the table field in SE11, activated the programs and tested the postings with the functional consultant.",
+  "res": "The receiving G/L and the offset profit centre now come from maintained mapping data per venture instead of hardcoded values."
+ },
+ ".archive/INBOX_2026-08-23.md + work log 21/08": {
+  "nick": "ZMM_VMS number range",
+  "title": "ZMM_VMS vendor creation: number-range error in Mock-2 resolved",
+  "objects": "ZMM_VMS (program)",
+  "req": "Vendor creation through ZMM_VMS stopped in Mock-2 with 'No number could be determined for number range'.",
+  "chal": "The behaviour differed between ECC and the converted system, so the number-range determination for the vendor account group had to be traced.",
+  "ai": "Diagnosed the number-range determination error and supplied the fix, answered the GST vendor classification query and triaged the remaining Mock-2 items into a ranked queue.",
+  "man": "The consultant applied the fix in the system and followed up the retest with the business user.",
+  "res": "Vendor creation works again. The fix was confirmed working by the user on 21/08/26."
+ },
+ "ovl/atc": {
+  "nick": "ATC remediation",
+  "title": "ATC S/4HANA-readiness remediation of 51 program includes in 14 packages",
+  "objects": "51 includes of 43 programs, for example ZFI_TAX_CREDIT_REPORT, ZFI_VOUCHER_PRINT, MZMMVENDORF01, ZF_FILL_MISSING_AUGGJ_NGLM",
+  "req": "The ATC findings on the custom objects assigned for the S/4HANA conversion, 847 findings in all, had to be remediated.",
+  "chal": "Findings spanned SELECT SINGLE without a unique key, field-length extension, simplified objects such as BSEG, KONV and VBUK / VBUP, strict Open SQL and pseudo-comment rules, on an older S/4 release.",
+  "ai": "Worked the findings family by family: 205 marked correction blocks in 51 includes (107 pseudo-comment, 65 replacements with the original kept commented, 33 new code), 833 lines added or changed. Packaged the includes by package with an upload procedure, a manual review list and a knowledge base of correction patterns.",
+  "man": "The consultant agreed the scope with the senior consultant, took the decisions on priority-1 findings, reviewed the corrections with a rule audit across all 51 objects and prepared the handover.",
+  "res": "All 847 assigned findings were worked: corrected with documented patterns or routed for decision (26). Original code is kept commented for review and the patterns are reusable."
+ },
+ "pal/zsd_fi_sgtxt": {
+  "nick": "SD-FI line text (INC01740)",
+  "title": "SD billing: sales order Header Note 1 on the customer line item (INC01740)",
+  "objects": "ZXVVFU02 (include), EXIT_SAPLV60B_002 (customer exit), SDVFX002 (enhancement)",
+  "req": "The customer line of SD billing documents showed no text in the Fiori Manage Customer Line Items app. The business wanted the sales order Header Note 1 there, as on the Statement of Account.",
+  "chal": "The text must be filled at posting time inside an existing exit include whose CHECK statement leaves the exit early for most invoices, and the first-created sales order has to be found from the billing items.",
+  "ai": "Chose the SD-FI customer exit over a BTE or the AC_DOCUMENT BAdI with reasons, placed the insert above the existing CHECK, and wrote the first-created-order rule and the READ_TEXT logic with language fallback (include 119 to 221 lines).",
+  "man": "The consultant supplied the active include, confirmed text ID 0002 in table TTXIT, applied the change and tested billing documents in the PAL system.",
+  "res": "New billing documents carry the Header Note 1 on the customer line, so it shows in the Fiori app with no change to the app or its CDS views."
+ },
+ "ovl/f1592_asset_worklist": {
+  "nick": "F1592 asset custodian field",
+  "title": "Fiori F1592 Asset Master Worklist: Custodian of Assets via CDS extensions",
+  "objects": "ZZI_FIXEDASSETWORKLIST_EXT (CDS extend view), ZZC_FIXEDASSETWORKLIST_EXT (CDS extend view)",
+  "req": "Custodian of Assets and Joint Venture, maintained in the asset master, did not appear in the Fiori asset apps used by Corporate Accounts.",
+  "chal": "The field sits on ANLU, which the standard view stack does not join, and the consumption view accepts no metadata extension on this release.",
+  "ai": "Analysed the SAP knowledge-base article and the extensibility routes, then built a modification-free association to ANLU in an interface view extension, carried it up through a consumption view extension and placed the UI annotations inline.",
+  "man": "The consultant confirmed the field and the view alias in the system, activated the extensions in ADT and cleared the gateway and UI caches.",
+  "res": "The custodian field is available in the worklist without modifying any standard view."
+ }
+}

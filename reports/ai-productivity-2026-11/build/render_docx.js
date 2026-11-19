@@ -4,8 +4,9 @@ const fs = require("fs");
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType,
   HeadingLevel, AlignmentType, LevelFormat, PageOrientation, BorderStyle, Footer, Header,
-  PageNumber, TableOfContents, VerticalAlign, PageBreak, TableLayoutType, ImageRun,
+  PageNumber, TableOfContents, VerticalAlign, PageBreak, TableLayoutType, ImageRun, Bookmark, InternalHyperlink,
 } = require("docx");
+const anchor = (t) => "h_" + String(t).replace(/[^A-Za-z0-9]+/g, "_").slice(0, 36);
 
 const [, , inPath, outPath] = process.argv;
 const doc = JSON.parse(fs.readFileSync(inPath, "utf8"));
@@ -128,7 +129,13 @@ function kpis(b, orientation) {
 function block(b, orientation) {
   switch (b.t) {
     case "h1":
-      return [new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: b.pageBreak ?? false, children: [new TextRun({ text: b.text })] })];
+      return [new Paragraph({ heading: HeadingLevel.HEADING_1, pageBreakBefore: b.pageBreak ?? false,
+        children: [new Bookmark({ id: anchor(b.text), children: [new TextRun({ text: b.text })] })] })];
+    case "contents":
+      return b.items.map((it) => new Paragraph({
+        spacing: { before: 0, after: 70, line: 264 }, indent: { left: 200 },
+        children: [new InternalHyperlink({ anchor: anchor(it), children: [new TextRun({ text: it, font: FONT, size: 21, color: INK })] })],
+      }));
     case "h2":
       return [new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: b.text })] })];
     case "h3":
@@ -156,7 +163,7 @@ function block(b, orientation) {
     case "note":
       return [
         new Paragraph({
-          spacing: { before: 80, after: 160, line: 264 },
+          spacing: { before: 80, after: 160, line: 264 }, keepLines: true,
           shading: { type: ShadingType.CLEAR, color: "auto", fill: NOTE_FILL },
           indent: { left: 140, right: 140 },
           children: runs(b.text, { font: FONT, size: 18, color: INK }),
@@ -187,17 +194,19 @@ function block(b, orientation) {
         new Paragraph({ spacing: { before: 120, after: 40 }, alignment: AlignmentType.CENTER, keepNext: true,
           children: [new ImageRun({ type: "png", data: fs.readFileSync(b.path), transformation: { width: b.w, height: b.h },
                                     altText: { title: b.alt || "chart", description: b.alt || "chart", name: b.alt || "chart" } })] }),
-        para(b.caption || "", { size: 15, color: MUTED, after: 160, align: AlignmentType.CENTER }),
+        ...(b.caption ? [para(b.caption, { size: 15, color: MUTED, after: 160, align: AlignmentType.CENTER })] : []),
       ];
     case "pagebreak":
       return [new Paragraph({ children: [new PageBreak()] })];
     case "cover":
       return [
-        para("", { after: 2400 }),
-        new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: b.kicker, font: FONT, size: 22, bold: true, color: ACCENT })] }),
-        new Paragraph({ spacing: { after: 240, line: 560 }, children: [new TextRun({ text: b.title, font: FONT, size: 52, bold: true, color: INK })] }),
-        new Paragraph({ spacing: { after: 600, line: 320 }, children: [new TextRun({ text: b.subtitle, font: FONT, size: 26, color: MUTED })] }),
-        ...b.lines.map((l) => new Paragraph({ spacing: { after: 80 }, children: runs(l, { font: FONT, size: 20, color: INK }) })),
+        para("", { after: 2600 }),
+        new Paragraph({ spacing: { after: 240 }, children: [new TextRun({ text: b.kicker, font: FONT, size: 20, bold: true, color: ACCENT })] }),
+        new Paragraph({ spacing: { after: 280, line: 600 }, children: [new TextRun({ text: b.title, font: FONT, size: 56, bold: true, color: INK })] }),
+        new Paragraph({ spacing: { after: 200, line: 340 }, border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: ACCENT, space: 14 } },
+          children: [new TextRun({ text: b.subtitle, font: FONT, size: 28, color: ACCENT, bold: true })] }),
+        para("", { after: 500 }),
+        ...b.lines.map((l) => new Paragraph({ spacing: { after: 110 }, children: runs(l, { font: FONT, size: 21, color: INK }) })),
       ];
     default:
       throw new Error("unknown block " + b.t);

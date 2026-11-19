@@ -5,12 +5,12 @@ Dear [Manager name],
 As requested, please find attached my report on AI utilisation in SAP ABAP delivery from July to November 2026, with the detailed use-case register and the success-story presentation.
 
 Summary:
-- AI-assisted developments: 74 completed - ONGC (OVL) 51, Astral (KPMG) 12, PAL 6, common tools 5; 873 commits.
-- Significant applications: ONGC JIB Status dashboard (client-confirmed), DPR Fiori dashboard and CPI interface, Bank Revaluation and Per-Barrel analytics; PAL FB70 credit-memo approval workflow; Astral ZFORECAST (Adhesive / Paints), Exceptional Approval and Clause 34 TDS report.
-- ATC corrections (ONGC): 847 findings remediated across 51 program includes, with 76 reusable correction patterns.
-- Automations: 17 - daily BP-creation mail, mass uploads, approval workflow, source mass-download and enhancement-finder tools.
-- Effort: about 57 man-days saved, 39% overall effort reduction.
-- Delivery: working versions typically within a working day; JIB Status went from requirement to client confirmation in 11 working days.
+- AI-assisted developments: 74 completed - ONGC (OVL) 51, Astral (KPMG) 12, PAL 6, common tools 5; 865 commits in the work repository.
+- Significant applications: ONGC JIB Status dashboard, DPR Fiori dashboard and CPI interface, Bank Revaluation and Per-Barrel analytics; PAL FB70 credit-memo approval workflow; Astral ZFORECAST (Adhesive and Paints), Exceptional Approval and Clause 34 TDS report.
+- ATC corrections (ONGC): 847 findings worked across 51 program includes, with 72 documented correction patterns.
+- Automations: 17, including the daily BP-creation mail, mass uploads, the approval workflow and developer tools.
+- Effort: about 57 man-days saved, 40% overall effort reduction.
+- Success story: the JIB Status dashboard was built in three working days and confirmed by the client in writing on 17 November after their testing.
 - Benefits: three projects handled in parallel with production support, faster root-cause analysis, and reusable assets for the team.
 
 Attachments:

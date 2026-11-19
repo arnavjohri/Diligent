@@ -60,8 +60,8 @@ async function save(svg, name) {
   const y2 = (v) => T + (H2 - T - B) * (1 - v / max2);
   const pw2 = (W - L - Rm) / m.length, bw2 = 170;
   svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H2}" viewBox="0 0 ${W} ${H2}"><rect width="${W}" height="${H2}" fill="${SURF}"/>`;
-  svg += `<text x="${L}" y="48" font-family="${FONT}" font-size="34" font-weight="bold" fill="${INK}">Commits per month on client work</text>`;
-  svg += `<text x="${L}" y="88" font-family="${FONT}" font-size="24" fill="${MUTED}">Git history from 19/08/26; active days per month under each bar</text>`;
+  svg += `<text x="${L}" y="48" font-family="${FONT}" font-size="34" font-weight="bold" fill="${INK}">Commits per month</text>`;
+  svg += `<text x="${L}" y="88" font-family="${FONT}" font-size="24" fill="${MUTED}">Repository history from 19/08/26; days with AI-assisted commits under each bar</text>`;
   for (let v = 0; v <= max2; v += max2 / 4) {
     svg += `<line x1="${L}" x2="${W - Rm}" y1="${y2(v)}" y2="${y2(v)}" stroke="${GRID}" stroke-width="2"/>`;
     svg += `<text x="${L - 14}" y="${y2(v) + 8}" text-anchor="end" font-family="${FONT}" font-size="22" fill="${MUTED}">${fmt(v)}</text>`;

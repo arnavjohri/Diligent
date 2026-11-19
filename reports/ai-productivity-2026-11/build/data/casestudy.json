@@ -1,0 +1,22 @@
+{
+ "phases": [
+  [
+   "Development (design and build)",
+   31.2,
+   15.7
+  ],
+  [
+   "Debugging",
+   7.8,
+   4.6
+  ],
+  [
+   "Testing and correction",
+   13.0,
+   6.7
+  ]
+ ],
+ "baseline": 52,
+ "actual": 27.0,
+ "n_patterns": 72
+}

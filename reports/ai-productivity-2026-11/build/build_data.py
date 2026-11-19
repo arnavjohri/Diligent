@@ -47,18 +47,19 @@ RUBRIC_LABEL = {
 }
 COMPLEX = ["Low", "Medium", "High", "Very High"]
 RUBRIC = {
-    "NEW": [6, 14, 25, 42], "ENH": [3, 7, 14, 25], "FIX": [2, 4, 8, 14], "S4": [2, 6, 11, 20],
-    "ANA": [1, 4, 7, 11], "TOOL": [3, 7, 14, 22], "DOC": [1, 2, 4, 7],
+    "NEW": [4, 10, 22, 52], "ENH": [2, 5, 12, 26], "FIX": [1.5, 3.5, 7, 14], "S4": [1.5, 4, 9, 18],
+    "ANA": [1, 2.5, 5, 8], "TOOL": [2, 5, 10, 22], "DOC": [1, 1.5, 3, 5],
 }
 # Minimum human effort per use case (prompting, review, paste / activation, unit test, TR notes) by
 # complexity; code tiers A/B and analysis tier C. Git timestamps cannot see this time per object.
-FLOOR = {"code": [1.5, 3, 6, 11], "analysis": [1, 1.5, 3, 4]}
+FLOOR = {"code": [1, 2, 4, 8], "analysis": [0.5, 1, 2, 3]}
+WSIZE = 0.7   # share of the working time distributed by size of the development; the rest by measured session time
 TIER_LABEL = {
     "D": "D - Development completed", "R": "R - Analysis / root cause completed", "X": "Excluded",
 }
 # ATC baseline: minutes per correction block by type, plus per-object and packaging effort
 ATC = dict(pragma_blocks=107, replace_blocks=65, newcode_blocks=33, objects=51,
-           min_pragma=7, min_replace=18, min_newcode=28, h_per_object=0.2, h_packaging=6,
+           min_pragma=10, min_replace=25, min_newcode=40, h_per_object=0.25, h_packaging=8,
            pre_repo_h=28, rework_sites=46, h_per_rework_site=0.25)
 
 g = load("gitstats.json")
@@ -143,7 +144,7 @@ U = {
     "ovl/zhana_services": ("ONGC", "ENH", "Medium", 1, "B", "Business Process Automation", 0, [], None),
     "ovl/zsap_consumption_report": ("ONGC", "ENH", "Medium", 1, "B", "ABAP Program Development", 0, [], None),
     "ovl/zsap_timesheet_form_prg": ("ONGC", "ENH", "Medium", 1, "A", "SAP Forms", 0, [], None),
-    "ovl/gr_venture_release": ("ONGC", "ENH", "Low", 1.5, "B", "S/4HANA Modernisation", 0, ["ovl/zgr_jv_acdocu"], None),
+    "ovl/gr_venture_release": ("ONGC", "ENH", "Medium", 1.5, "B", "S/4HANA Modernisation", 0, ["ovl/zgr_jv_acdocu"], None),
     "ovl/f1592_asset_worklist": ("ONGC", "ENH", "Medium", 1.25, "B", "S/4HANA Modernisation", 0, ["ovl/asset_fiori_fields"],
                                  "Fiori F1592 Asset Master Worklist: Custodian / JV fields via CDS extension"),
     "ovl/me_process_po_cust": ("ONGC", "FIX", "High", 1, "A", "Enhancements", 0, [], None),
@@ -294,19 +295,24 @@ def add(**k):
     ROWS.append(k)
 
 
+def size_base(k):
+    """Part of the baseline delivered in the repository period (dated earlier hours are added separately)."""
+    return max(0.0, k["baseline_h"] - k["pre_h"])
+
+
 def solve_uplift():
-    """Allocation: git-period hours = a x session hours + c x baseline (half each), floors applied, total = available hours."""
+    """Working time of the repository period = a x session hours + c x size, floors applied, total = available hours."""
     budget = WORKING_DAYS * HOURS_PER_DAY * (1 - ADMIN_SHARE)
     in_rows = sum(k["session_h"] for k in ROWS)
     excluded = SESSION_TOTAL - in_rows
-    b_git = sum(k["baseline_h"] for k in ROWS if k["session_h"] > 0)
-    ratio = SESSION_TOTAL / b_git
+    b_git = sum(size_base(k) for k in ROWS if k["session_h"] > 0)
+    ratio = SESSION_TOTAL / b_git * WSIZE / (1 - WSIZE)
 
-    def used(u):
-        t = excluded * u
+    def used(a):
+        t = excluded * a / (1 - WSIZE)
         for k in ROWS:
             if k["session_h"] > 0:
-                t += max(k["floor_h"], k["session_h"] * u + k["baseline_h"] * u * ratio + k["pre_h"]) - k["pre_h"]
+                t += max(k["floor_h"], k["session_h"] * a + size_base(k) * a * ratio + k["pre_h"]) - k["pre_h"]
         return t
     lo, hi = 0.0, 10.0
     for _ in range(80):
@@ -353,7 +359,7 @@ for k in ROWS:  # every use case is completed (confirmed by Arnav 19/11/26)
     k["floor_h"] = FLOOR["analysis" if k["tier"] == "R" else "code"][COMPLEX.index(k["cx"])]
 UPLIFT, SIZE_FACTOR, EXCLUDED_SESSION, BUDGET = solve_uplift()
 for k in ROWS:
-    git_part = (k["session_h"] * UPLIFT + k["baseline_h"] * SIZE_FACTOR) if k["session_h"] > 0 else 0
+    git_part = (k["session_h"] * UPLIFT + size_base(k) * SIZE_FACTOR) if k["session_h"] > 0 else 0
     k["actual_h"] = round(max(k["floor_h"], git_part + k["pre_h"]) + k.get("rework_h", 0), 2)
 
 # ----------------------------------------------------------------- not in U
@@ -373,10 +379,47 @@ EXCLUDED = {
     "rws": "2025 engagement archive - no AI-assisted work.",
 }
 
+# --------------------------------------------------------- curated texts
+CUR = {}
+for f in ("curated_ongc.json", "curated_rest.json"):
+    fp = os.path.join(D, f)
+    if os.path.exists(fp):
+        CUR.update(json.load(open(fp)))
+CUR.update(json.load(open(os.path.join(D, "curated_own.json"))))
+AUTO = json.load(open(os.path.join(D, "automation.json")))
+# hand corrections to the delegated rewrite
+def _fix(folder, field, old=None, new=""):
+    if folder in CUR:
+        CUR[folder][field] = new if old is None else CUR[folder][field].replace(old, new)
+
+
+_fix("ovl/zfi_jib_status", "res", "show an open status", "show as Pending")
+_fix("ovl/zaa_impairmentloss", "res", None, "Both includes were activated on 27/08/26 and verified against a closed fiscal year: every asset returns "
+     "a readable message from the BAPI check instead of a buried batch-input log.")
+_fix("ovl/capex_provisional", "objects", None, "Functional specification for provisional Capex / Opex punching (assessment and design)")
+_fix("(repo tooling)", "objects", None, "Workflow skills, standing rules, record of release constraints, sync and audit scripts")
+_fix("(repo tooling)", "ai", "31 past mistakes", "31 lessons learned")
+_fix("(repo tooling)", "req", "two concurrent projects", "concurrent projects")
+
+
+def src(folder, merged, evidence):
+    t = folder + (f" (+ {merged})" if merged else "") + "; " + evidence
+    for a, b in (("COPILOT_CONTEXT_HANDOFF.md", "session handoff record"), (".archive/INBOX_2026-08-23.md", "mail triage record 23/08/26"),
+                 ("(repo tooling)", "repository rules, skills and scripts"), (" + handoff 5.5", ""), ("CLAUDE.md", "standing rules"),
+                 ("MEMORY.md", "release-constraint record")):
+        t = t.replace(a, b)
+    t = re.sub(r"\(branch claude/[^)]*\)", "(session branch)", t)
+    seen, parts = set(), []
+    for x in [y.strip() for y in t.split(";") if y.strip()]:
+        if x not in seen:
+            seen.add(x); parts.append(x)
+    return "; ".join(parts[:5])
+
+
 # --------------------------------------------------------- per-row text build
 DEV_LABEL = {"NEW": "New", "ENH": "Enhancement", "FIX": "Bug fix / RCA", "S4": "S/4HANA remediation", "ANA": "Analysis",
              "TOOL": "Automation / tool", "DOC": "Documentation", "ATC": "ATC remediation"}
-out = []
+out, MISSING = [], []
 for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "ASTRAL", "CROSS"].index(x["client"]),
                                                     ["D", "R"].index(x["tier"]), -x["baseline_h"]))):
     r, w = k.get("r"), k.get("w")
@@ -433,8 +476,17 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "AS
         basis=(w["basis"] if w else ("Git session hours x allocation factor, minimum-effort floor" + (f" + {k['pre_h']} h dated pre-repository days" if k["pre_h"] else "")
                                      + (" + rework allowance for 46 sites" if k.get("rework_h") else ""))),
     )
-    if o["folder"] == "tools/zr_icf_url_list":
-        o["manual"] = "Arnav pasted the report into SE38, maintained the text elements and ran it for the CPI team."
+    c = CUR.get(o["folder"])
+    if c:
+        o.update(title=c["title"], nick=c["nick"], objects=c["objects"], requirement=c["req"], challenge=c["chal"], ai=c["ai"],
+                 manual=c["man"], quality=c["res"])
+    else:
+        o["nick"] = o["title"][:30]
+        MISSING.append(o["folder"])
+    au = AUTO.get(o["folder"])
+    o["automation"] = bool(au)
+    o["auto_process"], o["auto_freq"] = (au if au else ("", ""))
+    o["source"] = src(o["folder"], o["merged"], o["evidence"])
     o["status"] = "Completed" if o["tier"] == "D" else "Completed - analysis / root cause delivered"
     o["open"] = ""
     if "not stated" in f"{o['first']}{o['last']}":
@@ -443,8 +495,9 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "AS
         if iso:
             fmt = lambda d: f"{d[8:10]}/{d[5:7]}/{d[2:4]}"
             o["first"], o["last"] = fmt(iso[0]), fmt(iso[-1])
-    o["impact"] = (f"{o['first']} to {o['last']}; {o['active_days']} active AI-session day(s), {o['commits']} commits"
-                   if o["commits"] else f"{o['first']} to {o['last']} (work-log dates)")
+    span = o["first"] if o["first"] == o["last"] else f"{o['first']} - {o['last']}"
+    o["impact"] = (f"{span}; {o['active_days']} working day(s) with AI sessions, {o['commits']} commits" if o["commits"]
+                   else f"{span}; dated in the work log")
     out.append(o)
 
 counted = [o for o in out if o["counted"]]
@@ -454,6 +507,9 @@ summary = dict(
     n_all=len(out), n_counted=len(counted), baseline=tot(counted, "baseline_h"), actual=tot(counted, "actual_h"),
     saved=tot(counted, "saved_h"),
 )
+summary["wsize"] = WSIZE
+summary["corrections"] = sum(o["rework_count"] for o in out if o["folder"] != "(repo tooling)")
+summary["missing_curated"] = MISSING
 summary["saved_md"] = round(summary["saved"] / 8, 1)
 summary["red"] = round(summary["saved"] / summary["baseline"], 4)
 summary["prod"] = round(summary["baseline"] / summary["actual"] - 1, 4)
@@ -466,7 +522,20 @@ for p in sorted({o["project"] for o in out}):
     summary["by_project"][p] = dict(n=len(rows), n_all=len([o for o in out if o["project"] == p]), baseline=tot(rows, "baseline_h"),
                                     actual=tot(rows, "actual_h"), saved=tot(rows, "saved_h"),
                                     confirmed_saved=tot([o for o in rows if o["tier"] == "A"], "saved_h"))
-json.dump(dict(rows=out, excluded=EXCLUDED, summary=summary, rubric=RUBRIC, floor=FLOOR, rubric_label=RUBRIC_LABEL, complex=COMPLEX,
+TS_DOCS = [
+    ["Astral (KPMG)", "ZFI_TDS_CL34 - Clause 34 TDS report (WRICEF 337), in the client template"],
+    ["Astral (KPMG)", "ZMB5B / ZRM07MLBD - MB5B receipt and issue amounts (WRICEF 195)"],
+    ["Astral (KPMG)", "ZMM_BP_CREATE_MAIL - supplier BP creation mail (FS 057)"],
+    ["Astral (KPMG)", "ZMM_VEND_UPLOAD - vendor mass upload enhancement (FSD 30)"],
+    ["Astral (KPMG)", "ZFORECAST Paints (WRICEF ID-2B)"],
+    ["Astral (KPMG)", "ZSD_EXC_APPR_ADHESIVE - Exceptional Approval, Adhesives (WRICEF 141.A)"],
+    ["Astral (KPMG)", "ZSD_EXC_APPR_PAINTS and upload - Exceptional Approval, Paints (WRICEF 141.B)"],
+    ["ONGC (OVL)", "ZFI_ACDOCA_JVA_ALIGN - JVA alignment upload"],
+    ["ONGC (OVL)", "ZFI_ACDOCA_JVSO1_RECON - ACDOCA / JV ledger reconciliation"],
+    ["ONGC (OVL)", "ZFI_TR_BANKACCT - treasury bank account register"],
+    ["ONGC (OVL)", "ZGR_FSITEM_REMAP - Group Reporting FS item remap"],
+]
+json.dump(dict(rows=out, excluded=EXCLUDED, summary=summary, ts_docs=TS_DOCS, rubric=RUBRIC, floor=FLOOR, rubric_label=RUBRIC_LABEL, complex=COMPLEX,
                project_map=PROJECT_MAP, evidence_client=EVIDENCE_CLIENT, atc=ATC, atc_baseline=round(atc_base, 2),
                tier_label=TIER_LABEL), open(os.path.join(D, "register.json"), "w"), indent=1)
 print(json.dumps(summary, indent=1))

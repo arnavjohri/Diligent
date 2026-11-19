@@ -1,0 +1,458 @@
+[
+ {
+  "n": 1,
+  "category": "NOORDER - SELECT SINGLE on a partial key",
+  "fix": "Convert to SELECT <fields> FROM <t> WHERE <cond> ORDER BY PRIMARY KEY INTO @tgt UP TO 1 ROWS, closed by ENDSELECT, without SINGLE; on a projection ORDER BY the selected key fields.",
+  "keep": true
+ },
+ {
+  "n": 2,
+  "category": "NOORDER - cluster/pool table or cursor without ORDER BY",
+  "fix": "Add ORDER BY PRIMARY KEY (SELECT *) or ORDER BY the selected key fields; keep CDPOS/CDHDR cursor paging and only add ORDER BY PRIMARY KEY.",
+  "keep": true
+ },
+ {
+  "n": 3,
+  "category": "NOORDER - empty SELECT/ENDSELECT",
+  "fix": "Replace with SELECT SINGLE @abap_true FROM t WHERE <cond> INTO @DATA(lv_exists), keep the sy-subrc logic and remove the leftover loop.",
+  "keep": true
+ },
+ {
+  "n": 4,
+  "category": "NOORDER - READ TABLE BINARY SEARCH without SORT",
+  "fix": "Insert SORT itab BY <WITH KEY fields> before the enclosing LOOP; do not duplicate an identical existing SORT.",
+  "keep": true
+ },
+ {
+  "n": 5,
+  "category": "NOORDER - DELETE ADJACENT DUPLICATES, AT NEW, ON CHANGE OF",
+  "fix": "SORT before the loop on exactly the compared fields (plain SORT if none), placed outside any loop.",
+  "keep": true
+ },
+ {
+  "n": 6,
+  "category": "NOORDER - first-row access (READ INDEX 1, LOOP with EXIT)",
+  "fix": "Add the inline pseudo-comment #EC CI_NOORDER to the statement.",
+  "keep": true
+ },
+ {
+  "n": 7,
+  "category": "NOORDER - WRITE/EXIT/RETURN inside a SELECT loop",
+  "fix": "The finding is reported inside the loop body: add ORDER BY to the enclosing SELECT, or set #EC CI_NOORDER on the reported line; do not append ORDER BY there.",
+  "keep": true
+ },
+ {
+  "n": 8,
+  "category": "NOORDER on a FOR ALL ENTRIES SELECT",
+  "fix": "ORDER BY is not allowed with FOR ALL ENTRIES; use the #EC CI_NOORDER pseudo-comment instead.",
+  "keep": true
+ },
+ {
+  "n": 9,
+  "category": "NOORDER - ALV factory result",
+  "fix": "SORT the internal table before handing it to the ALV factory.",
+  "keep": true
+ },
+ {
+  "n": 10,
+  "category": "Field Length Extension - type and length conflict messages",
+  "fix": "Use CONV #( ) to the MATNR or amount type, or retype the variable to the field's data element, then add #EC CI_FLDEXT_OK[note] as the resolution marker.",
+  "keep": true
+ },
+ {
+  "n": 11,
+  "category": "Field Length Extension - generic parameter messages",
+  "fix": "Use the pseudo-comment only: #EC CI_FLDEXT_OK[2215424 | 2610650].",
+  "keep": true
+ },
+ {
+  "n": 12,
+  "category": "Field Length Extension - IMPORT",
+  "fix": "Add ACCEPTING PADDING to the IMPORT statement.",
+  "keep": true
+ },
+ {
+  "n": 13,
+  "category": "Field Length Extension - offset/length access",
+  "fix": "Rework the offset access; if no clean fix exists, use #EC CI_FLDEXT_OK[2215424].",
+  "keep": true
+ },
+ {
+  "n": 14,
+  "category": "Field Length Extension - RFC function parameter type",
+  "fix": "Interface parameters in generated includes are normally false positives; review the interface in SE37 before changing anything.",
+  "keep": true
+ },
+ {
+  "n": 15,
+  "category": "Field length on released BAPIs (notes 2438131, 2669857, 2628704)",
+  "fix": "Pass MATERIAL_LONG or CONV #( ) only where a narrower value goes into the BAPI structure; otherwise #EC CI_USAGE_OK or CI_FLDEXT_OK[note]. The BAPI is not replaced.",
+  "keep": true
+ },
+ {
+  "n": 16,
+  "category": "Field length mapper classes",
+  "fix": "Use CL_MATNR_CHK_MAPPER=>CONVERT_ON_OUTPUT/INPUT, cl_cls_chk_mapper=>convert_char_value_on_output/input, or CONV DMBTR( ) for explicit conversion.",
+  "keep": true
+ },
+ {
+  "n": 17,
+  "category": "Amount field length extension (note 2610650)",
+  "fix": "Use CONV #( ) where an amount goes to a non-extended target; otherwise #EC CI_FLDEXT_OK[2610650].",
+  "keep": true
+ },
+ {
+  "n": 18,
+  "category": "Material number extension (note 2215424)",
+  "fix": "Review each usage; fix only where code truncates the material number to 18 characters, otherwise #EC CI_FLDEXT_OK[2215424].",
+  "keep": true
+ },
+ {
+  "n": 19,
+  "category": "Segmentation field length (note 2522971)",
+  "fix": "Use the pseudo-comment #EC CI_FLDEXT_OK[2522971].",
+  "keep": true
+ },
+ {
+  "n": 20,
+  "category": "MATNR 40-character selection screen",
+  "fix": "Use PARAMETERS with VISIBLE LENGTH 18, or place the parameter on its own BEGIN/END OF LINE block, to avoid the selection screen generation error.",
+  "keep": true
+ },
+ {
+  "n": 21,
+  "category": "MOVE-CORRESPONDING from ANY TABLE",
+  "fix": "Loop row by row into a work area LIKE LINE OF the target and APPEND it, avoiding the OBJECTS_TABLES_NOT_COMPATIBLE dump.",
+  "keep": true
+ },
+ {
+  "n": 22,
+  "category": "VBTYP - SD document category (note 2198647)",
+  "fix": "Retype to VBTYPL (keep the field name); use IF_SD_DOC_CATEGORY (EQ) or CL_SD_DOC_CATEGORY_UTIL=>rg_*( ) (IN); remove INCLUDE RVVBTYP.",
+  "keep": true
+ },
+ {
+  "n": 23,
+  "category": "VBUK / VBUP / LIKPUK status reads",
+  "fix": "Read V_VBUK_S4 / V_VBUP_S4 in strict Open SQL, or the status fields of VBAK/VBAP/LIKP/LIPS; replace LIKPUK with I_DeliveryDocument.",
+  "keep": true
+ },
+ {
+  "n": 24,
+  "category": "KONV -> PRCD_ELEMENTS",
+  "fix": "Select FROM v_konv or v_konv_cds in strict Open SQL; drop CLIENT SPECIFIED and mandt.",
+  "keep": true
+ },
+ {
+  "n": 25,
+  "category": "BSEG reads -> I_OperationalAcctgDocItem (note 2431747)",
+  "fix": "Field-aliased SELECT from the CDS view with absolute-amount elements plus SHKZG; SELECT *, ENDSELECT and UP TO stay on BSEG with #EC CI_DB_OPERATION_OK.",
+  "keep": true
+ },
+ {
+  "n": 26,
+  "category": "FAGLFLEXA / ACDOCA -> I_GLAccountLineItem",
+  "fix": "Map the fields to the CDS view and filter with rldnr = SourceLedger '0L'.",
+  "keep": true
+ },
+ {
+  "n": 27,
+  "category": "VBFA document flow",
+  "fix": "Read I_SDDocumentMultiLevelProcFlow (26 mapped fields); write via RV_DOCUMENT_FLOW_UPDATE_U or treat as a fit-gap.",
+  "keep": true
+ },
+ {
+  "n": 28,
+  "category": "VBAP (+VBUP) -> I_SalesDocumentItem",
+  "fix": "Field-aliased CDS read; status fields are built in, so drop the VBUP join (ABGRU = SalesDocumentRjcnReason, WERKS = Plant).",
+  "keep": true
+ },
+ {
+  "n": 29,
+  "category": "VBRK / VBRP billing (note 2768887)",
+  "fix": "Add DRAFT = SPACE to the WHERE clause, or read I_BillingDocumentBasic / I_BillingDocumentItemBasic; VBRK-BUPLA stays on the table.",
+  "keep": true
+ },
+ {
+  "n": 30,
+  "category": "Master data reads KNA1 / LFA1 / KNVV / VBAK-KNUMV",
+  "fix": "Use I_Customer, I_Supplier, I_CustomerSalesArea and I_SalesDocument.SalesDocumentCondition; KNA1-LZONE is not exposed, so keep the table read.",
+  "keep": true
+ },
+ {
+  "n": 31,
+  "category": "J_1BBRANCH -> P_BUSINESSPLACE (note 3404390)",
+  "fix": "Swap the FROM table name (field names are identical) and change TYPE j_1bbranch-<f> to p_businessplace-<f>.",
+  "keep": true
+ },
+ {
+  "n": 32,
+  "category": "J_1IMOVEND / J_1IMOCUST -> LFA1 / KNA1 (note 2877717)",
+  "fix": "Swap the FROM table name and retype the TYPE references accordingly (J_1IMOVEND -> LFA1, J_1IMOCUST -> KNA1).",
+  "keep": true
+ },
+ {
+  "n": 33,
+  "category": "V_OLR3_VBAX -> VBAK",
+  "fix": "Swap the FROM table to VBAK; no aliasing.",
+  "keep": true
+ },
+ {
+  "n": 34,
+  "category": "Material documents and valuation (notes 2206980, 2337368)",
+  "fix": "Read via NSDM_V_MSEG / NSDM_V_MARC / NSDM_V_MBEW; a DDIC view on MKPF/MSEG must be redefined on a MATDOC-based CDS view.",
+  "keep": true
+ },
+ {
+  "n": 35,
+  "category": "KNKK / KNKA credit management -> FSCM (note 2227014)",
+  "fix": "Decouple TYPE knkk-<f> to the data element; read via CVI_CUST_LINK -> BUT000 -> UKMBP_CMS_SGM; write via CL_UKM_FACADE; credit team validates.",
+  "keep": true
+ },
+ {
+  "n": 36,
+  "category": "Credit LIS S066 / S067 (note 2659692)",
+  "fix": "Read UKM_ITEM or use function module UKM_COMMTS_READ.",
+  "keep": true
+ },
+ {
+  "n": 37,
+  "category": "Pricing / condition technique (note 2220005)",
+  "fix": "VAKEY -> VAKEY_LONG; read via cl_cond_vakey_srv=>determine_vakey_from_db; review KALKS; DZAEHK -> Z data element; retype NACH references to NAST.",
+  "keep": true
+ },
+ {
+  "n": 38,
+  "category": "MRP planning file MDVM/MDVL/DBVM/DBVL (note 2227059)",
+  "fix": "Read PPH_DBVM and decouple TYPE mdvm-<f> to the data element.",
+  "keep": true
+ },
+ {
+  "n": 39,
+  "category": "Data element / structure token swaps",
+  "fix": "CHAR02 -> CHAR2 (2689873); FIP_S_BWART_RANGE -> BWART_RANGE and FIP_T_BWART_RANGE -> BWART_T_RANGE (2368747); CKMLMV011 -> MLRUNLIST.",
+  "keep": true
+ },
+ {
+  "n": 40,
+  "category": "T012K house bank (notes 1976487, 2870766)",
+  "fix": "Read via FCLM_BAM_ACLINK2 / CL_FCLM_BAM_BSMCUST_API; writes are a fit-gap because no released API exists.",
+  "keep": true
+ },
+ {
+  "n": 41,
+  "category": "Foreign trade EIKP / EIPO (notes 2223144, 3482527)",
+  "fix": "Redirect reads to the ITM_* fields on LIKP/LIPS/VBRK/VBRP/EKPO; EXPIMP_POSTING remains a fit-gap.",
+  "keep": true
+ },
+ {
+  "n": 42,
+  "category": "LIS S025 / S021-S028 (note 2268063)",
+  "fix": "Manual rework onto analytical CDS views.",
+  "keep": true
+ },
+ {
+  "n": 43,
+  "category": "SKA1 / SKB1 / CSKB / T001 (note 2389136)",
+  "fix": "Use a pseudo-comment, or map SKA1 -> I_GLAccountInChartOfAccounts and SKB1/CSKB -> I_GLAccountInCompanyCode.",
+  "keep": true
+ },
+ {
+  "n": 44,
+  "category": "Type-reference decouple",
+  "fix": "Change TYPE tab-field to TYPE <data element> only if the note removed that field and a data element of that exact name exists; otherwise leave it or use another valid table.",
+  "keep": true
+ },
+ {
+  "n": 45,
+  "category": "Non-strategic, compatibility-scope and orphaned-object notes",
+  "fix": "Add the reviewed #EC CI_USAGE_OK[note] pseudo-comment; any functional move is handled separately.",
+  "keep": true
+ },
+ {
+  "n": 46,
+  "category": "Simplified transaction codes in literals (P3)",
+  "fix": "Add the pseudo-comment on the quoted literal only.",
+  "keep": true
+ },
+ {
+  "n": 47,
+  "category": "DR_GET_COUNTRY_NAME (note 2862992)",
+  "fix": "Replace with SELECT SINGLE landx FROM t005t WHERE spras = l AND land1 = c.",
+  "keep": true
+ },
+ {
+  "n": 48,
+  "category": "LAST_DAY_OF_MONTHS (note 2296016)",
+  "fix": "Replace the function module with RP_LAST_DAY_OF_MONTHS; use a pseudo-comment as fallback.",
+  "keep": true
+ },
+ {
+  "n": 49,
+  "category": "Currency conversion FMs (note 2340247)",
+  "fix": "Use BAPI_CURRENCY_CONV_TO_INTERNAL and a Z copy of the SAP_TO_DISPLAY function module, or #EC CI_USAGE_OK[2340247] on the calls.",
+  "keep": true
+ },
+ {
+  "n": 50,
+  "category": "IS-Media FMs ISP_* (note 2469385)",
+  "fix": "Use native ABAP (TRANSLATE, date function modules) or the FI_ variant.",
+  "keep": true
+ },
+ {
+  "n": 51,
+  "category": "BAPI successor with a different interface",
+  "fix": "Wrapper pattern: call BAPI_PO_GETDETAIL1 with new structures and MOVE-CORRESPONDING back to the old work areas; use BAPISDORDER_GETDETAILEDLIST.",
+  "keep": true
+ },
+ {
+  "n": 52,
+  "category": "Customer/vendor display transactions XK03 / XD03 / VD02",
+  "fix": "Look up the partner via CVI_VEND_LINK / CVI_CUST_LINK and navigate with CL_BUPA_NAVIGATION_REQUEST.",
+  "keep": true
+ },
+ {
+  "n": 53,
+  "category": "BDC / CALL TRANSACTION -> BAPI",
+  "fix": "Replace with BAPIs: MSC1 -> BAPI_BATCH_CREATE with BAPI_OBJCL_*; XK01 -> VMD_EI_API; VA01 -> BAPI_SALESORDER_CREATEFROMDAT2; map BAPIRET2 to bdcmsgcoll.",
+  "keep": true
+ },
+ {
+  "n": 54,
+  "category": "MRP functions MD_CHANGE_MRP_DATA, MD_STOCK_REQUIREMENTS_LIST_API",
+  "fix": "Re-implement functionally (PPH_MRP_RUN_BADI=>MDPS_ADJUST); for MD_STOCK_REQUIREMENTS_LIST_API use a pseudo-comment.",
+  "keep": true
+ },
+ {
+  "n": 55,
+  "category": "Legacy statutory reports RFUMSV00 (note 2480067)",
+  "fix": "Replaced by Document and Reporting Compliance; treat as a fit-gap with no code fix.",
+  "keep": true
+ },
+ {
+  "n": 56,
+  "category": "DML write on a simplified table",
+  "fix": "Use the released API (BAPI_MATERIAL_SAVEDATA, CMD_EI_API / VMD_EI_API, BAPI_ACC_DOCUMENT_POST and similar); do not swap the table; if none exists, leave and flag.",
+  "keep": true
+ },
+ {
+  "n": 57,
+  "category": "BPGE SELECT (notes 2226072 / 2226048)",
+  "fix": "Use the pseudo-comment #EC CI_DB_OPERATION_OK[note].",
+  "keep": true
+ },
+ {
+  "n": 58,
+  "category": "SELECT * or JOIN on a simplified table",
+  "fix": "Keep the retained table with #EC CI_DB_OPERATION_OK; do not rewrite to CDS because the SELECT * structure differs.",
+  "keep": true
+ },
+ {
+  "n": 59,
+  "category": "Critical statement - native SQL",
+  "fix": "Rewrite to Open SQL where practical, otherwise use #EC CI_EXECSQL.",
+  "keep": true
+ },
+ {
+  "n": 60,
+  "category": "Critical statement - database hints",
+  "fix": "Remove non-HANA hints (MSSQLNT, ORACLE, DB6) and re-emit the terminating period; keep %_HINTS HDB.",
+  "keep": true
+ },
+ {
+  "n": 61,
+  "category": "ADBC interface",
+  "fix": "Use the pseudo-comment #EC CI_ADBC_US.",
+  "keep": true
+ },
+ {
+  "n": 62,
+  "category": "DDIC view based on a simplified table",
+  "fix": "Cannot be pseudo-commented; redefine the view on the successor or MATDOC-based CDS view (a DDIC task).",
+  "keep": true
+ },
+ {
+  "n": 63,
+  "category": "CLIENT SPECIFIED on a compatibility view",
+  "fix": "Drop CLIENT SPECIFIED and the mandt condition (avoids DBSQL_ILLEGAL_CLIENT_SPECIFIED); keep it on real transparent tables.",
+  "keep": true
+ },
+ {
+  "n": 64,
+  "category": "Strict Open SQL form",
+  "fix": "Use comma-separated field and ORDER BY lists, @ on right-hand operands only, and clause order FROM - FAE - WHERE - ORDER BY - INTO - UP TO.",
+  "keep": true
+ },
+ {
+  "n": 65,
+  "category": "ORDER BY PRIMARY KEY validity",
+  "fix": "Valid only on SELECT * or when the full key is selected; on a projection use ORDER BY explicit key fields or drop it.",
+  "keep": true
+ },
+ {
+  "n": 66,
+  "category": "UP TO n ROWS placement and SINGLE removal",
+  "fix": "Non-strict: UP TO right after the field list; strict: INTO @tgt UP TO 1 ROWS last; always remove the SINGLE keyword.",
+  "keep": true
+ },
+ {
+  "n": 67,
+  "category": "Pseudo-comment placement",
+  "fix": "The #EC token starts with a double quote, one per line; on a line with an existing comment place it inside that comment.",
+  "keep": true
+ },
+ {
+  "n": 68,
+  "category": "Change-marker mechanics",
+  "fix": "Comment out old code instead of deleting it, do not double-wrap, and match the marker format already used in the file.",
+  "keep": false
+ },
+ {
+  "n": 69,
+  "category": "Worklist handling",
+  "fix": "Locate the statement by content, not by worklist line; cross-check the object against the worklist before rewriting.",
+  "keep": false
+ },
+ {
+  "n": 70,
+  "category": "Scripted edit safety and post-edit verification",
+  "fix": "Skip comment lines, mask literals length-preserving, apply inline pseudo-comments first then real fixes bottom-up, and verify block balance and stray @@.",
+  "keep": false
+ },
+ {
+  "n": 71,
+  "category": "FOR ALL ENTRIES guard",
+  "fix": "Wrap every FOR ALL ENTRIES in IF driver IS NOT INITIAL; an empty driver table drops the WHERE and scans the whole table.",
+  "keep": true
+ },
+ {
+  "n": 72,
+  "category": "Runtime dump DBSQL_STMNT_TOO_LARGE",
+  "fix": "Replace the huge IN-list from a range table by a guarded FOR ALL ENTRIES on a de-duplicated driver table.",
+  "keep": true
+ },
+ {
+  "n": 73,
+  "category": "Runtime dump on memory allocation (TSV_TNEW_PAGE_ALLOC)",
+  "fix": "Narrow the field list, add the real filter and the driver guard, and narrow the internal table type.",
+  "keep": true
+ },
+ {
+  "n": 74,
+  "category": "Performance patterns",
+  "fix": "Use SORT + BINARY SEARCH for linear READ in LOOP when safe; skip unused reads; avoid blanket CDS wrapping; no bulk BOM explosion function exists.",
+  "keep": true
+ },
+ {
+  "n": 75,
+  "category": "FBL5N -> FBL5H",
+  "fix": "Map the parameters from SUBMIT rfitemar to FAGL_LINE_ITEM_BROWSER_AR; moderate rework that does not by itself remove the memory risk.",
+  "keep": true
+ },
+ {
+  "n": 76,
+  "category": "Scope rules for generated includes and fit-gap",
+  "fix": "Decide scope per project; reserve fit-gap for T012K writes, removed foreign trade and DRC reports; leave 'Missing include' findings for manual handling.",
+  "keep": false
+ }
+]

@@ -1,0 +1,442 @@
+{
+ "ovl/zpra_dpr": {
+  "nick": "ZPRA DPR dashboard and CPI",
+  "title": "ZPRA DPR rebuild: Fiori dashboard, CDS/RAP backend and CPI inbound interface",
+  "objects": "ZCL_ZPRA_DAILY_PROD_DPC_EXT (class), ZPRA_T_DLY_PRD (table), ZDPRPRODDASH (BSP application), ZDPR_Q_BOEPD_TOTAL (CDS view), ZDPR_C_PROD_CUBE (CDS view), ZPRA_I_DPR_EXCEL_DL (CDS view)",
+  "req": "Rebuild the DPR Excel (actual vs target BOEPD, performance table, summary download) as CDS/RAP services and a Fiori dashboard with six cards. Let CPI post about 20 daily records in one OData call and reconcile interface data with manual entries.",
+  "chal": "The older S/4 release rejects much modern CDS/RAP (no year() or month(), no analytical queries in a V4 binding), so every object had to be ported. The interface data differ by unit scaling and block mapping from the CPI mapping.",
+  "ai": "Built the Overview Page dashboard with six cards and four detail apps, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL and the classic-view rewrite of ZDPR_Q_PROD_PERF. Designed the $batch changeset handling in the OData class, fixed zero-valued measures creating rows and produced three reconciliation workbooks.",
+  "man": "The consultant generated the apps, activated the CDS objects, ran previews, deployed the BSP apps and supplied the class source and system extracts for the reconciliations. Launchpad, SICF and service set-up were done per system.",
+  "res": "The dashboard and four detail apps are deployed (TR OCQK901673, 17/09/26) and the cards load in the preview. Zero-valued measures no longer create rows. Reconciliations show the remaining differences come from the CPI mapping."
+ },
+ "ovl/zfi_jib_status": {
+  "nick": "ZFI_JIB_STATUS dashboard",
+  "title": "JIB Status management dashboard: CDS cube and views for a Fiori analytical query",
+  "objects": "ZI_JIB_STATUS_CUBE (CDS view), ZI_JIB_DOC (CDS view), ZI_JIB_DOC_AGG (CDS view), ZI_JIB_CLEARING (CDS view), ZI_JIB_PERIOD (CDS view), ZI_JIB_VENTURE (CDS view)",
+  "req": "Corporate Accounts wants, per joint venture and month, to see whether the operator's JIB is posted, the upload date and every document number. Later additions: all ventures, document type, clearing data and Business Unit for 49 ventures.",
+  "chal": "BKPF carries no venture and only the document type marks a JIB, so the venture is read from BSEG. The older release allows only classic CDS views, so periods need a 12-branch UNION ALL and aggregates need helper views.",
+  "ai": "Designed and delivered eight classic CDS views (1,110 lines) including the analytical cube, with reversal handling, clearing, document type OS and Business Unit by country prefix. Traced a launchpad HTTP 403 on repeat FB03 navigation to browser traces and resolved it with the tile parameter sap-ushell-next-navmode=explace.",
+  "man": "The consultant supplied BKPF samples, documents, browser traces and the client's Business Unit export, imported the objects, pasted the four changed objects on 17/11/26, did the key-user release and took the scope decisions.",
+  "res": "All twelve periods are generated, so months without a JIB show an open status instead of disappearing. The client's Corporate Accounts team confirmed the dashboard working well on 17/11/26, and the navigation fix was confirmed on 12/11/26."
+ },
+ "ovl/per_barrel_agenda": {
+  "nick": "Per Barrel Analysis cube",
+  "title": "Per Barrel Analysis board agenda: CDS cube and analytical query on ZFI_AGENDA",
+  "objects": "ZI_PBA_AGENDA_TF (CDS table function), ZCL_PBA_AGENDA_TF (class), ZI_PBA_ITEM (CDS view), ZI_PBA_CUBE (CDS view), ZZ1_PBA (analytical query), ZFI_AGENDA (table)",
+  "req": "Finance prepares the Per Barrel Analysis workbook for the board agenda: per project, oil and gas, price, cost, royalty, transportation, DD&A and profit per barrel by year and period. The ask was a CDS cube in Custom Analytical Queries.",
+  "chal": "ZFI_AGENDA stores values as DF34_DEC, which a CDS view on this release cannot cast, so an AMDP table function reads it. The table keeps only the last ZFI_PL run per project in four column sets, and Q2-Q4 are derived from cumulative periods.",
+  "ai": "Built table function ZI_PBA_AGENDA_TF, AMDP class ZCL_PBA_AGENDA_TF (331 lines), views ZI_PBA_ITEM and ZI_PBA_CUBE and an import ZIP. The cube output (1,322 rows) and two query exports (88 of 88 and 152 of 152 values) equal SAP. Gave the query set-up, calculated-measure formulas and tile URL.",
+  "man": "The consultant supplied the workbook and table extracts, created and activated the objects in ADT (10/11/26 and 12/11/26), built and published the query ZZ1_PBA, exported it twice and created the tile.",
+  "res": "The cube and query reproduce the PBA sheet, with query exports tying out to SAP values. The objects were active on 10/11/26 and the quarter change on 12/11/26."
+ },
+ "ovl/zfi_bank_reval": {
+  "nick": "ZFI_BANK_REVAL report",
+  "title": "Bank Revaluation report for Group Reporting: mapping table and CDS views",
+  "objects": "ZFI_BR_GLMAP (table), ZI_BR_BANKREVAL_ITM (CDS view), ZI_BR_BANKREVAL_CUBE (CDS view), ZI_BR_HOUSEBANKACCT (CDS view), ZBR_PISHARE (data element), ZZ1_BZHO1M6TDK65 (analytical query)",
+  "req": "FI / Group Reporting wants the period-end bank revaluation sheet as a Fiori analytical query: per bank G/L account the balance, participating-interest (PI) share, key-date rate to USD and revalued USD balance. The app-built query lacked PI share and rate.",
+  "chal": "An app-generated query cannot join a table or read TCURR, so a custom cube was needed. Several constructs were rejected at activation on the older release, T012K is redirected to V_T012K_BAM, and the cube needed key-user release (C1).",
+  "ai": "Designed the mapping table ZFI_BR_GLMAP, ZBR_PISHARE, the three CDS views, an import ZIP and a 48-row SM30 load sheet. Diagnosed the activation errors, the missing C1 release, the T012K redirect and a join fan-out, and reconciled the client's 18/11 extraction account by account (39 split accounts tie, 0 exceptions).",
+  "man": "The consultant pulled the ZIP, activated the views, did the key-user release, loaded the 48 SM30 rows and supplied system observations and query exports. The FI consultant built the query and the client's Corporate Accounts team tested.",
+  "res": "The query shows PI share, rate type, exchange rate, house bank and account number per bank account, with the PI share held in a maintainable table. The views were active on 03/11/26 and the house-bank fan-out was closed on 17/11/26."
+ },
+ "ovl/zmm_purchdoc_cds_ext": {
+  "nick": "Fiori PO custom fields and F4",
+  "title": "Fiori Manage Purchase Orders: custom EKKO header fields and F4 value helps",
+  "objects": "ZC_PURCHASEORDERTP_EXT (CDS view extension), ZCL_MM_PO_VH_MPC (class), ZCL_MM_PO_VH_DPC (class), ZEI_MM_PO_VH_MPC (enhancement), ZEI_MM_PO_VH_DPC (enhancement), MM_PUR_PO_MAINT_V2_SRV (standard OData service)",
+  "req": "The 84 custom EKKO append fields must show in Fiori Manage Purchase Orders and the GUI F4 helps of the Customer Data tab must be available there. The functional lead also wanted Validity Start / End visible and editable.",
+  "chal": "The app runs on the SEGW service MM_PUR_PO_MAINT_V2_SRV with fixed entity sets, so a CDS annotation alone does not reach the UI. Value helps had to be created at runtime through implicit enhancements of the generated MPC/DPC classes.",
+  "ai": "Reconciled ZC_PURCHASEORDERTP_EXT against ZSTR_HEADER (79 of 79 custom fields present, 12 of 84 annotated) and added four fields. Built six value-help CDS views, ZCL_MM_PO_VH_MPC (917 lines), ZCL_MM_PO_VH_DPC (271 lines) and two enhancement sheets, and diagnosed a short dump, an address F4 and an inactive view.",
+  "man": "The consultant pasted and activated every object, ran Gateway Client and app tests, supplied dump text, screenshots, table extracts and $metadata, and chose the implementation route.",
+  "res": "F4 on Inspection Type works in the app with key and description (22/10/26) and the ten fixed-value sets are served. No standard SAP object is modified: value helps are added through implicit enhancements that call Z classes."
+ },
+ "ovl/zfi_acdoca_jva_align": {
+  "nick": "ZFI_ACDOCA_JVA_ALIGN upload",
+  "title": "ZFI_ACDOCA_JVA_ALIGN: Excel upload posting JVA alignment lines to ACDOCA ledger 0L",
+  "objects": "ZFI_ACDOCA_JVA_ALIGN (report)",
+  "req": "Ledger 0L lacks the venture / equity group / recovery indicator split of the JV ledger, and Group Reporting reads 0L. The split is inserted from an Excel file as ACDOCA-only lines, with a default test run and an undo, without moving any account balance.",
+  "chal": "A direct INSERT into ACDOCA without BKPF/BSEG means every other field must be derived and every account must net to zero. Release limits and an Excel reader limitation appeared at activation and first upload.",
+  "ai": "Built the report (1,793 lines after five iterations), a TS, a 15-item assumptions sheet and a Python builder that checks 172 recon rows net to zero per account (40 accounts). Resolved 15 syntax errors, reworked the recovery-indicator rule, added an OLE fallback reader and added posting key, BTTYPE and CBTTYPE.",
+  "man": "The consultant ran the syntax checks and uploads on the development systems, supplied the recon rows and SE16H observations and took the design decisions (document type ZJ, posting date, currencies).",
+  "res": "The report defaults to a test run, posts balanced documents per company code, year and period, and offers an undo with authority checks. A one-account file posted as ZJVA000001 and the reconciliation showed zero on 03/11/26."
+ },
+ "ovl/zgr_fsitem_remap": {
+  "nick": "ZGR_FSITEM_REMAP cube",
+  "title": "Group Reporting FS item remap: mapping table and customer copy of standard cube",
+  "objects": "ZGR_FSITEM_MAP (table), ZI_GR_FSREMAP_CUBE (CDS view), ZGR_FSREMAP_READ (report), ZGR_RITEM_NEW (data element), I_MatrixConsolidationReportC (standard CDS view)",
+  "req": "Group Reporting wants selected FS items reported under a different FS item for certain consolidation units without touching ACDOCU postings, using a maintained table and a view on the standard Group Data Analysis cube.",
+  "chal": "The standard cube I_MatrixConsolidationReportC (111 elements, 73 associations) had to be re-exposed as a customer cube on an older release. An unfiltered read dumps with DBSQL_SQL_INTERNAL_DB_ERROR because of the HANA memory limit.",
+  "ai": "Built table ZGR_FSITEM_MAP, the 743-line cube ZI_GR_FSREMAP_CUBE (71 of 73 associations, new column NewFinancialStatementItem) and an import ZIP of 7 objects with a paste fallback, plus a TS. Diagnosed the HANA memory dump and wrote the 234-line report ZGR_FSREMAP_READ that forces the pushdown filters.",
+  "man": "The consultant supplied the standard cube source and the dump text, and handled the manual steps: import or paste, maintenance dialog generation, key-user release, search help and the mail to the Group Reporting team.",
+  "res": "The standard cube stays unmodified. The customer copy shows the mapped FS item where a row exists, else the original, and the read report makes ledger, version, year and period mandatory so the memory dump cannot recur."
+ },
+ "ovl/zaa_impairmentloss": {
+  "nick": "ZAAIMP impairment posting",
+  "title": "Asset impairment and write-back posting: batch input replaced by FI-AA BAPIs for S/4",
+  "objects": "SAPMZAAIMP (module pool), MZAAIMPI01 (include), MZAAIMPF01 (include), BAPI_ASSET_VALUE_ADJUST_POST (BAPI), BAPI_ASSET_WRITEUP_POST (BAPI), ZAAIMP (transaction)",
+  "req": "The impairment and write-back posting (ZFIIMPR, then ZAAIMP) stopped in SM35 after the S/4 conversion with 'LEAVE TO TRANSACTION is not allowed in batch input'. Posting had to work again for all six modes.",
+  "chal": "ABAA and ABZU are dispatchers on S/4 that redirect with LEAVE TO TRANSACTION, so all seven batch-input call sites were unusable. The BAPIs are not like-for-like: ALPHA conversion and depreciation areas were implicit on the screen.",
+  "ai": "Diagnosed the dispatcher redirect and mapped mode, screen and transaction for the seven call sites. Delivered MZAAIMPF01 (237 to 658 lines, new BAPI FORMs) and MZAAIMPI01 (1,436 to 1,925 lines) with check-then-post per row and a per-asset run log, the old code commented in place.",
+  "man": "The consultant supplied the SM35 log and table evidence, ran BAPI check tests in SE37, relayed the accounting principle 0004 decision, pasted and activated both includes and ran ZFIIMPR to ZAAIMP.",
+  "res": "Both includes were activated on 27/08/26. The verified run gives readable per-asset messages (0 posted, 117 in error), which is the intended result while AA fiscal year 2026 is closed."
+ },
+ "ovl/zfi_acdoca_jvso1_recon": {
+  "nick": "ZFI_ACDOCA_JVSO1_RECON",
+  "title": "ZFI_ACDOCA_JVSO1_RECON: reconciliation of ACDOCA ledger 0L against JV ledger items",
+  "objects": "ZFI_ACDOCA_JVSO1_RECON (report)",
+  "req": "The functional team needs to see where ACDOCA ledger 0L and JV ledger items (JVSO1, 4A) disagree for FI documents before the JVA cut-over, by venture, equity group, account, recovery indicator, year and period. The output also feeds the alignment upload.",
+  "chal": "Choosing the link between the ledgers (JVSO1-REFFIDOC = ACDOCA-BELNR), reading JVSO1 at line level because aggregates are not allowed with FOR ALL ENTRIES, a UTC time-stamp cut-off, and the JVSO1 4C column for the third currency.",
+  "ai": "Built the report (451 lines, CL_SALV_TABLE) with the third currency via ledger 4C and three amount-to-post columns, after removing the transaction-currency comparison. Wrote a 13-item assumptions sheet and a TS (v1.2) with requirement mapping and nine test scenarios.",
+  "man": "The consultant gave the requirement and the design changes, ran the report for company OVL 2022 001 and re-ran it with a later cut-off.",
+  "res": "The report lists the 172 differing rows for OVL 2022 001 and feeds the alignment upload. After posting, the re-run with a later cut-off showed zero (03/11/26)."
+ },
+ "ovl/zcl_gr_je_post": {
+  "nick": "ZCL_GR_JE_POST wrapper",
+  "title": "ZCL_GR_JE_POST: wrapper class posting Group Reporting journal entries from ABAP",
+  "objects": "ZCL_GR_JE_POST (class), CL_FINCS_DP_DOCUMENT_POST (standard class), IF_BADI_FINCS_CUST_DATAMON (BAdI interface)",
+  "req": "A custom Group Reporting Data Monitor task must post group journal entries into ACDOCU from ABAP.",
+  "chal": "No released posting API exists on this release, so posting goes through the internal Data Monitor engine CL_FINCS_DP_DOCUMENT_POST, whose structures are recorded as three flagged assumptions in the source.",
+  "ai": "Built class ZCL_GR_JE_POST (134 lines) with a public method POST that wraps the Data Monitor posting engine, builds the header and item structures by MOVE-CORRESPONDING from an ACDOCU-typed table and returns BAPIRET2_T. Documented the SE24 test procedure and the scope of the next version.",
+  "man": "The consultant created the class in ADT or SE24, activated it and ran the SE24 test described in the handover steps.",
+  "res": "One callable method posts a group journal entry and returns messages to the caller. The caller controls when the data is saved, so a later BAdI can drive the class."
+ },
+ "ovl/zgr_ct_tasklog": {
+  "nick": "ZGR_CT_TASKLOG report",
+  "title": "CXCD currency translation task log: data-source analysis and report ZGR_CT_TASKLOG",
+  "objects": "ZGR_CT_TASKLOG (report), C_CNSLDTNCRCYTRNSLTNTSKLG (standard CDS view), FINCS_LOG_HEADER (standard table), FINCS_FSIASSGMT (standard table), FIN_CONS_GENERICLOG_SRV (standard OData service)",
+  "req": "The team needed to know which CDS view or table the CXCD currency translation task log reads, and a report on it with all 23 columns of the Fiori Items export plus the currency translation attribute per FS item.",
+  "chal": "The only evidence was an ST05 binary export, an ABAP data cluster compressed twice, which had to be decoded to find the data sources. Every field name had to come from the trace's own select lists.",
+  "ai": "Decoded the ST05 export and established that the log is served by OData FIN_CONS_GENERICLOG_SRV from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG, keyed by the task log UUID, with ACDOCU not read. Wrote report ZGR_CT_TASKLOG (about 400 lines) with the 23 export columns, the FINCS_FSIASSGMT join and a Test Run checkbox.",
+  "man": "The consultant supplied the ST05 export, the Fiori Items export (3,403 rows) and a table screenshot, gave the follow-up requirement changes and handled the syntax check, activation and text elements.",
+  "res": "The report reads the same sources as the standard task log and shows the 23 columns in the Fiori order, so the two lists compare column for column. A decoder utility unpacks further ST05 exports."
+ },
+ "ovl/zfi_tr_bankacct": {
+  "nick": "ZFI_TR_BANKACCT register",
+  "title": "Treasury bank account register: table, DDIC objects and analytical cube",
+  "objects": "ZFI_TR_BANKACCT (table), ZTR_ACCTNO (domain), ZI_TR_BANKACCT (CDS view), ZI_TR_BANKACCT_CUBE (CDS view), ZFI_TREASURY (package)",
+  "req": "Treasury needs a separate transaction for the company's own bank account details, maintained by Treasury and viewable by other finance staff: nine columns per account, with a Fiori tile in Custom Analytical Queries.",
+  "chal": "The Custom Analytical Queries app lists only cubes released for key users (C1) and a cube needs a measure, so a counting cube sits on the plain view. The existing table ZFI_BANK_DETAILS serves a different purpose and is left alone.",
+  "ai": "Delivered table ZFI_TR_BANKACCT with three domains and seven data elements, view ZI_TR_BANKACCT (63 lines), cube ZI_TR_BANKACCT_CUBE (90 lines) and an import ZIP of 17 files. Wrote a 16-item assumptions sheet and a TS with the SE11, SE54, SE93 and key-user steps, and a cube annotation checklist.",
+  "man": "The consultant supplied the requirement, ran the import, handled the SE11 foreign keys, SE54 maintenance dialog, SE93 transactions and key-user release, and coordinated with Treasury and the functional consultant.",
+  "res": "Treasury gets a business-readable register with check tables for country and currency, and a cube for Custom Analytical Queries. The existing cash-call payee table is untouched."
+ },
+ "ovl/zfi_cnb_brs": {
+  "nick": "ZFIBRS bank reconciliation",
+  "title": "ZFIBRS bank reconciliation: header truncation fix and FF67 upload changes",
+  "objects": "ZFI_CNB_BRS (report), ZFIBRSTOP (include), ZFI_CNB_BRS1 (report), ZFIBRS (transaction), ZPFSTATUS (GUI status)",
+  "req": "The BRS step stopped after Validation with 'Inconsistent header in file'. By change request the FF67 upload also had to send all bank statement lines without validations, with correct opening and closing balances and a clean log.",
+  "chal": "A 2003 batch-input program drives FF67 (SAPMF40K) and its screen sequence changes with the processing type. The file header was truncated because AZNUM is 18 positions long, and the balance sign convention produced message FV 072.",
+  "ai": "Reconstructed clean sources from SE38 listings and delivered ZFIBRSTOP (three fields widened to 70) and ZFI_CNB_BRS (screen flow, balances, warning suppression, no-validation upload). Built ZFI_CNB_BRS1 (4,431 lines) with a matched-only variant and settled the balance signs from the 172-line bank file.",
+  "man": "The consultant supplied the listings and bank files, ran each upload and FF67 test, confirmed the FV messages, copied the client version into the development system, ran drift checks against the SAP copies and moved the transport to QA.",
+  "res": "The BRS file header no longer truncates and the FF67 upload runs without validations, with opening and closing balance check lines above the log. Lines with non-numeric amounts are listed instead of dropped."
+ },
+ "ovl/zmm_arms": {
+  "nick": "ZMM_ARMS role rename",
+  "title": "ARMS authorisation request tool: hardcode analysis and PFCG role rename for S/4",
+  "objects": "SAPMZMMPREPROLE1_PHASEII (module pool), MZMMPREPROLE1_PHASEIII01 (include), MZMMPREPROLE1_PHASEIIF01 (include), ZGRC_CALL_TODE (report), ZMM_PREP_ROLEDES (table)",
+  "req": "An inventory of everything hardcoded in the ARMS authorisation request tool and of the roles that make a user an approver. For the S/4 role build, four hardcoded PFCG role names in ZOVL_ARMS had to be renamed and 14 role tables moved to QA.",
+  "chal": "A module pool family of about 25,000 lines with literals in five FORMs and modules; the live transaction (ZOVL_ARMS, as ZMM_ARMS is retired) had to be established first. One old role maps to two new roles, and the role tables are cross-client.",
+  "ai": "Produced the hardcode register, role master, approver-role analysis from AGR_1251 and transaction comparison. Delivered includes MZMMPREPROLE1_PHASEIII01 (8,758 lines) and MZMMPREPROLE1_PHASEIIF01 (11,193 lines) with 7 edits, splitting PM_PS into PM and PS rows, and a transport sheet for the role tables.",
+  "man": "The consultant supplied listings, table extracts, the AGR_1251 extract and fresh downloads, confirmed the live transaction with the business, pasted and activated the includes and built and released the transport.",
+  "res": "Only the literals changed, and the one-to-two role mapping is handled explicitly. The analysis also showed about 44 roles make a user an L1 ARMS approver through FRGCO = '*', which was passed to Security."
+ },
+ "ovl/zf01_exchange_rate": {
+  "nick": "ZF01 exchange rate upload",
+  "title": "Exchange rate mass upload interface: CPI to Gateway OData V2 to TCURR",
+  "objects": "ZF01_EXCHANGE_RATE_SRV (OData service), ZCL_ZF01_EXCHANGE_RATE_DPC_EXT (class), ZCL_ZF01_EXCHANGE_RATE_MPC_EXT (class), ZF01_EXCHANGE_RATE (SEGW project), BAPI_EXCHRATE_CREATEMULTIPLE (standard BAPI)",
+  "req": "A source system produces a file of foreign-exchange rates. SAP CPI must post them in mass into TCURR through a custom OData service that validates each record.",
+  "chal": "A flat OData V2 create accepts one rate per call, so mass upload needed a $batch changeset with CHANGESET_BEGIN redefined. The BAPI rejects mixed direct and indirect quotations (E!/033) and unmaintained currency pairs (E!/015).",
+  "ai": "Delivered the final DPC_EXT method EXCHANGERATESSET_CREATE_ENTITY (about 97 lines), the CHANGESET_BEGIN redefinition, the accepted CPI $batch envelope, the FI and Basis prerequisites and an 11-row error-to-fix table in a 342-line handover document. Added a TCURC/TCURF pre-check and a mandatory-field check.",
+  "man": "The consultant modelled and generated the service in SEGW, registered it in /IWFND/MAINT_SERVICE, set up the CPI adapter and mapping, and ran Gateway Client tests and debugging on OCQ. FI maintains the OBBS translation ratios.",
+  "res": "A single create works (rate saved in TCURR) and the CPI $batch envelope is accepted, with each part running CREATE_ENTITY. Business messages replace raw BAPI errors."
+ },
+ "ovl/zfi_pl": {
+  "nick": "ZFI_PL unmapped G/L and JVSO1",
+  "title": "ZFI_PL profitability statement: SECC exclusion and JVSO1 reads moved to ACDOCA view",
+  "objects": "SAPFZFIPL (module pool), ZFI_PL (transaction), MZFIPLF01 (include), ZFI_PNL_GL (table), JV_JVSO1_ACDOCA (standard CDS view)",
+  "req": "5* series G/L accounts appeared as unmapped in ZFI_PL after the S/4 move, although they are not part of the OVL trial balance. Every read of JVSO1 also had to use SAP's view JV_JVSO1_ACDOCA, as JVSO1 is no longer written.",
+  "chal": "Fourteen secondary cost elements (account group SECC) became G/L accounts on S/4 and surfaced as unmapped. The view switch touches 24 SELECT sites in a 15,384-line include, each checked against the view definition.",
+  "ai": "Identified the SECC cause once the missing block and SKA1 data were supplied and wrote a 26-line exclusion patch. Changed FROM jvso1 to FROM jv_jvso1_acdoca at all 24 sites in MZFIPLF01 (15,384 to 15,461 lines, old line commented in BOC/EOC) and produced a 24-site paste sheet.",
+  "man": "The consultant supplied the print, checked ZFI_PNL_GL, provided the G/L check snippet, the SKA1 facts and the full download of 26/10/26, and applied the SECC patch in the system.",
+  "res": "SECC accounts are excluded from the unmapped check, with the reason documented in the code. All 24 JVSO1 reads use the SAP view with field lists and WHERE conditions untouched."
+ },
+ "kpmg/zmm_me35k_release": {
+  "nick": "ZMMME35K contract release",
+  "title": "ZMMME35K contract release restored after the ECC to S/4 conversion",
+  "objects": "ZMM_RM06EF00 (report), SAPMZFM06L (program), ZFM06LFFR (include), ZFM06LFFR_FRG_SET (include), ZMMME35K (transaction)",
+  "req": "The custom contract release transaction ZMMME35K, which checks that a linked PR is released and that the OLA value does not exceed the PR value, stopped releasing after the S/4 conversion.",
+  "chal": "Two independent causes in frozen 2003 Z copies of SAP code: FEKKO and HIDK are program-local, so they were built in SAPFM06L but read in SAPMZFM06L; and on S/4 ZFM06LFFR had been rebuilt from the modular standard, losing the custom FRG_SET blocks.",
+  "ai": "Documented both root causes, the standard release flow on S/4 and the inventory of live and dead custom logic. Delivered the new include ZFM06LFFR_FRG_SET (602 lines) restoring the custom FRG_SET with four helper FORMs, the one-line include swap in ZFM06LFFR and 13 PERFORM corrections in ZMM_RM06EF00.",
+  "man": "The consultant supplied the print listing and debugger comparison, created the include, assigned SAPMZFM06L as main program, swapped the include, applied the 13 corrections, activated in the documented order and maintained the T160 entry.",
+  "res": "Contract release works again and is confirmed working. SAP's own include FM06LFFR_FRG_SET, shared by standard ME35K, ME28 and ME35L, is not edited, and seven known issues are documented."
+ },
+ "ovl/me_process_po_cust": {
+  "nick": "ME_PROCESS_PO_CUST validity",
+  "title": "BAdI ME_PROCESS_PO_CUST: PO validity-date rule a warning in Fiori, error in the GUI",
+  "objects": "ME_PROCESS_PO_CUST (BAdI), IF_EX_ME_PROCESS_PO_CUST~CHECK (BAdI method), C_PurchaseOrderTP (standard CDS view), CL_MM_PUR_PO_MAINTAIN_FEAT_CHK (standard class), ZMM (message class)",
+  "req": "Service purchase orders created in the Fiori Manage Purchase Orders app hit the PO validity-period checks. The client wants the 'validity end before the latest delivery date' rule to be a warning in the app and stay an error in the GUI.",
+  "chal": "The method holds the client's whole PO rulebook (6,336 lines). sy-tcode and sy-ucomm are blank in the Fiori app, so transaction-guarded rules do not run there, and the validity dates are hidden in SAP's C_PurchaseOrderTP.",
+  "ai": "Documented the four validity-period rules and delivered the complete corrected method body (6,351 lines, was 6,336): one BOC/EOC block raising a warning when sy-tcode is initial and an error otherwise. Limited the change to the validity rule and flagged an unguarded POPUP_TO_CONFIRM as a short-dump risk in Fiori.",
+  "man": "The consultant supplied the method, the CDHDR transaction-code evidence and the user's two-PO test, decided the warning-in-app and error-in-GUI behaviour, and pasted and activated the change on 28/10/26.",
+  "res": "The validity rule is a warning in the Fiori app and an error in the GUI (activated 28/10/26). One line was replaced by 16 and all other PO rules are untouched. The Fiori release validations were analysed with a fix pattern."
+ },
+ "ovl/zbnk_app1": {
+  "nick": "ZFI_BNK_APP1 batch approval",
+  "title": "ZFI_BNK_APP1 bank batch approval: one signature released every batch of a payment run",
+  "objects": "ZFI_BNK_APP1 (module pool), ZFI_BNK_APP1_F01 (include), ZFI_BNK_APP1_I01 (include), ZFI_PAYM_FILE (table), ZFI_BATCH_SIGN (table)",
+  "req": "A second signatory selected one batch of payment run 21.08.2026 and all three batches were flagged released. Approval must be recorded batch by batch, with the bank file going out only when the whole run is approved.",
+  "chal": "ZFI_PAYM_FILE holds one record per payment run while REGUT holds one row per batch, so every READ TABLE drops the batch component and signing one batch transmitted the whole run. The cause is the ECC to S/4 port from BNK_BATCH_HEADER to REGUT.",
+  "ai": "Located the defect in ZFI_BNK_APP1 although it was reported against the read-only monitor ZBNK_APP2. Wrote ZFI_BNK_APP1_F01 (1,073 to 1,188 lines, new run-level approval-count FORM) and ZFI_BNK_APP1_I01 (465 to 583 lines) so the selected batch is signed first and the file is sent only when the run is fully approved.",
+  "man": "The consultant supplied the SE80 download and the evidence rows, then pasted and activated both includes in OCQ on 27/08/26.",
+  "res": "Approval is written per batch to ZFI_BATCH_SIGN and the bank file goes out only when every batch of the run is approved, with a user message for each outcome. Both includes were activated in OCQ on 27/08/26."
+ },
+ "ovl/zfi_jv_tb": {
+  "nick": "ZFI_JV_TB trial balance",
+  "title": "ZFI_JV_TB joint venture trial balance: venture column, opening balance, validation",
+  "objects": "ZFI_JV_TB (report), ZJVTB (transaction)",
+  "req": "Corporate Accounts reported the last venture VN2012 missing in the Excel output, the opening balance blank in every venture column since the move to the ACDOCA views, and differences in the ECC-vs-RISE validation.",
+  "chal": "A dynamic ALV with positional field names is exported through an Excel template. The live totals view has no legacy JVTO1 branch, so HSLVT is blank, and it returns no row for an account whose postings net to zero.",
+  "ai": "Rebuilt a clean 2,213-line source from the SE38 print and traced all eight opening-balance write sites. Delivered a corrected object (totals view switched to JV_JVTO1_ACDOCA_SWITCH_2 at five reads, USD branch restored to SUM( kslvt )) and a one-SELECT patch sheet for the missing G/L row. Showed one validation difference is a spreadsheet sort artefact.",
+  "man": "The consultant supplied list downloads and output workbooks, ran breakpoints and the test with the widened template, supplied the view DDL and fresh sources of 22/09 and 28/09, and confirmed with SE16N that no row exists for G/L 300100.",
+  "res": "Opening balances are restored by the corrected totals view, and accounts netting to zero are no longer dropped. The ECC-vs-RISE comparison is explained: only six G/Ls differ when matched on G/L number."
+ },
+ "ovl/zhana_services": {
+  "nick": "ZHANA timesheet Excel upload",
+  "title": "SAP Timesheet module pool: Excel download and upload, Scope handling, buttons",
+  "objects": "ZHANA_SERVICES_PRG (module pool), ZHANA_SERVICES_PRG_MAILF01 (include), ZSAP_TIMESHEET (table), ZSAPT_FORM1 (transaction), ZCON1 (transaction)",
+  "req": "In Create mode a consultant keys one timesheet row, downloads it to Excel, fills more rows there and uploads them back. Later additions: a Scope listbox and download filter, Print and Consumption buttons, and MICROSOFT scope for every Service Element.",
+  "chal": "A real .xlsx round trip inside a module pool (CL_SALV_TABLE download, CL_FDT_XL_SPREADSHEET upload read by column position, Excel serial dates). The source was an SE80 print wrapped at 72 columns, so only marked blocks can be pasted.",
+  "ai": "Rebuilt the includes from the SE80 print and wrote the FORMs DOWNLOAD_ROWS, UPLOAD_ROWS, XL_TO_DATE, XL_TO_DAYS, SET_HEADING and GET_SCOPE_VALUES (include grown from 14 to 672 lines). Added the Scope-filtered download popup, re-pointed Print to ZSAPT_FORM1 and Consumption to ZCON1, and allowed MICROSOFT scope without forcing AS IS.",
+  "man": "The consultant decided the design (real .xlsx, Create mode only, upload replaces table-control rows), supplied the SE80 print, and did the SE41 status change, SE51 listbox attribute, paste of marked blocks and testing.",
+  "res": "Rows can be filled in Excel and uploaded instead of keyed one by one. Upload validates Scope against the domain fixed values at run time and goes through the existing save path and its validation."
+ },
+ "ovl/zsap_consumption_report": {
+  "nick": "ZCON consumption report",
+  "title": "ZSAP_CONSUMPTION_REPORT: consumed-till-date columns and MICROSOFT scope",
+  "objects": "ZSAP_CONSUMPTION_REPORT (report), ZCON1 (transaction), ZSERVICE_ELEMENT (table), ZSAP_TIMESHEET (table)",
+  "req": "Available days only deducted the selected period's consumption, so the business wanted a column of everything consumed till date and Available based on it. MICROSOFT consumption also had to be shown and deducted from AS IS.",
+  "chal": "A second aggregation (till date, Head IT approved only) had to run beside the period aggregation without changing the period columns. The MICROSOFT requirement changed during the work, so the Available formula was redefined.",
+  "ai": "Added a second SUM (GT_SUM_TILL) and Consumed till date columns, with Available = Scope - Consumed till date (270 to 446 lines, BOC/EOC SAP_ABAP). Added MICROSOFT columns, reworked AS IS Available to deduct MICROSOFT till date, reordered the field catalog and wrote a test case for three date ranges.",
+  "man": "The consultant supplied the original source and the SE16N extract, set the changing requirement and column order, and activated and tested the changes.",
+  "res": "Available days and amount are based on consumption till date, with MICROSOFT deducted from AS IS and columns in the requested order. The period columns are unchanged."
+ },
+ "ovl/zsap_timesheet_form_prg": {
+  "nick": "Timesheet print by Scope",
+  "title": "ZSAP_TIMESHEET_FORM_PRG timesheet print: print by Scope and Smart Form filter",
+  "objects": "ZSAP_TIMESHEET_FORM_PRG (report), ZSAP_TIMESHEET_FORM_PRG_CP (report), ZSAP_TIMESHEET_FORM (Smart Form), ZSAP_TIMESHEET (table)",
+  "req": "A dropdown on the Timesheet Print selection screen to print only the records of the chosen Scope, reduced to two print options: A = AS IS + ADDITIONAL and M = MICROSOFT.",
+  "chal": "The Smart Form re-reads every line by DOC_NO, so Scope is passed as a new import parameter and applied in its Initialization SELECT. A sy-subrc check after DELETE ADJACENT DUPLICATES also gave a false 'Document No not found'.",
+  "ai": "Added the listbox parameter, the line filter before de-duplication and a message when nothing is left (323 to 413 lines). Diagnosed the false 'Document No not found' from the debugger and removed the check. Wrote the Smart Form Initialization code (43 to 88 lines) that filters lines by the import parameter IV_SCOPE.",
+  "man": "The consultant supplied the program and form sources, ran the copy in the system and reported debugger and activation results, and handled selection texts and the form's new import parameter.",
+  "res": "The print shows only the lines of the chosen print option, and a message replaces a blank run when nothing is left. Earlier versions were activated and tested in the system on 06/10/26."
+ },
+ "tools/zr_prog_download": {
+  "nick": "ZR_PROG_DOWNLOAD helper",
+  "title": "ZR_PROG_DOWNLOAD: mass download of ABAP sources with include tree and CDS DDL",
+  "objects": "ZR_PROG_DOWNLOAD (report), DDDDLSRC (table), CL_OO_CLASSNAME_SERVICE (standard class), GUI_DOWNLOAD (function module)",
+  "req": "The SAP systems have no ADT connection, so sources had to be downloaded by hand. A report was needed to download programs with their complete include tree, function groups, classes and CDS DDL sources in bulk, one file per object.",
+  "chal": "Recursive include resolution in source order for programs, function groups and class pools, a DDDDLSRC read for DDL sources, and a listing layout that the downstream parsers already understand.",
+  "ai": "Wrote a 766-line report adding CDS DDL sources (S_DDLS select-option, package checkbox, DDDDLSRC read) to the include-tree download, with coverage table, file naming and text elements documented. Reduced the DDL support to one block (FORM add_ddl_source) that can be added to the installed program.",
+  "man": "The consultant supplied the selection screen of the installed program, which shows its wider options, and runs the program for every download.",
+  "res": "The report is read-only and writes one file per object in a fixed listing layout, so downloads feed the audit scripts directly. A missing include leaves a one-line note instead of stopping the run."
+ },
+ "ovl/zfi_acdoca_vname_upd": {
+  "nick": "ZFI_ACDOCA_VNAME_UPD back-fill",
+  "title": "ZFI_ACDOCA_VNAME_UPD: one-off back-fill of ZZ1_VNAME on historical ACDOCA items",
+  "objects": "ZFI_ACDOCA_VNAME_UPD (report)",
+  "req": "After the custom field ZZ1_VNAME and the substitution rule SET_VNAME went live, only new postings were filled. Historical ACDOCA lines had to be filled from VNAME per company code and fiscal year.",
+  "chal": "A direct mass UPDATE of ACDOCA that must be safe to interrupt and re-run: packages of at most 10,000 lines saved one by one, NULL handling for the appended column, and a database column name (ZZ1_VNAME_COB) only known at activation.",
+  "ai": "Built the report (329 lines) with a default test run, a package loop saving each package, a guard that keeps existing values and stop conditions. After activation feedback it set the column name ZZ1_VNAME_COB and added a document-number filter and a 'Max lines' limit for a single-line first test.",
+  "man": "The consultant activated the report on DEV on 16/10/26, decided that no authority check is coded and asked for the single-line test option. The GR consultant re-runs the data release afterwards.",
+  "res": "The report back-fills ZZ1_VNAME from VNAME and is safe to re-run after an interruption, as existing values are kept. The column name ZZ1_VNAME_COB was confirmed by activation on DEV on 16/10/26."
+ },
+ "ovl/gr_venture_release": {
+  "nick": "GR Venture CDS extensions",
+  "title": "Group Reporting data release: Venture exposed through two CDS view extensions",
+  "objects": "ZX_CNSLDTNINTEGRPTDFINVNAME (CDS view extension), ZX_JOURNALENTRYITEMVNAME (CDS view extension), I_CnsldtnIntegRptdFinData (standard CDS view), E_JournalEntryItem (standard CDS view), ZZ1_VNAME_COB (custom field)",
+  "req": "After the Group Reporting data release (ACDOCA to ACDOCU) the custom Venture field in ACDOCU is blank. The business wants Venture, both ZZ1_VNAME_COB and the standard ACDOCA-VNAME, available for mapping in the data release task.",
+  "chal": "ZZ1_VNAME_COB is not exposed by I_CnsldtnIntegRptdFinData, and the standard VNAME needs two chained extensions. E_JournalEntryItem selects from acdoca with alias Persistence, so the guide syntax acdoca.xxx would not activate.",
+  "ai": "Wrote two CDS extend views: ZX_CNSLDTNINTEGRPTDFINVNAME (31 lines) and ZX_JOURNALENTRYITEMVNAME (20 lines, Persistence.vname as ZZ_VNAME). Documented the activation order and follow-up steps, and justified the alias usage when SAP's review queried it against the guide.",
+  "man": "The consultant relayed the SAP incident reply and review of 05/10/26, supplied the as-is source of E_JournalEntryItem and activated ZX_JOURNALENTRYITEMVNAME in ADT. Functional mapping and re-release rest with the functional team.",
+  "res": "Venture is made selectable in the data release mapping through customer extend views only, with the standard views untouched. SAP's review of 05/10/26 rated the Group Reporting view extension correct."
+ },
+ "kpmg/zmmims": {
+  "nick": "ZMMIMS GeM invoice F4",
+  "title": "ZMMIMS GeM Invoice No. F4 correction and automatic display",
+  "objects": "SAPMZMMIMS (module pool), ZMMIMS (transaction), MZMMIMSF01 (include), MZMMIMSI01 (include), ZGEM_BILL (table), ZGEM_BILLDET (table)",
+  "req": "In change mode the GeM Invoice No. was not displayed and F4 returned 'No values found' (DH801), while a number still appeared in the field. The invoice is to be determined from the purchase order, shown without F4 and saved with the document.",
+  "chal": "IST_RETURN_TAB is a header-line table shared by all search helps and was not refreshed, DELETE ADJACENT DUPLICATES ran before the PO filter and EBELN was missing from the WHERE clause. A proposed number must also exist in ZGEM_BILLDET.",
+  "ai": "Delivered a replacement MODULE get_geminv (136 lines) stating the three root causes, a patch sheet with the new FORM get_gem_invoice_no and three call points, and the two whole includes with the +019 changes in place.",
+  "man": "The consultant applied the changes in SE80 against a fresh download and checked EKKO-BSART and PROCSTAT of the affected PO in SE16.",
+  "res": "The GeM invoice is determined from the PO and filled only into an initial field, so stored values are kept. Only invoices that exist in ZGEM_BILLDET are proposed, and ZGEM_BILL is no longer read whole on every F4."
+ },
+ "ovl/zbc_tadir_srcsys": {
+  "nick": "ZBC_TADIR_SRCSYS_CHANGE",
+  "title": "ZBC_TADIR_SRCSYS_CHANGE: utility to reset TADIR source system from OCQ to OCD",
+  "objects": "ZBC_TADIR_SRCSYS_CHANGE (report), TADIR (table)",
+  "req": "Development moved from OCQ, now the quality system, to the new development system OCD, where every custom object still carries TADIR-SRCSYSTEM = OCQ, so each edit is a repair. The objects had to become originals in OCD.",
+  "chal": "A direct mass UPDATE of TADIR writes no change document, so the report must be safe by construction: it runs only in OCD, skips standard objects, defaults to test mode and asks for confirmation. The scope changed twice on the same day.",
+  "ai": "Built the report (141 lines): it selects every R3TR entry with SRCSYSTEM = OCQ, runs in test mode by default, asks for confirmation, repeats SRCSYSTEM = OCQ in the UPDATE and lists changed and rejected entries. Documented the guards, the missing change document, repair flags in open transports and the SE03 alternative.",
+  "man": "The consultant specified the utility and refined the scope twice on 05/10/26 (fixed OCQ to OCD, no selection screen, all custom objects).",
+  "res": "The report refuses to run unless the system is OCD, with a message, and standard objects (SRCSYSTEM = SAP) cannot match. It replaces changing object directory entries one by one in SE03."
+ },
+ "tools/st05_decode": {
+  "nick": "ST05 trace decoder",
+  "title": "Offline decoder for ST05 binary trace exports",
+  "objects": "ST05 (transaction)",
+  "req": "To find which CDS view or table the Group Reporting currency translation task log (opened from CXCD) reads, an ST05 trace supplied as a binary export had to be read without access to the SAP system.",
+  "chal": "The ST05 export is an undocumented binary format: an ABAP data cluster with a UTF-16 payload compressed with SAP's LZH, containing a second nested cluster compressed the same way.",
+  "ai": "Wrote an 86-line Python script that inflates both cluster levels and writes the trace records as TSV, all UTF-16 strings and the raw decompressed cluster. Applied to the supplied trace (97,911 records), it showed the log is served by OData FIN_CONS_GENERICLOG_SRV from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG.",
+  "man": "The consultant recorded the ST05 trace in the development system and supplied the export file.",
+  "res": "A binary ST05 export can be analysed offline. The script checks the file signature and the decompressed length, and it identified the data source of the CXCD task log from the supplied trace."
+ },
+ "ovl/zbnk_app2": {
+  "nick": "ZBNK_APP2 Back/Exit fix",
+  "title": "ZFI_BNK_APP bank payment file monitor: Back, Exit and Cancel corrected",
+  "objects": "ZFI_BNK_APP (report), ZBNK_APP2 (transaction), ZFI_BNK_APP_I01 (include), ZFI_BNK_APP_OUTPUTO01 (include), ZPF_FI_BNK_APP (GUI status), ZTITLE_FI_BNK_APP (GUI title)",
+  "req": "Two issues were reported against ZBNK_APP2: Back (F3), Exit and Cancel did nothing once the batch list was displayed, and one selected batch released all batches of the run.",
+  "chal": "Screen 100 had no GUI status (SET PF-STATUS was still the SE51 generator stub) and USER_COMMAND_0100 handled only code 'E'. The monitor has no release logic, so the writing program was found through the where-used list of ZFI_BATCH_SIGN.",
+  "ai": "Identified the missing GUI status and the CASE handling only 'E', specified status ZPF_FI_BNK_APP and title ZTITLE_FI_BNK_APP, and wrote ZFI_BNK_APP_I01 (38 to 91 lines) and ZFI_BNK_APP_OUTPUTO01 (60 to 73 lines). Traced the second issue to ZFI_BNK_APP1 through the where-used list.",
+  "man": "The consultant supplied the SE80 download and where-used list, ran the SE11/SE16 checks, created the status and title in SE41, pasted and activated both includes in OCQ and verified Back and Exit.",
+  "res": "Back (F3) and Exit (Shift+F3) work, verified in OCQ on 27/08/26. The GUI status also makes the download and resend buttons reachable. The release defect is handled in ZFI_BNK_APP1."
+ },
+ "ovl/zmm_tms_status": {
+  "nick": "ZMM_TMS_STATUS Excel export",
+  "title": "ZMM_TMS_STATUS tender status report: Excel export from the ALV opened blank",
+  "objects": "ZMM_TMS_STATUS (report), SAPMZMMTMS (module pool), ZMMTMSSTATUS (transaction)",
+  "req": "Excel export from the Tender Monitoring Status report opened as a blank workbook, although another custom report exported correctly for the same user.",
+  "chal": "A constant '0' was passed as NO_OUT on all 44 field-catalog entries: the grid still showed the columns, but the layout dialog and the spreadsheet export treated every column as hidden.",
+  "ai": "Ruled out the report logo as the cause and traced the fault to the NO_OUT constant from the symptom that Change Layout listed no displayed columns. Delivered the corrected report (1,533 to 1,536 lines) with a one-constant fix and the original line kept commented.",
+  "man": "The consultant supplied fresh source listings, ran the grid tests that confirmed the diagnosis, applied the change in DEV and raised the transport.",
+  "res": "Export works for all 44 columns. Confirmed working on DEV by the SAP lead the same day (28/10/26), transport OCDK920415."
+ },
+ "ovl/zfibrs": {
+  "nick": "ZFIBRS upload diagnosis",
+  "title": "ZFIBRS bank book upload: error diagnosis and Excel upload template",
+  "objects": "ZFIBRS (report)",
+  "req": "Users of the ZFIBRS bank book upload got 'Inconsistent header in file' and 'Run Validation Module First'. No template had been delivered with the original development, so users prepared the tab-delimited text file themselves.",
+  "chal": "GUI_UPLOAD returned sy-subrc 1 (FILE_OPEN_ERROR): the file was not opened, so the empty table made the program report a misleading 'Inconsistent header'. The 16-column file layout had to be inferred from a sample file.",
+  "ai": "Checked the sample file (115 lines, 16 columns) and diagnosed FILE_OPEN_ERROR, so no code change was needed. Built an upload template workbook (Upload sheet with Text-formatted cells, Instructions, Column Guide) whose tab-delimited save reproduces the sample lines byte for byte, and documented the layout and GUI_UPLOAD pitfalls.",
+  "man": "The consultant supplied the error texts, the sy-subrc value and the sample file, and passed the procedural fix to the users: run from SAP GUI desktop, close the file and check the exact file name.",
+  "res": "The root cause is established without a code change, and users get a standard template that keeps leading zeros and 0.00 values intact."
+ },
+ "ovl/zfitax_pbt_calc_prg": {
+  "nick": "ZFITAX PBT row loss",
+  "title": "ZFITAX_PBT_CALC_PRG: FAGLFLEXT read drops rows through FOR ALL ENTRIES",
+  "objects": "ZFITAX_PBT_CALC_PRG (report), ZFI_TAX_CREDIT_REPORT (report), FAGLFLEXT (S/4 compatibility view)",
+  "req": "The PBT calculation showed account sums that did not match the ledger: for account 200153 (company code OVL, 2026, ledger 0L) period-6 credits of 18,018.00 INR and 187.81 USD were missing.",
+  "chal": "FOR ALL ENTRIES applies an implicit DISTINCT over the columns of the target type ty_fl. On the S/4 compatibility view rows differ only by DRCRK and RCNTR, which ty_fl lacks, so identical credit rows collapse (25 rows on the database, 21 in it_fl).",
+  "ai": "Diagnosed the row loss and explained why widening ty_fl is not a real fix. Wrote a 67-line patch sheet: a RANGE on RACCT built from lt_racct, sorted, de-duplicated and guarded with IS NOT INITIAL, with the original statement commented in BOC/EOC. Flagged the same statement in ZFI_TAX_CREDIT_REPORT and the DBSQL_STMNT_TOO_LARGE risk.",
+  "man": "The consultant supplied the row counts from the system (25 rows in SE16N against 21 in it_fl, 29/10/26) and the account figures.",
+  "res": "The patch returns every database row, and an empty account list now selects nothing instead of every account. The same fix is identified for the second report that uses the same statement."
+ },
+ "ovl/zjv_bapi_balupload1": {
+  "nick": "ZJV_BAPI_BALUPLOAD1 XREF1",
+  "title": "ZJV_BAPI_BALUPLOAD1 JV G/L balance upload: XREF1 not reaching BSEG-XREF1",
+  "objects": "ZJV_BAPI_BALUPLOAD1 (report), ZJV_BAPI_BALUPLOAD1_MON (report), BAPI_ACC_DOCUMENT_POST (BAPI), ZJVBALUPLOAD1 (transaction)",
+  "req": "XREF1 supplied in the upload file must update BSEG-XREF1 on the posted document. It worked in the monthly program ZJV_BAPI_BALUPLOAD1_MON but not in this one.",
+  "chal": "GUI_UPLOAD fills the target structure by column position. IST_GL declared XREF1 as field 28, but the 33-column template has five columns before it, so XREF1 received a blank column and file column 33 was dropped.",
+  "ai": "Found the positional mismatch by comparing IST_GL with the sister program's declaration and added the five placeholder columns before XREF1 (declaration-only change in BOC/EOC, 1,429 to 1,448 lines). Confirmed SCREEN_300 already maps XREF1, listed the out-of-scope defects left untouched and added a development test upload file.",
+  "man": "The consultant supplied the SE80 download on 14/10/26 and the evidence that XREF1 works in the _MON program.",
+  "res": "File columns and structure fields now match by position, so XREF1 reaches BSEG-XREF1 with no logic change, in line with the working sister program. Out-of-scope defects are reported rather than silently changed."
+ },
+ "ovl/rgjv_update_acc_data_in_acdoca": {
+  "nick": "RGJV ACDOCA correction tool",
+  "title": "SAP JVA tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA: how it fetches data and why it stops",
+  "objects": "RGJV_UPDATE_ACC_DATA_IN_ACDOCA (standard report), CL_JVA_MIG_CORRECT_ACDOCA (standard class), CL_JVA_MIG_POST_ACDOCA (standard class), JVSO1 (table), ACDOCA (table), JVA_ACD_UPD_LOG (table)",
+  "req": "Understand how SAP's JVA ACDOCA correction tool fetches and corrects data, how JVSO1 relates to ACDOCA, and why a test document ends with 'The detected issues cannot be fixed through this program'.",
+  "chal": "The logic sits in a standard class of 91 methods. JVSO1 splits the offset line into 50 lines by venture, equity group and recovery indicator while ACDOCA has 13, so the amounts differ and no selection-screen option can correct it.",
+  "ai": "Wrote a 226-line analysis: the JVSO1-to-ACDOCA join per document type, the ten-step data fetch, the interface parameters the report does not set and an eleven-point checklist. Located the raising statement (COMPARE_FIELD_VALUES, wrong_amount), recorded the way-forward options including ACDOCA-only split lines, and noted a side effect even in test mode.",
+  "man": "The consultant downloaded the three SE80 prints from OCQ on 19/10/26, ran and debugged the test case in FI mode, reported the values and stated the preferred fix (ACDOCA-only split lines).",
+  "res": "The analysis explains why the standard tool cannot correct the document and recommends ACDOCA-only split lines, with an SAP incident before building. No standard object is modified."
+ },
+ "ovl/z_jva_alignment": {
+  "nick": "JVA alignment design",
+  "title": "Z_JVA_ALIGNMENT reference analysis and OVL design for JVA-aligned ACDOCA split lines",
+  "objects": "Z_JVA_ALIGNMENT (reference report), ZGTT_COMPANY (table), JVTO1 (table), ACDOCA (table), CL_JVA_MIG_POST_ACDOCA (standard class), ZFI_ACDOCA_JVA_ALIGN (report)",
+  "req": "A report from another landscape inserts JVA-aligned split lines directly into ACDOCA. The need was to establish what a similar OVL function requires and which fields it writes, leading to an upload that posts alignment lines to ledger 0L with an undo.",
+  "chal": "The 736-line reference uses one WITH statement over JVTO1 and ACDOCA, has hardcodes from another landscape and inserts directly with marker fields. JVA on ACDOCA is active at OVL, so totals, currency mapping and markers needed fresh decisions.",
+  "ai": "Wrote a 329-line analysis and design note: the algorithm in six steps with a worked example, a dependency table, an ACDOCA field-by-field map and ten decisions for an OVL version. Recorded the agreed design with a 15-column Excel template and file-level checks, which ZFI_ACDOCA_JVA_ALIGN then implemented.",
+  "man": "The consultant supplied the reference source and SE16H rows for a sample document, and took the decisions: posting date, profit centre from the Excel, period 000 in scope, document type ZJ and the third-currency column.",
+  "res": "The analysis found dead code and a missing plan-record filter in the reference, and set file-level checks (net zero per account, duplicate-upload stop, undo). It delivered the design that ZFI_ACDOCA_JVA_ALIGN implements."
+ },
+ "ovl/cnsldtn_grpjrnl_api": {
+  "nick": "GR journal entry API study",
+  "title": "Group Reporting group journal entry APIs: research trail and test data pack",
+  "objects": "API_CNSLDTNGRPJRNLITEM (standard OData service), FINCS_JRNLENTR_POST_SRV (standard OData service), CL_FINCS_DP_DOCUMENT_POST (standard class), CL_FINCS_DOCUMENT_REFRESH (standard class), FINCS_CUST_DATAMON (BAdI)",
+  "req": "The team wants to create group journal entries in ACDOCU by program, from a custom Data Monitor task (BAdI FINCS_CUST_DATAMON) or an ECC caller.",
+  "chal": "The read API is analytical only and the posting API API_CNSLDTNGRPJRNLENTR needs S/4HANA 2022 or later. Only engine classes and the draft-based Fiori service remain, and posting without CL_FINCS_DOCUMENT_REFRESH doubles amounts on re-run.",
+  "ai": "Documented the read API and established from two catalogue passes that no released posting API exists on this release. Recorded the posting-engine classes with signatures, traced the Fiori post action chain and wrote a test data pack for FINCS_JRNLENTR_POST_SRV (14 test cases, 8 data sets, four JSON payloads).",
+  "man": "The consultant checked the backend service catalogue twice in the system and supplied service metadata, SE24 screenshots of the classes and the PROCESS_DRAFT source. The team decided the route on 22/10/26.",
+  "res": "The research led to the posting wrapper ZCL_GR_JE_POST on the Data Monitor engine (22/10/26). It records the re-run rule and the upgrade risk of unreleased classes for sign-off."
+ },
+ "ovl/cj88_flq": {
+  "nick": "CJ88 settlement reversal",
+  "title": "CJ88 settlement reversal: update termination traced to standard Liquidity Calculation",
+  "objects": "CJ88 (transaction), FLQ_INSERT_EXTSN (standard function module), FLQITEMFI (table)",
+  "req": "Reversing a WBS settlement in CJ88 ended with 'Update was canceled' express documents and the reversals did not post.",
+  "chal": "The termination sits in standard SAP: the classic Liquidity Calculation inserts with a placeholder document number, so the second insert hits a duplicate key and the whole update rolls back.",
+  "ai": "Identified the exact crash site and mechanism from the ST22 dump, the SM13 update modules and table rows, and explained why the CJ88 log reported success although nothing posted. Recommended deactivating classic Liquidity Calculation for the company code instead of changing standard code.",
+  "man": "The consultant reproduced the error in the system, supplied the dump, update records and table extracts, and took the recommendation to the FI team.",
+  "res": "Root cause proven in SAP standard, so no custom code was changed. A configuration route and test sequence were handed to Finance."
+ },
+ "ovl/fbv0_core_gj_912": {
+  "nick": "FBV0 CORE_GJ 912",
+  "title": "FBV0 posting error CORE_GJ 912 on venture CP0001: root cause in standard VALID_BTYPE",
+  "objects": "VALID_BTYPE (standard function module), GJ_PARTNER_CHECK (standard function module), SAPMF05A (standard program), FBV0 (transaction), T8JV (table)",
+  "req": "Posting a parked FBV0 document (employee vendor advance coded to corporate venture CP0001) stopped with CORE_GJ 912 'No partner found for venture CP0001 and vendor 7078087', and the user needed the document to post.",
+  "chal": "In standard code, GJ_PARTNER_CHECK returns sy-subrc 0 for the corporate venture, so the FBV0 exemption in VALID_BTYPE does not fire and the operator check meets a blank T8JV-OPERATOR. Buffered JVA tables hide the reads from a plain SQL trace.",
+  "ai": "Pinned the branch taken from the ST05 trace, the SE37 sources of VALID_BTYPE and GJ_PARTNER_CHECK and SE16N evidence, and documented the three-step mechanism. Ruled out custom code and vendor master gaps, showed SAP KBA 0828606 does not apply, and wrote a reusable five-step method and an SAP incident recommendation.",
+  "man": "The consultant ran the ST05 trace, where-used and source scans in the system, supplied the SE37 sources and SE16N extracts, and handed the case to the functional lead on 08/10/26.",
+  "res": "Root cause proven in SAP standard, so no custom code was changed. An SAP note or incident route and an interim functional workaround were handed to the functional lead on 08/10/26."
+ },
+ "ovl/zfi_cp_mass_ven_pay": {
+  "nick": "ZFIAPP payment without cheque",
+  "title": "ZFI_CP_MASS_VEN_PAY mass vendor payment: payment posted without a cheque",
+  "objects": "ZFI_CP_MASS_VEN_PAY (report), ZFIAPP (transaction), ZFI_CP_MAS_VEN_AI001 (include), ZFI_CP_VEND_DOCS (table)",
+  "req": "F&A reported that ZFIAPP posted payment document 1726000164 without consuming a cheque (FCHN: 'No check information was found'). They needed the cause and a payment and cheque step that cannot silently diverge.",
+  "chal": "F-53 and FCH5 are two separate CALL TRANSACTIONs in two LUWs, so the payment is saved before the cheque step. The cheque number is guessed as PCEC-CHECL + 1 without reading PAYR or testing the lot ceiling, and every FCH5 error is ignored.",
+  "ai": "From the 08.08.2026 listing, produced a code analysis naming three silent exits in include ZFI_CP_MAS_VEN_AI001 and a hardcoded fiscal-year variant 'V3' for FCH5. Added SE16, SM35, ST22 and SE51 checks, the immediate functional action (new lot in FCHI, manual cheque assignment in FCH5) and a proposed fix.",
+  "man": "The consultant confirmed the cause in the system on 31/08/26 from PCEC (the lot keyed on the selection screen had CHECL = CHECT) and coordinated with F&A, who reported the issue.",
+  "res": "The root cause is confirmed: an exhausted cheque lot. The proposed fix replaces the silent exits with user messages naming the posted document and checks PAYR and the lot ceiling PCEC-CHECT."
+ },
+ "ovl/capex_provisional": {
+  "nick": "Provisional Capex punching",
+  "title": "Provisional Capex / Opex fortnightly punching: FS assessment and design",
+  "objects": "CL_GUI_ALV_GRID (standard class), TCURR (table), OB08 (transaction)",
+  "req": "Business units punch category-wise cumulative Capex (EWIP, DWIP, CWIP, Other) per project at each fortnight end in SAP. SAP must reject a decrease, pre-fill the prior cumulative and show three colour states, with derived views and an Opex equivalent.",
+  "chal": "The ask is not a report: it needs persistence, pre-fill, validation against stored data, a period freeze and per-cell state, so custom tables are needed. JV code cannot be the project key, and the older release makes RAP/Fiori far costlier.",
+  "ai": "Assessed the FS workbook and mapped the Capex and Opex sheets to one punched input table plus derived values. Proposed a three-layer design (six Z tables, an SE38 program with an editable ALV grid, output reports) and found that the Excel silently clamps a decrease to zero.",
+  "man": "The consultant supplied the FS workbook on 18/11/26 and takes the ten design questions to the FS owner.",
+  "res": "The assessment gives a clear build route: a punching transaction with reports on top, a lock on project and period and checks against decreases. The alternatives considered are recorded with reasons."
+ },
+ "ovl/wf_pr_release_ws90900008": {
+  "nick": "PR release workflow error",
+  "title": "PR release workflow WS90900008 in error: agent rule AC90900002 returns no agent",
+  "objects": "WS90900008 (workflow), AC90900002 (agent rule), EBAN (table)",
+  "req": "Workflow 50092307 for PR 2100001615 went into error at node 4 ('Rule AC90900002 ended with an exception', SWP 088), and the PR release workflow has to complete.",
+  "chal": "The rule returned no agent for this PR and is set to terminate on an empty result. The diagnosis works from two SWI1 screenshots and has to establish what the rule keys on.",
+  "ai": "Read the two SWI1 screenshots and established that rule AC90900002 returned no agent for the first ParForEach index of node 4 and terminates on an empty result, while everything before it ran. Wrote a four-step diagnosis path (PFAC rule simulation, rule function module, EBAN comparison with a PR that worked) and two pitfalls.",
+  "man": "The consultant supplied the two SWI1 screenshots on 28/10/26 and takes the diagnosis path forward with the rule's function module and PR data.",
+  "res": "The fault is localised to the agent rule determination at node 4, with a defined path to the cause. SWPR restarts the workflow after the correction, so a new PR is not needed."
+ },
+ "ovl/fagl_settings_restrict_mig": {
+  "nick": "FAGL_SETTINGS migrated data",
+  "title": "FAGL_SETTINGS RESTRICT_MIG (KBA 2891129): migrated data in FAGLL03 and FAGLB03",
+  "objects": "FAGL_SETTINGS (table), FAGLL03 (standard transaction), FAGLB03 (standard transaction), RFBILA00 (standard report), RFBELJ00 (standard report), ACDOCA (table)",
+  "req": "After the ECC to S/4 conversion, FAGLL03, FAGLB03, RFBILA00 and RFBELJ show migrated data incorrectly. The functional team forwarded SAP KBA 2891129 and wanted the notes and FAGL_SETTINGS steps reviewed, FAGLL03 first.",
+  "chal": "The migration wrote extra ACDOCA lines with MIG_SOURCE A, C and R that standard reports select. The remedy is SAP notes plus a FAGL_SETTINGS switch per program, the system has no outbound internet, and Fiori apps and Z reports ignore the switch.",
+  "ai": "Reviewed the KBA and mapped each program to its note and FAGL_SETTINGS parameter (seven-row table), split the work between ABAP/Basis (SNOTE) and functional (SM30, testing), and explained why SNOTE 2697319 returns 'Cannot be implemented'. Wrote three caveats for the functional team and a DEV test plan.",
+  "man": "The consultant tried note 2697319 in SNOTE and maintained FAGLL03_RESTRICT_MIG = X in FAGL_SETTINGS in DEV client 500 (23/10/26).",
+  "res": "The FAGLL03 restriction switch is maintained in DEV (23/10/26) and no Z object is needed. The test plan requires the before and after FAGLL03 difference to equal the sum of the account's A, C and R lines."
+ },
+ "ovl/zfi_fbl3n_acdoca_u": {
+  "nick": "FBL3N ACDOCA U-status lines",
+  "title": "ZFI_FBL3N_ACDOCA_U: BAdI adding ACDOCA-only journal entry lines to FBL3N",
+  "objects": "ZFI_FBL3N_ACDOCA_U (BAdI implementation), ZCL_IM_FI_FBL3N_ACDOCA_U (class), FI_ITEMS_CH_DATA (BAdI)",
+  "req": "Journal entries that exist only in ACDOCA with document status 'U' (no BSEG item) are not displayed in FBL3N. They should be listed together with the normal line items.",
+  "chal": "FBL3N reads BSIS/BSAS through logical database SDF, so the BAdI reads the selection screen by dynamic ASSIGN, selects leading-ledger ACDOCA lines and maps them to RFPOSXEXT, whose fields differ here. The BAdI also fires for FBL1N and FBL5N.",
+  "ai": "Wrote the complete CHANGE_ITEMS method body (294-line file) with the SE19 creation steps, field-name table, risks and five test steps. After the first activation it removed CPUDT, DMBTR, WRBTR and SEGMENT and switched to U_BKTXT and U_USNAM, matching RFPOSXEXT on this system.",
+  "man": "The consultant activated the first version on 19/10/26 and fed back the result, then created the implementation in SE19, activated it and tested.",
+  "res": "ACDOCA-only lines with status U are appended to FBL3N. A transaction-code guard keeps FBL1N and FBL5N untouched, the company-code authority check applies, and the leading ledger is read from T881 instead of being hardcoded."
+ }
+}

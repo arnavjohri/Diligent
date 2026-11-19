@@ -1,172 +1,127 @@
 {
  "metrics": [
   [
-   "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-   873,
-   "git rev-list --all --count"
+   "Commits in the work repository, 19/08 - 19/11/26",
+   865,
+   "Repository history, all branches"
   ],
   [
-   "Working days in the period 20/07 - 19/11/26 (less 4 days leave)",
+   "  of which AI-assisted (co-authored)",
+   724,
+   "Co-author record on each commit"
+  ],
+  [
+   "Working days in the period 20/07 - 19/11/26",
    85,
-   "Calendar"
+   "Calendar, after 4 days of leave"
   ],
   [
-   "Weekend days with AI-assisted work",
+   "Days with AI-assisted commits, 19/08 - 19/11/26",
+   58,
+   "Commit dates"
+  ],
+  [
+   "  of which weekend days",
    6,
-   "git commit dates: 23/08, 29/08, 05/09, 13/09, 27/09, 10/10"
-  ],
-  [
-   "Peak day (22/10/26): commits",
-   68,
-   "work from 09:37 to 22:08 IST (12.5 h)"
-  ],
-  [
-   "Days with 8+ hours between first and last commit",
-   6,
-   "git commit timestamps (IST)"
-  ],
-  [
-   "Commits made after 19:00 or before 07:00 IST",
-   37,
-   "git commit timestamps (IST)"
-  ],
-  [
-   "Days with 6 or more hours of measured AI session time",
-   6,
-   "Commit work blocks"
-  ],
-  [
-   "Average commits per active day",
-   15.1,
-   "Total commits / active days"
-  ],
-  [
-   "Period of AI-assisted delivery covered",
-   "20/07/26 - 19/11/26",
-   "Claude Code handoff record (from 20/07) and git history (from 19/08)"
-  ],
-  [
-   "AI tool",
-   "Claude Code (Anthropic)",
-   "Co-author trailers on commits; handoff record. No other AI tool is evidenced in the repository."
+   "Commit dates: 23/08, 29/08, 05/09, 13/09, 27/09, 10/10"
   ],
   [
    "Claude Code sessions, 20/07 - 15/08/26",
    30,
-   "COPILOT_CONTEXT_HANDOFF.md closing note: 30 session transcripts"
+   "Session records"
   ],
   [
    "Prompts in those sessions",
    557,
-   "Same note: 557 prompts"
+   "Session records"
   ],
   [
-   "Cloud sessions since 19/08/26 (one branch per session)",
+   "Claude Code cloud sessions, 19/08 - 19/11/26",
    65,
-   "git: origin/claude/* branches (sessions working directly on main not counted)"
+   "One working branch per session"
   ],
   [
-   "Commits in the repository (all branches, non-merge)",
-   802,
-   "git log --all --no-merges"
+   "Measured AI session time, 19/08 - 19/11/26 (hours)",
+   171,
+   "Commit timestamps grouped into working blocks"
   ],
   [
-   "  of which AI co-authored or AI-authored",
-   732,
-   "Co-Authored-By: Claude trailer or author 'Claude'"
-  ],
-  [
-   "Active days with AI-assisted commits (19/08 - 19/11/26)",
-   58,
-   "git commit dates; 6 of them weekend days"
-  ],
-  [
-   "Measured AI session hours (19/08 - 19/11/26)",
-   171.3,
-   "Commit timestamps grouped into work blocks (method on Effort Assumptions)"
-  ],
-  [
-   "Lines of ABAP / CDS / script code added in AI commits",
+   "Lines of ABAP / CDS / script code written in AI-assisted commits",
    150384,
-   "git numstat; originals, imports, SE80 prints and single additions > 3,000 lines excluded; rewrites count again"
+   "Commit statistics; imported originals and bulk additions excluded"
   ],
   [
-   "Lines of documentation added in AI commits (notes, TS, logs)",
+   "Lines of documentation written (notes, specifications, logs)",
    33461,
-   "git numstat on .md files"
+   "Commit statistics"
   ],
   [
    "Use cases completed",
    74,
-   "Master Register"
+   "Use-case register"
   ],
   [
-   "Distinct custom (Z/Y) SAP objects named in those use cases",
+   "Custom SAP objects built, changed or analysed",
    312,
-   "SAP object lists of the issue logs"
+   "Object lists of the use cases"
   ],
   [
-   "Issue-log entries written (issue -> cause -> fix)",
+   "Issue-log entries written (issue, cause, fix)",
    371,
-   "ISSUES.md rows across the use-case folders"
+   "Issue log of each object"
   ],
   [
-   "Review corrections applied to AI output before go-live",
-   211,
-   "Issue logs - activation feedback, functional review, test results"
+   "Technical specifications produced",
+   11,
+   "Annex D"
   ],
   [
-   "Technical specification files produced",
-   17,
-   "Files named TS_* outside the 2025 archives"
+   "Corrections to AI output logged during review and testing",
+   201,
+   "Issue logs"
   ],
   [
-   "Workflow skills built for the AI loop",
-   7,
-   ".claude/skills: triage, fix-issue, ship-fix, from-fs, atc-fix, status, solve"
-  ],
-  [
-   "Release constraints recorded from activation failures",
+   "Release constraints recorded and reused",
    56,
-   "MEMORY.md section 4"
+   "Toolkit record of activation constraints"
   ],
   [
-   "Past mistakes written up as standing rules",
-   31,
-   "MEMORY.md section 5"
+   "Workflow skills in the AI delivery toolkit",
+   7,
+   "Toolkit"
   ]
  ],
  "highlights": [
-  "873 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
-  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and Astral (KPMG) - on 58 active days including 6 weekends; peak day 22/10 with 68 commits over 12.5 hours.",
-  "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
-  "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
-  "312 custom SAP objects built, enhanced or analysed; 17 technical specifications; 371 issue-log entries; 150,384 lines of code written."
+  "865 commits in under four months on 58 working days with AI sessions, 6 of them weekends.",
+  "Three projects in parallel: PAL, ONGC Videsh (OVL) and Astral (KPMG).",
+  "ATC (ONGC): 847 assigned findings worked through 205 correction blocks in 51 includes across 14 packages.",
+  "JIB Status management dashboard for ONGC Videsh: built in three working days; client confirmation in writing on 17/11/26.",
+  "312 custom SAP objects built, changed or analysed; 11 technical specifications; 150,384 lines of code written."
  ],
  "monthly": [
   [
    "Aug 2026 (from 19/08)",
    15.2,
    8,
-   78
+   102
   ],
   [
    "Sep 2026",
    61.0,
    21,
-   236
+   284
   ],
   [
    "Oct 2026",
    66.9,
    20,
-   329
+   353
   ],
   [
    "Nov 2026 (to 19/11)",
    28.2,
    9,
-   118
+   126
   ]
  ],
  "gaps": [

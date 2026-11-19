@@ -14,9 +14,17 @@ for f in ["inv_ovl1.json", "inv_ovl2.json", "inv_ovl3.json", "inv_kpmg.json", "i
     for r in json.load(open(os.path.join(D, f))):
         inv[r["folder"]] = r
 
-bodies = git("log", "--all", "--no-merges", "--format=@@@%an%n%B")
-blocks = bodies.split("@@@")[1:]
-ai_commits = sum(1 for b in blocks if "Co-Authored-By: Claude" in b or b.startswith("Claude\n"))
+# Commits that only touch this report folder are excluded, so the figures describe the delivery work itself.
+raw = git("log", "--all", "--no-merges", "--format=@@@%H|%an%n%B@@FILES", "--name-only")
+report_only, blocks = 0, []
+for blk in raw.split("@@@")[1:]:
+    head, _, files = blk.partition("@@FILES")
+    fs = [l for l in files.strip().split("\n") if l.strip()]
+    if fs and all(f.startswith("reports/") for f in fs):
+        report_only += 1
+        continue
+    blocks.append(head)
+ai_commits = sum(1 for b in blocks if "Co-Authored-By: Claude" in b or b.split("\n")[0].endswith("|Claude"))
 branches = [b for b in git("branch", "-r").split() if b.startswith("origin/claude/")]
 days = [datetime.date.fromisoformat(d) for d in g["days"]]
 weekend = sum(1 for d in days if d.weekday() >= 5)
@@ -41,55 +49,43 @@ doc_lines = sum(auth["md"].values())
 month = collections.defaultdict(lambda: [0.0, set(), 0])
 for d, x in g["perday"].items():
     month[d[:7]][0] += sum(x.values()); month[d[:7]][1].add(d)
+# Commits per month on the same basis as the headline count: every commit in the history, less report-only commits.
+allm = collections.Counter(git("log", "--all", "--date=format:%Y-%m", "--format=%ad").split())
+repm = collections.Counter()
 for line in git("log", "--all", "--no-merges", "--date=format:%Y-%m", "--format=@@@%ad", "--name-only").split("@@@")[1:]:
-    ls = line.strip().split("\n")
-    if any(x.split("/")[0] in ("ovl", "kpmg", "pal", "tools") for x in ls[1:]):
-        month[ls[0]][2] += 1
+    ls = [x for x in line.strip().split("\n") if x.strip()]
+    if len(ls) > 1 and all(x.startswith("reports/") for x in ls[1:]):
+        repm[ls[0]] += 1
+for mth in allm:
+    month[mth][2] = allm[mth] - repm[mth]
 names = {"2026-08": "Aug 2026 (from 19/08)", "2026-09": "Sep 2026", "2026-10": "Oct 2026", "2026-11": "Nov 2026 (to 19/11)"}
 monthly = [[names[m], round(v[0], 1), len(v[1]), v[2]] for m, v in sorted(month.items())]
 
-all_commits = int(git("rev-list", "--all", "--count").strip())
-hb = g["hours_by_day"]
-long_days = sum(1 for v in hb.values() if v >= 6)
+all_commits = int(git("rev-list", "--all", "--count").strip()) - report_only
+assert sum(v[2] for v in month.values()) == all_commits, (sum(v[2] for v in month.values()), all_commits)
 d0, d1 = datetime.date(2026, 7, 20), datetime.date(2026, 11, 19)
 weekdays = sum(1 for i in range((d1 - d0).days + 1) if (d0 + datetime.timedelta(i)).weekday() < 5) - 4
-IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
-stamps = [datetime.datetime.fromisoformat(x).astimezone(IST) for x in git("log", "--all", "--no-merges", "--format=%ad", "--date=iso-strict").split()]
-byday = collections.defaultdict(list)
-for t in stamps:
-    byday[t.date()].append(t)
-spans = {d: (max(v) - min(v)).total_seconds() / 3600 for d, v in byday.items()}
-peak = max(byday, key=lambda d: len(byday[d]))
-late = sum(1 for t in stamps if t.hour >= 19 or t.hour < 7)
-wk_dates = ", ".join(d.strftime("%d/%m") for d in sorted(byday) if d.weekday() >= 5)
+wk_dates = ", ".join(d.strftime("%d/%m") for d in sorted(days) if d.weekday() >= 5)
+n_ts = len(reg["ts_docs"])
 metrics = [
-    ("Total commits in the repository, 19/08 - 19/11/26 (all branches)", all_commits, "git rev-list --all --count"),
-    ("Working days in the period 20/07 - 19/11/26 (less 4 days leave)", weekdays, "Calendar"),
-    ("Weekend days with AI-assisted work", weekend, f"git commit dates: {wk_dates}"),
-    (f"Peak day ({peak.strftime('%d/%m/%y')}): commits", len(byday[peak]), f"work from {min(byday[peak]).strftime('%H:%M')} to {max(byday[peak]).strftime('%H:%M')} IST ({spans[peak]:.1f} h)"),
-    ("Days with 8+ hours between first and last commit", sum(1 for v in spans.values() if v >= 8), "git commit timestamps (IST)"),
-    ("Commits made after 19:00 or before 07:00 IST", late, "git commit timestamps (IST)"),
-    ("Days with 6 or more hours of measured AI session time", long_days, "Commit work blocks"),
-    ("Average commits per active day", round(all_commits / len(days), 1), "Total commits / active days"),
-    ("Period of AI-assisted delivery covered", "20/07/26 - 19/11/26", "Claude Code handoff record (from 20/07) and git history (from 19/08)"),
-    ("AI tool", "Claude Code (Anthropic)", "Co-author trailers on commits; handoff record. No other AI tool is evidenced in the repository."),
-    ("Claude Code sessions, 20/07 - 15/08/26", 30, "COPILOT_CONTEXT_HANDOFF.md closing note: 30 session transcripts"),
-    ("Prompts in those sessions", 557, "Same note: 557 prompts"),
-    ("Cloud sessions since 19/08/26 (one branch per session)", len(branches), "git: origin/claude/* branches (sessions working directly on main not counted)"),
-    ("Commits in the repository (all branches, non-merge)", len(blocks), "git log --all --no-merges"),
-    ("  of which AI co-authored or AI-authored", ai_commits, "Co-Authored-By: Claude trailer or author 'Claude'"),
-    ("Active days with AI-assisted commits (19/08 - 19/11/26)", len(days), f"git commit dates; {weekend} of them weekend days"),
-    ("Measured AI session hours (19/08 - 19/11/26)", round(g["total_block_hours"], 1), "Commit timestamps grouped into work blocks (method on Effort Assumptions)"),
-    ("Lines of ABAP / CDS / script code added in AI commits", code_lines, "git numstat; originals, imports, SE80 prints and single additions > 3,000 lines excluded; rewrites count again"),
-    ("Lines of documentation added in AI commits (notes, TS, logs)", doc_lines, "git numstat on .md files"),
-    ("Use cases completed", len(counted), "Master Register"),
-    ("Distinct custom (Z/Y) SAP objects named in those use cases", len(objs), "SAP object lists of the issue logs"),
-    ("Issue-log entries written (issue -> cause -> fix)", issue_entries, "ISSUES.md rows across the use-case folders"),
-    ("Review corrections applied to AI output before go-live", rework, "Issue logs - activation feedback, functional review, test results"),
-    ("Technical specification files produced", len(ts_docs), "Files named TS_* outside the 2025 archives"),
-    ("Workflow skills built for the AI loop", 7, ".claude/skills: triage, fix-issue, ship-fix, from-fs, atc-fix, status, solve"),
-    ("Release constraints recorded from activation failures", 56, "MEMORY.md section 4"),
-    ("Past mistakes written up as standing rules", 31, "MEMORY.md section 5"),
+    ("Commits in the work repository, 19/08 - 19/11/26", all_commits, "Repository history, all branches"),
+    ("  of which AI-assisted (co-authored)", ai_commits, "Co-author record on each commit"),
+    ("Working days in the period 20/07 - 19/11/26", weekdays, "Calendar, after 4 days of leave"),
+    ("Days with AI-assisted commits, 19/08 - 19/11/26", len(days), "Commit dates"),
+    ("  of which weekend days", weekend, f"Commit dates: {wk_dates}"),
+    ("Claude Code sessions, 20/07 - 15/08/26", 30, "Session records"),
+    ("Prompts in those sessions", 557, "Session records"),
+    ("Claude Code cloud sessions, 19/08 - 19/11/26", len(branches), "One working branch per session"),
+    ("Measured AI session time, 19/08 - 19/11/26 (hours)", round(g["total_block_hours"]), "Commit timestamps grouped into working blocks"),
+    ("Lines of ABAP / CDS / script code written in AI-assisted commits", code_lines, "Commit statistics; imported originals and bulk additions excluded"),
+    ("Lines of documentation written (notes, specifications, logs)", doc_lines, "Commit statistics"),
+    ("Use cases completed", len(counted), "Use-case register"),
+    ("Custom SAP objects built, changed or analysed", len(objs), "Object lists of the use cases"),
+    ("Issue-log entries written (issue, cause, fix)", issue_entries, "Issue log of each object"),
+    ("Technical specifications produced", n_ts, "Annex D"),
+    ("Corrections to AI output logged during review and testing", reg["summary"]["corrections"], "Issue logs"),
+    ("Release constraints recorded and reused", 56, "Toolkit record of activation constraints"),
+    ("Workflow skills in the AI delivery toolkit", 7, "Toolkit"),
 ]
 gaps = [
     "Client timesheets record hours per client per day, not per object; they were not used as per-object effort actuals.",
@@ -103,11 +99,11 @@ gaps = [
     "Mail threads, meetings, SAP-side debugging and testing that produced no commit are not visible in the repository.",
 ]
 highlights = [
-    f"{all_commits} commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about {round(all_commits / len(days))} commits per active day.",
-    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and Astral (KPMG) - on {len(days)} active days including {weekend} weekends; peak day {peak.strftime('%d/%m')} with {len(byday[peak])} commits over {spans[peak]:.1f} hours.",
-    "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
-    "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
-    f"{len(objs)} custom SAP objects built, enhanced or analysed; {len(ts_docs)} technical specifications; {issue_entries} issue-log entries; {code_lines:,} lines of code written.",
+    f"{all_commits} commits in under four months on {len(days)} working days with AI sessions, {weekend} of them weekends.",
+    "Three projects in parallel: PAL, ONGC Videsh (OVL) and Astral (KPMG).",
+    "ATC (ONGC): 847 assigned findings worked through 205 correction blocks in 51 includes across 14 packages.",
+    "JIB Status management dashboard for ONGC Videsh: built in three working days; client confirmation in writing on 17/11/26.",
+    f"{len(objs)} custom SAP objects built, changed or analysed; {n_ts} technical specifications; {code_lines:,} lines of code written.",
 ]
 json.dump(dict(metrics=metrics, highlights=highlights, monthly=monthly, gaps=gaps, objects=sorted(objs)), open(os.path.join(D, "usage.json"), "w"), indent=1)
 for m in metrics:

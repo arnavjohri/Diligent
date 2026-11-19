@@ -14,11 +14,13 @@ const S = R.summary;
 const J = R.rows.find((o) => o.folder === "ovl/zfi_jib_status");
 const h = (x) => Math.round(x).toLocaleString("en-US");
 const pc = (x) => `${Math.round(x * 100)}%`;
-const md = (x) => Math.round(x / 8).toLocaleString("en-US");
+const md = (x) => Math.floor(x / 8 + 0.5).toLocaleString("en-US");
 const USAGE = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "usage.json"), "utf8"));
 const MET = Object.fromEntries(USAGE.metrics.map((m) => [m[0], m[1]]));
-const COMMITS = MET["Total commits in the repository, 19/08 - 19/11/26 (all branches)"];
-const USAGE_LINES = MET["Lines of ABAP / CDS / script code added in AI commits"].toLocaleString("en-US");
+const COMMITS = MET["Commits in the work repository, 19/08 - 19/11/26"];
+const USAGE_LINES = MET["Lines of ABAP / CDS / script code written in AI-assisted commits"].toLocaleString("en-US");
+const CS = JSON.parse(fs.readFileSync(path.join(__dirname, "data", "casestudy.json"), "utf8"));
+const h1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
 
 const THEME = {
   name: "Diligent Teal",
@@ -84,7 +86,7 @@ async function icon(Comp, color, size = 256) {
   let s = pres.addSlide({ masterName: "DARK", sectionTitle: "Case study" });
   tb(s, "ONGC VIDESH (OVL)  ·  MANAGEMENT DASHBOARD  'JIB STATUS'", { x: 0.6, y: 0.85, w: 8.8, h: 0.35, fontSize: 13, bold: true, color: C.accent2 });
   s.addText("AI-Enabled SAP ABAP Delivery Improvement", { placeholder: "title" });
-  tb(s, "Eight CDS views and an analytical cube, built from a requirement workbook and confirmed by the client in 11 working days", { x: 0.6, y: 2.7, w: 5.6, h: 0.9, fontSize: 16, color: C.background1 });
+  tb(s, "Eight CDS views and an analytical cube, built in three working days and confirmed by the client in writing after their testing", { x: 0.6, y: 2.7, w: 5.6, h: 0.9, fontSize: 16, color: C.background1 });
   s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: 6.55, y: 2.55, w: 2.85, h: 1.55, rectRadius: 0.1, fill: { color: C.accent1 }, line: { color: C.accent1 }, objectName: "Key result panel" });
   tb(s, `${h(J.baseline_h)} h  →  ${h(J.actual_h)} h`, { x: 6.7, y: 2.68, w: 2.6, h: 0.6, fontSize: 28, bold: true, color: C.background1, fontFace: THEME.headFontFace });
   tb(s, `${pc(J.red)} less effort\nconventional vs AI-assisted`, { x: 6.7, y: 3.3, w: 2.6, h: 0.7, fontSize: 13, color: C.background1 });
@@ -124,7 +126,7 @@ async function icon(Comp, color, size = 256) {
   // 3 ------------------------------------------------------------- workflow
   s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Case study" });
   s.addText("How AI was leveraged", { placeholder: "title" });
-  tb(s, "AI tool: Claude Code (Anthropic), working from the repository; every object reached SAP through Arnav", { x: 0.5, y: 0.98, w: 9, h: 0.3, fontSize: 12, italic: true, color: C.accent6 });
+  tb(s, "AI tool: Claude Code (Anthropic), working from the repository; every object reached SAP through the consultant", { x: 0.5, y: 0.98, w: 9, h: 0.3, fontSize: 12, italic: true, color: C.accent6 });
   const steps = [
     [ic.file, "Requirement", "Workbook and production sample documents checked line by line"],
     [ic.robot, "AI design", "Data model: entry, document, period, venture, clearing, aggregates"],
@@ -147,35 +149,41 @@ async function icon(Comp, color, size = 256) {
     { text: "56 release constraints, each recorded from a real activation failure, applied before any code is written", options: { bullet: true, breakLine: true } },
     { text: "No SAP standard object modified; client test data drove every rebuild", options: { bullet: true } },
   ], { x: 0.7, y: 3.98, w: 8.6, h: 1.05, fontSize: 12, paraSpaceAfter: 2 });
-  s.addNotes("Workflow per ovl/zfi_jib_status/ISSUES.md: model rebuilt 04/11 (entry-date) and 06/11 (posting period at document grain); additions 17/11 (all ventures, document type, clearing date and document); BU mapping 19/11. Controls: CLAUDE.md and MEMORY.md section 4 (release constraints).");
+  s.addNotes("Workflow per ovl/zfi_jib_status/ISSUES.md: model rebuilt 04/11 (entry-date) and 06/11 (posting period at document grain); additions 17/11 (all ventures, document type, clearing date and document); BU mapping 19/11. Controls: standing rules and the record of release constraints.");
 
   // 4 ----------------------------------------------------------- before / after
   s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Case study" });
   s.addText("Before vs after AI", { placeholder: "title" });
-  s.addChart(pres.charts.BAR, [{ name: "Effort (hours)", labels: ["Conventional", "AI-assisted"], values: [J.baseline_h, J.actual_h] }], {
-    x: 0.5, y: 1.05, w: 4.6, h: 3.0, barDir: "col", chartColors: [HEX.accent6, HEX.accent1], showValue: true, dataLabelPosition: "outEnd",
-    dataLabelFontSize: 12, dataLabelColor: HEX.dk1, dataLabelFontFace: "+mn-lt", showTitle: true, title: "Total effort (hours)", titleFontSize: 13,
-    titleColor: HEX.dk2, titleFontFace: "+mn-lt", showLegend: false, catAxisLabelColor: HEX.accent6, valAxisLabelColor: HEX.accent6,
-    catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-lt", catAxisLabelFontSize: 11, valAxisLabelFontSize: 10, valAxisMaxVal: 70,
-    valGridLine: { color: "DDE5E8", size: 0.5 }, catGridLine: { style: "none" }, varyColors: true, objectName: "Effort chart",
+  const phLabels = CS.phases.map((p) => p[0].replace(" (design and build)", "")).concat(["Total"]);
+  const conv = CS.phases.map((p) => p[1]).concat([CS.baseline]);
+  const withAi = CS.phases.map((p) => p[2]).concat([CS.actual]);
+  s.addChart(pres.charts.BAR, [{ name: "Conventional", labels: phLabels, values: conv }, { name: "With AI", labels: phLabels, values: withAi }], {
+    x: 0.5, y: 1.05, w: 5.0, h: 3.25, barDir: "col", barGrouping: "clustered", chartColors: [HEX.accent6, HEX.accent1], showValue: true,
+    dataLabelPosition: "outEnd", dataLabelFontSize: 10, dataLabelColor: HEX.dk1, dataLabelFontFace: "+mn-lt", dataLabelFormatCode: "0",
+    showTitle: true, title: "Effort by phase (hours)", titleFontSize: 13, titleColor: HEX.dk2, titleFontFace: "+mn-lt",
+    showLegend: true, legendPos: "b", legendFontSize: 11, legendFontFace: "+mn-lt", legendColor: HEX.accent6,
+    catAxisLabelColor: HEX.accent6, valAxisLabelColor: HEX.accent6, catAxisLabelFontFace: "+mn-lt", valAxisLabelFontFace: "+mn-lt",
+    catAxisLabelFontSize: 10, valAxisLabelFontSize: 10, valAxisMaxVal: Math.ceil(CS.baseline / 10) * 10 + 10,
+    valGridLine: { color: "DDE5E8", size: 0.5 }, catGridLine: { style: "none" }, objectName: "Effort chart",
   });
   const rows = [
-    ["", "Conventional", "AI-assisted"],
+    ["", "Conventional", "With AI"],
     ["Total effort", `${h(J.baseline_h)} h`, `${h(J.actual_h)} h`],
-    ["First running version", `Build ~${Math.round(J.baseline_h / 8)} working days`, "Next working day (03 -> 04/11)"],
-    ["Requirement -> client confirmation", "Build plus test rounds", "11 working days, 2 test rounds"],
-    ["Change rounds absorbed", "Each a manual rebuild", "13 logged, 6 rebuilds / fixes"],
+    ["Development time", `about ${Math.round(J.baseline_h / 8)} working days`, "3 working days (03, 04, 06 Nov)"],
+    ["First running version", "after the full build", "next working day"],
+    ["Client testing and sign-off", "client side", "06 - 17 Nov, client side"],
+    ["Change rounds absorbed", "each a manual rebuild", "13 logged, same-day turnaround"],
   ];
-  s.addTable(rows.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: i === 0 || j === 0, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : (i % 2 ? HEX.lt2 : HEX.lt1) }, fontSize: 11, fontFace: "Calibri", valign: "middle" } }))),
-    { x: 5.35, y: 1.15, w: 4.15, colW: [1.55, 1.25, 1.35], rowH: 0.52, border: { type: "solid", pt: 0.5, color: "C9D3D8" }, objectName: "Comparison table" });
-  tb(s, "Conventional effort from the work-type baseline; AI-assisted effort includes prompting, review, activation, testing and every client change round.",
-    { x: 0.5, y: 4.3, w: 9.0, h: 0.6, fontSize: 11, italic: true, color: C.accent6 });
-  s.addNotes(`Effort: ${h(J.baseline_h)} h baseline (rubric, Very High new development) vs ${h(J.actual_h)} h AI-assisted (git session time ${J.session_h} h x allocation factor ${S.uplift}, with the 16 h minimum for a Very High development). Timeline from ISSUES.md: 03/11 requirement, 04/11 first query, 06/11 client test, 12/11 navigation fix, 17/11 confirmation.`);
+  s.addTable(rows.map((r, i) => r.map((c, j) => ({ text: c, options: { bold: i === 0 || j === 0, color: i === 0 ? HEX.lt1 : HEX.dk1, fill: { color: i === 0 ? HEX.accent1 : (i % 2 ? HEX.lt2 : HEX.lt1) }, fontSize: 10.5, fontFace: "Calibri", valign: "middle" } }))),
+    { x: 5.7, y: 1.15, w: 3.8, colW: [1.35, 1.15, 1.3], rowH: 0.5, border: { type: "solid", pt: 0.5, color: "C9D3D8" }, objectName: "Comparison table" });
+  tb(s, "Development took three working days; the remaining time to the written confirmation on 17 November was client testing. Conventional split by a standard phase ratio; AI-assisted split by recorded working sessions.",
+    { x: 0.5, y: 4.45, w: 9.0, h: 0.6, fontSize: 11, italic: true, color: C.accent6 });
+  s.addNotes(`Effort: ${h(J.baseline_h)} h baseline (Very High new development) vs ${h1(J.actual_h)} h AI-assisted. Phases: conventional 60 / 15 / 25 split; AI-assisted split by the recorded sessions (development 03, 04, 17 and 19/11; testing and correction 06/11; debugging 12/11). Timeline: requirement 03/11, first query 04/11, client test and retest 06/11, navigation setting 12/11, written confirmation 17/11.`);
 
   // 5 ----------------------------------------------------------- benefits
   s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Case study" });
   s.addText("Quantified productivity benefits", { placeholder: "title" });
-  const stats = [[`${h(J.saved_h)} h`, "effort saved"], [md(J.saved_h), "man-days saved"], [pc(J.red), "effort reduction"], [`${(J.prod + 1).toFixed(1)}x`, "throughput (+" + Math.round(J.prod * 100) + "%)"]];
+  const stats = [[`${h(J.saved_h)} h`, "effort saved"], [h1(J.saved_h / 8), "man-days saved"], [pc(J.red), "effort reduction"], ["3 days", "development time"]];
   stats.forEach((st, i) => {
     const x = 0.5 + i * 2.28;
     card(s, x, 1.1, 2.1, 1.55, "Stat " + (i + 1));
@@ -187,9 +195,9 @@ async function icon(Comp, color, size = 256) {
   tb(s, [
     { text: `${S.n_counted} completed use cases: ${h(S.saved)} h (${md(S.saved)} man-days) saved, ${pc(S.red)} effort reduction across PAL, ONGC and Astral (KPMG)`, options: { bullet: true, breakLine: true } },
     { text: `${COMMITS} commits in under four months; ${USAGE_LINES} lines of code; three projects in parallel`, options: { bullet: true, breakLine: true } },
-    { text: "Timeline benefit reported separately from hours: 11 working days from requirement to client confirmation", options: { bullet: true } },
+    { text: "Delivery time reported separately from hours: first running version the next working day, build complete in three", options: { bullet: true } },
   ], { x: 1.3, y: 3.35, w: 8.2, h: 1.5, fontSize: 13, paraSpaceAfter: 5 });
-  s.addNotes("Formulas: saved = baseline - actual; reduction = saved / baseline; man-days = saved / 8; productivity improvement = baseline / actual - 1. Portfolio totals: AI_Use_Case_Register.xlsx Dashboard; sensitivity: Effort Assumptions section 7.");
+  s.addNotes("Formulas: saved = baseline - actual; reduction = saved / baseline; man-days = saved / 8. Portfolio totals: AI_Use_Case_Register.xlsx, Productivity Dashboard.");
 
   // 6 ----------------------------------------------------------- quality & value
   s = pres.addSlide({ masterName: "CONTENT", sectionTitle: "Case study" });
@@ -206,13 +214,13 @@ async function icon(Comp, color, size = 256) {
     tb(s, c[1], { x: x + 0.9, y: 1.36, w: 1.85, h: 0.35, fontSize: 15, bold: true, color: C.text2 });
     tb(s, c[2].map((t, k) => ({ text: t, options: { bullet: true, breakLine: k < c[2].length - 1 } })), { x: x + 0.18, y: 2.0, w: 2.55, h: 2.9, fontSize: 12, paraSpaceAfter: 6 });
   });
-  s.addNotes("Quality points from ovl/zfi_jib_status/ISSUES.md rows 5, 8, 9, 11, 12. Reuse: ovl/zfi_bank_reval, ovl/zfi_tr_bankacct, ovl/per_barrel_agenda follow the same classic-view / cube / Custom Analytical Query pattern. No billing rate is recorded, so no monetary value is stated.");
+  s.addNotes("Quality points from ovl/zfi_jib_status/ISSUES.md rows 5, 8, 9, 11, 12. Reuse: ovl/zfi_bank_reval, ovl/zfi_tr_bankacct, ovl/per_barrel_agenda follow the same classic-view / cube / Custom Analytical Query pattern. Effort value follows from man-days saved and the applicable day rate.");
 
   // 7 ----------------------------------------------------------- conclusion
   s = pres.addSlide({ masterName: "CLOSING", sectionTitle: "Case study" });
   s.addText("Conclusion and replication", { placeholder: "title" });
   const blocks = [
-    ["Principal achievement", `A client-confirmed management dashboard in 11 working days at ${pc(J.red)} less effort, one of ${S.n_counted} AI-assisted use cases.`],
+    ["Principal achievement", `A management dashboard built in three working days at ${pc(J.red)} less effort and confirmed by the client in writing - one of ${S.n_counted} AI-assisted use cases.`],
     ["Lessons learned", "Fresh source and production samples first; one object at a time with activation feedback; record every release constraint; claim only what the system confirms."],
     ["Replicate across PAL · ONGC · Astral", "PAL: finance workflow and upload tiles on the same loop. ONGC: further dashboard cards on the cube pattern. Astral (KPMG): forecasting and credit-management analytics."],
     ["Next steps", "Roll the AI delivery toolkit out to the team; extend the dashboard pattern; apply the ATC patterns to the next remediation wave; log effort per object."],

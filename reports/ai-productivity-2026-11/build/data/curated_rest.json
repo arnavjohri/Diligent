@@ -1,0 +1,222 @@
+{
+ "kpmg/zfi_fb70_cm_apprv": {
+  "nick": "FB70 approval workflow",
+  "title": "FB70 customer credit memo approval on the GL journal workflow with stage e-mails",
+  "objects": "Z_FI_CM_APPR_PARK_EVENT (function module), Z_FI_CM_APPR_START_WF (function module), ZCL_CM_WORKFLOW (class), ZEI_FI_CM_APPR_POST (implicit enhancement), WS02800046 (workflow scenario)",
+  "req": "A customer credit memo parked in FB70 must be approved by one to three sequential approvers by amount, then posted automatically. Rejected documents are corrected and resubmitted, with e-mails at each stage.",
+  "chal": "FB70 has no BAdI after park, so the standard G/L verification workflow and Fiori app had to be reused. Every G/L-only check in the standard code was located by debugger and call stack, then lifted by a guarded implicit enhancement.",
+  "ai": "Designed and built the trigger function modules, class ZCL_CM_WORKFLOW with four mail body builders, an RFC mail wrapper and six implicit enhancements (12 source files, 2,146 lines). Diagnosed each G/L-only check and fixed the resubmit by rewriting AWTYP to BKPFF.",
+  "man": "The consultant created and activated every object in DEV, made the FIBF entry, ran the FB70, Verify-app and SE37 tests and supplied traces, logs and standard source. Design decisions were taken with the team.",
+  "res": "Approval routing and posting work end to end in DEV client 400 (27/10/26). Standard-code changes are guarded enhancements for document type DG, switchable in SE19. Parked and posted mails confirmed in DEV on 30/10/26."
+ },
+ "pal/zinv_gl_upload": {
+  "nick": "GL upload amount restore",
+  "title": "PAL Upload General Journal Entry: Excel local and group amounts restored on posting",
+  "objects": "ZCL_GL_EXCHANGE_AMOUNT_DET (class), ZFI_ENHGL_POST_DOCUMENT (implicit enhancement), ZINV_CL_BP_GL_USER (behaviour pool), ZINV_POST_GL (table), ZINV_GL_VALID (message class)",
+  "req": "When an uploaded journal entry request is rejected, edited and approved, the posted document must carry the local and group currency amounts from the Excel file, not amounts re-derived from exchange rates.",
+  "chal": "UPDATE_AMOUNT runs in the update task of POST_DOCUMENT for every FI posting, where breakpoints do not fire. Excel lines do not map 1:1 to line items, and the debit/credit indicator is not stored in ZINV_POST_GL.",
+  "ai": "Diagnosed the original 48-line method and a mapping error that stored the local amount as the group amount. Delivered a rewritten UPDATE_AMOUNT (889 lines) that matches Excel lines to line items per G/L account, logs to SLG1 and leaves the document untouched without a single fit.",
+  "man": "The consultant supplied the original method, checked ZINV_POST_GL data, pasted, activated and tested interim versions, and supplied the update-task dump and debugger findings that shaped the final version.",
+  "res": "Parked documents posted after approval carry the Excel local and group amounts, and every outcome is logged to SLG1. Matching logic checked against brute force on 6,000 random cases with no mismatch. Delivered 14/10/26."
+ },
+ "pal/zfi03custinv1": {
+  "nick": "Invoice PDF mail fix",
+  "title": "PAL customer invoice forms: e-mailed PDF could not be opened (INC01967)",
+  "objects": "ZFI03CUSTINV1 (report), ZFI_03_CUSTINV_FORM (include), ZDJ_ENCRYPTPDF (external command), ZGLBPARAM (table), ZFI_AR_COLLECTIONS_PAL (role)",
+  "req": "Invoice PDFs e-mailed by the program could not be opened in Acrobat or Edge, while the same document saved manually opened. Customers must receive a readable PDF and the mail log must not report success for a broken mail.",
+  "chal": "The mail path writes the PDF to the server, runs an OS command and reads the file back with no return code checked. The fault depended on the sender's S_DATASET authorisation, so it had to be proven from debugger values and role comparison.",
+  "ai": "Rebuilt one source per include from a 7,084-line print listing and isolated the unchecked write, encrypt and read-back round trip. Delivered the corrected include ZFI_03_CUSTINV_FORM (5,020 to 5,197 lines) and named the narrow authorisation set needed.",
+  "man": "The consultant supplied the print listing, debugged in the system, relayed the AR team's findings and supplied role lists, authorisation traces and SU53. The consultant decided to have Security assign the role.",
+  "res": "Every return code in the mail chain is checked, nothing is sent on error and the log shows the reason. Role assignment confirmed on 13/10/26: the mail now carries a readable PDF and the incident symptom is closed."
+ },
+ "pal/zmm_po_noround": {
+  "nick": "Ariba PO NO_ROUNDING BAdI",
+  "title": "PAL Ariba purchase orders: BAdI ME_BAPI_PO_CUST sets NO_ROUNDING (INC01192)",
+  "objects": "ZMM_BAPI_PO_NOROUND (BAdI implementation), ZCL_IM_MM_BAPI_PO_NOROUND (class), ME_BAPI_PO_CUST (BAdI definition), IF_EX_ME_BAPI_PO_CREATE_02 (interface), BAPI_PO_CREATE1 (BAPI)",
+  "req": "After 'send prices' from Ariba Sourcing, no purchase order was created in S/4 for materials with a rounding value. The PO must be created with the awarded quantity while the rounding value stays for MRP.",
+  "chal": "Ariba posts through BAPI_PO_CREATE1, which rounds each item to MARC-BSTRF and exceeds the open requisition. NO_ROUNDING must be set only on the BAPI path, leaving ME21N and MRP unchanged.",
+  "ai": "Built the BAdI implementation class (122 lines): INBOUND loops over the items and sets NO_ROUNDING in POITEM and POITEMX, and the other eight methods are empty. Removed the SAP sample logic left by Copy Sample and wrote an SE19 walk-through and a four-step test plan.",
+  "man": "The consultant created the implementation in SE19, confirmed the INBOUND signature on the PAL system (17/09/26) and decided that the flag applies to every BAPI caller. The functional consultant reproduced the problem in QS4-160.",
+  "res": "Ariba awards create purchase orders with the awarded quantity. It is a released customer BAdI with no modification, and manual ME21N, ME22N, ME59N and the MRP run are unaffected."
+ },
+ "pal/zcl_inv_utility": {
+  "nick": "ZCL_INV_UTILITY validation",
+  "title": "PAL invoice upload utility: local and group currency validated independently",
+  "objects": "ZCL_INV_UTILITY (class), ZFM_INV_DOC_CHECK (function module), BAPI_ACC_DOCUMENT_POST (BAPI)",
+  "req": "In the AR and GL upload, a document whose local or group currency amounts did not balance was accepted if the document currency balanced. Such documents must be rejected with a message naming the currency that is out of balance.",
+  "chal": "Local and group checks sat inside one IF that needed both currency codes filled, so a blank code skipped every check. Totals were not cleared, so a skipped document was compared with the previous document's totals.",
+  "ai": "Named the root cause from the 5,367-line class and delivered the whole corrected class (5,758 lines, 6 change blocks). Both methods now clear totals per document, validate local and group separately, reject an amount without a currency code and give three currency-specific messages.",
+  "man": "The consultant supplied the class source and handled the transfer into the system through SE24 or ADT.",
+  "res": "Local and group currency balances are checked independently, with the old code kept as comments. Pre-existing defects found during the work are documented and left unchanged."
+ },
+ "kpmg/zpp_forecast_v2": {
+  "nick": "ZFORECAST Adhesive",
+  "title": "ZFORECAST Adhesive v2: annual, quarterly, monthly forecast with uploads and report",
+  "objects": "ZPP_FORECAST (report), ZPP_FORECAST_UPLOAD (report), ZPP_FORECAST_REPORT (report), ZCL_PP_FCST (class), ZCL_PP_FCST_UTIL (class), ZPPT_FCST_YR (table)",
+  "req": "Adhesive forecasting in three modes from billing history, load factor and business forecast, with mass uploads, downloadable templates and a final report, extended by change requests for price and value columns, replaced material codes and MSL.",
+  "chal": "The object had to stay screen-free (CL_SALV_TABLE only) to ship as an offline ZIP on a release that rejects some modern syntax. The FS mixes two history sources and leaves the replaced-material rules to be settled case by case.",
+  "ai": "Built the engine class, helper class, three reports, DDIC and message class as an import package (7,634 ABAP lines, 39 files), plus two change-request builds. Fixed 16 activation errors and a history bug, and audited every changed line against the QA copy.",
+  "man": "The consultant supplied the change requests, errors and debugger findings, tested and relayed the testers' cases, and activated the objects. The consultant created the SE41 status and SE11 field and took the design decisions.",
+  "res": "Forecasts generate in all three modes with mass uploads and a report. Activated in DEV 15/09/26 and 23/09/26; on 30/09/26 the tester's monthly run (plant 2439) matched the month sums of the replaced codes."
+ },
+ "kpmg/zsd_scheme": {
+  "nick": "Pipes scheme settlement",
+  "title": "Scheme (Pipes): scheme master, settlement with credit-note posting, report and upload",
+  "objects": "SAPMZSD_SCHEME (module pool), ZCL_SD_SCHEME (class), ZCL_SD_SCHEME_SETTLE (class), ZSD_SCHEME_REPORT (report), ZSD_SCHEME_UPLOAD (report), ZSDT_SCHM_HDR (table)",
+  "req": "Create, change and display sales schemes for the Pipes business with ranges and product ratios, evaluate customer volume per settlement period, calculate and post credit notes, report on them and upload schemes in mass.",
+  "chal": "A module pool with four screens, a tabstrip and two ALV grids, one generic range table replacing seven child tables, and configuration-driven posting. The FS had blank sections and fields that may not exist in the system.",
+  "ai": "Built six source files (3,579 lines): the module pool, three global classes, the report and the mass upload. Added a technical object list with DDIC definitions and build order (36 objects), a screen layout document and a register of 42 assumptions and queries.",
+  "man": "The consultant created the screens, GUI statuses, number range, authorisation objects, lock object, change documents, SM30 views and transactions, and reviewed the open queries with the SD functional consultant.",
+  "res": "Schemes are maintained online or by upload through one validation class, so the two routes cannot diverge. Posting is fully configuration-driven and the Post button is removed without settlement authorisation."
+ },
+ "kpmg/zsd_exc_approval": {
+  "nick": "Exceptional Approval reports",
+  "title": "WRICEF 141 A/B: Exceptional Approval reports for Adhesives and Paints",
+  "objects": "ZSD_EXC_APPR_ADHESIVE (report), ZSD_EXC_APPR_PAINTS (report), ZSD_EXP_PAINTS_UPLOAD (report), ZSD_EXP_PAINTS (table), ZSD_EXC_PAINTS (function group)",
+  "req": "Reports of exceptional credit approvals against outstanding and collections with fulfilment status. Adhesives is a report over BP credit management (BP3100). Paints needs a custom table with maintenance, a mass upload and a report.",
+  "chal": "The FS documents contradict themselves and no field name could be checked on the system. Outstanding as on a past date needs BSID plus BSAD, and the table definition lacked a currency key.",
+  "ai": "Reviewed both FS documents, raised 16 questions and wrote locked build specs. Built ZSD_EXC_APPR_ADHESIVE (1,247 lines), ZSD_EXP_PAINTS_UPLOAD (1,522) and ZSD_EXC_APPR_PAINTS (982) with text elements, TS documents and SE11 sheets, and packaged the Paints objects as a 19-file ZIP.",
+  "man": "The consultant supplied the FS documents, corrected the BP3100 field name and activated the Adhesives report. The consultant handled DDIC, table maintenance generator and foreign keys, and supported testing of both formats.",
+  "res": "The Adhesives report is active in the system with the corrected BP3100 field. Paints entries are mass-loaded through the upload program instead of row-by-row table maintenance, and WAERS was added so the amount field activates."
+ },
+ "kpmg/zpp_forecast_paints": {
+  "nick": "ZFORECAST Paints",
+  "title": "ZFORECAST Paints: forecast generation for the Paints division on the Adhesive engine",
+  "objects": "ZPP_FORECAST_PAINTS (report), ZCL_PP_FCST_PNT (class), ZPPT_BRAND (table), ZPPT_PNT_FCST_YR (table), ZPPT_PNT_FCST_MN (table), ZPP_FORECAST_UPLOAD (report)",
+  "req": "The Paints division needs the annual, quarterly and monthly forecast in the Paints template layout: brand, MTS/MTO/DIS/TIN, pack size, dealer price, volume in KL and value in crores, plus a brand upload and Paints forecast tables.",
+  "chal": "The FS is the Adhesive template with a different layout and carried 28 defects and 17 queries without answers, so the build rests on documented assumptions. The Adhesive engine had to be reused unedited and shipped as ZIP packages.",
+  "ai": "Issued assumptions and queries with a reuse decision per Adhesive object. Built the DDIC, class ZCL_PP_FCST_PNT and report ZPP_FORECAST_PAINTS (2,426 lines) and the Brand upload as ZIP packages that imported. Wrote the TS, KT note, 22 functional test cases and a technical handover.",
+  "man": "The consultant took the design decisions, imported the ZIPs through the standalone import program and activated them, created the SE41 status and SE93 transaction and raised transport DEVK930479.",
+  "res": "Imported and activated in DEV on 22/10/26: the Paints tables, ZCL_PP_FCST_PNT, ZPP_FORECAST_PAINTS and the Brand upload. Delta packages leave the running Adhesive objects untouched."
+ },
+ "kpmg/zfi_tds_cl34": {
+  "nick": "TDS Clause 34 report",
+  "title": "TDS Report Clause 34: ALV of withholding tax deducted from vendors",
+  "objects": "ZFI_TDS_CL34 (report), ZFI_TDS_CL34_TOP (include), ZFI_TDS_CL34_SCR (include), ZFI_TDS_CL34_FORMS (include), I_WithholdingTaxItem (CDS view)",
+  "req": "A read-only ALV list of every FI document with TDS deducted from a vendor, for Clause 34 reporting: 25 FS columns selected by company code, fiscal year, posting date, vendor and section.",
+  "chal": "The FS could not be implemented literally (T059Z-TXT40 does not exist and the AWKEY rule had to be tested on AWTYP). The GL code needs three derivation branches, and WITH_ITEM amount signs follow the vendor-line debit/credit.",
+  "ai": "Built the report and three includes (3,575 lines) with a DDIC fact sheet, query register Q1-Q28 and the TS. Added an F_BKPF_BUK authorisation check, diagnosed three activation errors and the ZIP import element-order defect, and delivered the 07/09 and 15/09/26 changes.",
+  "man": "The consultant created and pasted the programs, reported each error and ran live runs and reconciled samples. The consultant supplied SE16 evidence, relayed the functional team's requests and maintained selection texts.",
+  "res": "Live runs on 27/08/26 reconciled: 49 rows for company code 1000 and 17 rows for a second company code. On 15/09/26 the system and the delivered source agreed on all four programs."
+ },
+ "kpmg/zmm_po_budget": {
+  "nick": "PO budget check",
+  "title": "Budget control on indirect purchase: PO budget check with budget table (WRICEF 050)",
+  "objects": "ZMM_PO_BUDGET (table), ZMM_BUDGET (message class), ME_PROCESS_PO_CUST (BAdI), ZMM_BUDGET_BEFORE_SAVE (event routine), ZMM_BUDGET_MODIFY_SCREEN (screen module), SAPMM06E (implicit enhancement)",
+  "req": "Block a purchase order in ME21N or ME22N when its account-assigned value exceeds Budget plus Additional Budget per plant, purchasing group and year, with the budget table maintained in SM30. The FS also covers scheduling agreements.",
+  "chal": "The check had to be inserted into an existing BAdI implementation holding other developers' code. Scheduling agreements bypass that BAdI and carry no EFFWR or NETWR, so their value is derived in an implicit enhancement of SAPMM06E.",
+  "ai": "Produced the DDIC and message class as a 7-file ZIP, the BAdI CHECK insert block (111 lines) and whole method (973 lines), the SE54 event routine and PBO module. For scheduling agreements built two read-only probes and a 281-line implicit enhancement.",
+  "man": "The consultant supplied the existing CHECK method, ran the probes in the system and handled table maintenance generation, the SE54 event, screen module, SE19 implementation and SE93 transaction.",
+  "res": "Purchase orders are blocked when value exceeds the budget, inside CHECK where the save stops. The SE54 event keeps the maintenance rule through regeneration, and WAERS was added so the amount has a currency."
+ },
+ "kpmg/zmm_vend_upload": {
+  "nick": "Vendor upload enhancement",
+  "title": "ZMM_VEND_UPLOAD: supplier business partner mass upload enhancement (FSD 30)",
+  "objects": "ZMM_VEND_MASTER (report), ZMM_VEND_MASTER_TOP (include), ZMM_VEND_MASTER_CL (include), ZMM_VEND_MASTER_FORMS (include), ZMM_VEND_UPLOAD (transaction)",
+  "req": "Enhance the supplier upload with a record-level log and download of error records, automatic extension to company code and purchasing organisation, a Change mode where blank cells do not overwrite, and validation with duplicate checks.",
+  "chal": "The baseline was a print listing, not compilable source. Create, extend and change run through vmd_ei_api=>maintain_bapi, and Change mode is safe only if datax flags are set for populated cells. The baseline hard stop had to be removed.",
+  "ai": "Delivered ten change units for FSD 30 requirements R1-R4 with exact placement, then complete per-include sources (five includes, 2,601 lines) and the TS with a requirement-to-unit mapping table.",
+  "man": "The consultant analysed the BP and vendor master fields for the upload template, reviewed the FSD and raised clarifications with the functional team.",
+  "res": "A bad record is logged and skipped without stopping the batch, and error records can be downloaded. Change mode sets datax only for filled cells, and extend and change are restartable."
+ },
+ "kpmg/zmm_bp_mail": {
+  "nick": "New supplier BP mail",
+  "title": "ZMM_BP_CREATE_MAIL: daily e-mail for newly created supplier business partners",
+  "objects": "ZMM_BP_CREATE_MAIL (report), ZMM_BP_MAIL (transaction), ZMM_BP_MAIL_MDM (TVARVC variable), ZMM_BP_CREATE_MAIL_DAILY (job)",
+  "req": "Daily, a background job must inform MDM, the supplier manager and the supplier contact of each new supplier account with name, address and BP number. From 05/10/26 one mail per BP is sent separately to each recipient.",
+  "chal": "Recipients are resolved by ADR6 sequence position (004 and 005), the MDM address comes from TVARVC, and each mail is sent and saved on its own through CL_BCS. The first run hit a dynamic SALV dump, and DEV has no SMTP node.",
+  "ai": "Raised queries on the FS, built the report (777 lines) and wrote the TS and manual steps. Fixed the CALL_METHOD_CONFLICT_TYPE dump and truncated headings, and diagnosed the SAPoffice status as missing SCOT configuration. Implemented the per-BP change (832 to 1,124 lines).",
+  "man": "The consultant answered the queries with the functional team, pasted and activated the report, ran it on a 14-BP range and verified the fixes. TVARVC, SE93, the variant and the SM36 job were set up by the consultant.",
+  "res": "Activated on first paste with no errors (25/09/26). A run on a 14-BP range sent mail to 3 recipients and the column fix was verified. Each mail is saved separately so one error does not undo the rest."
+ },
+ "kpmg/zmb5b": {
+  "nick": "ZMB5B amount columns",
+  "title": "ZMB5B: copy of the MB5B stock report with amount columns for storage location stock",
+  "objects": "ZRM07MLBD (report), ZMB5B (transaction), RM07MLBD_FORM_01 (standard include), RM07MLBD_FORM_02 (standard include)",
+  "req": "Copy MB5B to ZMB5B and show the amount (MSEG-DMBTR) in the detail list for the Storage Loc./Batch Stock option. A follow-up of 18/08/26 added receipt amount and issue amount columns.",
+  "chal": "The standard fills value fields only for valuated stock: three gates and an initial currency key leave the columns empty if only the field catalogue changes. The baseline was a print listing and the standard includes had to keep their names.",
+  "ai": "Delivered the Z copy ZRM07MLBD with only the main program changed (amount column in f0400_create_fieldcat) and a TS. Added the 18/08/26 follow-up: the whole program (6,206 lines) and a 7-unit paste sheet with unit tests UT-01 to UT-07.",
+  "man": "The consultant created ZRM07MLBD, the SE93 transaction ZMB5B and pasted the program in SE38, and ran the report in the system.",
+  "res": "The amounts show correctly in ZMB5B (reported 15/09/26). Standard includes stay unchanged, the currency key is filled and the scope stays within the FS."
+ },
+ "kpmg/zmm_rm07mlbd": {
+  "nick": "MB5B amount port",
+  "title": "ZMM_RM07MLBD: receipt and issue amounts ported into the existing custom MB5B copy",
+  "objects": "ZMM_RM07MLBD (report), ZMM_MB5B_NEW (transaction), ZMM_RM07MLBD_FORM_01 (include), RM07MLBD_DBSYS_OPT (BAdI), ZMB5B_NEW1 (authorisation check)",
+  "req": "Bring the ZMB5B receipt and issue amounts and the DMBTR detail column for the storage-location view into the existing transaction ZMM_MB5B_NEW so one report serves both.",
+  "chal": "This copy predates the standard line forcing gv_newdb = abap_false, so on HANA the BAdI RM07MLBD_DBSYS_OPT skips the classic aggregation and the amounts came out blank. The source was a print listing with over-length lines.",
+  "ai": "Reconstructed the five objects from the print listing, ported the ZMB5B units into the main program (5,960 to 6,137 lines) as named paste blocks with unit tests. Diagnosed the HANA BAdI path and added unit 11 (gv_newdb = abap_false for the storage-location view only).",
+  "man": "The consultant supplied the print listing of 15/09/26, applied and activated the port and reported the blank amounts, which led to the diagnosis.",
+  "res": "The storage-location view shows the new amount columns. The original design and the ZMB5B_NEW1 authorisation check are respected, and gv_newdb is forced off for that view only. First port activated 15/09/26."
+ },
+ "kpmg/zmm_po_validity_fs": {
+  "nick": "PO validity field selection",
+  "title": "PO header Validity Start/End for document type SBP: root cause in field selection",
+  "objects": "ME_PROCESS_PO_CUST (BAdI), NBF (field selection key), ZBRD (field selection key)",
+  "req": "The PO header fields Validity Start and Validity End (EKKO-KDATB, KDATE) must be input-ready for PO document type SBP only, in SAP GUI and Fiori, with no validation.",
+  "chal": "The field status is the most restrictive of the merged field-selection keys. The BAdI method FIELDSELECTION_HEADER receives only customer metafields, not the standard metafields 37 and 38, so it cannot show or hide these fields.",
+  "ai": "Drafted a FIELDSELECTION_HEADER body, then proved from the debugger findings that the BAdI cannot reach the standard metafields. Traced the cause to OMF4 key NBF (no option ticked, T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to the functional consultant.",
+  "man": "The consultant supplied the existing method body, checked type group MMMFD, debugged FIELDSELECTION_HEADER and checked OMF4 and T161. The customizing change is made by the functional consultant.",
+  "res": "Recommendation delivered: tick Opt. entry for both fields in NBF, with no ABAP change. This avoids a BAdI that could not work and leaves other developers' customer metafields untouched."
+ },
+ "kpmg/zsd_mis_customer": {
+  "nick": "Overall CC MIS feasibility",
+  "title": "WRICEF 147 Overall CC MIS: feasibility assessment and query list",
+  "objects": "ZSD_MIS_CUSTOMER (report), ZSD_CUST_SDFI_DATA (table), ZSD_RCL_NEW (report), ZSD_SALRCL (report)",
+  "req": "An ALV report with one row per customer and 80 columns (master data, sales, returns, collections, outstanding, credit limit, legal status, deposits) plus a user-maintained custom table for data not available in SAP.",
+  "chal": "About a third of the columns are specified as 'fetch from Z report X' for seven existing reports whose source was not supplied. The FS and the logic sheet disagree on the Z table (18 annual fields against a 94-column monthly layout).",
+  "ai": "Delivered a feasibility assessment dated 21/09/26: all 80 columns classified by source (about 44 buildable now, about 36 dependent on the seven reports), 21 numbered queries (15 blocking) and design recommendations. Found defects in the proposed Z table before build.",
+  "man": "The consultant supplied the FS and the two logic sheets, reviewed them and prepared the query list for the functional team.",
+  "res": "Gives a clear build path: a narrow keyed table instead of 94 columns and direct table reads instead of submitting seven reports. The 21 queries are ready for the functional team."
+ },
+ "(repo tooling)": {
+  "nick": "AI delivery toolkit",
+  "title": "AI delivery toolkit: standing rules, constraint record, skills and scripts",
+  "objects": "ZR_PROG_DOWNLOAD (report)",
+  "req": "Issues arrive daily for two concurrent projects and fixes travel by paste or ZIP, verified by hand. The work needs standing rules, a record of what already went wrong on these systems and repeatable procedures.",
+  "chal": "The AI environment keeps no memory between runs, so everything to be recalled is stored in version control. The target is an older S/4 release where much generated CDS and RAP code does not activate and sources wrap on paste.",
+  "ai": "Built seven workflow skills (mail triage, issue fix, release packaging, build from FS, ATC remediation with 31 rules, status, solve) and six scripts (860 lines, including a 17-rule audit and a source rebuilder), a rulebook, 56 release constraints, 31 past mistakes and a 16-point definition of done.",
+  "man": "The consultant verifies every object before it goes into SAP and feeds activation errors back, which became rules. Transport release, QA, mail and ATC exemptions stay manual.",
+  "res": "Each piece of work starts from the same rules and confirmed constraints, so errors found on the system are not repeated. The toolkit is in use and extended (23/08/26 to 12/11/26)."
+ },
+ "tools/zr_find_enh": {
+  "nick": "ZR_FIND_ENH finder",
+  "title": "ZR_FIND_ENH: enhancement finder for the call tree of a function module or method",
+  "objects": "ZR_FIND_ENH (report), MODSAP (table), MODACT (table), SXC_EXIT (table), SEOMETAREL (table), WBCROSSGT (table)",
+  "req": "A developer needs the enhancement options in a standard function module and the routines it calls: customer exits, BAdIs, enhancement points and sections, BTE events, screen exits, USEREXIT forms and implicit options.",
+  "chal": "Static analysis must follow CALL FUNCTION, PERFORM and method calls to a chosen depth, resolve instance calls through the where-used index and map each hit to its project, BAdI and implementations. Dynamic calls and local classes cannot be followed.",
+  "ai": "Built ZR_FIND_ENH (1,169 lines, 07/10/26) with ALV output, detecting nine enhancement types. Documented the limits of static analysis, a runtime cross-check by breakpoints and the selection texts, and marked three table semantics as assumptions in the code.",
+  "man": "The consultant pastes the report into SE38 and maintains two text symbols and twelve selection texts.",
+  "res": "A read-only report that shows each finding with its call path and depth, with depth and routine limits bounding the scan. It replaces walking the code in SE80 by hand."
+ },
+ "ovl/ztest_t001": {
+  "nick": "ZIP import round trip",
+  "title": "ZTEST_T001: offline ZIP import round trip and the PROGDIR element-order rule",
+  "objects": "ZTEST_T001 (report)",
+  "req": "Prove that the offline ZIP import path works on a system without an ADT connection, using the smallest possible object, before relying on it for real objects.",
+  "chal": "The import deserialises PROGDIR in component order and rejects out-of-order elements. The hand-written XML had NAME, SUBC, FIXPT, VARCL, UCCHECK instead of NAME, VARCL, SUBC, FIXPT, UCCHECK, which short-dumps with XML_FORMAT_ERROR.",
+  "ai": "Traced the dump to the PROGDIR element order while debugging the same error on the TDS report. Reordered the XML, rebuilt the ZIP and recorded the order as a standing rule for all later ZIPs.",
+  "man": "The consultant ran the import through the standalone import program and reported the dump.",
+  "res": "The root cause of the XML_FORMAT_ERROR dump is identified and the element-order rule is applied to every later import package."
+ },
+ "tools/zr_icf_url_list": {
+  "nick": "ICF URL list",
+  "title": "ZR_ICF_URL_LIST: every ICF service URL as a flat list for the CPI team",
+  "objects": "ZR_ICF_URL_LIST (report), ICFSERVICE (table)",
+  "req": "The CPI integration team needs the complete list of valid service URLs of the system. SICF shows only a tree expanded node by node, so a report must produce one row per URL for export to a spreadsheet.",
+  "chal": "ICFSERVICE stores each node with its parent GUID, so the report walks the parent chain to rebuild the path and decide whether the whole chain is active. How virtual hosts are stored is marked as an assumption.",
+  "ai": "Built ZR_ICF_URL_LIST (298 lines, 02/11/26): one URL per row with active-chain and end-node flags, optional base URL prefix and ALV export. Wrote the shipping steps, text elements, run variants and a first-run check for the virtual-host assumption.",
+  "man": "The consultant pastes the report into SE38, maintains the text elements and performs the first-run check.",
+  "res": "A read-only report that lists only URLs that answer by default. Orphan subtrees and chains deeper than 64 nodes are marked rather than dropped, and the virtual-host assumption is guarded in code."
+ },
+ "research/copilot-btp-mcp": {
+  "nick": "Teams-to-SAP MCP proposal",
+  "title": "Research and proposal: creating SAP documents from Teams through the BTP MCP Gateway",
+  "objects": "API_PURCHASEREQ_PROCESS_SRV (OData API), API_PURCHASEORDER_PROCESS_SRV (OData API), BAPI_PR_CREATE (BAPI), BAPI_PO_CREATE1 (BAPI), BAPI_PO_RELEASE (BAPI), ZMCP_PO_CREATE (RFC wrapper)",
+  "req": "Business users want to raise requisitions, create and release purchase orders and maintain vendors from Microsoft Teams under their own identity and authorisations. Management needs options, a recommendation, costs and a plan for a proof of concept.",
+  "chal": "Several connection routes had to be compared against identity propagation into on-premise ABAP, SAP API Policy and licensing. Several vendor pages were not reachable from the research network and were read through public mirrors and search summaries.",
+  "ai": "Delivered research notes with sources, a management proposal v1.0 (seven options, architecture, compliance and licensing, security controls, five-phase plan, costs, risks, six decisions, build guide), a two-page connection brief and a generator for the Word versions.",
+  "man": "The consultant framed the two routes to compare and is named author of the proposal and brief. The verification of vendor pages and the six decisions rest with the leadership team.",
+  "res": "Management has an options comparison, a recommendation, a cost outline and a five-phase plan to decide on the proof of concept. Every claim carries a source and a read-before-write design limits risk."
+ }
+}

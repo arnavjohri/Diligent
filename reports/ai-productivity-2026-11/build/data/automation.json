@@ -1,0 +1,70 @@
+{
+ "kpmg/zfi_fb70_cm_apprv": [
+  "Routing parked FB70 credit memos to approvers by mail and posting them by hand after approval",
+  "Every parked credit memo"
+ ],
+ "ovl/zpra_dpr": [
+  "Daily production figures keyed by hand per asset and the Excel production report compiled manually",
+  "Daily"
+ ],
+ "ovl/per_barrel_agenda": [
+  "Per Barrel Analysis workbook compiled by hand from 15 report extracts for the board agenda",
+  "Each board-agenda cycle"
+ ],
+ "ovl/zfi_bank_reval": [
+  "Period-end bank revaluation worked out in Excel with hardcoded PI shares and manually looked-up exchange rates",
+  "Each period end"
+ ],
+ "ovl/zhana_services": [
+  "Timesheet rows keyed one by one in the table control; rows are now filled in Excel and uploaded",
+  "Each timesheet submission"
+ ],
+ "tools/zr_prog_download": [
+  "Downloading sources object by object from SE80 / SE38 on systems without ADT access",
+  "Before every code change"
+ ],
+ "ovl/zbc_tadir_srcsys": [
+  "Changing the original system object by object in SE03 after the development system moved",
+  "One-off, all custom objects"
+ ],
+ "tools/st05_decode": [
+  "Reading an SQL trace only inside SAP GUI on the traced system; exports are now analysed offline",
+  "Each trace analysis"
+ ],
+ "kpmg/zpp_forecast_v2": [
+  "Forecast worked out in Excel and master data maintained row by row in SM30, replaced by system calculation and nine mass uploads",
+  "Each annual, quarterly and monthly cycle"
+ ],
+ "kpmg/zsd_scheme": [
+  "Schemes entered one at a time and scheme credit notes calculated and posted by hand per customer and period",
+  "Each scheme settlement"
+ ],
+ "kpmg/zsd_exc_approval": [
+  "Exceptional-approval records for Paints entered row by row in table maintenance, replaced by a mass upload",
+  "Each approval upload"
+ ],
+ "kpmg/zmm_vend_upload": [
+  "Supplier business partners created, extended and changed one by one",
+  "Each vendor mass upload"
+ ],
+ "kpmg/zmm_bp_mail": [
+  "Informing MDM, the supplier manager and the supplier contact by hand when a new supplier is created",
+  "Daily background job"
+ ],
+ "(repo tooling)": [
+  "Manual filing and comparison of source downloads, manual version control and re-learning release limits on every object",
+  "Every development task"
+ ],
+ "tools/zr_find_enh": [
+  "Searching a standard function module and its nested calls for exits, BAdIs and enhancement points by reading code or debugging",
+  "Each enhancement analysis"
+ ],
+ "ovl/ztest_t001": [
+  "Creating DDIC objects and reports by hand in SE11 / SE38 instead of importing them as one package",
+  "Each ZIP delivery"
+ ],
+ "tools/zr_icf_url_list": [
+  "Expanding the SICF service tree node by node and writing out the service URLs by hand",
+  "Each integration request"
+ ]
+}
