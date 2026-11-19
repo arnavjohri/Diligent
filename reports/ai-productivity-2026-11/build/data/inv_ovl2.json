@@ -1,0 +1,1062 @@
+[
+  {
+    "folder": "ovl/zbnk_app1",
+    "title": "ZFI_BNK_APP1 bank batch approval / digital signature - one click by the second signatory released every batch of a payment run",
+    "sap_objects": [
+      "ZFI_BNK_APP1 (module pool)",
+      "ZFI_BNK_APP1_F01 (include, corrected)",
+      "ZFI_BNK_APP1_I01 (include, corrected)",
+      "ZFI_BNK_APP1_TOP (include)",
+      "ZFI_BNK_APP1_O01 (include)",
+      "ZBCM_CLASS (include)",
+      "ZBCM_CLASS_DECLARE (include)",
+      "ZBNK_APP1 (transaction, 'expected - confirm in SE93')",
+      "ZFI_PAYM_FILE (table)",
+      "ZFI_BATCH_SIGN (table)",
+      "ZFI_BNK_RULE (table)",
+      "ZUSER_SIGNER (table)",
+      "ZFI_PAYMEDIUM_DMEE_20 (function module, read-only reference)",
+      "ZCO_SIOS_BANK_INTERFACE_ENCRYP (proxy class, read-only reference)"
+    ],
+    "object_types": ["Module pool", "ALV"],
+    "module": "FI (payments / bank communication, digital signature of payment batches)",
+    "end_client_evidence": "ISSUES.md: 'Source: `ZFI_BNK_APP1.txt` (SE80, OCQ/500, SAP_ABAP, 27.08.2026 09:40)'; 'fix written and activated in OCQ/500 on 27.08.2026'; reported rows 'OVL IN 2026082100002  HB_01  001  21.08.2026'; 'Second signatory 68865'. NOTES.md: 'This is fallout from the ECC->S/4 port: `BNK_BATCH_HEADER` gave one batch per run, `REGUT` gives many.' Folder path ovl/ (OVL = ONGC Videsh per CLAUDE.md). MAIL-2026-08-27.md signed 'Arnav Johri | Associate Consultant | Diligent Global'.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "Bug fix / debugging",
+    "business_requirement": "A second signatory selected one batch of payment run 21.08.2026 / LAUFI 00002 and all three batches (3,882.00 / 2,257,792.00 / 14,000.00) were flagged released. The business needs approval recorded batch by batch, with the bank file going out only when the run is fully approved.",
+    "technical_challenge": "ZFI_PAYM_FILE holds one record per payment run (LAUFD + LAUFI) while REGUT holds one row per batch (LFDNR); every READ TABLE drops the batch component, so signing one batch transmitted the run's whole file and set one run-level SENT flag. It is fallout of the ECC->S/4 port from BNK_BATCH_HEADER to REGUT; the physical DMEE file is per run, so the file table could not simply be re-keyed, and the fix changes when money moves.",
+    "ai_contribution": "Located the defect in ZFI_BNK_APP1 although it was reported against tcode ZBNK_APP2 (a read-only monitor), and documented the mechanism step by step, a second instance on tab 1 (level-1 signature overwritten) and the collateral 'sent but unsigned' batches. Wrote the corrected includes ZFI_BNK_APP1_F01 (1073 -> 1188 lines: run-level SENT filter commented out, new FORM F_RUN_PENDING_COUNT) and ZFI_BNK_APP1_I01 (465 -> 583 lines: GET_SELECTED_ROW_TAB2 reordered to sign the selected batch first and transmit only when the run is fully approved). Extracted clean include sources from the SE80 download (work/), wrote a QA test sequence, a seven-point open list and a draft mail to the functional consultant.",
+    "manual_intervention": "Arnav supplied the SE80 download (OCQ/500, 27.08.2026 09:40) and the reported evidence rows; pasted and activated both includes in OCQ/500 on 27.08.2026. Still with humans per the log: functional sign-off on the transmission-timing change, the multi-batch test in QA, SE11/SE16 verification checks, informing the users, sending the mail, transport release.",
+    "rework_events": [],
+    "issue_log_entries": 1,
+    "first_date": "27/08/26",
+    "last_date": "27/08/26",
+    "code_lines_current": 1771,
+    "deliverable_files": [
+      "ovl/zbnk_app1/ZFI_BNK_APP1_F01.abap (1188; whole corrected include, 1073 as supplied)",
+      "ovl/zbnk_app1/ZFI_BNK_APP1_I01.abap (583; whole corrected include, 465 as supplied)",
+      "ovl/zbnk_app1/MAIL-2026-08-27.md (31; mail draft, not counted as code)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "ISSUES.md: '**Status:** fix written and activated in OCQ/500 on 27.08.2026. **Not yet tested.** Functional sign-off on the transmission-timing change still open. Do not move to QA/PRD until both are done.' and heading 'Fix delivered 27.08.2026 - activated in OCQ, untested'. Activated only; no test result is logged.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Approval is written per batch to ZFI_BATCH_SIGN with COMMIT; ROLLBACK and a message on failure",
+      "Bank file is transmitted only when every batch of the run is approved; F_RUN_PENDING_COUNT checks both signature levels so a batch cannot reach the bank with neither signature",
+      "User messages added for each outcome ('Batch approved. N of M batches in this run are approved - file not sent yet.', 'Run fully approved - file sent to the bank', 'Approval saved. File for this run was already sent to the bank')",
+      "Original code kept commented inside BOC/EOC markers; 'Diffs verified: changes confined to the two regions named above, nothing else touched'",
+      "No DDIC change or data migration: re-keying ZFI_PAYM_FILE was considered and rejected with reasons"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - correction of an existing approval program",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Functional sign-off on the timing change: the bank file now waits until every batch in a run is approved at both levels ('This changes when money moves')",
+      "Multi-batch run test in QA not yet done",
+      "Users must be told the second signatory now has to approve every batch, or it returns as a 'file not sent' ticket",
+      "What is in RAW_DATA of the 21.08 run is unresolved (ZFI_PAYMEDIUM_DMEE_20 not read) - unapproved payments may have reached the bank, or two batches may be stranded",
+      "Falsification test on SE16 ZFI_BATCH_SIGN not yet run; ZFI_PAYM_FILE key inferred from code, not read from DDIC",
+      "SNRO is not in the key of ZFI_BATCH_SIGN (a user who is both level-1 and level-2 approver collapses to one row); transport release manual"
+    ],
+    "evidence_files": [
+      "ovl/zbnk_app1/ISSUES.md",
+      "ovl/zbnk_app1/NOTES.md",
+      "ovl/zbnk_app1/MAIL-2026-08-27.md",
+      "ovl/zbnk_app1/ZFI_BNK_APP1_F01.abap",
+      "ovl/zbnk_app1/ZFI_BNK_APP1_I01.abap",
+      "ovl/_engagement/WORKLOG_2026-08.md"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Module pool with six includes, e-token signing and bank transmission; two includes changed (about 116 + 132 new/changed lines), root cause spanning two programs and two tables, all in one day (6 commits)."
+  },
+  {
+    "folder": "ovl/zbnk_app2",
+    "title": "ZFI_BNK_APP (tcode ZBNK_APP2) bank payment file monitor - dead Back/Exit/Cancel fixed; second reported issue (all batches released) triaged and traced to ZFI_BNK_APP1",
+    "sap_objects": [
+      "ZFI_BNK_APP (report)",
+      "ZBNK_APP2 (transaction)",
+      "ZFI_BNK_APP_I01 (include, corrected)",
+      "ZFI_BNK_APP_OUTPUTO01 (include, corrected)",
+      "ZFI_BNK_APP_TOP (include)",
+      "ZFI_BNK_APP_S01 (include)",
+      "ZFI_BNK_APP_F (include)",
+      "ZPF_FI_BNK_APP (GUI status, created by hand)",
+      "ZTITLE_FI_BNK_APP (GUI title, created by hand)",
+      "ZFI_BATCH_SIGN (table)",
+      "ZFI_PAYM_FILE (table)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "FI (payments / bank communication)",
+    "end_client_evidence": "ISSUES.md: 'Source supplied: `ZFI_BNK_APP.txt` (SE80, OCQ/500, SAP_ABAP, 27.08.2026 09:15)'; '**SE93 confirmed:** `ZBNK_APP2` -> program `ZFI_BNK_APP`, selection screen 1000, package `ZFI_OTH`, text \"Bank Batch\"'; 'All three parts applied to OCQ/500 and activated'; reported rows 'OVL IN 2026082100002'. NOTES.md: 'proxy class `ZCO_SIOS_BANK_INTERFACE_ENCRYP` - SBI web service used by `F_RESENT`'.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "Bug fix / debugging",
+    "business_requirement": "Two issues were reported against tcode ZBNK_APP2: Back (F3) / Exit / Cancel did nothing once the batch list was displayed, and one selected batch released all batches of the run for signatory 68865.",
+    "technical_challenge": "Screen 100 had no GUI status at all (SET PF-STATUS still the commented SE51 generator stub) and USER_COMMAND_0100 handled only code 'E'; the screen and status are not part of the SE80 download, so the cause had to be established through SE51/SE41 checks. For the second issue the monitor contains no release logic at all, so the writing program had to be found through the where-used list of ZFI_BATCH_SIGN.",
+    "ai_contribution": "Triaged both issues from the SE80 download. For issue 1 it identified the root cause (no GUI status plus a CASE handling only 'E'), specified the SE41 status ZPF_FI_BNK_APP and title ZTITLE_FI_BNK_APP to be created by hand (function type must stay blank), and wrote corrected ZFI_BNK_APP_I01 (38 -> 91 lines: BACK/CANC/EXIT handling, ALV grid and container freed before leaving) and ZFI_BNK_APP_OUTPUTO01 (60 -> 73 lines: SET PF-STATUS / SET TITLEBAR). For issue 2 it proposed a batch-key truncation hypothesis, which was disproven, then narrowed the signature writer to ZFI_BNK_APP1 / the ZBCM* enhancements from the where-used list.",
+    "manual_intervention": "Arnav supplied the SE80 download; ran the SE11/SE16 checks that killed the truncation hypothesis; confirmed SE93 and supplied the where-used list (11 hits) and the SE51 flow logic; confirmed no GUI status exists; created the status and title by hand in SE41/SE80; pasted and activated both includes in OCQ/500; verified Back (F3) and Exit (Shift+F3); confirmed marker author SAP_ABAP. Transport release remains manual.",
+    "rework_events": [
+      "27/08/26: issue 2 hypothesis (41-char batch key silently truncated by CONCATENATE) disproven by SE11/SE16 checks - the data element checked (BNK_COM_BTCH_NO) was on the wrong field; analysis redirected to the where-used list and to ZFI_BNK_APP1 (also recorded as mistake M-13 in MEMORY.md)"
+    ],
+    "issue_log_entries": 2,
+    "first_date": "27/08/26",
+    "last_date": "27/08/26",
+    "code_lines_current": 164,
+    "deliverable_files": [
+      "ovl/zbnk_app2/ZFI_BNK_APP_I01.abap (91; 38 as supplied)",
+      "ovl/zbnk_app2/ZFI_BNK_APP_OUTPUTO01.abap (73; 60 as supplied)"
+    ],
+    "status": "Implemented - confirmed working in system",
+    "status_evidence": "ISSUES.md: '**Status: FIXED and verified by Arnav in OCQ, 27.08.2026.** Back (F3) and Exit (Shift+F3) confirmed working. Transport release still manual.' and 'All three parts applied to OCQ/500 and activated ... Arnav confirms **Back (F3) and Exit (Shift+F3) now work**.' Confirmation is in OCQ/500 only; F12, re-execute after F3 and the four toolbar buttons are listed as 'Still worth one pass'. Issue 2 was continued in ovl/zbnk_app1.",
+    "tr_numbers": [],
+    "quality_points": [
+      "BACK / EXIT / CANC now handled in USER_COMMAND_0100 (previously only 'E')",
+      "ALV grid and container freed (free, CLEAR, cl_gui_cfw=>flush) before leaving so a re-run does not hit a destroyed screen",
+      "GUI status makes DOWNLOAD1/2/3 and RESENT reachable for the first time ('had no buttons before the status existed')",
+      "Deliberately no AT EXIT-COMMAND module - screen flow logic left unchanged, reason recorded",
+      "Disproven hypothesis recorded with the three checks that killed it"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - bug fix",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Transport release (manual)",
+      "F12 (Cancel) path not yet checked",
+      "Re-execute after F3 (grid rebuild) not yet checked",
+      "Toolbar buttons DOWNLOAD1 / DOWNLOAD2 / DOWNLOAD3 / RESENT have never run before and are unverified",
+      "ZFI_BATCH_SIGN-BATCH_NO real type still unverified (SE11)",
+      "Left alone deliberately: PBO re-queries the database on every round trip; three near-identical download FORMs"
+    ],
+    "evidence_files": [
+      "ovl/zbnk_app2/ISSUES.md",
+      "ovl/zbnk_app2/NOTES.md",
+      "ovl/zbnk_app2/ZFI_BNK_APP_I01.abap",
+      "ovl/zbnk_app2/ZFI_BNK_APP_OUTPUTO01.abap",
+      "MEMORY.md",
+      "ovl/_engagement/WORKLOG_2026-08.md"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "Two small includes changed (about 66 lines added) plus one hand-made GUI status; one day, 5 commits, one disproven hypothesis on the second issue."
+  },
+  {
+    "folder": "ovl/zcl_gr_je_post",
+    "title": "ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP via the Data Monitor posting engine",
+    "sap_objects": [
+      "ZCL_GR_JE_POST (class)",
+      "CL_FINCS_DP_DOCUMENT_POST (SAP standard class wrapped)",
+      "IF_BADI_FINCS_CUST_DATAMON (BAdI interface - wiring named as next object, not built)"
+    ],
+    "object_types": ["Class"],
+    "module": "FI - Group Reporting (FIN-CS, ACDOCU)",
+    "end_client_evidence": "NOTES.md heading: 'OVL - `ZCL_GR_JE_POST`: post a group journal entry from ABAP'. ISSUES.md: '`API_CNSLDTNGRPJRNLENTR` is S/4HANA 2022+, OVL is below'. ZCL_GR_JE_POST.abap header: 'Project    : OVL - Group Reporting, custom Data Monitor task (CXCD)', 'Author     : Arnav Johri (Diligent)      Created: 22.10.2026'.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "New development",
+    "business_requirement": "A custom Group Reporting Data Monitor task must post group journal entries into ACDOCU from ABAP.",
+    "technical_challenge": "No posting API exists on this release (API_CNSLDTNGRPJRNLENTR is S/4HANA 2022+; the Fiori app's own classes are BOPF/draft-bound), so the posting has to go through SAP's internal Data Monitor engine CL_FINCS_DP_DOCUMENT_POST, whose structures and message-handler class could not be verified without system access (assumptions A1-A3).",
+    "ai_contribution": "Built class ZCL_GR_JE_POST v1 (134 lines) with one public method POST that wraps cl_fincs_dp_document_post_fac=>get_factory( )->create( )->post( ), builds FINCS_S_DOCUMENT_HEAD_POST and FC05_T_PDOC_S4H_QFLE by MOVE-CORRESPONDING from an ACDOCU-typed item table and returns BAPIRET2_T. Wrote NOTES.md with the SE24 test procedure, the three flagged assumptions and the scope left for version 2; the API research is recorded in ovl/cnsldtn_grpjrnl_api/NOTES.md.",
+    "manual_intervention": "Not evidenced in this folder beyond the requirement itself. Creation in ADT/SE24, activation and the SE24 test are described as steps for Arnav; no result is logged.",
+    "rework_events": [],
+    "issue_log_entries": 1,
+    "first_date": "22/10/26",
+    "last_date": "22/10/26",
+    "code_lines_current": 134,
+    "deliverable_files": [
+      "ovl/zcl_gr_je_post/ZCL_GR_JE_POST.abap (134)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "ISSUES.md fix column: 'New wrapper class on `CL_FINCS_DP_DOCUMENT_POST` (v1, post only)', TR column blank. NOTES.md: 'Each one is a possible activation or runtime message, fixed in one cycle.'; 'Version 2 once v1 has posted one document.'; '**Next object:** the BAdI wiring ... after the class is active.' No activation or test is recorded.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Messages are returned to the caller as BAPIRET2_T",
+      "Three unverified assumptions flagged in the source header as ASSUMPTION A1-A3 with what to do if each fails",
+      "MOVE-CORRESPONDING chosen so a differing field name does not break activation (the engine reports it at runtime)",
+      "Commit controlled by the caller (BAdI call planned with iv_commit = abap_false)"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Activation and first posting not recorded",
+      "Assumptions A1-A3 (ACDOCU field names in the engine structures; message handler class CL_FINCS_TE_MESSAGE_HANDLER; initial run ID and draft indicator accepted)",
+      "No deletion of the previous run (IF_FINCS_DOCUMENT_REFRESH) - 're-runs would double the amounts'",
+      "No engine test run (POST_TEST_RUN) and no reading of messages out of the message handler in v1",
+      "BAdI wiring in IF_BADI_FINCS_CUST_DATAMON~EXECUTE not built yet",
+      "No TR recorded"
+    ],
+    "evidence_files": [
+      "ovl/zcl_gr_je_post/ISSUES.md",
+      "ovl/zcl_gr_je_post/NOTES.md",
+      "ovl/zcl_gr_je_post/ZCL_GR_JE_POST.abap",
+      "ovl/cnsldtn_grpjrnl_api/NOTES.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One 134-line class in a single commit, but built on an undocumented internal SAP posting engine with three unverified assumptions."
+  },
+  {
+    "folder": "ovl/zf01_exchange_rate",
+    "title": "ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway OData V2 -> TCURR); the folder holds a handover document only, no ISSUES.md / NOTES.md / source files",
+    "sap_objects": [
+      "ZF01_EXCHANGE_RATE_SRV (OData V2 service)",
+      "ZF01_EXCHANGE_RATE (SEGW project)",
+      "ZCL_ZF01_EXCHANGE_RATE_DPC_EXT (class)",
+      "ZCL_ZF01_EXCHANGE_RATE_DPC (class)",
+      "ZCL_ZF01_EXCHANGE_RATE_MPC_EXT (class)",
+      "ZCL_ZF01_EXCHANGE_RATE_MPC (class)",
+      "BAPI_EXCHRATE_CREATEMULTIPLE (standard BAPI called)"
+    ],
+    "object_types": ["OData/Gateway", "Class", "Interface/BAPI/IDoc"],
+    "module": "FI (exchange rates, TCURR) / Gateway - CPI integration",
+    "end_client_evidence": "docs/ZF01_EXCHANGE_RATE_HANDOVER.md: '**System / client** seen in debug: `vhovlocqci` / OCQ 500.' Folder path ovl/. Root README.md: 'zf01_exchange_rate/            Exchange rate OData V2 interface (CPI -> TCURR)'.",
+    "wricef_or_ticket": "not stated (the handover names '`ZF01_EXCHANGE_RATE_API_SPEC.md` / `.docx` - customer interface spec', which is not in the repo)",
+    "dev_type": "New development",
+    "business_requirement": "A partner/source system produces a file of foreign-exchange rates; SAP CPI must post them in mass into TCURR through a custom OData service that validates each record.",
+    "technical_challenge": "A flat OData V2 create accepts one rate per call, so mass upload needed an OData $batch changeset with CHANGESET_BEGIN redefined (cv_defer_mode = abap_false). BAPI_EXCHRATE_CREATEMULTIPLE rejected payloads carrying both direct and indirect quotations (E!/033) and unmaintained currency pairs (E!/015), which required clearing the _V block, condensing padded values, converting the date and a TCURC/TCURF pre-check.",
+    "ai_contribution": "The only artefact in the folder is a 342-line knowledge-transfer document containing the final DPC_EXT method EXCHANGERATESSET_CREATE_ENTITY (about 97 lines of ABAP), the CHANGESET_BEGIN redefinition, the accepted CPI $batch envelope, the FI/Basis configuration prerequisites, data rules for the sender and an 11-row error -> fix table. There is no ISSUES.md or NOTES.md, the document carries no date and does not say who or what wrote the code or the document, and the reference files it lists ('ZCL_ZF01_EXCH_RATE_*.abap / ZCL_YF01_*', the API spec, the XML samples) are not in this repo. COPILOT_CONTEXT_HANDOFF.md and WORKLOG_2026-08.md cite it as the pattern reused for the later daily-production OData design (14/08).",
+    "manual_intervention": "As described in the handover: SEGW modelling and generation, service registration in /IWFND/MAINT_SERVICE, cache clean-up, CPI adapter and mapping set-up, /IWFND/GW_CLIENT tests and debugging on vhovlocqci / OCQ 500 ('verified in debugger: BAPI committed, rate in TCURR'). FI must maintain OBBS translation ratios. Who performed each step is not stated.",
+    "rework_events": [
+      "date and author not stated: deep (header + navigation) model tried first ('Method CREATE_DEEP_ENTITY not implemented'); deployed model is flat with $batch",
+      "date and author not stated: 'The type \"TS_EXCHANGERATE\" is unknown' - wrong generated type name; replaced by a local ty_rate structure",
+      "date and author not stated: 'could not find function BAPI_EXCHANGERATE_CREATEMULTIPLE' - wrong function module name; corrected to BAPI_EXCHRATE_CREATEMULTIPLE",
+      "date and author not stated: E!/033 'EXCH_RATE or EXCH_RATE_V must be > 0' because both indirect and direct rates were sent; the _V block is now always cleared",
+      "date and author not stated: 'Default changeset implementation allows only one operation' on $batch; CHANGESET_BEGIN redefined with cv_defer_mode = abap_false",
+      "date and author not stated: a CPI splitter approach 'kept failing' and was abandoned for $batch"
+    ],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 0,
+    "deliverable_files": [
+      "ovl/zf01_exchange_rate/docs/ZF01_EXCHANGE_RATE_HANDOVER.md (342; documentation with embedded method code - not counted as code)"
+    ],
+    "status": "Implemented - confirmed working in system",
+    "status_evidence": "docs/ZF01_EXCHANGE_RATE_HANDOVER.md section 11: 'OData service (flat) built, registered, cache-clean. Single create works (verified in debugger: BAPI committed, rate in TCURR).' and 'CPI: `$batch` envelope accepted (HTTP 202); after the `CHANGESET_BEGIN` fix each part runs `CREATE_ENTITY`.' and 'Remaining = **config**: FI must maintain OBBS translation ratios for every currency pair the source sends'. Evidence is for OCQ 500 only; no dated log, no transport, no production evidence. Only git trace: commit 805da52 of 2026-08-19 ('Add OVL ATC remediation, DPR, JV cash call and related work').",
+    "tr_numbers": [],
+    "quality_points": [
+      "TCURC/TCURF pre-check returns a clean 'Currency/exchange-rate settings not maintained' message instead of the raw BAPI error E!/015",
+      "BAPI error path: rollback and messages raised through the Gateway message container; commit with wait on success",
+      "Mandatory-field check with a business message before the BAPI call",
+      "Local structure used so the method does not depend on generated MPC type names",
+      "Strict Open SQL with @-escaped host variables in the pre-check selects",
+      "Eleven errors and their fixes documented for the next maintainer"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated - the interface loads FX rates from CPI into TCURR, but the handover does not say how rates were maintained before",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Configuration: FI must maintain OBBS translation ratios (TCURF) for every currency pair; unmaintained pairs return 'not maintained' per record",
+      "Very old dates (e.g. 01.01.1800) may be rejected by SAP",
+      "Source system should send values without trailing spaces and never a direct (_V) rate",
+      "Reference files named in section 12 (API spec, XML samples, reference classes) are not in this repo",
+      "No ISSUES.md / NOTES.md, no dates, no TR - provenance of the work cannot be established from this folder"
+    ],
+    "evidence_files": [
+      "ovl/zf01_exchange_rate/docs/ZF01_EXCHANGE_RATE_HANDOVER.md",
+      "ovl/_engagement/WORKLOG_2026-08.md",
+      "COPILOT_CONTEXT_HANDOFF.md",
+      "README.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One SEGW OData V2 service with DPC/MPC extension classes (three redefined methods), a BAPI call and CPI $batch integration; eleven distinct errors worked through; no source files in the repo."
+  },
+  {
+    "folder": "ovl/zfi_acdoca_jva_align",
+    "title": "ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group / recovery indicator split) directly into ACDOCA ledger 0L, with test run and undo",
+    "sap_objects": [
+      "ZFI_ACDOCA_JVA_ALIGN (report)"
+    ],
+    "object_types": ["Report", "Upload/Download utility", "ALV"],
+    "module": "FI / JVA",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - system OCQ/500 - package/TR: TBD'. ISSUES.md: 'First syntax check on OCQ: 15 errors', 'Test on OCD'. TS_ZFI_ACDOCA_JVA_ALIGN.md: 'Author | Arnav Johri, Diligent Global', 'Project / system | OVL - OCQ/500', 'reference program `Z_JVA_ALIGNMENT` (another landscape)'. test/README.md: 'OVL / 2022 / period 001'.",
+    "wricef_or_ticket": "not stated ('Related FS | None - design in `ovl/z_jva_alignment/NOTES.md` section 6', TS: 'no FSD; design agreed in chat 02/11/2026')",
+    "dev_type": "New development",
+    "business_requirement": "Ledger 0L lacks the venture / equity group / recovery indicator split that the JV ledger carries, and Group Reporting reads 0L. The business wanted the missing split inserted from a reviewed Excel file (the recon export plus cost objects) as ACDOCA-only lines, one document per company code / year / period, with a test run by default and an undo, without moving any account balance.",
+    "technical_challenge": "Direct INSERT into ACDOCA without BKPF/BSEG, so every other field (currency keys from existing 0L lines, posting date, account type, WBS internals, posting key, segment) has to be derived and every account must net to zero. Release limits surfaced only at activation (string template not accepted as a PERFORM actual parameter; T8JV/T8JJ column names unconfirmed) and CL_FDT_XL_SPREADSHEET rejected a workbook not written by Excel.",
+    "ai_contribution": "Built the report (1542 lines on 02/11/26, 1793 lines after five logged iterations), the TS (93 lines), a 15-item assumptions-and-queries sheet and test case 1: a Python builder that parses the 172 recon rows, checks net-zero per account (40 accounts, all zero) and writes the upload workbook. Fixed the 15 syntax errors of the first check, replaced the recovery-indicator rule after the test data showed 11 rows with RI but no venture, added read diagnostics and an OLE fallback reader (TEXT_CONVERT_XLS_TO_SAP), and added posting key / BTTYPE / CBTTYPE on Arnav's instruction. Two release rules were written back to MEMORY.md.",
+    "manual_intervention": "Arnav ran the first syntax check on OCQ and returned the 15 errors; pasted the 172 recon rows; ran the upload on OCD (two failed reads), then posted the one-account file (document ZJVA000001) and re-ran the recon with a later cut-off, which showed zero; instructed posting key and BTTYPE/CBTTYPE = RFBU 'as the reference program did'; took the design decisions of 02/11 (document type ZJ, posting date, currencies) and supplied SE16H observations. Functional confirmation of the posting keys and client sign-off are pending.",
+    "rework_events": [
+      "03/11/26: first syntax check on OCQ gave 15 errors - string template passed as PERFORM actual parameter (13 sites), 'Unknown column name JVNAME' on T8JV, 'Unknown column name RECIN' on T8JJ (names taken from a never-activated program); messages now built into a variable, T8JV vname used, recovery-indicator check moved (1542 -> 1613 lines)",
+      "03/11/26: validation rule 'RI/EG need a venture' was wrong - 11 of the 172 test rows carry a recovery indicator with no venture and would have been rejected; replaced by a check against the company code's 0L lines (1613 -> 1634 lines)",
+      "03/11/26: first upload on OCD failed with 'Unable to load worksheet' - the AI-generated openpyxl workbook was rejected by CL_FDT_XL_SPREADSHEET; test workbook rebuilt in Excel's package layout",
+      "03/11/26: second upload returned 'The file has no data rows below the heading' - cause 'not yet proven'; test file given plain headings, program split into class reader with diagnostics plus OLE fallback reader (1634 -> 1756 lines)"
+    ],
+    "issue_log_entries": 5,
+    "first_date": "02/11/26",
+    "last_date": "03/11/26",
+    "code_lines_current": 1793,
+    "deliverable_files": [
+      "ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap (1793)",
+      "ovl/zfi_acdoca_jva_align/TS_ZFI_ACDOCA_JVA_ALIGN.md (93; technical specification, not counted as code)",
+      "ovl/zfi_acdoca_jva_align/ASSUMPTIONS_AND_QUERIES.md (21; not counted as code)",
+      "ovl/zfi_acdoca_jva_align/test/build_testfile.py (150; test-data builder, not counted)",
+      "ovl/zfi_acdoca_jva_align/test/README.md (67; test case and results, not counted)",
+      "ovl/zfi_acdoca_jva_align/test/ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001.xlsx (binary test workbook, 172 rows)",
+      "ovl/zfi_acdoca_jva_align/test/ZFI_ACDOCA_JVA_ALIGN_OVL_2022_001_acct30434.xlsx (binary test workbook, 2 rows)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "NOTES.md test log: '03/11/26, OCD: one-account file (30434, 2 rows) posted as `ZJVA000001`; recon with cut-off 04.11.2026 shows zero on both rows. First confirmed end-to-end run. Those two lines were written **before** BSCHL / BTTYPE / CBTTYPE were added - undo and re-post if the lines must be uniform.' ISSUES.md row 5: 'One-account test (30434) posted on OCD, recon shows zero'. The full 172-row file and the final 1793-line version are not recorded as run; the NOTES.md header still says 'activation pending'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Test run is the default and writes nothing; an undo mode deletes the alignment lines by marker fields",
+      "Every account must net to zero in HSL, KSL and OSL or nothing posts - account balances cannot move",
+      "AUTHORITY-CHECK F_BKPF_BUK per company code for the update run and the undo",
+      "COMMIT WORK on success, ROLLBACK WORK on a rejected insert, per document",
+      "Every file row appears in the SALV result list with a status and message (Error / Skipped / Test / Not posted / Posted / Failed)",
+      "Assumptions greppable as ASSUMPTION in the source and listed with 'if wrong' consequences (15 items)"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Direct write to ACDOCA: 'client / functional sign-off before anything beyond DEV, one company code and one period first'",
+      "MIG_SOURCE = 'U' domain check and T003 'ZJ' check outstanding",
+      "Posting keys for D/K/A/M 'are the standard SAP keys - functional to confirm'",
+      "Full 172-row test file not recorded as posted; the two test lines predate BSCHL / BTTYPE and need undo and re-post",
+      "GR data release must carry the lines to ACDOCU (functional step)",
+      "Package and TR are TBD; T8JJ column names unconfirmed on OCQ"
+    ],
+    "evidence_files": [
+      "ovl/zfi_acdoca_jva_align/ISSUES.md",
+      "ovl/zfi_acdoca_jva_align/NOTES.md",
+      "ovl/zfi_acdoca_jva_align/ASSUMPTIONS_AND_QUERIES.md",
+      "ovl/zfi_acdoca_jva_align/TS_ZFI_ACDOCA_JVA_ALIGN.md",
+      "ovl/zfi_acdoca_jva_align/test/README.md",
+      "ovl/zfi_acdoca_jva_align/ZFI_ACDOCA_JVA_ALIGN.abap",
+      "MEMORY.md"
+    ],
+    "complexity": "High",
+    "complexity_basis": "One 1793-line report writing directly to ACDOCA, two Excel readers, TS, 15 assumptions, an offline test-data builder; five logged iterations and 8 commits in two days."
+  },
+  {
+    "folder": "ovl/zfi_acdoca_jvso1_recon",
+    "title": "ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV ledger line items (JVSO1 4A / 4C)",
+    "sap_objects": [
+      "ZFI_ACDOCA_JVSO1_RECON (report)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "FI / JVA",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - system OCQ/500 - package/TR: TBD'. TS_ZFI_ACDOCA_JVSO1_RECON.md: 'Author | Arnav Johri, Diligent Global', 'Project / system | OVL - OCQ/500'. ISSUES.md: 'OSL company code carries ROCUR INR'.",
+    "wricef_or_ticket": "not stated ('Related FS | None - requirement received in chat, 19/10/2026')",
+    "dev_type": "New development",
+    "business_requirement": "The functional team needs to see where the universal journal (ACDOCA, ledger 0L) and the JV ledger line items (JVSO1, ledger 4A) disagree for the same FI documents created before the JVA-on-ACDOCA cut-over (default 27.09.2026), totalled by venture, equity group, account, recovery indicator, year and period. From 02/11/26 the output also has to feed the ACDOCA alignment upload (amount to post, third currency).",
+    "technical_challenge": "Choosing the link between the two ledgers (JVSO1-REFFIDOC = ACDOCA-BELNR, the join SAP's CL_JVA_MIG_CORRECT_ACDOCA uses), reading JVSO1 at line level because aggregates are not allowed with FOR ALL ENTRIES, a UTC time-stamp cut-off, and which JVSO1 4C column holds the third currency (an assumption held in constant GC_OSL_COL).",
+    "ai_contribution": "Built the report on 19/10/26 (384 lines, CL_SALV_TABLE), removed the transaction-currency comparison on 21/10/26 (367 lines) and added the third currency via ledger 4C plus three 'amount to post' columns on 02/11/26 (451 lines). Wrote a 13-item assumptions-and-queries sheet and a TS (v1.2, .md and .docx) with requirement mapping and nine test scenarios.",
+    "manual_intervention": "Arnav gave the requirement in chat (19/10), instructed dropping WSL/TSL (21/10) and the extension for the upload (02/11). On 03/11/26 he pasted the report's output for OVL 2022 001 (172 rows with Diff = X) and re-ran it with a later cut-off (recorded in ovl/zfi_acdoca_jva_align/test/README.md and NOTES.md). Answers to the open queries are pending.",
+    "rework_events": [],
+    "issue_log_entries": 3,
+    "first_date": "19/10/26",
+    "last_date": "02/11/26",
+    "code_lines_current": 451,
+    "deliverable_files": [
+      "ovl/zfi_acdoca_jvso1_recon/ZFI_ACDOCA_JVSO1_RECON.abap (451)",
+      "ovl/zfi_acdoca_jvso1_recon/TS_ZFI_ACDOCA_JVSO1_RECON.md (127; technical specification, not counted as code)",
+      "ovl/zfi_acdoca_jvso1_recon/TS_ZFI_ACDOCA_JVSO1_RECON.docx (binary)",
+      "ovl/zfi_acdoca_jvso1_recon/ASSUMPTIONS_AND_QUERIES.md (34; not counted as code)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "The folder's own log never records activation: ISSUES.md row 1 'Awaiting activation + answers', row 3 'Built on the repo copy - no fresh SE80 download this session; diff against OCQ before paste'. Indirect evidence that it runs: ovl/zfi_acdoca_jva_align/test/README.md '`ZFI_ACDOCA_JVSO1_RECON` output for OVL 2022 001, the 172 rows with Diff = X, as pasted by Arnav' and ovl/zfi_acdoca_jva_align/NOTES.md '03/11/26, OCD: ... recon with cut-off 04.11.2026 shows zero on both rows'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "ACDOCA totals built on the database with GROUP BY instead of line-by-line reads",
+      "IS NOT INITIAL guard before FOR ALL ENTRIES; DOCNR/DOCLN kept in the field list so FAE cannot collapse identical lines",
+      "Cut-off date is a selection parameter with a default, not a literal in the SELECT",
+      "User messages for 'no ACDOCA data' and 'no JVSO1 lines found' instead of an empty list",
+      "Syntax kept at 7.40 level for the older S/4 release (no +=, FIELDS, FINAL)",
+      "Transaction-currency totals removed once shown to be meaningless across mixed currencies"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Query 1: REFFIDOC vs DOCNR as the link; CO-only JV lines (REFDOCNR) are not matched",
+      "Query 4: cut-off compares raw UTC digits, no IST shift",
+      "Query 9: no authority check in the code",
+      "Queries 10/12: which ledger-4C column carries the third currency (GC_OSL_COL = 'KSL' is an ASSUMPTION)",
+      "02/11/26 change was built on the repo copy without a fresh SE80 download - 'diff against OCQ before pasting'",
+      "Package and TR are TBD"
+    ],
+    "evidence_files": [
+      "ovl/zfi_acdoca_jvso1_recon/ISSUES.md",
+      "ovl/zfi_acdoca_jvso1_recon/NOTES.md",
+      "ovl/zfi_acdoca_jvso1_recon/ASSUMPTIONS_AND_QUERIES.md",
+      "ovl/zfi_acdoca_jvso1_recon/TS_ZFI_ACDOCA_JVSO1_RECON.md",
+      "ovl/zfi_acdoca_jvso1_recon/ZFI_ACDOCA_JVSO1_RECON.abap",
+      "ovl/zfi_acdoca_jva_align/test/README.md",
+      "ovl/zfi_acdoca_jva_align/NOTES.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One 451-line display-only report in three versions over two weeks, with TS and 13 queries; two requirement changes, no logged defects."
+  },
+  {
+    "folder": "ovl/zfi_acdoca_vname_upd",
+    "title": "ZFI_ACDOCA_VNAME_UPD - one-off back-fill of custom field ZZ1_VNAME from VNAME on historical ACDOCA line items",
+    "sap_objects": [
+      "ZFI_ACDOCA_VNAME_UPD (report)"
+    ],
+    "object_types": ["Report"],
+    "module": "FI / Group Reporting",
+    "end_client_evidence": "ZFI_ACDOCA_VNAME_UPD.abap header: 'Project        : OVL                          Module: FI / GR', 'Author         : Arnav Johri                  Date: 16.10.2026'. NOTES.md: 'imported **after** the custom-field TR (OCDK920155 / its replacement)'; 'confirmed by activation on DEV, 16/10/26'.",
+    "wricef_or_ticket": "not stated ('Related FS     : None - follow-up to GR custom field ZZ1_VNAME')",
+    "dev_type": "New development",
+    "business_requirement": "After the Group Reporting custom field ZZ1_VNAME and the substitution rule SET_VNAME went live, only new postings are filled; historical ACDOCA lines have an empty ZZ1_VNAME and must be filled from VNAME per company code and fiscal year.",
+    "technical_challenge": "A direct mass UPDATE of ACDOCA that must be safe to interrupt and re-run: packages of at most 10,000 lines with a COMMIT each, no cursor held across commits, NULL handling for the appended column, and the real database column name of the custom field (ZZ1_VNAME_COB) only known at activation.",
+    "ai_contribution": "Built the report (329 lines) with test run as default, a package loop with COMMIT per package, a guard that never overwrites an existing value and stop conditions. After activation feedback it corrected the column name to ZZ1_VNAME_COB, added a document-number filter and a 'Max lines' limit for a single-line first test, and removed the authority check on request. Wrote NOTES.md with text elements and run order.",
+    "manual_intervention": "Arnav activated it on DEV on 16/10/26 and returned the activation error; decided 'No authority check in the code (decided 16/10/26)'; asked for the single-line test option. The GR consultant re-runs the data release afterwards; client/functional approval is required before PRD.",
+    "rework_events": [
+      "16/10/26: activation error - the custom field is stored in ACDOCA as column ZZ1_VNAME_COB, not ZZ1_VNAME; column name corrected (commit 04d83c0 'activation error fix')"
+    ],
+    "issue_log_entries": 1,
+    "first_date": "16/10/26",
+    "last_date": "16/10/26",
+    "code_lines_current": 329,
+    "deliverable_files": [
+      "ovl/zfi_acdoca_vname_upd/ZFI_ACDOCA_VNAME_UPD.abap (329)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "NOTES.md: 'ACDOCA column is `ZZ1_VNAME_COB` (confirmed by activation on DEV, 16/10/26).' Activation only; no test-run or update-run result is logged, and ISSUES.md carries the TR placeholder '<TR>'.",
+    "tr_numbers": [
+      "OCDK920155 (the custom-field TR this report must be imported after - not the report's own TR, which is still a placeholder)"
+    ],
+    "quality_points": [
+      "Test run is the default and only counts",
+      "A line that already has a value is never overwritten, so the report is safe to re-run after an interruption",
+      "COMMIT per package of at most 10,000 lines; no cursor held across commits",
+      "Stops if a package updates nothing or the package count exceeds the expected number",
+      "Stops before any update if ZZ1_VNAME is shorter than VNAME",
+      "Document filter and 'Max lines = 1' allow a single-line first test checked in SE16H"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "NOTES.md: 'One-off back-fill report.'"
+    },
+    "open_items": [
+      "'Direct table update of ACDOCA: get client/functional approval before PRD'",
+      "Own workbench TR not recorded; must be imported after the custom-field TR or activation fails in QA",
+      "ACDOCU is not updated - the GR consultant has to re-release the periods",
+      "No authority check in the code (restrict by SE38 authorisation group / role)",
+      "No run result (counts) logged"
+    ],
+    "evidence_files": [
+      "ovl/zfi_acdoca_vname_upd/ISSUES.md",
+      "ovl/zfi_acdoca_vname_upd/NOTES.md",
+      "ovl/zfi_acdoca_vname_upd/ZFI_ACDOCA_VNAME_UPD.abap"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "One 329-line report built and corrected in one day (4 commits, one activation error); the risk lies in the direct ACDOCA update, not in size."
+  },
+  {
+    "folder": "ovl/zfi_bank_reval",
+    "title": "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analytical Query, plus client UAT support",
+    "sap_objects": [
+      "ZFI_BR_GLMAP (table)",
+      "ZBR_PISHARE (domain)",
+      "ZBR_PISHARE (data element)",
+      "ZI_BR_BANKREVAL_ITM (CDS view)",
+      "ZI_BR_BANKREVAL_CUBE (CDS view, analytical cube)",
+      "ZI_BR_HOUSEBANKACCT (CDS view)",
+      "ZFI_BANK_REVAL (package / abapGit ZIP)",
+      "ZZ1_BR_REPORT / ZZ9_BR_REPORT (app-generated custom analytical query, as supplied by FI)",
+      "ZZ1_BZHO1M6TDK65 (live custom analytical query 'Bank Revaluation Report', built in the app)"
+    ],
+    "object_types": ["CDS view", "DDIC", "Fiori extension", "Customizing advice"],
+    "module": "FI (G/L, bank accounting) / Group Reporting",
+    "end_client_evidence": "NOTES.md: '**Client:** OVL - **System:** ovlrisedev (Fiori: *Custom Analytical Queries*) - **Filed:** 28/10/26', '**Requester:** functional (FI) via Excel `original/FIORI_Development_-_Bank_Revaluation_-_Updated_V2.xlsx`', hierarchy '`H109/ONGC/BANK_REVAL`'. ISSUES.md: 'Pulled 28/10/26 into `SUPPORT_OCD`', 'Mail Khyati Sharma (Corporate Accounts)', 'Company code fixed as **OVL**', 'Fiori on OCD'.",
+    "wricef_or_ticket": "not stated (requirement is the Excel 'FIORI_Development_-_Bank_Revaluation_-_Updated_V2.xlsx'; SAP KBA 2783951 and 2668461 are cited for the key-user release)",
+    "dev_type": "New development",
+    "business_requirement": "FI / Group Reporting wants the period-end bank revaluation sheet as a Fiori Custom Analytical Query: one row per bank G/L account with the balance in account currency, OVL's participating-interest (PI) share, the exchange rate to USD at the key date and the USD balance after revaluation, next to the USD figure SAP carries. The existing app-built query could not show the PI share or the key-date rate.",
+    "technical_challenge": "An app-generated analytical query cannot join a table or read TCURR, so a custom cube was needed; the rate has to be account currency -> USD while OB08 holds USD -> INR. On this older S/4 release several constructs failed at activation (FLTP literal cast, exchange_rate_type must be a literal, no functions in a classic WHERE), T012K turned out to be redirected to compatibility view V_T012K_BAM, carry-forward lines carry INR as transaction currency, a house-bank join fanned out, and the cube had to be released for key-user apps (C1) before the app listed it.",
+    "ai_contribution": "Designed and delivered the mapping table ZFI_BR_GLMAP with domain/data element ZBR_PISHARE, CDS views ZI_BR_BANKREVAL_ITM (seven versions), ZI_BR_BANKREVAL_CUBE and helper ZI_BR_HOUSEBANKACCT (three versions), an abapGit ZIP and a 48-row SM30 load sheet generated from the requirement Excel. Diagnosed the activation errors, the 'cube not listed' case (missing C1 release), the blank house bank (T012K redirected to V_T012K_BAM), the cross-year sums, the carry-forward currency behaviour and the 95312 join fan-out. Reconciled the client's 18/11 extraction account by account (39 split accounts tie, 0 exceptions) in RECON_2026-11-18.md, wrote the nine-step handover for building the query and drafted replies to the client tester.",
+    "manual_intervention": "Arnav pulled the ZIP with abapGit into SUPPORT_OCD, activated views by ADT paste and returned each activation error; did the key-user (C1) release; loaded the 48 SM30 rows; supplied SE16N T012K observations, ACDOCA rows, results of test report ZTEST_1 and FAGLB03, the system copy of the cube (with a hand-added filter he later removed) and the query exports. The FI consultant built the query in the app; Khyati Sharma (Corporate Accounts) tested and sent mails/sheets on 10/11, 16/11 and 18/11; FI added mapping rows in SM30.",
+    "rework_events": [
+      "28/10/26: ZI_BR_BANKREVAL_ITM activation stopped on 'CAST 1.0 of type FLTP to type CURR is not possible' - changed to cast( 1 as abap.curr(23,10) )",
+      "28/10/26: ZI_BR_BANKREVAL_CUBE failed on 'CURRENCY_CONVERSION: for parameter EXCHANGE_RATE_TYPE only expressions of type literal' - rewritten as a CASE with one literal call per rate type (CLT / M / TTA)",
+      "28/10/26: cube active but not listed in the Custom Analytical Queries app - cause was the missing key-user release (C1); cube re-delivered with modelingPattern / supportedCapabilities annotations",
+      "03/11/26: house bank / account ID / bank account number blank - ITM read SKB1-HBKID/HKTID (not maintained on S/4); v3 via T012K-HKONT still blank; helper view with lpad + ITM v4 still blank; root cause T012K redirected to V_T012K_BAM, helper v2 reads the compatibility view (three attempts)",
+      "03/11/26: cube activation warning 'Association of field GLACCOUNT ignored' would have dropped G/L texts and the hierarchy - _ChartOfAccounts association added",
+      "10/11/26: first diagnosis of the FBL3N difference (carry-forward FAGLGVTR not run in DEV) was wrong - corrected the same day from ACDOCA rows (query ran without an effective fiscal-year filter) and again in #8 ('FY 2026 carry-forward *is* run in DEV (ISSUES #5 said otherwise)')",
+      "10/11/26: cube with the key-date fiscal-year restriction failed activation 'Random expressions are not supported in a condition' - logic moved into ITM v6 as column KeyDateFiscalYear",
+      "10/11/26: 'Balance in Account Currency' used the transaction-currency amount for foreign-currency accounts and showed INR on carry-forward lines (96488) - ITM v7 uses AmountInBalanceTransacCrcy",
+      "17/11/26: assumption 'one T012K row per G/L' did not hold - G/L 95312 has two account IDs and every line joined twice (total doubled); helper v3 groups to one row per company code + G/L",
+      "17/11/26: after the measure switch advised on 10/11 (#8) the query's ALC / OVL Share / Balance After Revaluation went blank because they were chained on the measure taken out of the field selection; rebuild steps given, and on 18/11 the chain was found restored on the wrong base (#14)"
+    ],
+    "issue_log_entries": 16,
+    "first_date": "28/10/26",
+    "last_date": "18/11/26",
+    "code_lines_current": 515,
+    "deliverable_files": [
+      "ovl/zfi_bank_reval/src/zi_br_bankreval_cube.ddls.asddls (255)",
+      "ovl/zfi_bank_reval/src/zi_br_bankreval_itm.ddls.asddls (184)",
+      "ovl/zfi_bank_reval/src/zi_br_housebankacct.ddls.asddls (76)",
+      "ovl/zfi_bank_reval/src/zfi_br_glmap.tabl.xml (81; abapGit DDIC XML, not counted as code)",
+      "ovl/zfi_bank_reval/src/zbr_pishare.dtel.xml (22; abapGit DDIC XML, not counted)",
+      "ovl/zfi_bank_reval/src/zbr_pishare.doma.xml (16; abapGit DDIC XML, not counted)",
+      "ovl/zfi_bank_reval/src/package.devc.xml (10; not counted)",
+      "ovl/zfi_bank_reval/src/zi_br_bankreval_cube.ddls.xml + zi_br_bankreval_itm.ddls.xml + zi_br_housebankacct.ddls.xml (13 each; not counted)",
+      "ovl/zfi_bank_reval/.abapgit.xml (10; not counted)",
+      "ovl/zfi_bank_reval/ZFI_BANK_REVAL.zip (binary abapGit archive)",
+      "ovl/zfi_bank_reval/ZFI_BR_GLMAP_load.txt (48 data rows for SM30; not counted as code)",
+      "ovl/zfi_bank_reval/ZFI_BR_GLMAP_load.xlsx (binary load sheet)",
+      "ovl/zfi_bank_reval/RECON_2026-11-18.md (59; reconciliation of the client's extraction, not counted)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "NOTES.md 'Status 03/11/26': 'All four CDS objects active on OCD (`ZFI_BR_GLMAP`, `ZI_BR_HOUSEBANKACCT` v2, `ZI_BR_BANKREVAL_ITM` v4, `ZI_BR_BANKREVAL_CUBE` released for key-user apps), 48 mapping rows loaded for company code OVL, query built in the app on the cube: PI share, rate type, exchange rate, house bank and bank account number all show.' ISSUES.md #11: 'Helper v3 activated 17/11/26 - 95312 fan-out closed'. NOTES.md 'Status 18/11/26': '93201 now correct ... Still 39 accounts on two rows because **Transaction Currency is still on the query rows** ... Two app changes outstanding, no code'. Client testing is ongoing; no overall sign-off is logged and ISSUES #8 still reads 'Open - ITM v7 to activate'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "SAP's currency_conversion of one unit used instead of a hand-written TCURR join (handles direction, ratios, indirect quotation, triangulation)",
+      "PI share kept in an SM30-maintained table instead of a hardcoded CASE - a PI change needs no transport",
+      "Cube enforces the fiscal year of the key date and posting date <= key date itself after the query variable was shown not to filter",
+      "House-bank join fan-out removed: one row per company code + G/L",
+      "Missing mapping or rate shows as NULL (blank), 'not a wrong one'",
+      "Hand-added, unmarked filter found in the system copy was filed and reported as drift before the next change"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Period-end bank revaluation Excel sheet in which the PI share per G/L was 'hardcoded' and the exchange rate taken from OB08",
+      "frequency_evidence": "NOTES.md: 'A period-end bank revaluation sheet, one row per foreign/local-currency bank G/L account' and 'Monthly use: enter company code, fiscal year, revaluation date'"
+    },
+    "open_items": [
+      "Query change still to be made: Transaction Currency off the rows, Account Currency on (ISSUES #11)",
+      "Calculated measures must be rebuilt on 'Balance in Account Currency'; currently wrong on every foreign-currency INR row (ISSUES #12, #14)",
+      "'LCC Currency Balance' definition asked from the client",
+      "TR number to be noted; SE54 maintenance view for ZFI_BR_GLMAP still manual",
+      "PI share 0 on 93251 / 93281 / 93291 passed back to FI",
+      "ISSUES #3, #4, #7, #8 still marked Open (delivered / awaiting activation or ACDOCA details)"
+    ],
+    "evidence_files": [
+      "ovl/zfi_bank_reval/ISSUES.md",
+      "ovl/zfi_bank_reval/NOTES.md",
+      "ovl/zfi_bank_reval/RECON_2026-11-18.md",
+      "ovl/zfi_bank_reval/src/zi_br_bankreval_cube.ddls.asddls",
+      "ovl/zfi_bank_reval/src/zi_br_bankreval_itm.ddls.asddls",
+      "ovl/zfi_bank_reval/src/zi_br_housebankacct.ddls.asddls",
+      "MEMORY.md"
+    ],
+    "complexity": "Very High",
+    "complexity_basis": "One table with domain/data element, three CDS views (515 lines) with analytics and currency conversion, an abapGit ZIP and a key-user query; 16 logged issues, 31 commits and about ten correction rounds over three weeks including client UAT reconciliation."
+  },
+  {
+    "folder": "ovl/zfi_cnb_brs",
+    "title": "ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header truncation fix, FF67 upload changes, and a single-source copy built from the ONGC version (mix of bug fixes and change requests)",
+    "sap_objects": [
+      "ZFI_CNB_BRS (report)",
+      "ZFIBRSTOP (include)",
+      "ZFI_CNB_BRS1 (report, new single-source copy)",
+      "ZFIBRS (transaction)",
+      "ZPFSTATUS (GUI status)"
+    ],
+    "object_types": ["Report", "Upload/Download utility"],
+    "module": "FI (bank accounting - bank reconciliation, manual bank statement FF67)",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - system OCP - package `ZFI_BL`'. ISSUES.md: 'AZNUM is 18 digits on OCP'; '#10 Arnav copied the ONGC version of ZFI_CNB_BRS into OCD'; '#22 ... (TR moved to QA). Sachin Thakur reports the opening/closing balance issue as still coming.' ZFI_CNB_BRS1.abap header: 'Source   : ONGC version of ZFI_CNB_BRS (OCD, 10.10.2026)'.",
+    "wricef_or_ticket": "not stated for this work; legacy source header carries 'Functional Specification No. : FS-FI-BA-001' and 'CR 30012894'; SAP note 3438783 is cited for WVAR_ART = '3' in the ONGC code",
+    "dev_type": "Enhancement of existing object",
+    "business_requirement": "The BRS step failed after Validation with 'Inconsistent header in file ... Run Validation Module First'. The FF67 upload then had to run with a different processing type and, per the change request of 10/10/26, send all bank statement lines to FF67 without validations (a posting exit does the matching), with correct opening/closing balances and a clean log.",
+    "technical_challenge": "A 2003 batch-input program driving FF67 (SAPMF40K): the screen sequence changes with the processing type (0101, Specifications popup 0110, posting log list SAPMSSY0 0120), the file header was truncated because AZNUM is 18 digits on OCP, and the balance sign convention (bank side vs company side) produced FV 072. Sources were only available as SE38 print listings that had to be reconstructed, and two code lines (OVL and ONGC versions) plus an all-lines and a matched-only variant had to be kept apart.",
+    "ai_contribution": "Reconstructed clean sources from SE38 print listings; delivered corrected ZFIBRSTOP (three fields widened to 70) and ZFI_CNB_BRS (WVAR_ART, BDC screen flow, balances, warning suppression, no-validation upload). Built ZFI_CNB_BRS1 as a single-source copy of the ONGC version with ZFIBRSTOP merged in (4431 lines) plus a matched-only test variant (4330 lines) and a text-element sheet. Verified the statement-449 bank file line by line (172 lines) to settle the balance signs, and ran drift checks against the SAP copies pasted on 15/10/26 and 06/11/26.",
+    "manual_intervention": "Arnav supplied the SE38 listings, ran each upload and pasted the FF67 logs and errors, ran FF67 by hand (0110 popup observation), confirmed the FV 058 / 072 / 093 messages, copied the ONGC version into OCD, supplied the statement-449 bank file and bank book file, pasted the SAP copies for drift checks, corrected the AI's misreading of his request (#19 -> #20) and moved the TR to QA. Sachin Thakur reports from QA.",
+    "rework_events": [
+      "09/10/26: after the WVAR_ART 2 -> 4 change the upload failed with 'Field FEBMKA-MNAM1 does not exist in Dynpro SAPMF40K 0101' - cursor moved and NM1VB / MNAM1 lines commented out (#3)",
+      "09/10/26: 'No batch input data found for dynpro SAPMSSY0 0120. SAPMF40K 0101 expected' - closing /N now sent on SAPMSSY0 0120 (#4)",
+      "09/10/26: 'No batch input data found for dynpro SAPMF40K 0110' - retry from the first 0110 block added (#6)",
+      "09/10/26: statement saved but not posted (FV 072 / FV 093) - still open, field behind FV 093 unknown (#8)",
+      "10/10/26: after the all-lines upload, unmatched lines reached FF67 with an empty cheque number and FF67 gave an error - fallback chain for CHECT_KF added (#13)",
+      "15/10/26: closing-balance fix ESALD = CLBL (#15) was off by 14,802,225.12 and superseded - after checking the 172-line bank file the signs were flipped: SSALD = -OPBL, ESALD = -CLBL (#16)",
+      "15/10/26: the AI misread the request and rebuilt ZFI_CNB_BRS1 on the matched-only logic (#19, 'Withdrawn: misread'); all-lines version restored (#20)",
+      "06/11/26: balance issue still reported from QA - drift check shows the SAP copy is the matched-only test variant, not the all-lines version; no code change, awaiting QA details (#22)"
+    ],
+    "issue_log_entries": 22,
+    "first_date": "09/10/26",
+    "last_date": "06/11/26",
+    "code_lines_current": 12809,
+    "deliverable_files": [
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS1.abap (4431; whole program, ONGC version + merged include + changes)",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS1_MATCHED_ONLY.abap (4330; test variant, differs from ZFI_CNB_BRS1 in about 173 diff lines)",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS.abap (3744; whole corrected program, 3608 as supplied)",
+      "ovl/zfi_cnb_brs/ZFIBRSTOP.abap (304; whole corrected include, 292 as supplied)",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS1_TEXTS.md (89; text elements and selection texts, not counted as code)"
+    ],
+    "status": "In progress",
+    "status_evidence": "ISSUES.md #22 (06/11/26): 'The SAP copy is the matched-only version (#21 ...) ... The all-lines version (#20, closing = -CLBL) is **not** in SAP.' ... 'No code change. Needed from QA: exact message text, the OPBL/CLBL entered ...' status '**Open: awaiting QA details**'. Rows 1-7, 9, 11-14, 16-17, 20 read 'Delivered, awaiting test'; #18 'Not syntax-checked in SAP'; #8 '**Open: waiting for FV 093 field**'. No row records a successful test.",
+    "tr_numbers": [
+      "none recorded for this work (TR column is '-' in all 22 rows; #22 says only 'TR moved to QA')",
+      "legacy TRs in source comments, not this work: OCDK900893, OCDK900873 (09.09.2016), RD1K960036, RD1K998453, RP1K951283 (2008-2022)"
+    ],
+    "quality_points": [
+      "Header fields widened to 70 so the Validation -> BRS file header no longer truncates (the old 55-char compare silently dropped DT_TO)",
+      "BDC retries from screen 0110 when FF67 opens on the Specifications popup; success test now on the saved lv_subrc",
+      "Lines with non-numeric amounts are skipped and listed instead of silently dropped",
+      "Whole-program static check before delivery: 43 FORM/ENDFORM pairs, IF/LOOP/CASE/DO balanced per FORM, no line over 120 characters",
+      "Drift checks against the copy actually in SAP before each further change (15/10/26, 06/11/26)",
+      "Computed opening/closing balance check lines printed above the FF67 log"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - changes to an existing reconciliation / upload program",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "#22: opening/closing balance issue still reported from QA; SAP holds the matched-only variant, not the all-lines version - awaiting QA details",
+      "#8: FV 072 / FV 093 - the field FF67 ignores is not identified",
+      "ASSUMPTION: default codes OTD<x> / RCT<x> exist in T028G for variant BANK",
+      "ASSUMPTION: the posting exit reads CHECT_KF; exact FF67 error text for #13 not supplied",
+      "Noted, not fixed: previous-month error merge suffers the same truncation (needs FS confirmation)",
+      "No row has a recorded successful test; no TR number logged"
+    ],
+    "evidence_files": [
+      "ovl/zfi_cnb_brs/ISSUES.md",
+      "ovl/zfi_cnb_brs/NOTES.md",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS1_TEXTS.md",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS1.abap",
+      "ovl/zfi_cnb_brs/ZFI_CNB_BRS.abap",
+      "ovl/zfi_cnb_brs/ZFIBRSTOP.abap"
+    ],
+    "complexity": "High",
+    "complexity_basis": "22 logged issues and 22 commits over four weeks on a legacy BDC program; four source files totalling 12,809 lines (mostly pre-existing code - about 190 diff lines changed in ZFI_CNB_BRS), three program variants, sources rebuilt from print listings."
+  },
+  {
+    "folder": "ovl/zfi_cp_mass_ven_pay",
+    "title": "ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written",
+    "sap_objects": [
+      "ZFI_CP_MASS_VEN_PAY (report with screens, 'module pool style')",
+      "ZFIAPP (transaction)",
+      "ZFI_CP_MASS_VEN_PAY_TOP (include)",
+      "ZFI_CP_MAS_VEN_AI001 (include)",
+      "ZFI_CP_MAS_VEN_BO001 (include)",
+      "ZFI_CP_MAS_VEN_E0001 (include)",
+      "ZFI_CP_VEND_DOCS (table)"
+    ],
+    "object_types": ["Module pool", "Analysis/Document only"],
+    "module": "FI (accounts payable - vendor payment, cheque management)",
+    "end_client_evidence": "NOTES.md heading: 'ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) - OVL'; 'ZR_PROG_DOWNLOAD listing of 08.08.2026 taken from OCQ/500 for the ATC work'. ISSUES.md: 'Sachin Thakur (F&A): ... ZFIAPP posted payment document 1726000164 (27.06.2026, co. code OVL)'; 'PCEC on OVL holds 72 lots, all on house bank **HB_01 / account HB001**'.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "Analysis / feasibility only",
+    "business_requirement": "F&A reported that ZFIAPP posted payment document 1726000164 without consuming a cheque (FCHN: 'No check information was found'); they need the cause and a payment/cheque step that cannot silently diverge.",
+    "technical_challenge": "F-53 and FCH5 are two separate CALL TRANSACTIONs in two LUWs, so the payment commits before the cheque step. The cheque number is guessed as PCEC-CHECL + 1 without reading PAYR or testing the lot ceiling, and bdc_fch5 ignores sy-subrc and every FCH5 error, so an exhausted cheque lot fails silently on every run.",
+    "ai_contribution": "From the 08.08.2026 listing it produced a code analysis naming three silent exits in include ZFI_CP_MAS_VEN_AI001, a secondary trap (hardcoded fiscal-year variant 'V3' for FCH5), a list of SE16 / SM35 / ST22 / SE51 checks, the immediate functional action (new lot in FCHI, manual cheque assignment in FCH5) and a proposed fix. No code was written because the repo copy was not verified as current.",
+    "manual_intervention": "The cause was confirmed in the system on 31/08/26 from PCEC (the lot keyed on the selection screen had CHECL = CHECT); Sachin Thakur (F&A) reported the issue. A fresh SE80 download of ZFI_CP_MAS_VEN_AI001 and the functional corrective action (FCHI / FCH5) remain with humans.",
+    "rework_events": [],
+    "issue_log_entries": 1,
+    "first_date": "31/08/26",
+    "last_date": "31/08/26",
+    "code_lines_current": 0,
+    "deliverable_files": [],
+    "status": "Analysis only - nothing built",
+    "status_evidence": "ISSUES.md row 1: 'code fix pending - needs fresh download of `ZFI_CP_MAS_VEN_AI001`' / 'open'; heading 'Proposed fix (not yet written - needs a fresh SE80 download first)'. NOTES.md: the listing 'is **not** verified against what is running in the production/dev client - ask for a fresh download before changing anything.'",
+    "tr_numbers": [],
+    "quality_points": [
+      "Root cause confirmed against PCEC data before any code was written",
+      "Fix withheld until a fresh download exists (repo copy not trusted as current)",
+      "Proposed fix (not yet written) replaces silent exits with user messages naming the posted document",
+      "Proposed fix (not yet written) checks PAYR for used/voided numbers and the lot ceiling PCEC-CHECT",
+      "Hardcodes documented (i_periv = 'V3', BLART 'BP', WAERS 'INR', AGUMS 'PF')"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - analysis of an existing program",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Code fix not written; needs a fresh SE80 download of ZFI_CP_MAS_VEN_AI001",
+      "'this will recur on the next exhausted lot until the program is fixed' - several PCEC lots already show CHECL = CHECT",
+      "Hardcoded fiscal-year variant 'V3' can make FCH5 fail silently for Jan-Mar postings",
+      "Whether screen 0200 binds p_ch1 to a checkbox is unconfirmed (SE51)",
+      "No lock on the derived cheque number - two users can get the same number"
+    ],
+    "evidence_files": [
+      "ovl/zfi_cp_mass_ven_pay/ISSUES.md",
+      "ovl/zfi_cp_mass_ven_pay/NOTES.md",
+      "ovl/_engagement/WORKLOG_2026-08.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "Diagnosis of a 2237-line payment program with two chained batch-input transactions; one logged issue, two commits, no code delivered."
+  },
+  {
+    "folder": "ovl/zfi_fbl3n_acdoca_u",
+    "title": "ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only (document status 'U') journal entry lines to FBL3N",
+    "sap_objects": [
+      "ZFI_FBL3N_ACDOCA_U (BAdI implementation)",
+      "ZCL_IM_FI_FBL3N_ACDOCA_U (class)",
+      "FI_ITEMS_CH_DATA (classic BAdI, method CHANGE_ITEMS)"
+    ],
+    "object_types": ["BAdI/Enhancement", "Class"],
+    "module": "FI (G/L line item display)",
+    "end_client_evidence": "Client NOT confirmed. NOTES.md: 'Client folder is a placeholder until Arnav names the project (OVL or KPMG). Move with `git mv`; nothing inside depends on the path.' ZCL_IM_FI_FBL3N_ACDOCA_U.abap header: 'Project         : <placeholder - confirm OVL / KPMG>   Module: FI', 'Author          : Arnav Johri                  Date: 19.10.2026', 'Transport       : <TR>'.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "New development",
+    "business_requirement": "Journal entries that exist only in ACDOCA with document status 'U' (no BSEG item) are not displayed in FBL3N; they should be listed together with the normal line items.",
+    "technical_challenge": "FBL3N builds its list from BSIS/BSAS through logical database SDF, so the BAdI has to read the selection screen by dynamic ASSIGN ('(RFITEMGL)<name>'), select the leading-ledger ACDOCA lines, map them to RFPOSXEXT (whose fields differ on this system), de-duplicate and apply the F_BKPF_BUK check. The classic BAdI is not multiple-use and the same BAdI fires for FBL1N and FBL5N.",
+    "ai_contribution": "Wrote the complete CHANGE_ITEMS method body with header (294-line file), NOTES.md with the SE19 creation steps, a table of selection-screen field names to verify, behaviour, deliberate omissions, risks and five test steps. After the first activation it removed CPUDT / DMBTR / WRBTR / SEGMENT and switched to U_BKTXT / U_USNAM, which do not exist / are named differently in RFPOSXEXT on this system.",
+    "manual_intervention": "The first activation on 19/10/26 was done in the system and its result fed back ('Confirmed by the first activation (19/10/26)'). Arnav has not yet named the project/client; SE19 creation, activation of the implementation and all tests are manual and not recorded.",
+    "rework_events": [
+      "19/10/26: first activation showed RFPOSXEXT on this system has no DMBTR, WRBTR, CPUDT or SEGMENT and that header text / user are U_BKTXT / U_USNAM - fields dropped or renamed (commit 62aad15 'activation fixes')"
+    ],
+    "issue_log_entries": 1,
+    "first_date": "19/10/26",
+    "last_date": "19/10/26",
+    "code_lines_current": 294,
+    "deliverable_files": [
+      "ovl/zfi_fbl3n_acdoca_u/ZCL_IM_FI_FBL3N_ACDOCA_U.abap (294)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "ISSUES.md: 'Status: delivered for activation, not yet tested'. NOTES.md: 'Confirmed by the first activation (19/10/26): `RFPOSXEXT` here has **no** `DMBTR`, `WRBTR`, `CPUDT` or `SEGMENT`' and 'Whether `CHANGE_ITEMS` is called at all when the standard selection finds **zero** items is not confirmed.' A successful activation of the corrected version is not recorded.",
+    "tr_numbers": [],
+    "quality_points": [
+      "sy-tcode guard keeps FBL1N / FBL5N untouched",
+      "A wrong selection-screen field name is caught via sy-subrc and reported with an information message - 'no dump'",
+      "F_BKPF_BUK activity 03 checked per company code, as the standard does",
+      "De-duplication on BUKRS / BELNR / GJAHR / BUZEI against what FBL3N already selected",
+      "Leading ledger read from T881-XLEADING instead of being hardcoded",
+      "Deliberate omissions and risks listed (F_BKPF_BES, dynamic selections, no sort)"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Project / client not confirmed (OVL or KPMG) - folder is a placeholder",
+      "Not tested; not confirmed that CHANGE_ITEMS is reached when the standard selection finds zero items",
+      "Technical selection-screen field names (SD_SAKNR, SD_BUKRS, X_OPSEL, PA_STIDA, X_CLSEL, SO_BUDAT) to be verified by F1",
+      "FI_ITEMS_CH_DATA is not multiple-use - an existing implementation would require pasting into it",
+      "F_BKPF_BES (account authorisation group) not checked",
+      "TR placeholder; FB03 double-click with the derived BUZEI to be checked"
+    ],
+    "evidence_files": [
+      "ovl/zfi_fbl3n_acdoca_u/ISSUES.md",
+      "ovl/zfi_fbl3n_acdoca_u/NOTES.md",
+      "ovl/zfi_fbl3n_acdoca_u/ZCL_IM_FI_FBL3N_ACDOCA_U.abap"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One BAdI method (294-line file) with dynamic access to the standard report's selection screen; two commits in one day, one activation correction, untested."
+  },
+  {
+    "folder": "ovl/zfi_jib_status",
+    "title": "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus launchpad navigation support",
+    "sap_objects": [
+      "ZI_JIB_STATUS_CUBE (CDS view, analytical cube)",
+      "ZI_JIB_DOC (CDS view)",
+      "ZI_JIB_DOC_AGG (CDS view)",
+      "ZI_JIB_YEAR_AGG (CDS view)",
+      "ZI_JIB_QTR_AGG (CDS view)",
+      "ZI_JIB_CLEARING (CDS view)",
+      "ZI_JIB_PERIOD (CDS view)",
+      "ZI_JIB_VENTURE (CDS view)",
+      "ZI_JIB_ENTRY (CDS view, 04/11 model - dropped)",
+      "ZI_JIB_WINDOW (CDS view, 04/11 model - dropped)",
+      "ZZ1_TWKWN9B2DSJV (custom analytical query built in the app by the GR consultant)",
+      "ZFI_OTH (existing package)"
+    ],
+    "object_types": ["CDS view", "Fiori extension", "Customizing advice"],
+    "module": "FI / JVA (Joint Interest Billing) - Management Dashboard",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - dev OCQ/500, sample document from PRD'; 'OVL is the non-operating partner'. ISSUES.md: 'Client test (K. Sharma, Corporate Accounts)'; 'Client (Corporate Accounts, mail 17/11/26)'; console trace '~sysid=OCD'. MAIL-2026-11-04-ui-tile.md: 'CDS cube ZI_JIB_STATUS_CUBE (OCD 500, package ZFI_OTH)'. MAIL-2026-11-17-client-reply.md: 'the GR consultant (Tushar Anand, SAP)', 'Dear Khyati'.",
+    "wricef_or_ticket": "not stated (requirement workbook 'docs/Management_Dashboard_-_JIB_Status_-_Final.xlsx')",
+    "dev_type": "New development",
+    "business_requirement": "For the Management Dashboard, Corporate Accounts wants to see per joint venture and month whether the operator's JIB has been posted (Uploaded / Pending), the date of upload and every document number, with a click opening the document. On 17/11/26 the client added: all ventures, document type, clearing date and clearing document; on 19/11/26 the Business Unit for all 49 ventures.",
+    "technical_challenge": "BKPF carries no venture and nothing marks a JIB except the document type (JM, later also OS), so the venture comes from BSEG. On this older release only classic CDS views are safe: all twelve periods are generated with a 12-branch UNION ALL, aggregates need helper views, and the cube must collapse to one line per venture for year/quarter views. A separate launchpad problem (HTTP 403 on the second FB03 navigation from the stateful WebGUI container) had to be diagnosed from browser traces.",
+    "ai_contribution": "Designed and delivered eight classic CDS views (1110 lines) including the analytical cube and an abapGit ZIP, and rebuilt the model twice after feedback (04/11 entry-date model, 06/11 posting-period model at document grain). Added year/quarter aggregate views, reversal handling, the clearing view, document type OS and the Business Unit derivation by country prefix. Diagnosed the HTTP 403 navigation failure from the browser console and webgui_min.js and arrived at the tile parameter sap-ushell-next-navmode=explace. Drafted four mails (two to the UI developer, two client replies) and the step list for the GR consultant's query change.",
+    "manual_intervention": "Arnav supplied the PRD BKPF sample row, the GS03 screenshot, SE16N BKPF lists, two full PRD documents, the FB03 header of a parked-then-posted JIB, browser console traces, the vendor line item list showing OS documents and the client's Business Unit export; pulled the ZIP on OCD (04/11), pasted the four changed objects into ADT on 17/11 and did the key-user release. The GR consultant builds the query in the app; Khyati Sharma (Corporate Accounts) tested on 06/11, retested and mailed on 17/11. Scope decisions (four ventures, JM only) were Arnav's.",
+    "rework_events": [
+      "04/11/26: first model (cube keyed on posting period, one row per month) rebuilt as an entry-date model with Granularity / window views after Arnav's reading of the requirement (ISSUES 4)",
+      "06/11/26: client test showed August, November and February as Pending although every JIB was posted - the 04/11 entry-date model grouped by month of entry; model rebuilt again on posting period at document grain, ZI_JIB_ENTRY / ZI_JIB_WINDOW dropped (ISSUES 5)",
+      "06/11/26: SD2002 December and June 2025 showed Pending - reversed documents had been excluded by design (stblg = ''); filter removed, ReversalDocument and Reversed flag added (ISSUES 8)",
+      "12/11/26: sap-ushell-navmode=explace on the target mapping had no effect and fix options a/b/c were proposed; resolved by a tile parameter (sap-ushell-next-navmode=explace), URL-target variant withdrawn (ISSUES 10)",
+      "17/11/26: after the all-ventures change the Bangladesh JIBs (document type OS) were missing - the view filtered on JM only and 'NOTES check 3 ... was never run'; OS added, reversals excluded by XREVERSAL (ISSUES 12)",
+      "19/11/26: Business Unit showed 'Unassigned' for every venture beyond the original four - per-venture CASE replaced by a CASE on the country prefix from the client's list (ISSUES 13)"
+    ],
+    "issue_log_entries": 13,
+    "first_date": "03/11/26",
+    "last_date": "19/11/26",
+    "code_lines_current": 1110,
+    "deliverable_files": [
+      "ovl/zfi_jib_status/src/zi_jib_status_cube.ddls.asddls (361)",
+      "ovl/zfi_jib_status/src/zi_jib_period.ddls.asddls (258)",
+      "ovl/zfi_jib_status/src/zi_jib_doc.ddls.asddls (161)",
+      "ovl/zfi_jib_status/src/zi_jib_clearing.ddls.asddls (81)",
+      "ovl/zfi_jib_status/src/zi_jib_venture.ddls.asddls (80)",
+      "ovl/zfi_jib_status/src/zi_jib_doc_agg.ddls.asddls (62)",
+      "ovl/zfi_jib_status/src/zi_jib_year_agg.ddls.asddls (54)",
+      "ovl/zfi_jib_status/src/zi_jib_qtr_agg.ddls.asddls (53)",
+      "ovl/zfi_jib_status/src/*.ddls.xml (8 files, 13 lines each; abapGit XML, not counted as code)",
+      "ovl/zfi_jib_status/.abapgit.xml (10; not counted)",
+      "ovl/zfi_jib_status/ZFI_JIB_STATUS.zip (binary abapGit archive)",
+      "ovl/zfi_jib_status/docs/BU_mapping_2026-11-19.md (33; client's Business Unit list, not counted)",
+      "ovl/zfi_jib_status/MAIL-2026-11-17-client-reply.md (21) and three other mail drafts (not counted)"
+    ],
+    "status": "Implemented - confirmed working in system",
+    "status_evidence": "ISSUES.md #11: 'Client (Corporate Accounts, mail 17/11/26): \"working well and meeting expectations\"; four additions'. ISSUES.md #10: '**Resolved** 12/11/26 - tile parameter', 'confirmed working with the tile parameter 12/11'. NOTES.md: 'Proven on OCD by the 04/11 pull (the Fiori query ran on it, screenshots 06/11/26)'. Caveat: the confirmation covers the version before the additions - #11 'four objects delivered and pasted 17/11/26 ... awaiting the CAQ change ... and the client's retest', #12 'delivered 17/11/26, awaiting activation and the two checks', #13 'delivered 19/11/26, awaiting activation and retest'. All TR cells are '<TR>'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "All twelve fiscal periods generated so months without a JIB show as Pending instead of disappearing",
+      "Clearing data kept in a separate view so a document is not split into cleared/uncleared rows and counts are not doubled",
+      "Reversed JIBs kept with a Reversed flag and reversal document rather than silently filtered",
+      "Business Unit derived from the venture's country prefix (16 WHEN lines cover all 49 ventures and future ones) instead of a per-venture hardcode",
+      "Superseded WHERE clauses commented out inside markers, not deleted",
+      "Release-proven CDS constructs written back to MEMORY.md for reuse"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated (the requirement arrived as a workbook, docs/Management_Dashboard_-_JIB_Status_-_Final.xlsx; how the status was tracked before is not stated)",
+      "frequency_evidence": "NOTES.md: 'per joint venture, has the month's JIB ... been posted, and when'"
+    },
+    "open_items": [
+      "ISSUES 12: OS document type change awaiting activation and two checks, including whether OS carries postings that are not JIBs",
+      "ISSUES 13: Business Unit by country prefix awaiting activation and retest",
+      "ISSUES 11: query change by the GR consultant (three new row fields) and the client's retest",
+      "Client decision open: ventures with no JIB ever posted are not listed",
+      "Which document type JIB provisions use is unanswered",
+      "No TR recorded; Basis ticket on the stateful WebGUI 403 optional"
+    ],
+    "evidence_files": [
+      "ovl/zfi_jib_status/ISSUES.md",
+      "ovl/zfi_jib_status/NOTES.md",
+      "ovl/zfi_jib_status/MAIL-2026-11-04-ui-tile.md",
+      "ovl/zfi_jib_status/MAIL-2026-11-06-khyati-reply.md",
+      "ovl/zfi_jib_status/MAIL-2026-11-06-ui-tile.md",
+      "ovl/zfi_jib_status/MAIL-2026-11-17-client-reply.md",
+      "ovl/zfi_jib_status/docs/BU_mapping_2026-11-19.md",
+      "ovl/zfi_jib_status/src/zi_jib_status_cube.ddls.asddls",
+      "MEMORY.md"
+    ],
+    "complexity": "Very High",
+    "complexity_basis": "Eight CDS views (1110 lines) with an analytical cube shipped by abapGit ZIP, three data-model versions, 13 logged issues and 31 commits over 17 days, plus Fiori launchpad navigation debugging and client UAT."
+  },
+  {
+    "folder": "ovl/zfi_jv_tb",
+    "title": "ZFI_JV_TB (ZJVTB) Joint Venture Trial Balance - three issues: venture column missing in the Excel export, opening balance blank after the ACDOCA view switch, ECC-vs-RISE validation differences",
+    "sap_objects": [
+      "ZFI_JV_TB (report; REPORT statement in the download reads zzjvtb_test)",
+      "ZJVTB (transaction)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "FI / JVA",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - system OCQ - package/TR: TBD'. ISSUES.md: 'Reported by Gitesh S Lad, Corporate Accounts'; 'ECC-vs-RISE validation (Gitesh S Lad, via Gaurav Sharma/SAP)'; 'definition supplied by Arnav from OCQ/500'; 'SE38 list print from **OCP** (last changed 26.09.2026 by SAP_ABAP)'. Source header: 'Author     : Hrishikesh Nikam', 'Tran. Code : ZJVTB'.",
+    "wricef_or_ticket": "not stated ('FS No.     :' is blank in the source header)",
+    "dev_type": "Bug fix / debugging",
+    "business_requirement": "Corporate Accounts reported (1) the last venture VN2012 missing in the Excel output of the Q1 FY27 run, (2) the opening balance blank in every venture column since the program was moved from JVTO1/JVSO1 to the ACDOCA views, and (3) differences in the ECC-vs-RISE validation (G/L 300100 row missing on RISE; '22 ventures / 585 GLs' not matching).",
+    "technical_challenge": "A dynamic ALV with positional field names (BAL_CLO<n>) is exported through an Excel template. The live totals view JV_JVTO1_ACDOCA has no legacy JVTO1 branch, so HSLVT is blank, and the view returns no row for an account whose postings net to zero. Only SE38 list prints (lines cut at 72 characters) were available as source at times, and the live program drifted from the repo copy (a 25/09/26 change).",
+    "ai_contribution": "For issue 1 it ruled out four causes with debugger evidence, analysed both output workbooks, rebuilt a clean 2213-line source from the SE38 print, built test templates and mail drafts - and then retracted its own root cause when the test disproved it. For issue 2 it traced all eight opening-balance write sites and delivered a corrected object (totals view switched to JV_JVTO1_ACDOCA_SWITCH_2 at five reads, USD branch restored to SUM( kslvt )). For issue 3 it showed that observation 2 is a spreadsheet sort artefact (only six G/Ls differ when matched on G/L number; G/L 120170 is zero on RISE) and delivered a one-SELECT patch sheet for observation 1.",
+    "manual_intervention": "Arnav supplied the SE38 list downloads and the output workbooks, ran the breakpoints (lt_alljv, lt_fieldcat), ran the Mock 2 test with the widened template (which disproved the theory), supplied the view DDL from OCQ/500, the fresh source of 22/09 and the OCP print of 28/09, and ran SE16N on 28/09 confirming no row for 300100 / CP0001. Gitesh S Lad supplied the ECC-vs-RISE workbook. Testing of both deliveries is pending with Arnav.",
+    "rework_events": [
+      "27/08/26: root cause 'Excel template RawData named range (74 columns)' retracted - the Mock 2 run against the widened template wrote only 18 columns (16 of 27 ventures) and the export rewrites the RawData name; issue reopened, mail put on hold",
+      "27/08/26: widened template v1 (CZ5000) removed - 'it caused the 16-column truncation'; template v2 (BW1000) and a rewritten mail were produced minutes after the retraction on a cell-budget theory; its result is not recorded and ISSUES.md still says the template 'does nothing' and the mail 'must not be sent'",
+      "22/09/26: the 14/09 fix (totals view read on ledgers 4A + 4C) was withdrawn - it was built on the 26/08 copy, which was not the live view; rebuilt on the fresh 22/09 download",
+      "22/09/26: the 26/08 repo copy rebuilt from the SE38 print carried a transcription defect ('ls_jvt-racctrjvnam', missing space) at three lines; restored",
+      "28/09/26: live OCP program found to carry a 25/09/26 change not in the repo (new FORM get_opening, the five totals-view selects commented out) - the repo's corrected copy is 'behind the system and must not be pasted whole'; issue 3 fix delivered as a fragment patch"
+    ],
+    "issue_log_entries": 3,
+    "first_date": "26/08/26",
+    "last_date": "28/09/26",
+    "code_lines_current": 2291,
+    "deliverable_files": [
+      "ovl/zfi_jv_tb/ZFI_JV_TB.abap (2254; whole corrected program of 22/09/26, 2213 as supplied - behind the live system since 25/09/26)",
+      "ovl/zfi_jv_tb/PATCH-2026-09-28-issue3-obs1.abap (37; patch sheet)",
+      "ovl/zfi_jv_tb/MAIL-2026-08-27-gitesh.md (27; mail draft, not counted; ISSUES.md says it must not be sent)",
+      "ovl/zfi_jv_tb/template/CHANGE.txt (36; template note, not counted)",
+      "ovl/zfi_jv_tb/template/ZJVTB_TEMPLATE_v2_2026-08-27.xlsx (binary test template, not counted)"
+    ],
+    "status": "In progress",
+    "status_evidence": "ISSUES.md #1: '**RETRACTED 27/08/26 - see below. Reopened.**' (fix 'Not yet determined'); #2: '**Corrected object delivered - awaiting Arnav's test (\"values coming or not we will see\")**'; #3: '**Obs 1: patch delivered, awaiting Arnav's test. Obs 2: open**'; notes of 28/09/26: 'The repo copy `ZFI_JV_TB.abap` is therefore **behind the system** and must not be pasted whole.'",
+    "tr_numbers": [
+      "none recorded for this work (TR column 'n/a')",
+      "legacy change-history entries in the source header, not this work: OCDK906236 (01-11-2022), OCDK906479 (15-02-2023)"
+    ],
+    "quality_points": [
+      "Second, independent defect found and fixed: USD branch restored to SUM( kslvt ) AS hslvt",
+      "Patch takes the account list from the line items as well, so accounts netting to zero are no longer dropped",
+      "Observation 2 traced to a spreadsheet sort artefact - only six G/Ls differ when matched on G/L number",
+      "Drift against each fresh download checked and reported before changing code",
+      "Pre-existing defects documented but deliberately not touched (four 'break abapuser02', READ TABLE without sy-subrc, swapped debit/credit sources)",
+      "Own wrong root cause retracted in the log with the evidence that disproved it"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - corrections to an existing report",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Issue 1 (venture column cut off in the Excel export) root cause not determined; current lead is a saved ALV layout",
+      "Issue 3 observation 2: G/L 120170 zero on RISE - code (flag) vs data not yet decided",
+      "Repo copy is behind the live program (25/09/26 change); a clean ZR_PROG_DOWNLOAD is needed before any whole-object correction",
+      "Object name unresolved: REPORT statement reads zzjvtb_test",
+      "Four 'break abapuser02.' statements left in a productive report",
+      "Record inconsistency on template v2 and the mail draft (see rework events)"
+    ],
+    "evidence_files": [
+      "ovl/zfi_jv_tb/ISSUES.md",
+      "ovl/zfi_jv_tb/NOTES.md",
+      "ovl/zfi_jv_tb/PATCH-2026-09-28-issue3-obs1.abap",
+      "ovl/zfi_jv_tb/MAIL-2026-08-27-gitesh.md",
+      "ovl/zfi_jv_tb/template/CHANGE.txt",
+      "ovl/zfi_jv_tb/ZFI_JV_TB.abap",
+      "ovl/_engagement/WORKLOG_2026-08.md"
+    ],
+    "complexity": "High",
+    "complexity_basis": "A 2254-line report with dynamic ALV, three unrelated issues over five weeks (15 commits), one retracted root cause, one withdrawn fix, an ECC-vs-RISE workbook analysis across 73 ventures and about 630 G/Ls."
+  },
+  {
+    "folder": "ovl/zfi_pl",
+    "title": "ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis - two pieces of work: 5* G/L accounts listed as unmapped after the S/4 conversion, and JVSO1 reads moved to SAP view JV_JVSO1_ACDOCA",
+    "sap_objects": [
+      "SAPFZFIPL (module pool)",
+      "ZFI_PL (transaction)",
+      "MZFIPLF01 (include, corrected)",
+      "MZFIPLTOP (include)",
+      "MZFIPLO01 (include)",
+      "MZFIPLI01 (include)",
+      "ZFI_PNL_GL (table)",
+      "ZFI_PNL_PROJ (table)",
+      "JV_JVSO1_ACDOCA (SAP standard CDS view now read)"
+    ],
+    "object_types": ["Module pool"],
+    "module": "FI / JVA",
+    "end_client_evidence": "NOTES.md: '**Project:** OVL (ONGC Videsh) - dev OCD/500, production OCP (RISE) - package ZFI_OTH'; 'Author Hrishikesh Nikam, go-live 17.03.2023'. ISSUES.md: 'Gitesh Lad (OVL F&A) via Gaurav Sharma (SAP): \"5* series GL is coming\" in ZFI_PL on RISE Production'; 'Fresh `ZR_PROG_DOWNLOAD` tree supplied (OCD/500, 26.10.2026)'; chart of accounts 'ONGC' in PATCH_secc_exclusion.abap.",
+    "wricef_or_ticket": "not stated",
+    "dev_type": "S/4 migration or ATC remediation",
+    "business_requirement": "(1) OVL F&A reported that 5* series G/L accounts appear in ZFI_PL on RISE production, which did not happen in ECC; they are not part of the OVL trial balance and must not need mapping. (2) Every read of JVSO1 in the program is to be replaced by SAP's view JV_JVSO1_ACDOCA, because JVSO1 is no longer written once JVA runs on ACDOCA.",
+    "technical_challenge": "The 'unmapped G/L' check sits in a block that was not in the first print supplied; on S/4 fourteen secondary cost elements (account group SECC, created by SAPMIGRATION on 26.09.2026) became G/L accounts and surfaced as unmapped. The view switch touches 24 SELECT sites in a 15,384-line include, each needing its field list and WHERE checked against the view's definition, and the view returns nothing where ACDOCA-VNAME is blank.",
+    "ai_contribution": "Reviewed the supplied print and concluded no path in it could surface an unmapped account, gave a breakpoint list, and once the missing block and SKA1 data were supplied identified the SECC cause and wrote PATCH_secc_exclusion.abap (26 lines). On 26/10/26 it diffed the fresh ZR_PROG_DOWNLOAD tree against the 27.09 print (no drift), changed FROM jvso1 to FROM jv_jvso1_acdoca at all 24 sites in MZFIPLF01 (15,384 -> 15,461 lines, old line commented inside BOC/EOC) and produced a 24-site paste sheet (163 lines).",
+    "manual_intervention": "Arnav supplied the SE38 print of 27.09, checked ZFI_PNL_GL (no 5* rows), supplied the G/L check snippet and the SKA1 facts from OCP, and the full ZR_PROG_DOWNLOAD tree of 26.10.2026; the SECC patch is present in that download, i.e. it was applied in the system by hand. Activation and a run of the 26/10 change are pending.",
+    "rework_events": [
+      "27/09/26: first conclusion (no code cause - table content or postings; 'None in code') was revised the same day after Arnav reported no 5* rows in ZFI_PNL_GL: the list is built by a block outside the supplied print, cause is S/4 secondary cost elements (group SECC), patch written",
+      "10/11/26 (MEMORY.md M-29, logged under ovl/per_barrel_agenda): to see what ZFI_PL fetches the AI proposed a control run of Profitability Analysis 'in dev only' without stating that the function does MODIFY zfi_agenda + COMMIT WORK; 'The run was made in production: finance's saved rows for the project were replaced, the previous-year column was lost'"
+    ],
+    "issue_log_entries": 2,
+    "first_date": "27/09/26",
+    "last_date": "10/11/26",
+    "code_lines_current": 15650,
+    "deliverable_files": [
+      "ovl/zfi_pl/MZFIPLF01.abap (15461; whole corrected include, 15384 as supplied - about 77 lines added at 24 sites)",
+      "ovl/zfi_pl/PATCH_jvso1_to_jv_jvso1_acdoca.abap (163; paste sheet for the 24 sites)",
+      "ovl/zfi_pl/PATCH_secc_exclusion.abap (26; paste sheet)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "ISSUES.md #2: 'Delivered 26/10/26, awaiting activation + run. Data caveat: the view returns nothing for a year/project whose ACDOCA-VNAME is blank.' ISSUES.md #1: 'Fix: `AND GLAccountGroup <> 'SECC'` on the first SELECT - `ovl/zfi_pl/PATCH_secc_exclusion.abap`. Awaiting Arnav's verification.' NOTES.md: 'the 27/09/26 SECC patch is present in the download' (26.10.26, OCD/500) - applied in the system, but no result is logged. Last ISSUES entry is 26/10/26; the 10/11/26 date is a NOTES.md section ('Mapping table as of 10/11/26').",
+    "tr_numbers": [],
+    "quality_points": [
+      "One-line targeted change at each of 24 sites; field list, WHERE and targets untouched; old line kept commented inside BOC/EOC",
+      "All 12 selected fields and all 7 WHERE fields checked against the view's DDL before the switch",
+      "Drift check of the fresh download against the earlier print before changing anything ('none')",
+      "Secondary cost elements excluded from the unmapped-G/L check with the reason documented in the code",
+      "Data caveat flagged as ASSUMPTION in the code (view returns no line where ACDOCA-VNAME is blank)",
+      "Pre-existing problems documented and deliberately left (three BREAK abapuser02, SELECT in LOOP, unguarded FOR ALL ENTRIES)"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable - changes to an existing program",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "26/10/26 change awaiting activation and a run",
+      "The view returns nothing for a year/project whose ACDOCA-VNAME is blank (depends on the back-fill / alignment tools)",
+      "SECC patch result not confirmed in the log",
+      "'BREAK abapuser02.' three times in MZFIPLF01",
+      "SELECT ... FOR ALL ENTRIES without IS NOT INITIAL guard left untouched because later code may rely on it",
+      "Production data overwritten by a control run on 10/11/26 (MEMORY.md M-29) - recovery relies on the SE16 paste filed that morning"
+    ],
+    "evidence_files": [
+      "ovl/zfi_pl/ISSUES.md",
+      "ovl/zfi_pl/NOTES.md",
+      "ovl/zfi_pl/PATCH_secc_exclusion.abap",
+      "ovl/zfi_pl/PATCH_jvso1_to_jv_jvso1_acdoca.abap",
+      "ovl/zfi_pl/MZFIPLF01.abap",
+      "MEMORY.md"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Module pool with a 15,461-line include; 24 change sites plus one check patch, two logged issues over a month, first analysis done on an incomplete print; the code change itself is mechanical (about 125 diff lines)."
+  },
+  {
+    "folder": "ovl/zfi_tr_bankacct",
+    "title": "ZFI_TR_BANKACCT - Treasury register of the company's own bank accounts for the Management Dashboard: table, DDIC, basic CDS view and analytical cube for a Custom Analytical Query",
+    "sap_objects": [
+      "ZFI_TR_BANKACCT (table)",
+      "ZTR_ACCTNO (domain)",
+      "ZTR_TEXT60 (domain)",
+      "ZTR_TEXT120 (domain)",
+      "ZTR_ACCTNO (data element)",
+      "ZTR_ACCTNAME (data element)",
+      "ZTR_PROJSECT (data element)",
+      "ZTR_BUSUNIT (data element)",
+      "ZTR_ADDRESS (data element)",
+      "ZTR_PRINCOFF (data element)",
+      "ZTR_SIGNOFF (data element)",
+      "ZI_TR_BANKACCT (CDS view)",
+      "ZI_TR_BANKACCT_CUBE (CDS view, analytical cube)",
+      "ZFI_TREASURY (package, suggested)",
+      "ZTR_BANKACCT / ZTR_BANKACCT_V (SM30 parameter transactions, manual step - planned)"
+    ],
+    "object_types": ["DDIC", "CDS view", "Fiori extension"],
+    "module": "FI / Treasury",
+    "end_client_evidence": "Client is assumed, not stated. NOTES.md: '**Client:** OVL (assumed - see `ASSUMPTIONS_AND_QUERIES.md` item 1) - **Filed:** 03/11/26', '**Requester:** Treasury / FI via Excel `original/Management_Dashboard_-_Bank_Details.xlsx`'. ASSUMPTIONS_AND_QUERIES.md item 1: 'Project, system and package? | Not stated. ... | **OVL**, same system as `ZFI_BANK_REVAL` (OCD/OCQ).' TS: 'Author | Arnav Johri, Diligent Global'.",
+    "wricef_or_ticket": "not stated (TS 'Related FS': `Management_Dashboard_-_Bank_Details.xlsx`, sheet 'Bank Account Details', headings only, received 03/11/2026)",
+    "dev_type": "New development",
+    "business_requirement": "'A separate T-Code is required to be prepared for Bank A/c details. T-Code will be managed by the treasury department and view option will be provided to all other finance personnals.' Nine columns per account (name, number, project/section, business unit, address, currency, country, principal officer, signatory officer); the Fiori tile is to be built by the functional consultant in Custom Analytical Queries.",
+    "technical_challenge": "The Custom Analytical Queries app lists only cubes released for key users (C1), and a cube needs a measure, so a counting cube had to sit on top of the plain view. The DDIC objects ship as hand-built abapGit XML on a landscape where that is fragile (the first import created the DDL sources but not the table), and an existing table ZFI_BANK_DETAILS had to be recognised as a different thing and not reused.",
+    "ai_contribution": "Delivered table ZFI_TR_BANKACCT with three domains and seven data elements, basic view ZI_TR_BANKACCT (63 lines), cube ZI_TR_BANKACCT_CUBE (90 lines) and an abapGit ZIP with 17 source files, all on 03/11/26. Wrote a 16-item assumptions-and-queries sheet, a TS (v1.1, .md and .docx) with the manual SE11 / SE54 / SE93 / key-user-release steps and a nine-step handover table. Found the existing ZFI_BANK_DETAILS by scanning the repo and justified a separate table; when the app did not list the cube it diffed the annotations against the working bank-revaluation cube and gave a checklist.",
+    "manual_intervention": "Arnav supplied the requirement Excel, asked for a table plus CDS view, relayed that the tile would be built in Custom Analytical Queries, ran the first import (table not created) and reported the cube as not listed. Still manual: the pull log line, SE11 foreign keys, SE54 maintenance dialog, SE93 transactions, key-user release, the query (functional consultant) and the data entry (Treasury).",
+    "rework_events": [
+      "03/11/26: first import of ZFI_TR_BANKACCT.zip created both DDL sources but not table ZFI_TR_BANKACCT - cause pending (pull log line not supplied); SE11 fallback given, XML left unchanged",
+      "03/11/26: ZI_TR_BANKACCT_CUBE not offered as a data source in Custom Analytical Queries - no CDS change; checklist given (objects active, C1 release, search without '*', RSRTS_ODP_DIS)"
+    ],
+    "issue_log_entries": 4,
+    "first_date": "03/11/26",
+    "last_date": "03/11/26",
+    "code_lines_current": 153,
+    "deliverable_files": [
+      "ovl/zfi_tr_bankacct/src/zi_tr_bankacct_cube.ddls.asddls (90)",
+      "ovl/zfi_tr_bankacct/src/zi_tr_bankacct.ddls.asddls (63)",
+      "ovl/zfi_tr_bankacct/src/zfi_tr_bankacct.tabl.xml (113; abapGit DDIC XML, not counted as code)",
+      "ovl/zfi_tr_bankacct/src/ztr_*.dtel.xml (7 files, 22 lines each; not counted)",
+      "ovl/zfi_tr_bankacct/src/ztr_*.doma.xml (3 files, 15 lines each; not counted)",
+      "ovl/zfi_tr_bankacct/src/package.devc.xml (10) and two *.ddls.xml (13 each); not counted",
+      "ovl/zfi_tr_bankacct/.abapgit.xml (10; not counted)",
+      "ovl/zfi_tr_bankacct/ZFI_TR_BANKACCT.zip (binary abapGit archive)",
+      "ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.md (241; technical specification, not counted)",
+      "ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.docx (binary)",
+      "ovl/zfi_tr_bankacct/ASSUMPTIONS_AND_QUERIES.md (41; not counted)"
+    ],
+    "status": "In progress",
+    "status_evidence": "ISSUES.md #2: 'First import of `ZFI_TR_BANKACCT.zip`: both DDL sources created, table `ZFI_TR_BANKACCT` not created' - cause 'Pending' - '**Open**'. ISSUES.md #3: '`ZI_TR_BANKACCT_CUBE` not offered as a data source in *Custom Analytical Queries*' - '**Open**'. NOTES.md 'Status': '03/11/26 - delivered, not yet imported.' (older than ISSUES #2). No activation of the table and no working query is recorded.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Z data elements so SM30 headings and view labels read as business words ('Principal Officer', not 'Text, 60 characters')",
+      "Country and currency stored as SAP keys with check tables for F4 help and grouping",
+      "Existing ZFI_BANK_DETAILS (JV cash-call payee list) deliberately not reused, to avoid changing cash-call behaviour",
+      "Foreign-key XML deliberately left out of the ZIP because that shape is unproven on this landscape - documented as a manual SE11 step",
+      "16 assumptions each documented with what breaks if wrong; unconfirmed standard view names 'not guessed'",
+      "Basic view kept separate from the cube so a later list report or value help has a base"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated ('The data is user-input based and must be entered by the user')",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Table ZFI_TR_BANKACCT not created on the first import - cause pending, SE11 fallback given",
+      "Cube not listed in Custom Analytical Queries - key-user (C1) release and checklist outstanding",
+      "Queries 3 and 4 (key: company code, account number) and 9 (link to the bank revaluation cube) unanswered - should be answered before data is entered",
+      "Manual steps outstanding: SE11 foreign keys, SE54 TMG, SE93 transactions, authorisation group",
+      "Client / system only assumed to be OVL; package and TR are TBD"
+    ],
+    "evidence_files": [
+      "ovl/zfi_tr_bankacct/ISSUES.md",
+      "ovl/zfi_tr_bankacct/NOTES.md",
+      "ovl/zfi_tr_bankacct/ASSUMPTIONS_AND_QUERIES.md",
+      "ovl/zfi_tr_bankacct/TS_ZFI_TR_BANKACCT.md",
+      "ovl/zfi_tr_bankacct/src/zi_tr_bankacct.ddls.asddls",
+      "ovl/zfi_tr_bankacct/src/zi_tr_bankacct_cube.ddls.asddls",
+      "MEMORY.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One table with 10 DDIC objects, two CDS views (153 lines), abapGit ZIP of 17 files, TS and 16 queries, all delivered in one day (5 commits); import and app listing still unresolved."
+  }
+]

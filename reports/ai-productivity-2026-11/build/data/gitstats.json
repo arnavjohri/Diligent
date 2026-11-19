@@ -1,0 +1,1197 @@
+{
+ "perday": {
+  "2026-08-19": {
+   "(repo tooling)": 0.015,
+   "kpmg/zmb5b": 0.057,
+   "kpmg/zmm_vend_upload": 0.092,
+   "kpmg/zpp_forecast": 0.05,
+   "kpmg/zsd_scheme": 0.064,
+   "ovl/COPILOT_CONTEXT_HANDOFF.md": 0.007,
+   "ovl/zpra_dpr": 0.024,
+   "ovl/ztest_t001": 0.028,
+   "ovl/atc": 0.32,
+   "ovl/jv-cash-call": 0.003,
+   "ovl/mm-fiori": 0.003,
+   "ovl/ocv-to-ovl-transfer": 0.003,
+   "ovl/zf01_exchange_rate": 0.001
+  },
+  "2026-08-23": {
+   "(repo tooling)": 1.09,
+   "gail": 0.034,
+   "incoming": 0.0,
+   "kpmg/_docs": 0.002,
+   "kpmg/abapgit_pilot": 0.004,
+   "kpmg/zmb5b": 0.056,
+   "kpmg/zmm_me35k_release": 0.002,
+   "kpmg/zmm_po_budget": 0.005,
+   "kpmg/zmm_po_budget_deferred": 0.002,
+   "kpmg/zmm_vend_upload": 0.053,
+   "kpmg/zmmims": 0.002,
+   "kpmg/zpp_forecast": 0.001,
+   "kpmg/zpp_forecast_v2": 0.016,
+   "kpmg/zsd_scheme": 0.001,
+   "mwc": 0.025,
+   "ovl/_engagement": 0.001,
+   "ovl/zpra_dpr": 0.099,
+   "ovl/ztest_t001": 0.001,
+   "rws": 0.003,
+   "sandbox": 0.313,
+   "ovl/atc": 0.063
+  },
+  "2026-08-24": {
+   "ovl/atc": 0.333
+  },
+  "2026-08-25": {
+   "kpmg/zmm_po_budget": 0.083,
+   "kpmg/zpp_forecast_v2": 0.194,
+   "ovl/atc": 0.056
+  },
+  "2026-08-26": {
+   "kpmg/zpp_forecast_v2": 0.201,
+   "ovl/cj88_flq": 0.522,
+   "ovl/zfi_jv_tb": 0.361
+  },
+  "2026-08-27": {
+   "kpmg/zfi_tds_cl34": 1.07,
+   "ovl/zfi_jv_tb": 0.868,
+   "ovl/zbnk_app2": 0.522,
+   "(repo tooling)": 0.187,
+   "ovl/zbnk_app1": 0.6,
+   "ovl/zaa_impairmentloss": 2.389,
+   "ovl/ztest_t001": 0.019
+  },
+  "2026-08-29": {
+   "(repo tooling)": 0.417
+  },
+  "2026-08-31": {
+   "ovl/zfi_cp_mass_ven_pay": 0.528,
+   "kpmg/zpp_forecast_v2": 1.197,
+   "(repo tooling)": 1.576,
+   "kpmg/zmb5b": 0.194,
+   "kpmg/abapgit_pilot": 0.194,
+   "kpmg/zpp_forecast_paints": 1.228
+  },
+  "2026-09-01": {
+   "kpmg/zpp_forecast_v2": 0.943,
+   "ovl/asset_fiori_fields": 0.943,
+   "ovl/f1592_asset_worklist": 1.668
+  },
+  "2026-09-02": {
+   "ovl/zgr_jv_acdocu": 1.081,
+   "kpmg/zpp_forecast_v2": 0.882,
+   "kpmg/zsd_exc_approval": 1.745,
+   "(repo tooling)": 0.176
+  },
+  "2026-09-03": {
+   "kpmg/zpp_forecast_v2": 4.438,
+   "kpmg/zsd_exc_approval": 0.192,
+   "kpmg/zmm_po_budget": 1.61
+  },
+  "2026-09-04": {
+   "kpmg/timesheets": 0.928,
+   "kpmg/zsd_exc_approval": 0.232
+  },
+  "2026-09-05": {
+   "(repo tooling)": 0.011,
+   "kpmg/zfi_tds_cl34": 0.011,
+   "kpmg/zsd_exc_approval": 0.311
+  },
+  "2026-09-07": {
+   "kpmg/zsd_exc_approval": 1.295,
+   "kpmg/zfi_tds_cl34": 1.756,
+   "kpmg/HANDOVER.md": 0.012,
+   "kpmg/abapgit_pilot": 0.012,
+   "kpmg/zmb5b": 0.012,
+   "kpmg/zmm_me35k_release": 0.012,
+   "kpmg/zmm_po_budget": 0.012,
+   "kpmg/zmm_po_budget_deferred": 0.012,
+   "kpmg/zmm_vend_upload": 0.012,
+   "kpmg/zmmims": 0.012,
+   "kpmg/zpp_forecast": 0.012,
+   "kpmg/zpp_forecast_v2": 0.217,
+   "kpmg/zsd_scheme": 0.012
+  },
+  "2026-09-13": {
+   "ovl/zpra_dpr": 0.333
+  },
+  "2026-09-14": {
+   "ovl/zfi_jv_tb": 0.209,
+   "(repo tooling)": 0.348,
+   "ovl/atc": 0.07
+  },
+  "2026-09-15": {
+   "kpmg/zpp_forecast_v2": 1.735,
+   "kpmg/zmm_rm07mlbd": 1.001,
+   "kpmg/zfi_tds_cl34": 0.4
+  },
+  "2026-09-16": {
+   "ovl/zpra_dpr": 4.492
+  },
+  "2026-09-17": {
+   "ovl/zpra_dpr": 1.911,
+   "pal/zmm_bapi_po_noround": 0.268,
+   "pal/zmm_po_noround": 0.879,
+   "kpmg/zsd_exc_approval": 1.173
+  },
+  "2026-09-18": {
+   "kpmg/zpp_forecast_v2": 0.333
+  },
+  "2026-09-21": {
+   "kpmg/zsd_mis_customer": 0.333,
+   "pal/zsd_fi_sgtxt": 1.466
+  },
+  "2026-09-22": {
+   "ovl/_engagement": 0.628,
+   "(repo tooling)": 0.628,
+   "ovl/zfi_jv_tb": 0.628,
+   "ovl/zpra_dpr": 1.884
+  },
+  "2026-09-23": {
+   "pal/zsd_fi_sgtxt": 0.55,
+   "kpmg/zpp_forecast_v2": 3.027,
+   "ovl/zpra_dpr": 2.752
+  },
+  "2026-09-24": {
+   "ovl/zpra_dpr": 6.46
+  },
+  "2026-09-25": {
+   "ovl/zpra_dpr": 0.917,
+   "kpmg/zmm_bp_mail": 1.12
+  },
+  "2026-09-27": {
+   "research/copilot-btp-mcp": 2.218,
+   "ovl/zfi_pl": 0.631
+  },
+  "2026-09-28": {
+   "ovl/zfi_jv_tb": 0.462,
+   "ovl/zpra_dpr": 0.333,
+   "ovl/gr_venture_release": 0.504
+  },
+  "2026-09-29": {
+   "kpmg/_docs": 0.143,
+   "kpmg/zfi_tds_cl34": 0.429,
+   "pal/zinv_gl_upload": 0.906
+  },
+  "2026-09-30": {
+   "pal/zinv_gl_upload": 1.56,
+   "kpmg/zfi_fb70_cm_apprv": 0.52,
+   "kpmg/zpp_forecast_v2": 1.192
+  },
+  "2026-10-05": {
+   "ovl/gr_venture_release": 0.391,
+   "ovl/zbc_tadir_srcsys": 0.78,
+   "ovl/zmm_arms": 1.258,
+   "kpmg/zmm_bp_mail": 0.156,
+   "ovl/zhana_services": 0.198,
+   "kpmg/zfi_fb70_cm_apprv": 0.198,
+   "kpmg/zsd_exc_approval": 0.333
+  },
+  "2026-10-06": {
+   "kpmg/timesheet": 0.333,
+   "ovl/zpra_dpr": 0.275,
+   "ovl/zhana_services": 1.039,
+   "ovl/zsap_timesheet_form_prg": 1.283,
+   "ovl/zsap_consumption_report": 0.732
+  },
+  "2026-10-07": {
+   "tools/zr_find_enh": 0.333
+  },
+  "2026-10-08": {
+   "ovl/zpra_dpr": 0.333,
+   "ovl/fbv0_core_gj_912": 0.697
+  },
+  "2026-10-09": {
+   "ovl/zfi_cnb_brs": 2.023,
+   "ovl/zfibrs": 0.205,
+   "kpmg/zsd_exc_approval": 0.205
+  },
+  "2026-10-10": {
+   "ovl/zfi_cnb_brs": 1.242,
+   "pal/zfi03custinv1": 0.515,
+   "(repo tooling)": 0.03
+  },
+  "2026-10-12": {
+   "pal/zfi03custinv1": 0.756,
+   "kpmg/zmm_po_validity_fs": 1.382,
+   "pal/zcl_inv_utility": 0.378,
+   "pal/zinv_gl_upload": 0.691
+  },
+  "2026-10-13": {
+   "pal/zfi03custinv1": 1.666
+  },
+  "2026-10-14": {
+   "pal/zinv_gl_upload": 0.333,
+   "ovl/zjv_bapi_balupload1": 0.743,
+   "kpmg/zfi_fb70_cm_apprv": 1.182
+  },
+  "2026-10-15": {
+   "ovl/zfi_cnb_brs": 0.95,
+   "kpmg/zfi_fb70_cm_apprv": 2.127
+  },
+  "2026-10-16": {
+   "kpmg/zfi_fb70_cm_apprv": 0.494,
+   "ovl/zsap_consumption_report": 0.693,
+   "ovl/zhana_services": 0.446,
+   "ovl/zfi_acdoca_vname_upd": 1.784
+  },
+  "2026-10-19": {
+   "kpmg/zpp_forecast_paints": 1.939,
+   "(repo tooling)": 0.211,
+   "ovl/zmm_purchdoc_cds_ext": 1.181,
+   "tools/zr_prog_download": 0.398,
+   "kpmg/_docs": 0.249,
+   "ovl/rgjv_update_acc_data_in_acdoca": 0.994,
+   "ovl/zfi_fbl3n_acdoca_u": 0.497,
+   "FSD": 0.036,
+   "ovl/zfi_acdoca_jvso1_recon": 0.213
+  },
+  "2026-10-21": {
+   "kpmg/zfi_fb70_cm_apprv": 1.853,
+   "FSD": 0.024,
+   "ovl/zfi_acdoca_jvso1_recon": 0.144,
+   "ovl/zmm_purchdoc_cds_ext": 0.241
+  },
+  "2026-10-22": {
+   "ovl/zmm_purchdoc_cds_ext": 6.971,
+   "kpmg/zpp_forecast_paints": 0.916,
+   "kpmg/zpp_forecast_v2": 0.038,
+   "ovl/cnsldtn_grpjrnl_api": 2.146,
+   "ovl/zcl_gr_je_post": 0.143,
+   "(repo tooling)": 0.581,
+   "kpmg/zfi_fb70_cm_apprv": 0.129
+  },
+  "2026-10-23": {
+   "ovl/zmm_purchdoc_cds_ext": 1.565,
+   "ovl/rgjv_update_acc_data_in_acdoca": 0.133,
+   "ovl/fagl_settings_restrict_mig": 0.133,
+   "kpmg/_docs": 0.017,
+   "kpmg/zpp_forecast_paints": 0.383,
+   "(repo tooling)": 0.133,
+   "kpmg/zfi_fb70_cm_apprv": 4.961
+  },
+  "2026-10-26": {
+   "ovl/zmm_arms": 1.368,
+   "ovl/atc": 0.08,
+   "kpmg/zfi_fb70_cm_apprv": 0.484,
+   "ovl/zfi_pl": 0.333
+  },
+  "2026-10-27": {
+   "kpmg/zfi_fb70_cm_apprv": 2.683,
+   "ovl/me_process_po_cust": 0.201,
+   "ovl/zmm_purchdoc_cds_ext": 0.067,
+   "ovl/zpra_dpr": 0.268
+  },
+  "2026-10-28": {
+   "ovl/me_process_po_cust": 0.761,
+   "ovl/zmm_purchdoc_cds_ext": 0.04,
+   "ovl/zmm_tms_status": 0.601,
+   "ovl/zfi_bank_reval": 1.607,
+   "(repo tooling)": 0.396,
+   "ovl/wf_pr_release_ws90900008": 0.2,
+   "kpmg/zfi_fb70_cm_apprv": 0.333
+  },
+  "2026-10-29": {
+   "ovl/zpra_dpr": 0.597,
+   "ovl/zfitax_pbt_calc_prg": 0.333
+  },
+  "2026-10-30": {
+   "kpmg/zfi_fb70_cm_apprv": 4.181
+  },
+  "2026-11-02": {
+   "tools/zr_icf_url_list": 0.333,
+   "ovl/z_jva_alignment": 1.346,
+   "ovl/zfi_acdoca_jvso1_recon": 0.323,
+   "ovl/zfi_bank_reval": 0.323,
+   "ovl/zfi_acdoca_jva_align": 0.269
+  },
+  "2026-11-03": {
+   "(repo tooling)": 0.24,
+   "ovl/zfi_acdoca_jva_align": 1.099,
+   "ovl/zfi_bank_reval": 0.989,
+   "FSD": 0.114,
+   "ovl/zfi_tr_bankacct": 0.745,
+   "ovl/zfi_jib_status": 1.728
+  },
+  "2026-11-04": {
+   "ovl/zfi_jib_status": 0.738
+  },
+  "2026-11-06": {
+   "ovl/zfi_cnb_brs": 0.353,
+   "FSD": 0.117,
+   "ovl/zgr_fsitem_remap": 1.964,
+   "(repo tooling)": 0.058,
+   "ovl/zfi_jib_status": 1.744,
+   "ovl/zgr_ct_tasklog": 1.341,
+   "tools/st05_decode": 0.071
+  },
+  "2026-11-10": {
+   "(repo tooling)": 0.204,
+   "ovl/per_barrel_agenda": 4.536,
+   "ovl/zfi_pl": 0.025,
+   "ovl/zfi_bank_reval": 1.873
+  },
+  "2026-11-12": {
+   "ovl/per_barrel_agenda": 3.259,
+   "(repo tooling)": 0.059,
+   "ovl/zfi_bank_reval": 0.237,
+   "ovl/zfi_jib_status": 1.185
+  },
+  "2026-11-17": {
+   "ovl/zfi_bank_reval": 0.504,
+   "ovl/zfi_jib_status": 1.286
+  },
+  "2026-11-18": {
+   "ovl/capex_provisional": 0.385,
+   "ovl/zfi_bank_reval": 0.385
+  },
+  "2026-11-19": {
+   "ovl/zfi_jib_status": 0.333
+  }
+ },
+ "total_block_hours": 171.3,
+ "blocks": 109,
+ "commits": 794,
+ "claude": 724,
+ "per": {
+  "(repo tooling)": {
+   "commits": 71,
+   "claude_commits": 63,
+   "active_days": 18,
+   "first": "2026-08-19",
+   "last": "2026-11-12",
+   "session_hours": 6.36
+  },
+  "kpmg/zmb5b": {
+   "commits": 6,
+   "claude_commits": 5,
+   "active_days": 4,
+   "first": "2026-08-19",
+   "last": "2026-09-07",
+   "session_hours": 0.32
+  },
+  "kpmg/zmm_vend_upload": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 3,
+   "first": "2026-08-19",
+   "last": "2026-09-07",
+   "session_hours": 0.16
+  },
+  "kpmg/zpp_forecast": {
+   "commits": 3,
+   "claude_commits": 3,
+   "active_days": 3,
+   "first": "2026-08-19",
+   "last": "2026-09-07",
+   "session_hours": 0.06
+  },
+  "kpmg/zsd_scheme": {
+   "commits": 3,
+   "claude_commits": 3,
+   "active_days": 3,
+   "first": "2026-08-19",
+   "last": "2026-09-07",
+   "session_hours": 0.08
+  },
+  "ovl/COPILOT_CONTEXT_HANDOFF.md": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-19",
+   "last": "2026-08-19",
+   "session_hours": 0.01
+  },
+  "ovl/zpra_dpr": {
+   "commits": 89,
+   "claude_commits": 89,
+   "active_days": 14,
+   "first": "2026-08-19",
+   "last": "2026-10-29",
+   "session_hours": 20.68
+  },
+  "ovl/ztest_t001": {
+   "commits": 3,
+   "claude_commits": 2,
+   "active_days": 3,
+   "first": "2026-08-19",
+   "last": "2026-08-27",
+   "session_hours": 0.05
+  },
+  "ovl/atc": {
+   "commits": 7,
+   "claude_commits": 5,
+   "active_days": 6,
+   "first": "2026-08-19",
+   "last": "2026-10-26",
+   "session_hours": 0.92
+  },
+  "ovl/jv-cash-call": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-19",
+   "last": "2026-08-19",
+   "session_hours": 0.0
+  },
+  "ovl/mm-fiori": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-19",
+   "last": "2026-08-19",
+   "session_hours": 0.0
+  },
+  "ovl/ocv-to-ovl-transfer": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-19",
+   "last": "2026-08-19",
+   "session_hours": 0.0
+  },
+  "ovl/zf01_exchange_rate": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-19",
+   "last": "2026-08-19",
+   "session_hours": 0.0
+  },
+  "gail": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-08-23",
+   "last": "2026-08-23",
+   "session_hours": 0.03
+  },
+  "incoming": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-23",
+   "last": "2026-08-23",
+   "session_hours": 0.0
+  },
+  "kpmg/_docs": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 4,
+   "first": "2026-08-23",
+   "last": "2026-10-23",
+   "session_hours": 0.41
+  },
+  "kpmg/abapgit_pilot": {
+   "commits": 3,
+   "claude_commits": 2,
+   "active_days": 3,
+   "first": "2026-08-23",
+   "last": "2026-09-07",
+   "session_hours": 0.21
+  },
+  "kpmg/zmm_me35k_release": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 2,
+   "first": "2026-08-23",
+   "last": "2026-09-07",
+   "session_hours": 0.01
+  },
+  "kpmg/zmm_po_budget": {
+   "commits": 11,
+   "claude_commits": 10,
+   "active_days": 4,
+   "first": "2026-08-23",
+   "last": "2026-09-07",
+   "session_hours": 1.71
+  },
+  "kpmg/zmm_po_budget_deferred": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 2,
+   "first": "2026-08-23",
+   "last": "2026-09-07",
+   "session_hours": 0.01
+  },
+  "kpmg/zmmims": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 2,
+   "first": "2026-08-23",
+   "last": "2026-09-07",
+   "session_hours": 0.01
+  },
+  "kpmg/zpp_forecast_v2": {
+   "commits": 66,
+   "claude_commits": 64,
+   "active_days": 13,
+   "first": "2026-08-23",
+   "last": "2026-10-22",
+   "session_hours": 14.41
+  },
+  "mwc": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-23",
+   "last": "2026-08-23",
+   "session_hours": 0.03
+  },
+  "ovl/_engagement": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 2,
+   "first": "2026-08-23",
+   "last": "2026-09-22",
+   "session_hours": 0.63
+  },
+  "rws": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-23",
+   "last": "2026-08-23",
+   "session_hours": 0.0
+  },
+  "sandbox": {
+   "commits": 3,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-08-23",
+   "last": "2026-08-23",
+   "session_hours": 0.31
+  },
+  "ovl/cj88_flq": {
+   "commits": 2,
+   "claude_commits": 0,
+   "active_days": 1,
+   "first": "2026-08-26",
+   "last": "2026-08-26",
+   "session_hours": 0.52
+  },
+  "ovl/zfi_jv_tb": {
+   "commits": 15,
+   "claude_commits": 4,
+   "active_days": 5,
+   "first": "2026-08-26",
+   "last": "2026-09-28",
+   "session_hours": 2.53
+  },
+  "kpmg/zfi_tds_cl34": {
+   "commits": 25,
+   "claude_commits": 15,
+   "active_days": 5,
+   "first": "2026-08-27",
+   "last": "2026-09-29",
+   "session_hours": 3.67
+  },
+  "ovl/zbnk_app2": {
+   "commits": 5,
+   "claude_commits": 0,
+   "active_days": 1,
+   "first": "2026-08-27",
+   "last": "2026-08-27",
+   "session_hours": 0.52
+  },
+  "ovl/zbnk_app1": {
+   "commits": 6,
+   "claude_commits": 0,
+   "active_days": 1,
+   "first": "2026-08-27",
+   "last": "2026-08-27",
+   "session_hours": 0.6
+  },
+  "ovl/zaa_impairmentloss": {
+   "commits": 25,
+   "claude_commits": 0,
+   "active_days": 1,
+   "first": "2026-08-27",
+   "last": "2026-08-27",
+   "session_hours": 2.39
+  },
+  "ovl/zfi_cp_mass_ven_pay": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-08-31",
+   "last": "2026-08-31",
+   "session_hours": 0.53
+  },
+  "kpmg/zpp_forecast_paints": {
+   "commits": 22,
+   "claude_commits": 22,
+   "active_days": 4,
+   "first": "2026-08-31",
+   "last": "2026-10-23",
+   "session_hours": 4.47
+  },
+  "ovl/asset_fiori_fields": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-09-01",
+   "last": "2026-09-01",
+   "session_hours": 0.94
+  },
+  "ovl/f1592_asset_worklist": {
+   "commits": 8,
+   "claude_commits": 8,
+   "active_days": 1,
+   "first": "2026-09-01",
+   "last": "2026-09-01",
+   "session_hours": 1.67
+  },
+  "ovl/zgr_jv_acdocu": {
+   "commits": 3,
+   "claude_commits": 3,
+   "active_days": 1,
+   "first": "2026-09-02",
+   "last": "2026-09-02",
+   "session_hours": 1.08
+  },
+  "kpmg/zsd_exc_approval": {
+   "commits": 29,
+   "claude_commits": 29,
+   "active_days": 8,
+   "first": "2026-09-02",
+   "last": "2026-10-09",
+   "session_hours": 5.49
+  },
+  "kpmg/timesheets": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 1,
+   "first": "2026-09-04",
+   "last": "2026-09-04",
+   "session_hours": 0.93
+  },
+  "kpmg/HANDOVER.md": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-09-07",
+   "last": "2026-09-07",
+   "session_hours": 0.01
+  },
+  "kpmg/zmm_rm07mlbd": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 1,
+   "first": "2026-09-15",
+   "last": "2026-09-15",
+   "session_hours": 1.0
+  },
+  "pal/zmm_bapi_po_noround": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-09-17",
+   "last": "2026-09-17",
+   "session_hours": 0.27
+  },
+  "pal/zmm_po_noround": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 1,
+   "first": "2026-09-17",
+   "last": "2026-09-17",
+   "session_hours": 0.88
+  },
+  "kpmg/zsd_mis_customer": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-09-21",
+   "last": "2026-09-21",
+   "session_hours": 0.33
+  },
+  "pal/zsd_fi_sgtxt": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 2,
+   "first": "2026-09-21",
+   "last": "2026-09-23",
+   "session_hours": 2.02
+  },
+  "kpmg/zmm_bp_mail": {
+   "commits": 7,
+   "claude_commits": 7,
+   "active_days": 2,
+   "first": "2026-09-25",
+   "last": "2026-10-05",
+   "session_hours": 1.28
+  },
+  "research/copilot-btp-mcp": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 1,
+   "first": "2026-09-27",
+   "last": "2026-09-27",
+   "session_hours": 2.22
+  },
+  "ovl/zfi_pl": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 3,
+   "first": "2026-09-27",
+   "last": "2026-11-10",
+   "session_hours": 0.99
+  },
+  "ovl/gr_venture_release": {
+   "commits": 5,
+   "claude_commits": 0,
+   "active_days": 2,
+   "first": "2026-09-28",
+   "last": "2026-10-05",
+   "session_hours": 0.89
+  },
+  "pal/zinv_gl_upload": {
+   "commits": 8,
+   "claude_commits": 8,
+   "active_days": 4,
+   "first": "2026-09-29",
+   "last": "2026-10-14",
+   "session_hours": 3.49
+  },
+  "kpmg/zfi_fb70_cm_apprv": {
+   "commits": 97,
+   "claude_commits": 97,
+   "active_days": 12,
+   "first": "2026-09-30",
+   "last": "2026-10-30",
+   "session_hours": 19.14
+  },
+  "ovl/zbc_tadir_srcsys": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 1,
+   "first": "2026-10-05",
+   "last": "2026-10-05",
+   "session_hours": 0.78
+  },
+  "ovl/zmm_arms": {
+   "commits": 13,
+   "claude_commits": 13,
+   "active_days": 2,
+   "first": "2026-10-05",
+   "last": "2026-10-26",
+   "session_hours": 2.63
+  },
+  "ovl/zhana_services": {
+   "commits": 8,
+   "claude_commits": 8,
+   "active_days": 3,
+   "first": "2026-10-05",
+   "last": "2026-10-16",
+   "session_hours": 1.68
+  },
+  "kpmg/timesheet": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-06",
+   "last": "2026-10-06",
+   "session_hours": 0.33
+  },
+  "ovl/zsap_timesheet_form_prg": {
+   "commits": 7,
+   "claude_commits": 7,
+   "active_days": 1,
+   "first": "2026-10-06",
+   "last": "2026-10-06",
+   "session_hours": 1.28
+  },
+  "ovl/zsap_consumption_report": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 2,
+   "first": "2026-10-06",
+   "last": "2026-10-16",
+   "session_hours": 1.42
+  },
+  "tools/zr_find_enh": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-07",
+   "last": "2026-10-07",
+   "session_hours": 0.33
+  },
+  "ovl/fbv0_core_gj_912": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-10-08",
+   "last": "2026-10-08",
+   "session_hours": 0.7
+  },
+  "ovl/zfi_cnb_brs": {
+   "commits": 22,
+   "claude_commits": 22,
+   "active_days": 4,
+   "first": "2026-10-09",
+   "last": "2026-11-06",
+   "session_hours": 4.57
+  },
+  "ovl/zfibrs": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-09",
+   "last": "2026-10-09",
+   "session_hours": 0.2
+  },
+  "pal/zfi03custinv1": {
+   "commits": 13,
+   "claude_commits": 13,
+   "active_days": 3,
+   "first": "2026-10-10",
+   "last": "2026-10-13",
+   "session_hours": 2.94
+  },
+  "kpmg/zmm_po_validity_fs": {
+   "commits": 4,
+   "claude_commits": 3,
+   "active_days": 1,
+   "first": "2026-10-12",
+   "last": "2026-10-12",
+   "session_hours": 1.38
+  },
+  "pal/zcl_inv_utility": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-12",
+   "last": "2026-10-12",
+   "session_hours": 0.38
+  },
+  "ovl/zjv_bapi_balupload1": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-10-14",
+   "last": "2026-10-14",
+   "session_hours": 0.74
+  },
+  "ovl/zfi_acdoca_vname_upd": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 1,
+   "first": "2026-10-16",
+   "last": "2026-10-16",
+   "session_hours": 1.78
+  },
+  "ovl/zmm_purchdoc_cds_ext": {
+   "commits": 69,
+   "claude_commits": 69,
+   "active_days": 6,
+   "first": "2026-10-19",
+   "last": "2026-10-28",
+   "session_hours": 10.06
+  },
+  "tools/zr_prog_download": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-10-19",
+   "last": "2026-10-19",
+   "session_hours": 0.4
+  },
+  "ovl/rgjv_update_acc_data_in_acdoca": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 2,
+   "first": "2026-10-19",
+   "last": "2026-10-23",
+   "session_hours": 1.13
+  },
+  "ovl/zfi_fbl3n_acdoca_u": {
+   "commits": 2,
+   "claude_commits": 2,
+   "active_days": 1,
+   "first": "2026-10-19",
+   "last": "2026-10-19",
+   "session_hours": 0.5
+  },
+  "FSD": {
+   "commits": 8,
+   "claude_commits": 8,
+   "active_days": 4,
+   "first": "2026-10-19",
+   "last": "2026-11-06",
+   "session_hours": 0.29
+  },
+  "ovl/zfi_acdoca_jvso1_recon": {
+   "commits": 3,
+   "claude_commits": 3,
+   "active_days": 3,
+   "first": "2026-10-19",
+   "last": "2026-11-02",
+   "session_hours": 0.68
+  },
+  "ovl/cnsldtn_grpjrnl_api": {
+   "commits": 12,
+   "claude_commits": 12,
+   "active_days": 1,
+   "first": "2026-10-22",
+   "last": "2026-10-22",
+   "session_hours": 2.15
+  },
+  "ovl/zcl_gr_je_post": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-22",
+   "last": "2026-10-22",
+   "session_hours": 0.14
+  },
+  "ovl/fagl_settings_restrict_mig": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-23",
+   "last": "2026-10-23",
+   "session_hours": 0.13
+  },
+  "ovl/me_process_po_cust": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 2,
+   "first": "2026-10-27",
+   "last": "2026-10-28",
+   "session_hours": 0.96
+  },
+  "ovl/zmm_tms_status": {
+   "commits": 3,
+   "claude_commits": 3,
+   "active_days": 1,
+   "first": "2026-10-28",
+   "last": "2026-10-28",
+   "session_hours": 0.6
+  },
+  "ovl/zfi_bank_reval": {
+   "commits": 31,
+   "claude_commits": 31,
+   "active_days": 7,
+   "first": "2026-10-28",
+   "last": "2026-11-18",
+   "session_hours": 5.92
+  },
+  "ovl/wf_pr_release_ws90900008": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-28",
+   "last": "2026-10-28",
+   "session_hours": 0.2
+  },
+  "ovl/zfitax_pbt_calc_prg": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-10-29",
+   "last": "2026-10-29",
+   "session_hours": 0.33
+  },
+  "tools/zr_icf_url_list": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-11-02",
+   "last": "2026-11-02",
+   "session_hours": 0.33
+  },
+  "ovl/z_jva_alignment": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 1,
+   "first": "2026-11-02",
+   "last": "2026-11-02",
+   "session_hours": 1.35
+  },
+  "ovl/zfi_acdoca_jva_align": {
+   "commits": 8,
+   "claude_commits": 8,
+   "active_days": 2,
+   "first": "2026-11-02",
+   "last": "2026-11-03",
+   "session_hours": 1.37
+  },
+  "ovl/zfi_tr_bankacct": {
+   "commits": 5,
+   "claude_commits": 5,
+   "active_days": 1,
+   "first": "2026-11-03",
+   "last": "2026-11-03",
+   "session_hours": 0.74
+  },
+  "ovl/zfi_jib_status": {
+   "commits": 31,
+   "claude_commits": 31,
+   "active_days": 6,
+   "first": "2026-11-03",
+   "last": "2026-11-19",
+   "session_hours": 7.02
+  },
+  "ovl/zgr_fsitem_remap": {
+   "commits": 6,
+   "claude_commits": 6,
+   "active_days": 1,
+   "first": "2026-11-06",
+   "last": "2026-11-06",
+   "session_hours": 1.96
+  },
+  "ovl/zgr_ct_tasklog": {
+   "commits": 4,
+   "claude_commits": 4,
+   "active_days": 1,
+   "first": "2026-11-06",
+   "last": "2026-11-06",
+   "session_hours": 1.34
+  },
+  "tools/st05_decode": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-11-06",
+   "last": "2026-11-06",
+   "session_hours": 0.07
+  },
+  "ovl/per_barrel_agenda": {
+   "commits": 34,
+   "claude_commits": 34,
+   "active_days": 2,
+   "first": "2026-11-10",
+   "last": "2026-11-12",
+   "session_hours": 7.8
+  },
+  "ovl/capex_provisional": {
+   "commits": 1,
+   "claude_commits": 1,
+   "active_days": 1,
+   "first": "2026-11-18",
+   "last": "2026-11-18",
+   "session_hours": 0.38
+  }
+ },
+ "days": [
+  "2026-08-19",
+  "2026-08-23",
+  "2026-08-24",
+  "2026-08-25",
+  "2026-08-26",
+  "2026-08-27",
+  "2026-08-29",
+  "2026-08-31",
+  "2026-09-01",
+  "2026-09-02",
+  "2026-09-03",
+  "2026-09-04",
+  "2026-09-05",
+  "2026-09-07",
+  "2026-09-13",
+  "2026-09-14",
+  "2026-09-15",
+  "2026-09-16",
+  "2026-09-17",
+  "2026-09-18",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-09-23",
+  "2026-09-24",
+  "2026-09-25",
+  "2026-09-27",
+  "2026-09-28",
+  "2026-09-29",
+  "2026-09-30",
+  "2026-10-05",
+  "2026-10-06",
+  "2026-10-07",
+  "2026-10-08",
+  "2026-10-09",
+  "2026-10-10",
+  "2026-10-12",
+  "2026-10-13",
+  "2026-10-14",
+  "2026-10-15",
+  "2026-10-16",
+  "2026-10-19",
+  "2026-10-21",
+  "2026-10-22",
+  "2026-10-23",
+  "2026-10-26",
+  "2026-10-27",
+  "2026-10-28",
+  "2026-10-29",
+  "2026-10-30",
+  "2026-11-02",
+  "2026-11-03",
+  "2026-11-04",
+  "2026-11-06",
+  "2026-11-10",
+  "2026-11-12",
+  "2026-11-17",
+  "2026-11-18",
+  "2026-11-19"
+ ],
+ "hours_by_day": {
+  "2026-08-19": 0.67,
+  "2026-08-23": 1.77,
+  "2026-08-24": 0.33,
+  "2026-08-25": 0.33,
+  "2026-08-26": 1.08,
+  "2026-08-27": 5.65,
+  "2026-08-29": 0.42,
+  "2026-08-31": 4.92,
+  "2026-09-01": 3.55,
+  "2026-09-02": 3.88,
+  "2026-09-03": 6.24,
+  "2026-09-04": 1.16,
+  "2026-09-05": 0.33,
+  "2026-09-07": 3.39,
+  "2026-09-13": 0.33,
+  "2026-09-14": 0.63,
+  "2026-09-15": 3.14,
+  "2026-09-16": 4.49,
+  "2026-09-17": 4.23,
+  "2026-09-18": 0.33,
+  "2026-09-21": 1.8,
+  "2026-09-22": 3.77,
+  "2026-09-23": 6.33,
+  "2026-09-24": 6.46,
+  "2026-09-25": 2.04,
+  "2026-09-27": 2.85,
+  "2026-09-28": 1.3,
+  "2026-09-29": 1.48,
+  "2026-09-30": 3.27,
+  "2026-10-05": 3.31,
+  "2026-10-06": 3.66,
+  "2026-10-07": 0.33,
+  "2026-10-08": 1.03,
+  "2026-10-09": 2.43,
+  "2026-10-10": 1.79,
+  "2026-10-12": 3.21,
+  "2026-10-13": 1.67,
+  "2026-10-14": 2.26,
+  "2026-10-15": 3.08,
+  "2026-10-16": 3.42,
+  "2026-10-19": 5.72,
+  "2026-10-21": 2.26,
+  "2026-10-22": 10.92,
+  "2026-10-23": 7.32,
+  "2026-10-26": 2.27,
+  "2026-10-27": 3.22,
+  "2026-10-28": 3.94,
+  "2026-10-29": 0.93,
+  "2026-10-30": 4.18,
+  "2026-11-02": 2.59,
+  "2026-11-03": 4.92,
+  "2026-11-04": 0.74,
+  "2026-11-06": 5.65,
+  "2026-11-10": 6.64,
+  "2026-11-12": 4.74,
+  "2026-11-17": 1.79,
+  "2026-11-18": 0.77,
+  "2026-11-19": 0.33
+ }
+}

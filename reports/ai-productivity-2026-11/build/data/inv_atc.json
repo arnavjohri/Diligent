@@ -1,0 +1,674 @@
+{
+"_meta": {
+ "generated_on": "19/11/26",
+ "repo": "/home/user/Diligent (read-only inspection; nothing in the repo was modified)",
+ "date_format": "DD/MM/YY, all dates are 2026",
+ "abbreviations": {
+  "KB": "ovl/atc/kb/ATC_S4_COMPLETE_KNOWLEDGE_BASE.md (567 lines; Lnnn = line number)",
+  "SH": "ovl/atc/kb/SESSION_HANDOFF_ATC_S4_LEARNINGS.md (229 lines)",
+  "HO": "ovl/atc/ATC_HANDOVER.md (547 lines, written 25/08/26)",
+  "AUD": "ovl/atc/AUDIT-2026-08-23.md and AUDIT-detail-2026-08-23.md",
+  "COPILOT": "COPILOT_CONTEXT_HANDOFF.md (repo root)",
+  "check_title_codes": {
+   "NOORDER": "Search problematic statements for result of SELECT/OPEN CURSOR without ORDER BY",
+   "USAGE": "S/4HANA: Search for Usages of Simplified Objects",
+   "FLE": "S/4HANA: Field Length Extensions",
+   "PREREQ": "Prerequisites for the test",
+   "DBOPS": "S/4HANA: Search for Database Operations",
+   "CRIT": "Critical Statements",
+   "TRANLIT": "S/4HANA: Search for Simplified Transactions in Literals",
+   "VIEWBASE": "S/4HANA: Search for Base Tables of ABAP Dictionary and CDS Views"
+  }
+ },
+ "how_computed": "Excel files read with python3 -I + openpyxl (read_only, data_only); rows = non-empty rows excluding the header row. Corrected files measured with wc -l / regex counts on ovl/atc/corrections/*.abap. Where a pre-remediation snapshot exists in ovl/atc/sources, the corrected file was line-diffed (difflib) against the main-program block of the snapshot (line-number prefix stripped). The repo auditor scripts/abap-audit.py was re-run read-only (python3 -B, no --md) on 19/11/26."
+},
+
+"summary": "ovl/atc is the working record of an SAP ATC (ABAP Test Cockpit) S/4HANA-readiness custom-code remediation for ONGC Videsh (OVL), ECC to S/4; the source listings carry the banner 'System OCQ / 500 User SAP_ABAP 08.08.2026'. The repo holds four ATC exports: the 09/06/26 export with 10,165 findings on 1,403 objects (P1 3,306 / P2 960 / P3 5,899), an undated later export (export_atc_errors.xlsx) with 5,220 findings on 640 objects whose latest 'First Found On' is 03/08/26, a 132-row file atc_ovl_050826.xlsx that is a row-for-row subset of that later export, and ovl_ocq_syntax_error.xlsx with 994 'Prerequisites for the test' rows. The Assignment sheet of the 09/06/26 export allocates 1,413 object/type pairs to named developers; 'Arnav' holds 44 (all ENHO, all Status 'Done'). COPILOT_CONTEXT_HANDOFF.md section 5.6 and the August worklog describe the August stream as 847 findings on the consultant's assigned objects, worked 05-14/08/26 'family by family'; the 847 figure cannot be reproduced from the files in the repo. The deliverable is 51 corrected program includes (43 parent programs, 14 packages, all R3TR PROG; 105,851 lines), each stored three times (153 files). The August pass is identifiable by 205 marker blocks '*--- BEGIN/END OF CHANGE BY SAP_ABAP 08.08.2026 FOR ATC ---' spread over all 51 files; a line diff of the 38 files that have a pre-remediation snapshot shows 296 changed hunks, 833 added/changed lines and #EC pragma lines rising from 351 to 527. A further 172 SAP_ABAP marker blocks dated 05-16.06.2026 were already in the system download of 08/08/26 and are not part of the August pass. By content the 205 August blocks are 107 pragma-only, 65 commented-old-code-plus-replacement and 33 new/changed code without a commented original (16 blocks read a released CDS view, 18 rebuild a SELECT SINGLE as UP TO 1 ROWS, 34 swap J_1IMOVEND for LFA1, 4 insert a SORT). The AI assistant (Claude Code; a later handoff file targets GitHub Copilot) is evidenced by the /atc-fix skill, the 31-rule handover, the knowledge base written 'for a new Claude session', the rule auditor and its first-person audit report; the ABAP files themselves carry only the author tag SAP_ABAP. A machine rule audit of 23/08/26 reported 433 rule findings in 41 of the 51 objects, 46 of them in 18 objects 'expected to fail activation'; it is explicitly a candidate list (the tool does not compile) and none of the 46 sites has been changed since - re-running the auditor on 19/11/26 returns the identical 433. The audit attributes to the remediation +13 SELECT...ENDSELECT loops, +2 unguarded FOR ALL ENTRIES and one duplicate inline declaration; an independent check shows that all 21 activation-candidate statements located in files with a snapshot already exist verbatim in the pre-remediation snapshot, and the other 25 sit in files without a snapshot. No file in the repo records that any of the 51 corrected programs was imported, activated, syntax-checked on the target system or re-run through ATC; the handover states closure 'is proven only by re-running ATC in the system' and a later issue log notes that the 26/08 system download of ZFI_JV_TB did not contain the 08.08.2026 ATC change. The only code change after delivery is the 24/08/26 fix of a misspelled FI_DOCUMENT_CHANGE parameter in ZFI_CHNG_PYBLCK after a runtime dump; the misspelling predates the August pass and the same active text is still present in 7 other corrected files. Open items include a 26-row manual-review list with an empty Decision column, five unanswered policy questions, parked BP* and DML findings and objects whose source was never exported.",
+
+"ai_tools_evidence": [
+ {"tool": "Claude Code (Anthropic)", "file": "COPILOT_CONTEXT_HANDOFF.md L3-4", "quote": "This is a single-file transfer of everything an AI assistant needs to work with me the way Claude Code did between 2026-07-20 and 2026-08-15"},
+ {"tool": "Claude Code", "file": "COPILOT_CONTEXT_HANDOFF.md L1116-1118", "quote": "Compiled 2026-08-15 from 30 Claude Code session transcripts (557 prompts, 2026-07-20 -> 2026-08-15), 6 persistent memory files, and the aj-02/KPMG repository.", "note": "Covers all work in the period, not ATC only."},
+ {"tool": "Claude Code", "file": "COPILOT_CONTEXT_HANDOFF.md section 5.6", "quote": "5.6 OVL - ATC S/4 remediation (Aug 5 - Aug 14) ... Scope built by intersecting two exports: export_atc_errors.xlsx (full ATC run) with the senior-assigned object list - 847 findings on objects assigned to me, written to a filtered workbook."},
+ {"tool": "Claude Code skill /atc-fix", "file": ".claude/skills/atc-fix/SKILL.md; README.md L28; ovl/atc/ATC_HANDOVER.md section 1", "quote": "The operating procedure - 31 rules + 5-phase workflow. Loaded by /atc-fix."},
+ {"tool": "Claude (knowledge base written for Claude sessions, different operator and clients)", "file": "ovl/atc/kb/ATC_S4_COMPLETE_KNOWLEDGE_BASE.md L3", "quote": "Hand this whole file to a new Claude session. It is the full accumulated ATC / S4-conversion knowledge", "note": "HO section 1 classifies it as 'Third-party working notes (cipla / Coca-Cola-CCEJ / ONGC). Mixed clients, self-contradicting in places.' The operator named in it is 'Vaibhav', not the repo owner."},
+ {"tool": "Claude", "file": "ovl/atc/kb/SESSION_HANDOFF_ATC_S4_LEARNINGS.md L3-5", "quote": "Purpose: hand this to a new Claude session so it can continue cipla/coke SAP custom-code ATC remediation, dump-fixing, and performance tuning"},
+ {"tool": "Claude Code (first-person assistant voice in the audit and upload procedure)", "file": "ovl/atc/AUDIT-2026-08-23.md L8, L12-13; ovl/atc/corrections/ONGC_abapgit/UPLOAD_PROCESS.md L15", "quote": "Nothing here has been changed - this is a review list, not a set of edits. ... Verify one of each kind in SE38 first; if SAP accepts it, tell me and I will drop that rule from the auditor rather than churn 46 sites. / I cannot write that XML by hand safely"},
+ {"tool": "GitHub Copilot (intended successor tool)", "file": "COPILOT_CONTEXT_HANDOFF.md L1 and L1108-1109", "quote": "# SAP ABAP Development Context - Handoff for GitHub Copilot ... 'Correct this ATC finding using the rules in section 4.2. Comment the old code, add *BOC/*EOC By Arnav on <date> markers, author id SAP_ABAP, one pseudo-comment per line. Full include back.'", "note": "No file under ovl/atc attributes any specific correction to Copilot."},
+ {"tool": "ZATC_RESULT_CORRECTION (in-system ABAP auto-fix report, not an LLM)", "file": "KB L481-523; marker text in the corrected files", "quote": "ZATC_RESULT_CORRECTION is Vaibhav's automated mass ATC remediation engine ... every fix brackets the change with \" <p_rem> <p_begin> <uname> <date> for ATC", "note": "172 marker blocks of this shape ('Code Remediation changes S4 2025_1_P Conversion **BEGIN OF CHANGE BY SAP_ABAP 16.06.2026 for ATC' and variants, dated 05-16.06.2026) are in the corrected files and were already in the 08.08.2026 download. Which tool or person produced them is not stated anywhere in the repo."},
+ {"tool": "Migration Agent (cloud CAP/Node service using ADT + Claude LLM)", "file": "KB L530", "quote": "a cloud CAP/Node service (\"Migration Agent\") that drives ATC bulk-fix runs through ADT + Claude LLM + deterministic pre-passes + per-system self-learning", "note": "Described in the third-party KB; no evidence in the repo that it was run on OVL."},
+ {"tool": "attribution limit", "file": "ovl/atc/corrections/*.abap", "quote": "*--- BEGIN OF CHANGE BY SAP_ABAP 08.08.2026 FOR ATC ---", "note": "The ABAP files carry only the SAP user tag SAP_ABAP; no change is labelled as AI-generated inside the code. Attribution of the 08.08.2026 blocks to the AI-assisted August pass rests on the handover, worklog and Copilot handoff documents."}
+],
+
+"worklists": [
+ {
+  "file": "ovl/atc/worklists/atc_ovl_090626.xlsx",
+  "run_date": "09/06/26 (from file name; 'First Found On' values range 31/05/26 to 08/06/26)",
+  "sheets": [
+   {"name": "Data", "rows": 10165, "headers": ["Priority","Check Title","Check Message","Object name","Object Type","Exemption State","Contact Person","Package","First Found On","Object Responsible","Last Changed by","SAP Note Number","Short Text","Referenced Application Component","Referenced Object Type","Referenced Object","Additional Info","Simplification Item Category","Change Category of Piecelist Items","Description of Change Category","Remarks"]},
+   {"name": "Assignment", "rows": 1413, "headers": ["Object name","Object Type","Developer","Status"]}
+  ],
+  "total_findings": 10165,
+  "by_priority": {"P1": 3306, "P2": 960, "P3": 5899},
+  "by_check_title": {"Search problematic statements for result of SELECT/OPEN CURSOR without ORDER BY": 3261, "S/4HANA: Search for Usages of Simplified Objects": 2687, "S/4HANA: Field Length Extensions": 2431, "Prerequisites for the test": 804, "S/4HANA: Search for Database Operations": 369, "Critical Statements": 366, "S/4HANA: Search for Simplified Transactions in Literals": 217, "S/4HANA: Search for Base Tables of ABAP Dictionary and CDS Views": 23, "S/4HANA: IDoc Check": 3, "S/4HANA: Search for ABAP Dictionary Enhancements": 2, "S/4HANA: Readiness Check for SAP Queries": 1, "Scan a Program": 1},
+  "top_checks": [
+   {"check": "NOORDER | SELECT SINGLE is possibly not unique", "count": 2697},
+   {"check": "USAGE | Functionality unavailable", "count": 1943},
+   {"check": "FLE | EXPORT issue", "count": 661},
+   {"check": "PREREQ | Used object ... does not exist.", "count": 558},
+   {"check": "FLE | IMPORT issue", "count": 472},
+   {"check": "USAGE | Syntactically incompatible change of existing functionality", "count": 392},
+   {"check": "CRIT | Use of Native SQL", "count": 356},
+   {"check": "NOORDER | READ TABLE ... INDEX 1 for result of statement at ... line ...", "count": 343},
+   {"check": "DBOPS | DB Operation SELECT found", "count": 306},
+   {"check": "FLE | Type component ... used by RFC-Function parameter", "count": 254},
+   {"check": "FLE | CALL FUNCTION Generic Parameter", "count": 253},
+   {"check": "PREREQ | Syntax error in ....", "count": 246},
+   {"check": "USAGE | Non-strategic-function", "count": 171},
+   {"check": "TRANLIT | Functionality unavailable", "count": 168},
+   {"check": "USAGE | Semantically incompatible change of existing functionality", "count": 162},
+   {"check": "FLE | No implementation for current statement", "count": 82},
+   {"check": "FLE | Casting from/to", "count": 75},
+   {"check": "FLE | PERFORM Generic Parameter", "count": 56},
+   {"check": "NOORDER | DELETE ADJACENT DUPLICATES for result of statement at ... line ...", "count": 54},
+   {"check": "FLE | Old WRITE-Length issue", "count": 51},
+   {"check": "NOORDER | Empty SELECT/ENDSELECT at ... line ...", "count": 49},
+   {"check": "FLE | Structure-Component type conflict", "count": 47},
+   {"check": "FLE | Old Concatenate length conflict", "count": 43},
+   {"check": "TRANLIT | Semantically incompatible change of existing functionality", "count": 42},
+   {"check": "NOORDER | SELECT ... for (former) cluster table ... without ORDER BY found", "count": 35}
+  ],
+  "distinct_title_message_pairs": 94,
+  "title_x_priority": ["NOORDER P3=3179","USAGE P1=2516","FLE P3=1951","PREREQ P3=552","DBOPS P1=369","CRIT P2=366","FLE P2=355","TRANLIT P3=217","PREREQ P1=213","USAGE P2=171","FLE P1=125","NOORDER P1=56","PREREQ P2=39","NOORDER P2=26","VIEWBASE P1=23","S/4HANA: IDoc Check P2=3","S/4HANA: Search for ABAP Dictionary Enhancements P1=2","S/4HANA: Readiness Check for SAP Queries P1=1","Scan a Program P1=1"],
+  "by_object_type": {"PROG": 5102, "WDYN": 2100, "FUGR": 1401, "SSFO": 727, "ENHO": 263, "SFPF": 210, "TABL": 132, "CLAS": 96, "SHLP": 45, "VIEW": 25, "FUGX": 24, "LDBA": 18, "FUGS": 9, "DTEL": 9, "IDOC": 3, "AQSG": 1},
+  "distinct_objects": 1403,
+  "distinct_object_type_pairs": 1413,
+  "top_objects": ["ZFI_AA_SCRAP_V=457","ZF040=312","ZEHS_BDC_PME_OH_UPLOAD=275","ZFI_AP_SAPF124=232","ZHSE_PERSERV=229","ZHR_MISC=171","ZHR_TRVL_TOUR=143","ZEHS_MAINTAIN_PERMEDCENT1=139","ZPME_SFORM_REPORT=138","ZEHS_HSEPME=128"],
+  "top_packages": ["ZHR_DEV=2461","ZFI_OTH=864","ZMM_OTH=855","ZEHS_OH=835","ZFI_AP=638","ZHSE=491","ZPRA=381","ZSLO=347"],
+  "top_sap_notes": ["(none)=4515","2610650=1514","2215424=764","2217205=695","2217206=692","2877717=213","2431747=189","2226129=155","2689873=139","2296016=102"],
+  "first_found_on": {"31/05/26": 8886, "08/06/26": 1015, "02/06/26": 201, "07/06/26": 36, "04/06/26": 20, "05/06/26": 7},
+  "assignment_sheet": {
+   "by_developer_objects": {"Gaurav": 933, "(blank)": 248, "Mandeep": 102, "Aditi": 48, "Arnav": 44, "Nandeshwari": 38},
+   "by_developer_findings_in_this_export": {"Gaurav": 6632, "(blank)": 2333, "Mandeep": 382, "Aditi": 293, "Arnav": 263, "Nandeshwari": 262},
+   "status_done_objects": 75,
+   "status_done_by_developer": {"Arnav": 44, "Nandeshwari": 31},
+   "arnav_assignment": "44 objects, all Object Type ENHO, all Status 'Done'; 263 findings in this export (P1 61, P2 29, P3 173; FLE 167, USAGE 61, TRANLIT 27, DBOPS 6, NOORDER 2)",
+   "notes": "Findings per developer computed by joining Data to Assignment on (Object name, Object Type)."
+  },
+  "notes": "No Include Name / Line Number / Message Code columns in this export, so it cannot be matched line-by-line to later exports. 'Exemption State' is blank on all 10,165 rows."
+ },
+ {
+  "file": "ovl/atc/worklists/export_atc_errors.xlsx",
+  "run_date": "not in file name; latest 'First Found On' = 03/08/26 (540 rows), latest 'Last Changed on Date' = 03/08/26. COPILOT section 5.6 calls it 'full ATC run' used on 05/08/26.",
+  "sheets": [
+   {"name": "Data", "rows": 5220, "headers": ["Priority","Check Title","Check Message","Object name","Object Type","Exemption State","Contact Person","Package","First Found On","Object Responsible","Last Changed by","SAP Note Number","Short Text","Referenced Application Component","Referenced Object Type","Referenced Object","Additional Info","Simplification Item Category","Change Category of Piecelist Items","Description of Change Category","Remarks","Include Name","Line Number","Sub Object Name","Sub Object Type","Marked for Baseline","Application Component","Count","Message Code","Identity","Check Class","Last Changed on Date"]}
+  ],
+  "total_findings": 5220,
+  "by_priority": {"P1": 1748, "P2": 521, "P3": 2951},
+  "by_check_title": {"Search problematic statements for result of SELECT/OPEN CURSOR without ORDER BY": 2275, "S/4HANA: Search for Usages of Simplified Objects": 1434, "Prerequisites for the test": 677, "S/4HANA: Field Length Extensions": 630, "S/4HANA: Search for Database Operations": 155, "S/4HANA: Search for Base Tables of ABAP Dictionary and CDS Views": 23, "S/4HANA: Search for Simplified Transactions in Literals": 19, "S/4HANA: IDoc Check": 3, "S/4HANA: Search for ABAP Dictionary Enhancements": 2, "S/4HANA: Readiness Check for SAP Queries": 1, "Scan a Program": 1},
+  "by_check_class": {"CL_CI_TEST_NO_ORDER_BY": 2275, "CL_CI_TEST_S4H_WHERE_USED": 1434, "CL_CI_TEST_PROGRAM": 677, "CL_CI_TEST_S4H_FIELD_EXT": 630, "CL_CI_TEST_S4H_SEARCH_DB_OPS": 155, "CL_CI_TEST_S4H_DD_VIEW_BASE": 23, "CL_CI_TEST_S4H_TRAN_LITERALS": 19, "CL_CI_TEST_IDOC_CONS": 3, "CL_CI_TEST_S4H_DD_ENHANCEMENTS": 2, "CL_CI_TEST_SAP_QUERY_S4H_READY": 1, "CL_CI_TEST_SCAN": 1},
+  "top_message_codes": ["AMB_SINGLE=2013","OnRoadMap=590","WithFuEqui=576","_MISSING_=476","FUNPAR_CMP=254","_SYNERR_=179","SynIncompC=134","LOOP_WRITE=124","SELECT=123","NonStrFuWE=89","OFFLEN=76","NO_IMPL=58"],
+  "top_checks": [
+   {"check": "NOORDER | SELECT SINGLE is possibly not unique", "count": 2013},
+   {"check": "USAGE | Functionality unavailable", "count": 1188},
+   {"check": "PREREQ | Used object ... does not exist.", "count": 476},
+   {"check": "FLE | Type component ... used by RFC-Function parameter", "count": 254},
+   {"check": "PREREQ | Syntax error in ....", "count": 201},
+   {"check": "USAGE | Syntactically incompatible change of existing functionality", "count": 134},
+   {"check": "NOORDER | WRITE in LOOP for result of statement at ... line ...", "count": 124},
+   {"check": "DBOPS | DB Operation SELECT found", "count": 123},
+   {"check": "USAGE | Non-strategic-function", "count": 87},
+   {"check": "FLE | Offset/Length-Access", "count": 76},
+   {"check": "FLE | No implementation for current statement", "count": 58},
+   {"check": "FLE | CALL FUNCTION Generic Parameter", "count": 44},
+   {"check": "NOORDER | READ TABLE ... INDEX 1 for result of statement at ... line ...", "count": 36},
+   {"check": "FLE | WRITE-Length issue", "count": 27},
+   {"check": "NOORDER | SELECT ... for (former) cluster table ... without ORDER BY found", "count": 26},
+   {"check": "NOORDER | DELETE ADJACENT DUPLICATES for result of statement at ... line ...", "count": 23},
+   {"check": "VIEWBASE | View based on a simplified artifact", "count": 23},
+   {"check": "FLE | Move -> Generic", "count": 22},
+   {"check": "FLE | Casting from/to", "count": 19},
+   {"check": "FLE | Move Generic ->", "count": 19},
+   {"check": "FLE | TRANSFER issue", "count": 18},
+   {"check": "NOORDER | LOOP AT itab. EXIT/RETURN/LEAVE ... for result of statement at ... line ...", "count": 18},
+   {"check": "USAGE | Usage of no longer available development object", "count": 17},
+   {"check": "FLE | CALL FUNCTION Generic Operand", "count": 17},
+   {"check": "DBOPS | DB Operation UPDATE found", "count": 16}
+  ],
+  "distinct_title_message_pairs": 66,
+  "title_x_priority": ["NOORDER P3=2235","USAGE P1=1347","PREREQ P3=479","FLE P2=391","FLE P3=218","PREREQ P1=173","DBOPS P1=155","USAGE P2=87","NOORDER P1=25","PREREQ P2=25","VIEWBASE P1=23","FLE P1=21","TRANLIT P3=19","NOORDER P2=15","S/4HANA: IDoc Check P2=3","S/4HANA: Search for ABAP Dictionary Enhancements P1=2","S/4HANA: Readiness Check for SAP Queries P1=1","Scan a Program P1=1"],
+  "by_object_type": {"PROG": 2228, "WDYN": 1857, "FUGR": 650, "SSFO": 157, "TABL": 112, "FUGS": 60, "SHLP": 44, "SFPF": 31, "CLAS": 27, "VIEW": 25, "LDBA": 18, "DTEL": 5, "IDOC": 3, "AQSG": 1, "FUGX": 1, "ENHO": 1},
+  "distinct_objects": 640,
+  "distinct_object_type_pairs": 643,
+  "distinct_includes": 807,
+  "top_objects": ["ZHSE_PERSERV=224","ZHR_MISC=168","ZHR_TRVL_TOUR=143","ZPME_SFORM_REPORT=136","ZHSE_PME_STATUS=116","ZEHS_HSEPME=112","ZMMSAPML03T=105","ZEHS_MAINTAIN_PERMEDCENT1=97","ZHSE_EHSPERSHC1=97","ZPY_RETIREDEMP_PAYSLIP=91"],
+  "top_packages": ["ZHR_DEV=2024","ZEHS_OH=536","ZHSE=415","ZFI_OTH=253","ZMM_OTH=201","ZPRA=191","ZMM_BARCODE=161","ZMM_PO=108"],
+  "top_sap_notes": ["(none)=3012","2217206=506","2217205=504","2610650=273","2215424=272","2431747=98","2689873=78","2250183=62","2877717=46","2296016=43"],
+  "first_found_on": {"10/06/26": 3695, "31/05/26": 652, "03/08/26": 540, "15/06/26": 253, "14/06/26": 26, "07/06/26": 23, "13/06/26": 19, "12/06/26": 6, "11/06/26": 5, "02/06/26": 1},
+  "findings_on_the_51_corrected_includes": {
+   "count": 453,
+   "by_priority": {"P1": 247, "P2": 2, "P3": 204},
+   "by_check_title": {"NOORDER": 169, "USAGE": 132, "DBOPS": 90, "FLE": 58, "PREREQ": 2, "TRANLIT": 2},
+   "includes_with_at_least_one_finding": 51,
+   "on_the_43_parent_objects": 554,
+   "how": "rows whose 'Include Name' equals one of the 51 include names in ONGC_abapgit/MANIFEST.csv; parent count uses 'Object name' = parent_object."
+  },
+  "notes": "This is the only export with Include Name, Line Number, Message Code and Check Class. 'Exemption State' blank on all rows; 'Marked for Baseline' = False on all rows. No 'Critical Statements' rows (366 in the 09/06/26 export)."
+ },
+ {
+  "file": "ovl/atc/worklists/atc_ovl_050826.xlsx",
+  "run_date": "05/08/26 (from file name)",
+  "sheets": [
+   {"name": "Data", "rows": 132, "headers": ["Priority","Check Title","Check Message","Object name","Object Type","Exemption State","Contact Person","Package","First Found On","Object Responsible","Last Changed by","SAP Note Number","Short Text","Referenced Application Component","Referenced Object Type","Referenced Object","Additional Info","Simplification Item Category","Change Category of Piecelist Items","Description of Change Category","Remarks","Include Name","Line Number","Sub Object Name","Sub Object Type"]}
+  ],
+  "total_findings": 132,
+  "by_priority": {"P1": 66, "P2": 0, "P3": 66},
+  "by_check_title": {"Search problematic statements for result of SELECT/OPEN CURSOR without ORDER BY": 70, "S/4HANA: Search for Database Operations": 28, "S/4HANA: Field Length Extensions": 24, "S/4HANA: Search for Usages of Simplified Objects": 6, "Prerequisites for the test": 3, "S/4HANA: Search for Simplified Transactions in Literals": 1},
+  "top_checks": [
+   {"check": "NOORDER | WRITE in LOOP for result of statement at ... line ...", "count": 46},
+   {"check": "DBOPS | DB Operation DELETE found", "count": 13},
+   {"check": "DBOPS | DB Operation SELECT found", "count": 13},
+   {"check": "NOORDER | DELETE ADJACENT DUPLICATES for result of statement at ... line ...", "count": 11},
+   {"check": "FLE | Compare length conflict", "count": 7},
+   {"check": "FLE | Move length conflict", "count": 6},
+   {"check": "FLE | Structure-Component length conflict", "count": 6},
+   {"check": "USAGE | Syntactically incompatible change of existing functionality", "count": 6},
+   {"check": "NOORDER | SELECT SINGLE is possibly not unique", "count": 6},
+   {"check": "NOORDER | SELECT ... for (former) cluster table ... without ORDER BY found", "count": 5},
+   {"check": "FLE | Type-Conflict", "count": 2},
+   {"check": "DBOPS | DB Operation JOIN found", "count": 2},
+   {"check": "NOORDER | READ TABLE ... INDEX 1 for result of statement at ... line ...", "count": 2},
+   {"check": "FLE | Old Compare length conflict", "count": 2},
+   {"check": "PREREQ | Syntax error in ....", "count": 2},
+   {"check": "FLE | Old Move length conflict", "count": 1},
+   {"check": "PREREQ | Used object ... does not exist.", "count": 1},
+   {"check": "TRANLIT | Semantically incompatible change of existing functionality", "count": 1}
+  ],
+  "distinct_title_message_pairs": 18,
+  "title_x_priority": ["NOORDER P3=59","DBOPS P1=28","FLE P1=21","NOORDER P1=11","USAGE P1=6","FLE P3=3","PREREQ P3=3","TRANLIT P3=1"],
+  "by_object_type": {"PROG": 130, "CLAS": 2},
+  "distinct_objects": 10,
+  "distinct_includes": 17,
+  "top_objects": ["SAPMZMMVENDOR=64","SAPMZMMCODREQ=16","Z_DEL_HIST_ENTRIES=13","SAPMZMMCODREQ_ERROR_RESET=10","ZFM_RFFMEP1BX_FOR3YEARS_CALL=8","SAPMZPSJVCCFCFORMS=6","ZFI_CHNG_PYBLCK=5","ZFI_REM_PYBLCK=5","ZFI_TAX_CREDIT_REPORT=3","ZCL_IM_PRA_METDOC=2"],
+  "top_packages": ["ZMM_OTH=90","ZFI_OTH=13","ZMM_IM=13","ZFI_FM=8","ZJVA_OTH=6","ZPRA=2"],
+  "top_sap_notes": ["(none)=73","2215424=24","2206980=9","2431747=7","2877717=6","2337368=4","2226072=4","2226048=4","2226131=1"],
+  "first_found_on": {"15/06/26": 91, "03/08/26": 19, "10/06/26": 19, "31/05/26": 2, "11/06/26": 1},
+  "notes": "All 132 rows also occur in export_atc_errors.xlsx with the same Object, Include Name, Line Number, Check Message, Priority and Referenced Object - it is a filtered subset of that export, not a separate ATC run. Contact Person and Last Changed by = SAP_ABAP on all 132 rows. 103 of the 132 rows sit on 10 of the 51 corrected includes. The worklog (05/08) describes this file as the filtered workbook holding '847 findings on my objects'; the file as stored holds 132 rows. 20 of the 26 MANUAL_REVIEW_LIST rows match a row here by Include + Line."
+ },
+ {
+  "file": "ovl/atc/worklists/ovl_ocq_syntax_error.xlsx",
+  "run_date": "not in file name; all 994 rows have 'First Found On' = 31/05/26; system OCQ per file name",
+  "sheets": [
+   {"name": "Data", "rows": 994, "headers": ["Priority","Check Title","Check Message","Object name","Object Type","Developer","Contact Person","Package","First Found On","Object Responsible","Last Changed by","SAP Note Number","Short Text","Referenced Application Component","Referenced Object Type","Referenced Object","Additional Info","Simplification Item Category","Change Category of Piecelist Items","Description of Change Category","Remarks"]}
+  ],
+  "total_findings": 994,
+  "by_priority": {"P1": 278, "P2": 41, "P3": 675},
+  "by_check_title": {"Prerequisites for the test": 993, "(blank)": 1},
+  "top_checks": [
+   {"check": "PREREQ | Used object ... does not exist.", "count": 659},
+   {"check": "PREREQ | Syntax error in ....", "count": 334},
+   {"check": "(blank) | Syntax error in ....", "count": 1}
+  ],
+  "by_object_type": {"PROG": 818, "FUGR": 122, "WDYN": 27, "FUGX": 8, "SFPF": 7, "CLAS": 5, "FUGS": 3, "LDBA": 2, "ENHO": 2},
+  "distinct_objects": 362,
+  "top_objects": ["ZMMSAPML03T=105","SAPMZMMVENDOR=36","SAPMZM06B=26","SAPMZM06B_O=26","ZZSPOOL_SP01R=22","SAPMZOHSEMONI=18","Z_PRA_TAB_MAIN=18","SAPMZHSEPMBG=17","ZMM_RM06EF00=13","ZQGMK=12"],
+  "top_packages": ["ZMM_OTH=136","ZMM_BARCODE=131","ZHR_DEV=107","ZMM_PO=74","ZHR_PA=64","ZPM_OTH=42","ZPRA=38","ZFI_OTH=36"],
+  "by_developer_rows": {"Gaurav": 716, "Arnav": 278},
+  "by_developer_and_message": {"Gaurav | Used object ... does not exist.": 659, "Arnav | Syntax error in ....": 278, "Gaurav | Syntax error in ....": 57},
+  "notes": "The 278 rows with Developer = Arnav are exactly the 278 Priority-1 'Syntax error in ....' rows, on 278 distinct objects (PROG 218, FUGR 35, WDYN 15, SFPF 6, CLAS 2, FUGX 1, LDBA 1). 7 of them carry a Remarks text (e.g. 'type does not exists', 'method parameters different', 'PERFORMS NOT CREATED', 'include not created'). In export_atc_errors.xlsx 172 of those 278 objects still carry a 'Syntax error in ....' finding. No SAP Note numbers in this file."
+ },
+ {
+  "file": "ovl/atc/worklists/OVL_Programs_Highlighted.xlsx",
+  "run_date": "not an ATC run export",
+  "sheets": [{"name": "Sheet1", "rows": 78, "headers": ["Table Name","Program Name","Description","T-Codes","Includes","Package"]}],
+  "total_findings": "not applicable",
+  "by_priority": {},
+  "top_checks": [],
+  "distinct_objects": 70,
+  "notes": "Program sheet: programs that use tables OIU_PR_MP (57 rows) and OIU_PR_DN (20 rows); packages ZPRA 62, ZABAP 10. No priority/check columns. Only 1 row of export_atc_errors.xlsx and 27 rows of the 09/06/26 export fall on these 70 programs. Same layout as ovl/_engagement/'OVL - Programs Containing OIU_PR_DN & OIU_PR_MP.xlsx' (78 data rows)."
+ },
+ {
+  "file": "ovl/atc/worklists/sample_excel_ovl.xlsx",
+  "run_date": "not an ATC run export",
+  "sheets": [
+   {"name": "Sheet1", "rows": 60, "headers": ["Transaction","Program","(blank x3)","Program","Includes","(blank)","Program","Screen"]},
+   {"name": "Sheet2", "rows": 26, "headers": ["Transaction","Program","(blank x3)","Program","Includes","(blank)","Program","Screen"]}
+  ],
+  "total_findings": "not applicable",
+  "by_priority": {},
+  "top_checks": [],
+  "distinct_objects": "Sheet1: 23 transactions / 25 programs; Sheet2: 13 transactions / 15 programs",
+  "notes": "Transaction / program / include / screen listing (ZPRA* transactions). No ATC columns."
+ }
+],
+
+"objects_in_scope": {
+ "by_category": {"Reports": 29, "Dialog Program": 3, "BDC": 5, "Enhancement": 3, "Smartforms": 16},
+ "total": 56,
+ "source": "file counts in ovl/atc/object-list/<category>/ (56 .txt source files, 131,136 lines; README.md L107 labels the folder 'Objects in scope, by category'; HO section 10 names its origin 'C:\\Users\\ArnavJohri\\Downloads\\ATC Tool Object List\\').",
+ "notes": "None of the 56 file names in object-list occurs as an Object name or Include Name in any of the four ATC exports in ovl/atc/worklists (0 of 56 matched), and none of the 51 corrected includes comes from this folder. 7 of the 56 files contain the tag SAP_ABAP (markers of the form 'by SAP_ABAP On <date> For Tkt# ASTR4'); 24 lines carry a #EC CI_ pragma. Whether these 56 objects were part of the OVL ATC scope is not determinable from the repo.",
+ "other_scope_measures": {
+  "assignment_sheet_09_06_26": "1,413 object/type pairs (1,403 distinct object names): PROG 724, FUGR 174, SSFO 135, WDYN 121, TABL 71, SFPF 53, ENHO 44, SHLP 25, CLAS 24, VIEW 17, DTEL 9, FUGX 7, FUGS 4, IDOC 2, LDBA 2, AQSG 1. Assigned to Arnav: 44 (ENHO).",
+  "august_batch_delivered": "51 program includes = 43 parent programs in 14 packages (ONGC_abapgit/MANIFEST.csv).",
+  "documented_claim": "847 findings on objects assigned to the consultant (COPILOT section 5.6; ovl/_engagement/WORKLOG_2026-08.md 05/08). Not reproducible: atc_ovl_050826.xlsx = 132 rows; export_atc_errors.xlsx rows on the 51 corrected includes = 453, on their 43 parent objects = 554, on any object/include that has a snapshot in ovl/atc/sources = 693.",
+  "objects_without_source": "HO section 7: '13 function groups, 3 classes, 6 smart forms were never exported, so none of their findings were worked.'"
+ }
+},
+
+"sources_snapshots": {
+ "modpool": 218,
+ "reports": 84,
+ "changedoc": 24,
+ "total_files": 326,
+ "total_lines": {"modpool": 476600, "reports": 281317, "changedoc": 383},
+ "notes": "File counts via ls. 73 files (65 in reports, 8 in modpool) are ZR_PROG_DOWNLOAD/SE80 listings with the banner 'System OCQ / 500 User SAP_ABAP 08.08.2026 hh:mm:ss' (times 15:13:45 to 15:17:36) and include the full include tree; the other 253 are plain source. 38 of the 51 corrected objects have a snapshot here (AUD: '38 objects exist in both sources/ and corrections/'); 13 do not: MZPSJVCCFCFORMS_GET_TOTALS_F01, MZPSJVCCFCFORMS_USER_COMMANI01, MZPZ9920_MED_INPATIENT_F01, MZPZ9920_MED_INPATIENT_I01, SAPMZFI_VPAN_MAINTAINO, SAPMZFI_VPAN_MAINTAINO_BAK, ZFI_CP_MAS_VEN_E0001, ZFI_TAX_CAPEX_POSTING_E01, ZFI_TAX_CAPEX_POSTING_F01, ZFI_TAX_POSTING_E01, ZFI_TAX_POSTING_F01, ZFI_TAX_SEC42_AMORT_SCH_F01, Z_CORR_PRCTR_OVL. Two commits of 26/10/26 changed sources/modpool/MZMMPREPROLE1_PHASEIIO01.abap for unrelated work (zmm_arms)."
+},
+
+"corrected_programs_field_notes": "lines = wc -l. boc_blocks = lines matching 'BEGIN OF CHANGE ... SAP_ABAP' (any style) plus '*BOC By SAP_ABAP'. boc_blocks_dated_08_08_2026 = '*--- BEGIN OF CHANGE BY SAP_ABAP 08.08.2026 FOR ATC ---' lines (the August pass). single_line_markers = lines carrying an inline '#EC CI_*' pseudo-comment (all dates; no line carries two). grep_sap_abap = grep -c -i SAP_ABAP. source_lines_before / diff_hunks = snapshot line count and number of difflib hunks vs the snapshot (null = no snapshot). finding_categories = what the 08.08.2026 blocks contain: pragma tokens with SAP note (x = occurrences), and structural changes (x = blocks). audit_findings / audit_activation_candidates = rows in AUDIT-detail-2026-08-23.md (all rules / ORDER_PRIMARY+CLAUSE_ORDER+INTO_BEFORE_FROM+DUP_INLINE_DATA).",
+
+"corrected_programs": [
+{"object":"MZMMCODREQF01","file":"ovl/atc/corrections/MZMMCODREQF01.abap","parent":"SAPMZMMCODREQ","package":"ZMM_OTH","lines":9403,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":5,"grep_sap_abap":2,"source_lines_before":9401,"diff_hunks":2,"finding_categories":["SORT insert x1"],"audit_findings":28,"audit_activation_candidates":2,"validation_evidence":"none found"},
+{"object":"MZMMCODREQO01","file":"ovl/atc/corrections/MZMMCODREQO01.abap","parent":"SAPMZMMCODREQ","package":"ZMM_OTH","lines":3545,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":3,"grep_sap_abap":2,"source_lines_before":3544,"diff_hunks":3,"finding_categories":["CI_NOORDER x2"],"audit_findings":9,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"MZMMCODREQ_ERROR_RESETF01","file":"ovl/atc/corrections/MZMMCODREQ_ERROR_RESETF01.abap","parent":"SAPMZMMCODREQ_ERROR_RESET","package":"ZMM_OTH","lines":6425,"boc_blocks":5,"boc_blocks_dated_08_08_2026":3,"single_line_markers":8,"grep_sap_abap":9,"source_lines_before":6420,"diff_hunks":6,"finding_categories":["CI_FLDEXT_OK[2215424] x3"],"audit_findings":22,"audit_activation_candidates":4,"validation_evidence":"none found"},
+{"object":"MZMMVENDORF01","file":"ovl/atc/corrections/MZMMVENDORF01.abap","parent":"SAPMZMMVENDOR","package":"ZMM_OTH","lines":12086,"boc_blocks":38,"boc_blocks_dated_08_08_2026":22,"single_line_markers":52,"grep_sap_abap":78,"source_lines_before":12021,"diff_hunks":23,"finding_categories":["CI_USAGE_OK[2877717] x1","J_1IMOVEND->LFA1 swap x22"],"audit_findings":43,"audit_activation_candidates":2,"validation_evidence":"none found"},
+{"object":"MZMMVENDORI01","file":"ovl/atc/corrections/MZMMVENDORI01.abap","parent":"SAPMZMMVENDOR","package":"ZMM_OTH","lines":9666,"boc_blocks":15,"boc_blocks_dated_08_08_2026":5,"single_line_markers":48,"grep_sap_abap":32,"source_lines_before":9654,"diff_hunks":6,"finding_categories":["CI_NOORDER x2","SORT insert x2","J_1IMOVEND->LFA1 swap x1"],"audit_findings":13,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"MZMMVENDORO01","file":"ovl/atc/corrections/MZMMVENDORO01.abap","parent":"SAPMZMMVENDOR","package":"ZMM_OTH","lines":4799,"boc_blocks":5,"boc_blocks_dated_08_08_2026":5,"single_line_markers":24,"grep_sap_abap":10,"source_lines_before":4782,"diff_hunks":9,"finding_categories":["CI_NOORDER x11","UP TO 1 ROWS + ORDER BY rebuild x2","ORDER BY PRIMARY KEY x2","SORT insert x1"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"MZMMVENDORTOP","file":"ovl/atc/corrections/MZMMVENDORTOP.abap","parent":"SAPMZMMVENDOR","package":"ZMM_OTH","lines":1232,"boc_blocks":4,"boc_blocks_dated_08_08_2026":4,"single_line_markers":0,"grep_sap_abap":8,"source_lines_before":1221,"diff_hunks":5,"finding_categories":["J_1IMOVEND->LFA1 swap x4"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"MZPSJVCCFCFORMS_GET_TOTALS_F01","file":"ovl/atc/corrections/MZPSJVCCFCFORMS_GET_TOTALS_F01.abap","parent":"SAPMZPSJVCCFCFORMS","package":"ZJVA_OTH","lines":93,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","UP TO 1 ROWS + ORDER BY rebuild x1","ORDER BY PRIMARY KEY x1"],"audit_findings":8,"audit_activation_candidates":8,"validation_evidence":"none found"},
+{"object":"MZPSJVCCFCFORMS_USER_COMMANI01","file":"ovl/atc/corrections/MZPSJVCCFCFORMS_USER_COMMANI01.abap","parent":"SAPMZPSJVCCFCFORMS","package":"ZJVA_OTH","lines":183,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"MZPZ9920_MED_INPATIENT_F01","file":"ovl/atc/corrections/MZPZ9920_MED_INPATIENT_F01.abap","parent":"SAPMZPZ9920_MED_INPATIENT","package":"ZHR_DEV","lines":7428,"boc_blocks":2,"boc_blocks_dated_08_08_2026":2,"single_line_markers":1,"grep_sap_abap":4,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","UP TO 1 ROWS + ORDER BY rebuild x1","ORDER BY PRIMARY KEY x1","ORDER BY <fields> x1","CDS read: I_OPERATIONALACCTGDOCITEM x1"],"audit_findings":45,"audit_activation_candidates":10,"validation_evidence":"none found"},
+{"object":"MZPZ9920_MED_INPATIENT_I01","file":"ovl/atc/corrections/MZPZ9920_MED_INPATIENT_I01.abap","parent":"SAPMZPZ9920_MED_INPATIENT","package":"ZHR_DEV","lines":2635,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":8,"audit_activation_candidates":2,"validation_evidence":"none found"},
+{"object":"SAPMZFI_VPAN_MAINTAINO","file":"ovl/atc/corrections/SAPMZFI_VPAN_MAINTAINO.abap","parent":"SAPMZFI_VPAN_MAINTAIN","package":"ZFI_OTH","lines":329,"boc_blocks":7,"boc_blocks_dated_08_08_2026":6,"single_line_markers":0,"grep_sap_abap":14,"source_lines_before":null,"diff_hunks":null,"finding_categories":["J_1IMOVEND->LFA1 swap x6"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"SAPMZFI_VPAN_MAINTAINO_BAK","file":"ovl/atc/corrections/SAPMZFI_VPAN_MAINTAINO_BAK.abap","parent":"SAPMZFI_VPAN_MAINTAIN_BAK","package":"ZFI_OTH","lines":226,"boc_blocks":2,"boc_blocks_dated_08_08_2026":1,"single_line_markers":0,"grep_sap_abap":4,"source_lines_before":null,"diff_hunks":null,"finding_categories":["J_1IMOVEND->LFA1 swap x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFCLEAR","file":"ovl/atc/corrections/ZFCLEAR.abap","parent":"ZFCLEAR","package":"ZFI_GL","lines":297,"boc_blocks":2,"boc_blocks_dated_08_08_2026":1,"single_line_markers":2,"grep_sap_abap":4,"source_lines_before":295,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_BCM_REJREC","file":"ovl/atc/corrections/ZFI_BCM_REJREC.abap","parent":"ZFI_BCM_REJREC","package":"ZFI_OTH","lines":4417,"boc_blocks":18,"boc_blocks_dated_08_08_2026":2,"single_line_markers":19,"grep_sap_abap":37,"source_lines_before":4413,"diff_hunks":4,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":22,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_CHNG_PYBLCK","file":"ovl/atc/corrections/ZFI_CHNG_PYBLCK.abap","parent":"ZFI_CHNG_PYBLCK","package":"ZFI_OTH","lines":2351,"boc_blocks":18,"boc_blocks_dated_08_08_2026":2,"single_line_markers":12,"grep_sap_abap":39,"source_lines_before":2338,"diff_hunks":7,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"No activation/ATC evidence. Runtime evidence only: commit 055ad76 (24/08/26) 'ZFI_CHNG_PYBLCK: fix T_ACCCHG param typo in FI_DOCUMENT_CHANGE call (zz_s4_bseg_zlspr), CX_SY_DYN_CALL_PARAM_MISSING dump on Preaudit release' - the repo copy was corrected with a '*BOC By SAP_ABAP on 24/08/26' block (the 18th boc block)."},
+{"object":"ZFI_CHNG_PYBLCKD","file":"ovl/atc/corrections/ZFI_CHNG_PYBLCKD.abap","parent":"ZFI_CHNG_PYBLCKD","package":"ZFI_OTH","lines":1802,"boc_blocks":10,"boc_blocks_dated_08_08_2026":2,"single_line_markers":10,"grep_sap_abap":21,"source_lines_before":1798,"diff_hunks":4,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":2,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_CP_MAS_VEN_E0001","file":"ovl/atc/corrections/ZFI_CP_MAS_VEN_E0001.abap","parent":"ZFI_CP_MASS_VEN_PAY","package":"ZFI_OTH","lines":867,"boc_blocks":4,"boc_blocks_dated_08_08_2026":2,"single_line_markers":4,"grep_sap_abap":9,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":6,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_JV_TB","file":"ovl/atc/corrections/ZFI_JV_TB.abap","parent":"ZFI_JV_TB","package":"ZFI_OTH","lines":2076,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":0,"grep_sap_abap":2,"source_lines_before":2059,"diff_hunks":2,"finding_categories":["CDS read: I_GLACCOUNTINCHARTOFACCOUNTS x1"],"audit_findings":2,"audit_activation_candidates":1,"validation_evidence":"Evidence of NOT being in the system as of 26/08/26: ovl/zfi_jv_tb/ISSUES.md 'Base for the corrected file is the 26/08 download. It does **not** contain the ATC change dated 08.08.2026 (SKA1 -> I_GLAccountInChartOfAccounts, in ovl/atc/corrections/ZFI_JV_TB.abap). Two divergent versions exist; which one is live is unconfirmed.'"},
+{"object":"ZFI_REM_PYBLCK","file":"ovl/atc/corrections/ZFI_REM_PYBLCK.abap","parent":"ZFI_REM_PYBLCK","package":"ZFI_OTH","lines":4563,"boc_blocks":17,"boc_blocks_dated_08_08_2026":2,"single_line_markers":21,"grep_sap_abap":35,"source_lines_before":4559,"diff_hunks":4,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":24,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_REP_BLOCK","file":"ovl/atc/corrections/ZFI_REP_BLOCK.abap","parent":"ZFI_REP_BLOCK","package":"ZFI_OTH","lines":1549,"boc_blocks":6,"boc_blocks_dated_08_08_2026":2,"single_line_markers":8,"grep_sap_abap":14,"source_lines_before":1545,"diff_hunks":4,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x2"],"audit_findings":2,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_RFSEPA03","file":"ovl/atc/corrections/ZFI_RFSEPA03.abap","parent":"ZFI_RFSEPA03","package":"ZFI_OTH","lines":396,"boc_blocks":2,"boc_blocks_dated_08_08_2026":1,"single_line_markers":2,"grep_sap_abap":4,"source_lines_before":394,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":2,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_CAPEX_POSTING_E01","file":"ovl/atc/corrections/ZFI_TAX_CAPEX_POSTING_E01.abap","parent":"ZFI_TAX_CAPEX_POSTING","package":"ZFI_OTH","lines":136,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":2,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","ORDER BY PRIMARY KEY x1"],"audit_findings":2,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_CAPEX_POSTING_F01","file":"ovl/atc/corrections/ZFI_TAX_CAPEX_POSTING_F01.abap","parent":"ZFI_TAX_CAPEX_POSTING","package":"ZFI_OTH","lines":434,"boc_blocks":2,"boc_blocks_dated_08_08_2026":2,"single_line_markers":4,"grep_sap_abap":4,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CDS read: I_GLACCOUNTINCOMPANYCODE x2"],"audit_findings":5,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_CREDIT_REPORT","file":"ovl/atc/corrections/ZFI_TAX_CREDIT_REPORT.abap","parent":"ZFI_TAX_CREDIT_REPORT","package":"ZFI_OTH","lines":1078,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":0,"grep_sap_abap":2,"source_lines_before":1064,"diff_hunks":1,"finding_categories":["ORDER BY <fields> x1","CDS read: I_OPERATIONALACCTGDOCITEM x1"],"audit_findings":13,"audit_activation_candidates":4,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_POSTING_E01","file":"ovl/atc/corrections/ZFI_TAX_POSTING_E01.abap","parent":"ZFI_TAX_POSTING","package":"ZFI_OTH","lines":139,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","ORDER BY PRIMARY KEY x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_POSTING_F01","file":"ovl/atc/corrections/ZFI_TAX_POSTING_F01.abap","parent":"ZFI_TAX_POSTING","package":"ZFI_OTH","lines":364,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":4,"grep_sap_abap":2,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CDS read: I_GLACCOUNTINCOMPANYCODE x1"],"audit_findings":3,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"ZFI_TAX_SEC42_AMORT_SCH_F01","file":"ovl/atc/corrections/ZFI_TAX_SEC42_AMORT_SCH_F01.abap","parent":"ZFI_TAX_SEC42_AMORT_SCH","package":"ZFI_OTH","lines":1072,"boc_blocks":2,"boc_blocks_dated_08_08_2026":2,"single_line_markers":0,"grep_sap_abap":4,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CDS read: I_GLACCOUNTINCOMPANYCODE x2"],"audit_findings":3,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"ZFI_UPDATE_KIDNO","file":"ovl/atc/corrections/ZFI_UPDATE_KIDNO.abap","parent":"ZFI_UPDATE_KIDNO","package":"ZFI_OTH","lines":881,"boc_blocks":7,"boc_blocks_dated_08_08_2026":4,"single_line_markers":11,"grep_sap_abap":14,"source_lines_before":854,"diff_hunks":5,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","UP TO 1 ROWS + ORDER BY rebuild x1","ORDER BY <fields> x1","CDS read: I_OPERATIONALACCTGDOCITEM x2"],"audit_findings":1,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_UPDATE_SECO","file":"ovl/atc/corrections/ZFI_UPDATE_SECO.abap","parent":"ZFI_UPDATE_SECO","package":"ZFI_OTH","lines":81,"boc_blocks":3,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":6,"source_lines_before":79,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZFI_VOUCHER_PRINT","file":"ovl/atc/corrections/ZFI_VOUCHER_PRINT.abap","parent":"ZFI_VOUCHER_PRINT","package":"ZUFSO_TO_ICE","lines":1804,"boc_blocks":31,"boc_blocks_dated_08_08_2026":31,"single_line_markers":28,"grep_sap_abap":62,"source_lines_before":1718,"diff_hunks":46,"finding_categories":["CI_NOORDER x18","CI_DB_OPERATION_OK[2431747] x4","CI_USAGE_OK[2340247] x3","CI_FLDEXT_OK[2215424] x2","CI_USAGE_OK[3224316] x1","UP TO 1 ROWS + ORDER BY rebuild x8","ORDER BY PRIMARY KEY x8"],"audit_findings":37,"audit_activation_candidates":3,"validation_evidence":"none found"},
+{"object":"ZF_CHECK_OI_BALANCE_EXT","file":"ovl/atc/corrections/ZF_CHECK_OI_BALANCE_EXT.abap","parent":"ZF_CHECK_OI_BALANCE_EXT","package":"ZFI_GL","lines":1232,"boc_blocks":29,"boc_blocks_dated_08_08_2026":3,"single_line_markers":26,"grep_sap_abap":58,"source_lines_before":1226,"diff_hunks":6,"finding_categories":["CI_DB_OPERATION_OK[2389136] x2","CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":13,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZF_CORR_PSWSL","file":"ovl/atc/corrections/ZF_CORR_PSWSL.abap","parent":"ZF_CORR_PSWSL","package":"ZGEN_00","lines":275,"boc_blocks":6,"boc_blocks_dated_08_08_2026":4,"single_line_markers":6,"grep_sap_abap":12,"source_lines_before":241,"diff_hunks":6,"finding_categories":["CI_FLDEXT_OK[2610650] x2","ORDER BY <fields> x1","CDS read: I_GLACCOUNTINCOMPANYCODE x1, I_OPERATIONALACCTGDOCITEM x1"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZF_EDIT_CLEARING","file":"ovl/atc/corrections/ZF_EDIT_CLEARING.abap","parent":"ZF_EDIT_CLEARING","package":"ZGEN_00","lines":217,"boc_blocks":3,"boc_blocks_dated_08_08_2026":1,"single_line_markers":2,"grep_sap_abap":6,"source_lines_before":215,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZF_FILL_MISSING_AUGGJ_NGLM","file":"ovl/atc/corrections/ZF_FILL_MISSING_AUGGJ_NGLM.abap","parent":"ZF_FILL_MISSING_AUGGJ_NGLM","package":"ZFI_GL","lines":1408,"boc_blocks":19,"boc_blocks_dated_08_08_2026":13,"single_line_markers":89,"grep_sap_abap":38,"source_lines_before":1382,"diff_hunks":30,"finding_categories":["CI_NOORDER x20","CI_DB_OPERATION_OK[2431747] x6","CI_FLDEXT_OK[3320010] x1","CI_FLDEXT_OK[2610650] x1"],"audit_findings":15,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZF_RESET_CLEARING","file":"ovl/atc/corrections/ZF_RESET_CLEARING.abap","parent":"ZF_RESET_CLEARING","package":"ZCFM","lines":398,"boc_blocks":3,"boc_blocks_dated_08_08_2026":1,"single_line_markers":4,"grep_sap_abap":6,"source_lines_before":396,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1"],"audit_findings":2,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZF_RESET_CLR","file":"ovl/atc/corrections/ZF_RESET_CLR.abap","parent":"ZF_RESET_CLR","package":"ZFI_GL","lines":2648,"boc_blocks":14,"boc_blocks_dated_08_08_2026":3,"single_line_markers":7,"grep_sap_abap":28,"source_lines_before":2632,"diff_hunks":4,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","ORDER BY PRIMARY KEY x1","CDS read: I_GLACCOUNTINCOMPANYCODE x2"],"audit_findings":13,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZJVC_LOG_REPORT","file":"ovl/atc/corrections/ZJVC_LOG_REPORT.abap","parent":"ZJVC_LOG_REPORT","package":"ZFI_OTH","lines":303,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":0,"grep_sap_abap":2,"source_lines_before":290,"diff_hunks":1,"finding_categories":["CDS read: I_OPERATIONALACCTGDOCITEM x1"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZJV_SAPF100","file":"ovl/atc/corrections/ZJV_SAPF100.abap","parent":"ZJV_SAPF100","package":"ZJVA_OTH","lines":4258,"boc_blocks":17,"boc_blocks_dated_08_08_2026":10,"single_line_markers":18,"grep_sap_abap":34,"source_lines_before":4229,"diff_hunks":18,"finding_categories":["CI_FLDEXT_OK[2610650] x6","CI_DB_OPERATION_OK[2431747] x2","ORDER BY PRIMARY KEY x3","ORDER BY <fields> x1","CDS read: I_OPERATIONALACCTGDOCITEM x1"],"audit_findings":22,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZPME_SFORM_REPORT","file":"ovl/atc/corrections/ZPME_SFORM_REPORT.abap","parent":"ZPME_SFORM_REPORT","package":"ZEHS_OH","lines":292,"boc_blocks":13,"boc_blocks_dated_08_08_2026":12,"single_line_markers":38,"grep_sap_abap":26,"source_lines_before":268,"diff_hunks":26,"finding_categories":["CI_USAGE_OK[2217206] x38","UP TO 1 ROWS + ORDER BY rebuild x2","ORDER BY PRIMARY KEY x2"],"audit_findings":4,"audit_activation_candidates":2,"validation_evidence":"none found"},
+{"object":"ZRCCWFL01","file":"ovl/atc/corrections/ZRCCWFL01.abap","parent":"ZRCCWFL01","package":"ZPM_LDM","lines":374,"boc_blocks":5,"boc_blocks_dated_08_08_2026":5,"single_line_markers":5,"grep_sap_abap":10,"source_lines_before":364,"diff_hunks":5,"finding_categories":["CI_USAGE_OK[2267918] x4","CI_FLDEXT_OK x1"],"audit_findings":1,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZRIWFWA01","file":"ovl/atc/corrections/ZRIWFWA01.abap","parent":"ZRIWFWA01","package":"ZPM_WCM","lines":1913,"boc_blocks":13,"boc_blocks_dated_08_08_2026":3,"single_line_markers":3,"grep_sap_abap":26,"source_lines_before":1907,"diff_hunks":9,"finding_categories":["CI_USAGE_OK[3224334] x3"],"audit_findings":6,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZRIWFWD01","file":"ovl/atc/corrections/ZRIWFWD01.abap","parent":"ZRIWFWD01","package":"ZPM_WCM","lines":1219,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":1,"grep_sap_abap":2,"source_lines_before":1217,"diff_hunks":3,"finding_categories":["CI_USAGE_OK[3224334] x1"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZR_JV_POST","file":"ovl/atc/corrections/ZR_JV_POST.abap","parent":"ZR_JV_POST","package":"ZFI_OTH","lines":2201,"boc_blocks":1,"boc_blocks_dated_08_08_2026":1,"single_line_markers":6,"grep_sap_abap":2,"source_lines_before":2199,"diff_hunks":2,"finding_categories":["CI_DB_OPERATION_OK[2389136] x1"],"audit_findings":1,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZSD_CORRECT_RFBSK","file":"ovl/atc/corrections/ZSD_CORRECT_RFBSK.abap","parent":"ZSD_CORRECT_RFBSK","package":"ZSD_BL","lines":94,"boc_blocks":3,"boc_blocks_dated_08_08_2026":3,"single_line_markers":13,"grep_sap_abap":6,"source_lines_before":88,"diff_hunks":6,"finding_categories":["CI_DB_OPERATION_OK[2768887] x2","CI_NOORDER x2"],"audit_findings":0,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZSD_INVOICE_VAPEXP_DP","file":"ovl/atc/corrections/ZSD_INVOICE_VAPEXP_DP.abap","parent":"ZSD_INVOICE_VAPEXP_DP","package":"ZSD_BL","lines":2584,"boc_blocks":2,"boc_blocks_dated_08_08_2026":1,"single_line_markers":10,"grep_sap_abap":4,"source_lines_before":2580,"diff_hunks":1,"finding_categories":["UP TO 1 ROWS + ORDER BY rebuild x1","ORDER BY PRIMARY KEY x1"],"audit_findings":20,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"ZZRBUS2105","file":"ovl/atc/corrections/ZZRBUS2105.abap","parent":"ZZRBUS2105","package":"ZMM_OTH","lines":1696,"boc_blocks":27,"boc_blocks_dated_08_08_2026":20,"single_line_markers":27,"grep_sap_abap":54,"source_lines_before":1655,"diff_hunks":21,"finding_categories":["CI_FLDEXT_OK x19","CI_USAGE_OK[1803189] x1","CI_USAGE_OK[2438131] x1"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"Z_CORR_PRCTR","file":"ovl/atc/corrections/Z_CORR_PRCTR.abap","parent":"Z_CORR_PRCTR","package":"ZCO_PCA","lines":651,"boc_blocks":2,"boc_blocks_dated_08_08_2026":2,"single_line_markers":6,"grep_sap_abap":4,"source_lines_before":647,"diff_hunks":3,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","CI_FLDEXT_OK[2610650] x1"],"audit_findings":6,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"Z_CORR_PRCTR2","file":"ovl/atc/corrections/Z_CORR_PRCTR2.abap","parent":"Z_CORR_PRCTR2","package":"ZCO_PCA","lines":656,"boc_blocks":3,"boc_blocks_dated_08_08_2026":3,"single_line_markers":8,"grep_sap_abap":6,"source_lines_before":645,"diff_hunks":6,"finding_categories":["CI_DB_OPERATION_OK[2431747] x2","UP TO 1 ROWS + ORDER BY rebuild x2","ORDER BY PRIMARY KEY x2"],"audit_findings":3,"audit_activation_candidates":0,"validation_evidence":"none found"},
+{"object":"Z_CORR_PRCTR_OVL","file":"ovl/atc/corrections/Z_CORR_PRCTR_OVL.abap","parent":"Z_CORR_PRCTR_OVL","package":"ZCO_PCA","lines":651,"boc_blocks":2,"boc_blocks_dated_08_08_2026":2,"single_line_markers":6,"grep_sap_abap":4,"source_lines_before":null,"diff_hunks":null,"finding_categories":["CI_DB_OPERATION_OK[2431747] x1","CI_FLDEXT_OK[2610650] x1"],"audit_findings":6,"audit_activation_candidates":1,"validation_evidence":"none found"},
+{"object":"Z_REVERSE_CLEARING","file":"ovl/atc/corrections/Z_REVERSE_CLEARING.abap","parent":"Z_REVERSE_CLEARING","package":"ZFI_AR","lines":424,"boc_blocks":4,"boc_blocks_dated_08_08_2026":4,"single_line_markers":4,"grep_sap_abap":8,"source_lines_before":416,"diff_hunks":8,"finding_categories":["CI_DB_OPERATION_OK[2431747] x4","ORDER BY PRIMARY KEY x2"],"audit_findings":6,"audit_activation_candidates":0,"validation_evidence":"none found"}
+],
+
+"corrected_totals": {
+ "files": 51,
+ "lines": 105851,
+ "boc_blocks": 378,
+ "single_line_markers": 552,
+ "boc_blocks_breakdown": {
+  "dated_08_08_2026_star_style": 205,
+  "june_2026_zatc_style_pre_existing": 172,
+  "dated_24_08_26_BOC_EOC_style": 1,
+  "june_zatc_style_by_date": {"16.06.2026": 70, "15.06.2026": 56, "10.06.2026": 14, "05.06.2026": 11, "09.06.2026": 11, "06.06.2026": 7, "12.06.2026": 2, "14.06.2026": 1},
+  "end_marker_lines_matching_SAP_ABAP": 378,
+  "notes": "205 = lines '*--- BEGIN OF CHANGE BY SAP_ABAP 08.08.2026 FOR ATC ---' (205 matching END lines; every one dated 08.08.2026; present in all 51 files). 172 = lines 'Code Remediation changes S4 2025[_1_P|_1_A] Conversion ... BEGIN OF CHANGE ... SAP_ABAP <date>'; 168 of them are in the 38 files with a snapshot and all 168 are already in the snapshot downloaded 08.08.2026, the other 4 are in files without a snapshot. The star-style marker occurs 0 times in any snapshot. BEGIN/END imbalance of the June style in three files: MZMMCODREQ_ERROR_RESETF01 5 begin / 4 end, ZFI_CHNG_PYBLCK 17 / 18, ZFI_REP_BLOCK 6 / 7."
+ },
+ "august_blocks_by_content": {
+  "pragma_only_no_old_code_commented": 107,
+  "old_code_commented_plus_replacement": 65,
+  "new_or_changed_code_without_commented_original": 33,
+  "blocks_containing": {"ORDER BY PRIMARY KEY": 37, "UP TO 1 ROWS (SELECT SINGLE rebuild)": 18, "strict @ host variables": 18, "FROM I_* released CDS view": 16, "ORDER BY <explicit fields>": 5, "SORT statement": 4, "CALL FUNCTION carrying a pragma": 4, "J_1IMOVEND -> LFA1 swap": 34},
+  "cds_views_read": {"I_OPERATIONALACCTGDOCITEM": 7, "I_GLACCOUNTINCOMPANYCODE": 8, "I_GLACCOUNTINCHARTOFACCOUNTS": 1},
+  "pragma_tokens_inside_august_blocks": {"CI_NOORDER": 55, "CI_DB_OPERATION_OK[2431747]": 47, "CI_USAGE_OK[2217206]": 38, "CI_FLDEXT_OK (no note)": 20, "CI_FLDEXT_OK[2610650]": 11, "CI_FLDEXT_OK[2215424]": 5, "CI_USAGE_OK[2267918]": 4, "CI_USAGE_OK[3224334]": 4, "CI_DB_OPERATION_OK[2389136]": 3, "CI_USAGE_OK[2340247]": 3, "CI_DB_OPERATION_OK[2768887]": 2, "CI_USAGE_OK[2877717]": 1, "CI_USAGE_OK[3224316]": 1, "CI_FLDEXT_OK[3320010]": 1, "CI_USAGE_OK[1803189]": 1, "CI_USAGE_OK[2438131]": 1, "total": 197},
+  "notes": "Classification by script: a block is 'pragma-only' when it has no commented (*) line and its active lines contain a #EC token but no ORDER BY / UP TO / SORT / CDS / CONV / CALL FUNCTION; heuristic. HO rule 6 says markers are for real fixes only and a pure pseudo gets no BEGIN/END block; 107 of the 205 August blocks wrap pragma-only lines. In export_atc_errors.xlsx every finding with note 2217206 (506), 2431747 (98), 2877717 (46), 2389136 (23) and 2340247 (3) is Priority 1."
+ },
+ "pragma_tokens_all_dates": {"CI_NOORDER": 302, "CI_FLDEXT_OK": 92, "CI_USAGE_OK": 92, "CI_DB_OPERATION_OK": 56, "CI_EXECSQL": 10, "total_lines": 552, "CI_DB_OPERATION_OK[2431747]": 51, "CI_USAGE_OK[2217206]": 38, "lines_with_two_tokens": 0},
+ "diff_vs_snapshot_38_files": {"source_lines": 90756, "corrected_lines": 91294, "net_lines": 538, "diff_hunks": 296, "source_lines_removed_or_changed": 295, "lines_added_or_changed": 833, "ec_pragma_lines_before": 351, "ec_pragma_lines_after": 527, "new_or_changed_lines_carrying_ec": 177, "august_marker_blocks_in_these_38": 182, "notes": "difflib.SequenceMatcher on right-stripped lines; includes the 24/08/26 edit in ZFI_CHNG_PYBLCK. The 13 files without a snapshot (14,557 lines, 23 August blocks) cannot be diffed."},
+ "raw_grep_counts": {
+  "grep_c_i_SAP_ABAP_total": 768,
+  "grep_c_i_BOC_total": 22,
+  "grep_c_i_BOC_nonzero_files": {"MZMMVENDORO01": 8, "MZMMVENDORI01": 7, "MZMMVENDORF01": 3, "MZMMVENDORTOP": 1, "ZFI_CHNG_PYBLCK": 1, "ZFI_TAX_CREDIT_REPORT": 1, "ZFI_UPDATE_KIDNO": 1},
+  "grep_c_i_changes_by_total": 18,
+  "grep_c_i_changes_by_nonzero_files": {"ZFI_VOUCHER_PRINT": 4, "ZFI_BCM_REJREC": 2, "ZFI_CHNG_PYBLCK": 2, "ZFI_REM_PYBLCK": 2, "ZFI_REP_BLOCK": 2, "Z_CORR_PRCTR": 2, "Z_CORR_PRCTR_OVL": 2, "MZMMVENDORF01": 1, "MZPZ9920_MED_INPATIENT_F01": 1},
+  "notes": "The literal 'BOC' hits are legacy markers of other authors (ss, Rohit, one '*boc by arnav' pair that is already in the 08.08.2026 snapshot) plus the single '*BOC By SAP_ABAP on 24/08/26'. All 18 'changes by' hits are legacy authors (SOGET, Vinod, SAB_RAMESH ...); there is no single-line 'Changes by SAP_ABAP' marker. In this work the single-line marker is the inline #EC pragma."
+ },
+ "copies": "Each of the 51 files is stored three times with identical content (md5 equal for all 51): loose .abap, ONGC_abapgit/src/<name>.prog.abap, ONGC_abapgit/by_package/<PKG>/src/<name>.prog.abap = 153 files."
+},
+
+"abapgit_package": {
+ "path": "ovl/atc/corrections/ONGC_abapgit",
+ "structure": "MANIFEST.csv (51 rows: package, parent_object, include, abapgit_filename), UPLOAD_PROCESS.md (127 lines), src/ (51 *.prog.abap), by_package/<14 packages>/src/ (51 *.prog.abap in total). 104 files: 102 .abap, 1 .csv, 1 .md. No .prog.xml, no .abapgit.xml, no package.devc.xml.",
+ "packages": [
+  {"name": "ZFI_OTH", "objects": 20}, {"name": "ZMM_OTH", "objects": 8}, {"name": "ZFI_GL", "objects": 4}, {"name": "ZJVA_OTH", "objects": 3}, {"name": "ZCO_PCA", "objects": 3}, {"name": "ZHR_DEV", "objects": 2}, {"name": "ZGEN_00", "objects": 2}, {"name": "ZPM_WCM", "objects": 2}, {"name": "ZSD_BL", "objects": 2}, {"name": "ZUFSO_TO_ICE", "objects": 1}, {"name": "ZCFM", "objects": 1}, {"name": "ZEHS_OH", "objects": 1}, {"name": "ZPM_LDM", "objects": 1}, {"name": "ZFI_AR", "objects": 1}
+ ],
+ "total_objects": 51,
+ "parent_programs": 43,
+ "import_status_evidence": "No evidence of an import. UPLOAD_PROCESS.md is a procedure to be executed ('Export from the target first, drop our .abap files on top, import back.'; 'abapGit will not write an object from a bare .abap file. Every object in a repo needs its metadata companion <name>.prog.xml'); the folder contains no XML, so it is not importable as stored. HO section 7 'Shipping' restates the same procedure in the future tense. CLAUDE.md: 'Hand-written abapGit XML has not yet imported on this landscape'; MEMORY.md L595-598 describes the ATC route as export -> overlay -> re-import -> review diff -> pull. No transport request number for the ATC batch is recorded; ovl/_engagement/ocp_tr_list.xls (49 OCP entries, 01.05.26-03.08.26) contains no entry text mentioning ATC or remediation."
+},
+
+"manual_review_list": {
+ "file": "ovl/atc/corrections/MANUAL_REVIEW_LIST.xlsx",
+ "sheet": "Manual_review",
+ "rows": 26,
+ "headers": ["Category","Object","Include","Line","Message Code","SAP Note","Check Message","Referenced Object","Statement","Decision","Comment"],
+ "summary": "26 findings set aside as decisions rather than code changes. 'Decision' and 'Comment' are empty on all 26 rows. Compiled 20/08/26 per the worklog. 25 of the 26 rows match a row of export_atc_errors.xlsx by Include + Line; 20 match atc_ovl_050826.xlsx.",
+ "by_reason_counts": {"P1 field length": 19, "BSEG CDS not possible": 5, "Simplified transaction - real usage": 1, "System-side investigation": 1},
+ "by_object": {"SAPMZMMCODREQ": 13, "SAPMZMMCODREQ_ERROR_RESET": 6, "ZJV_SAPF100": 5, "SAPMZMMVENDOR": 1, "ZCL_PRA_APP_LOG_SCADA": 1},
+ "by_sap_note": {"2215424": 19, "2431747": 5, "2226131": 1, "(none)": 1},
+ "by_check_message": {"Compare length conflict": 7, "Structure-Component length conflict": 6, "Move length conflict": 6, "DB Operation SELECT found": 5, "Semantically incompatible change of existing functionality": 1, "Missing include - ATC could not resolve a class-pool include": 1},
+ "details": "P1 field length = DOMA:ATWRT conflicts (note 2215424) in MZMMCODREQF01 / I01 / O01 and MZMMCODREQ_ERROR_RESETF01; BSEG CDS not possible = 5 SELECTs in ZJV_SAPF100 using dynamic WHERE or fields rdiff/rdif2/rdif3/gbetr/kursr/xhkom 'not in CDS'; simplified transaction = XK01 BDC call in MZMMVENDORF01 line 2686; system-side = ZCL_PRA_APP_LOG_SCADA 'no source exported; check the class in OCQ'."
+},
+
+"finding_categories_resolved": [
+ {"category": "NOORDER - SELECT SINGLE possibly not unique", "description": "SELECT SINGLE on a partial key (2,697 findings on 09/06/26; 2,013 in the later export).", "typical_fix": "Rebuild as SELECT <f> FROM <t> WHERE <c> ORDER BY PRIMARY KEY INTO @tgt UP TO 1 ROWS. ENDSELECT. - strip SINGLE; on a projection ORDER BY the selected key fields. HO section 7 / MEMORY M-12 record that this adds a SELECT...ENDSELECT loop and propose SELECT SINGLE ... ORDER BY PRIMARY KEY instead (not yet syntax-checked).", "evidence_file": "KB L206, L344-350, L430, L444; HO rules 13-16, section 7"},
+ {"category": "NOORDER - former cluster/pool table or OPEN CURSOR without ORDER BY", "description": "SELECT on BSEG/CDPOS/KONV etc. or a cursor without deterministic order.", "typical_fix": "Add ORDER BY PRIMARY KEY (SELECT *) or ORDER BY <selected key fields>; CDPOS/CDHDR cursor paging is kept, only ORDER BY PRIMARY KEY added.", "evidence_file": "KB L431, L446, L461; SH L142"},
+ {"category": "NOORDER - empty SELECT/ENDSELECT", "description": "Existence check written as an empty SELECT ... ENDSELECT.", "typical_fix": "SELECT SINGLE @abap_true FROM t WHERE ... INTO @DATA(lv_exists), keeping the sy-subrc logic (earlier disposition: remove the leftover).", "evidence_file": "KB L432, L445"},
+ {"category": "NOORDER - READ ... BINARY SEARCH without SORT", "description": "Binary search on an itab filled by an unsorted SELECT.", "typical_fix": "Insert SORT itab BY <WITH KEY fields> before the enclosing LOOP (dedupe identical SORT).", "evidence_file": "KB L433, L502; SH L143"},
+ {"category": "NOORDER - DELETE ADJACENT DUPLICATES / AT NEW / AT END OF / ON CHANGE OF", "description": "Order-dependent statement on a SELECT result.", "typical_fix": "SORT before the loop on exactly the compared fields (plain SORT if none), placed outside any loop.", "evidence_file": "KB L492, L504-505; COPILOT section 4.2 L208"},
+ {"category": "NOORDER - READ TABLE ... INDEX 1 / LOOP ... EXIT for result", "description": "First-row access on an unsorted result.", "typical_fix": "Inline #EC CI_NOORDER pseudo-comment, no begin/end markers.", "evidence_file": "KB L418-419, L448, L508"},
+ {"category": "NOORDER - WRITE or EXIT/RETURN/LEAVE inside SELECT...ENDSELECT", "description": "Finding is reported on the WRITE/EXIT line inside the loop body, not on the SELECT.", "typical_fix": "Add ORDER BY to the enclosing SELECT (scan upward) or close with #EC CI_NOORDER on the reported line; never append ORDER BY at the finding line.", "evidence_file": "KB L447, L453, L457; HO rule 26"},
+ {"category": "NOORDER on a FOR ALL ENTRIES SELECT", "description": "ORDER BY is not allowed together with FOR ALL ENTRIES.", "typical_fix": "#EC CI_NOORDER instead of ORDER BY.", "evidence_file": "KB L507; HO rule 25"},
+ {"category": "NOORDER - ALV factory result", "description": "Unsorted table handed to an ALV factory (auto-fix tool rule).", "typical_fix": "SORT t_table.", "evidence_file": "KB L492"},
+ {"category": "Field Length Extension - conflict messages", "description": "SELECT type conflict, Type-Conflict, Compare length, Structure-Component type, Arithmetic type, MOVE length/type conflict (MATNR 18->40, amounts).", "typical_fix": "CONV #( ) to the MATNR / amount type or retype the variable to the field's data element, then #EC CI_FLDEXT_OK[note] as resolution marker.", "evidence_file": "KB L194, L328, L510; HO section 5"},
+ {"category": "Field Length Extension - generic messages", "description": "CALL METHOD/FUNCTION generic parameter, WRITE/SET/GET, EXPORT, compare C<->N, ASSIGN COMPONENT, PACK.", "typical_fix": "Pragma only: #EC CI_FLDEXT_OK[2215424 | 2610650].", "evidence_file": "KB L166, L420-423, L510"},
+ {"category": "Field Length Extension - IMPORT issue", "description": "IMPORT of an extended field from memory/cluster.", "typical_fix": "Add ACCEPTING PADDING.", "evidence_file": "KB L489, L510"},
+ {"category": "Field Length Extension - Offset/Length access", "description": "+0(2)-style access on extended domains (MATNR, ATWRT).", "typical_fix": "Rework the offset access; if no clean fix, #EC CI_FLDEXT_OK[2215424].", "evidence_file": "KB L427, L437"},
+ {"category": "Field Length Extension - type used by RFC-function parameter", "description": "Interface parameter type in a generated include (254 findings in both OVL exports).", "typical_fix": "KB is contradictory: false positive / do not touch (L192, L414) versus manual review in SE37 (L536). Gated question in HO section 8.", "evidence_file": "KB L192, L414, L536; HO section 8"},
+ {"category": "Field length in disguise on released BAPIs", "description": "Notes 2438131 (material longfield), 2669857 (object-list number 10->19), 2628704 (amount), 2438006 flagged as Usages of Simplified Objects.", "typical_fix": "Pass MATERIAL_LONG or CONV #( ) the value only where a narrower value is moved into the BAPI structure; else #EC CI_USAGE_OK / CI_FLDEXT_OK[note] alone. BAPI is not replaced.", "evidence_file": "KB L100, L145-146, L151, L221, L239, L472"},
+ {"category": "Field length mapper classes", "description": "Explicit length conversion for MATNR, ATWRT/ATWTB, DMBTR.", "typical_fix": "CL_MATNR_CHK_MAPPER=>CONVERT_ON_OUTPUT / CONVERT_ON_INPUT, cl_cls_chk_mapper=>convert_char_value_on_output/input, CONV DMBTR( ).", "evidence_file": "KB L311-314"},
+ {"category": "Amount Field Length Extension (note 2610650)", "description": "Currency amounts extended to 23 digits.", "typical_fix": "CONV #( ) where an amount goes to a non-extended target, otherwise #EC CI_FLDEXT_OK[2610650].", "evidence_file": "KB L160"},
+ {"category": "Material number extension (note 2215424)", "description": "Per-usage review; never truncate material to 18.", "typical_fix": "Real fix only where code truncates; otherwise reviewed #EC CI_FLDEXT_OK[2215424].", "evidence_file": "KB L437"},
+ {"category": "Segmentation field length (note 2522971)", "description": "SGT_SRCA field length.", "typical_fix": "#EC CI_FLDEXT_OK[2522971].", "evidence_file": "KB L165"},
+ {"category": "MATNR 40-char selection screen", "description": "RSDBGENA 'Error generating selection screen 1000' when a fixed COMMENT position collides with a 40-char MATNR parameter.", "typical_fix": "PARAMETERS ... VISIBLE LENGTH 18, or split onto its own BEGIN/END OF LINE.", "evidence_file": "SH L169-173"},
+ {"category": "MOVE-CORRESPONDING from ANY TABLE (FLE remediation side effect)", "description": "Whole-table MOVE-CORRESPONDING from a dynamic source dumps OBJECTS_TABLES_NOT_COMPATIBLE at runtime.", "typical_fix": "Loop row by row into a work area LIKE LINE OF the target, then APPEND.", "evidence_file": "KB L366-375; HO rule 23"},
+ {"category": "VBTYP - SD document category (note 2198647)", "description": "CHAR1 -> CHAR4; RVVBTYP constants obsolete.", "typical_fix": "Retype to VBTYPL (keep the field name), move constant comparisons to IF_SD_DOC_CATEGORY (EQ) / CL_SD_DOC_CATEGORY_UTIL=>rg_*( ) (IN), remove INCLUDE RVVBTYP.", "evidence_file": "KB L142, L225, L275-282, L327, L352"},
+ {"category": "VBUK / VBUP / LIKPUK status reads", "description": "Status tables merged into VBAK/VBAP/LIKP/LIPS.", "typical_fix": "Read V_VBUK_S4 / V_VBUP_S4 in strict Open SQL, or the status fields on VBAK/VBAP/LIKP/LIPS; LIKPUK -> I_DeliveryDocument.", "evidence_file": "KB L176, L320, L362, L387"},
+ {"category": "KONV -> PRCD_ELEMENTS", "description": "Pricing conditions table replaced.", "typical_fix": "FROM v_konv / v_konv_cds in strict Open SQL, drop CLIENT SPECIFIED and mandt.", "evidence_file": "KB L320, L354-356"},
+ {"category": "BSEG read -> I_OperationalAcctgDocItem", "description": "DB-operation finding on explicit-field BSEG SELECTs (note 2431747 at OVL).", "typical_fix": "Field-aliased SELECT from the CDS (element AS bseg field), absolute-amount elements plus SHKZG, strict SQL; SELECT * / ENDSELECT / UP TO stay on BSEG with #EC CI_DB_OPERATION_OK.", "evidence_file": "KB L263-268, L321-322; SH L79-87; HO section 6"},
+ {"category": "FAGLFLEXA / ACDOCA -> I_GLAccountLineItem", "description": "GL line-item reads.", "typical_fix": "Field map with rldnr=SourceLedger filter '0L'.", "evidence_file": "SH L89-93"},
+ {"category": "VBFA document flow", "description": "Reads and writes of VBFA.", "typical_fix": "Read I_SDDocumentMultiLevelProcFlow (26 mapped fields); writes via RV_DOCUMENT_FLOW_UPDATE_U or fit-gap.", "evidence_file": "KB L186, L196, L247"},
+ {"category": "VBAP (+VBUP) -> I_SalesDocumentItem", "description": "Sales item with item status.", "typical_fix": "Field-aliased CDS read; status fields built in so the VBUP join is dropped (ABGRU=SalesDocumentRjcnReason, WERKS=Plant).", "evidence_file": "KB L198"},
+ {"category": "VBRK / VBRP billing", "description": "DB-operation findings and billing drafts (note 2768887).", "typical_fix": "Add DRAFT = SPACE to the WHERE, or read I_BillingDocumentBasic / I_BillingDocumentItemBasic; VBRK-BUPLA stays on the table.", "evidence_file": "KB L200, L229, L319; SH L98"},
+ {"category": "Master data reads KNA1 / LFA1 / KNVV / VBAK-KNUMV", "description": "Customer, supplier, sales-area and condition-number reads.", "typical_fix": "I_Customer, I_Supplier, I_CustomerSalesArea, I_SalesDocument.SalesDocumentCondition (KNA1-LZONE not exposed -> keep table).", "evidence_file": "SH L95-100"},
+ {"category": "J_1BBRANCH -> P_BUSINESSPLACE (note 3404390)", "description": "Business place name moved to a text table.", "typical_fix": "FROM table-name swap (identical field names); TYPE j_1bbranch-<f> -> p_businessplace-<f>.", "evidence_file": "KB L152, L202"},
+ {"category": "J_1IMOVEND / J_1IMOCUST -> LFA1 / KNA1 (note 2877717)", "description": "India CIN tables.", "typical_fix": "FROM table-name swap plus TYPE retype. Labelled a cipla disposition and 'gated' in HO section 8, yet 34 August blocks in the OVL files apply J_1IMOVEND -> LFA1.", "evidence_file": "KB L150; HO section 8; COPILOT section 4.2"},
+ {"category": "V_OLR3_VBAX -> VBAK", "description": "View merged into VBAK.", "typical_fix": "FROM swap, no aliasing.", "evidence_file": "KB L153, L331"},
+ {"category": "Material documents and valuation (notes 2206980, 2337368)", "description": "MKPF/MSEG merged into MATDOC; MBEW/MARC compatibility views.", "typical_fix": "Reads via NSDM_V_MSEG / NSDM_V_MARC / NSDM_V_MBEW; a DDIC view on MKPF/MSEG must be redefined on a MATDOC-based CDS.", "evidence_file": "KB L163, L235, L323"},
+ {"category": "KNKK / KNKA credit management -> FSCM (note 2227014)", "description": "Classic credit master obsolete.", "typical_fix": "TYPE knkk-<f> decouple to the data element; reads via CVI_CUST_LINK -> BUT000 -> UKMBP_CMS_SGM; writes via CL_UKM_FACADE; credit team must validate.", "evidence_file": "KB L178-179, L210, L215, L289-302"},
+ {"category": "Credit LIS S066 / S067 (note 2659692)", "description": "Credit info structures.", "typical_fix": "Read UKM_ITEM / FM UKM_COMMTS_READ.", "evidence_file": "KB L171"},
+ {"category": "Pricing / condition technique (note 2220005)", "description": "VAKEY/VADAT removed, KALKS/KALVG CHAR1->CHAR2, DZAEHK changed.", "typical_fix": "VAKEY -> VAKEY_LONG; value reads via cl_cond_vakey_srv=>determine_vakey_from_db; KALKS reviewed pseudo; DZAEHK -> Z data element; NACH field refs retyped to NAST.", "evidence_file": "KB L154-159, L329, L379; SH L122-133"},
+ {"category": "MRP planning file MDVM/MDVL/DBVM/DBVL (note 2227059)", "description": "Planning file tables replaced.", "typical_fix": "Read PPH_DBVM; TYPE mdvm-<f> decoupled to the data element.", "evidence_file": "KB L175, L387"},
+ {"category": "Data element / structure token swaps", "description": "CHAR02 (note 2689873), FIP_S_BWART_RANGE (note 2368747), CKMLMV011.", "typical_fix": "CHAR02 -> CHAR2; FIP_S_BWART_RANGE -> BWART_RANGE, FIP_T_BWART_RANGE -> BWART_T_RANGE; CKMLMV011 -> MLRUNLIST.", "evidence_file": "KB L232, L237, L320"},
+ {"category": "T012K house bank (notes 1976487, 2870766)", "description": "Bank Account Management.", "typical_fix": "Reads via FCLM_BAM_ACLINK2 / CL_FCLM_BAM_BSMCUST_API; writes are fit-gap (no released API).", "evidence_file": "KB L185, L187, L473"},
+ {"category": "Foreign trade EIKP / EIPO (notes 2223144, 3482527)", "description": "SD-FT removed.", "typical_fix": "Redirect reads to ITM_* fields on LIKP/LIPS/VBRK/VBRP/EKPO; EXPIMP_POSTING stays fit-gap.", "evidence_file": "KB L167, L183, L189, L335"},
+ {"category": "LIS S025 / S021-S028 (note 2268063)", "description": "Info structures.", "typical_fix": "Manual rework onto analytics CDS views.", "evidence_file": "KB L172, L184, L188"},
+ {"category": "SKA1 / SKB1 / CSKB / T001", "description": "G/L master reads (note 2389136).", "typical_fix": "KB (cipla): pseudo comment. OVL mapping listed in COPILOT section 4.2: SKA1 -> I_GLAccountInChartOfAccounts, SKB1 and CSKB -> I_GLAccountInCompanyCode (9 such CDS reads are in the corrected files).", "evidence_file": "KB L235, L324; COPILOT section 4.2 L188-192"},
+ {"category": "Type-reference decouple", "description": "TYPE tab-field on a simplified table.", "typical_fix": "TYPE tab-field -> TYPE <data element> only if the note removed that field and a data element of that exact name exists; otherwise leave or retype to another valid table.", "evidence_file": "KB L98, L159, L379; SH L122-129; HO rule 21"},
+ {"category": "Non-strategic / compatibility-scope / orphaned-object notes", "description": "Notes 2270199, 2371631, 2368913, 2348023, 2296016, 2370131, 2226131, 2227963.", "typical_fix": "Reviewed #EC CI_USAGE_OK[note]; functional move handled separately.", "evidence_file": "KB L148, L161-162, L192, L220, L228-234, L417, L424, L438"},
+ {"category": "Simplified transactions in literals (P3)", "description": "Obsolete transaction code in a string literal.", "typical_fix": "Pragma on the quoted literal only.", "evidence_file": "KB L491"},
+ {"category": "DR_GET_COUNTRY_NAME (note 2862992)", "description": "Drag&Relate FM withdrawn.", "typical_fix": "SELECT SINGLE landx FROM t005t WHERE spras = l AND land1 = c.", "evidence_file": "KB L169, L208"},
+ {"category": "LAST_DAY_OF_MONTHS (note 2296016)", "description": "Orphaned-object list.", "typical_fix": "FM-name swap to RP_LAST_DAY_OF_MONTHS, fallback pseudo.", "evidence_file": "KB L233"},
+ {"category": "Currency conversion FMs (note 2340247)", "description": "CURRENCY_AMOUNT_DISPLAY_TO_SAP / CURRENCY_AMOUNT_SAP_TO_DISPLAY.", "typical_fix": "BAPI_CURRENCY_CONV_TO_INTERNAL; Z copy of the SAP_TO_DISPLAY FM. In the OVL file ZFI_VOUCHER_PRINT the three calls carry #EC CI_USAGE_OK[2340247] instead.", "evidence_file": "KB L170, L331"},
+ {"category": "IS-Media FMs ISP_* (note 2469385)", "description": "IS-M repository objects must not be used.", "typical_fix": "Native ABAP (TRANSLATE, date FMs) or the FI_ variant.", "evidence_file": "KB L147, L168"},
+ {"category": "BAPI successor with different interface", "description": "BAPI_PO_GETDETAIL, BAPI_ISAORDER_GETDETAILEDLIST, WCOCOF.", "typical_fix": "Wrapper pattern: call BAPI_PO_GETDETAIL1 on new structures, MOVE-CORRESPONDING back to the old work areas; BAPISDORDER_GETDETAILEDLIST.", "evidence_file": "KB L331"},
+ {"category": "Customer/vendor display transactions XK03 / XD03 / VD02", "description": "Master data only via Business Partner.", "typical_fix": "CVI_VEND_LINK / CVI_CUST_LINK partner lookup plus CL_BUPA_NAVIGATION_REQUEST navigation.", "evidence_file": "KB L316"},
+ {"category": "BDC / CALL TRANSACTION -> BAPI", "description": "Batch input on removed or changed transactions.", "typical_fix": "Worked example MSC1 -> BAPI_BATCH_CREATE (+ BAPI_OBJCL_GETDETAIL / _CREATE, COMMIT, BAPIRET2 -> bdcmsgcoll); XK01 -> VMD_EI_API, VA01 -> BAPI_SALESORDER_CREATEFROMDAT2. Convert-or-leave is an open question for OVL.", "evidence_file": "KB L75, L542; SH L148-163; HO section 8"},
+ {"category": "MRP functions", "description": "MD_CHANGE_MRP_DATA BAdI (note 2268085), MD_STOCK_REQUIREMENTS_LIST_API (notes 2227579 / 2227532 / 3211383).", "typical_fix": "Functional re-implementation (PPH_MRP_RUN_BADI=>MDPS_ADJUST); pseudo for MD_STOCK as a one-batch P1 exception.", "evidence_file": "KB L212, L235, L470"},
+ {"category": "Legacy statutory reports RFUMSV00 (note 2480067)", "description": "Replaced by Document and Reporting Compliance.", "typical_fix": "Fit-gap, no code fix.", "evidence_file": "KB L180"},
+ {"category": "DML write on a simplified table", "description": "UPDATE/MODIFY/INSERT/DELETE on MARC, MBEW, KNA1, LFA1, SKA1, BSEG, COEP, KONV, VBUK, LIKP, MCHB ...", "typical_fix": "Use the released API (BAPI_MATERIAL_SAVEDATA, BAPI_MATVAL_PRICE_CHANGE, CMD_EI_API / VMD_EI_API, GL_ACCT_MASTER_SAVE, FI_DOCUMENT_CHANGE, BAPI_ACC_DOCUMENT_POST, BAPI_OUTB_DELIVERY_CHANGE, VB_UPDATE_BATCH); never swap the table; no API -> leave and flag functional.", "evidence_file": "KB L217, L241-248, L387; HO section 6"},
+ {"category": "BPGE SELECT (notes 2226072 / 2226048)", "description": "FSCM credit-exposure table.", "typical_fix": "#EC CI_DB_OPERATION_OK[note] (P1 pseudo approved for one cipla batch only).", "evidence_file": "KB L471"},
+ {"category": "SELECT * or JOIN on a simplified table", "description": "Structure of SELECT * differs from the CDS.", "typical_fix": "Keep the retained table plus #EC CI_DB_OPERATION_OK; never rewrite to CDS.", "evidence_file": "KB L200, L268, L488; HO rule 9"},
+ {"category": "Critical statement - Native SQL", "description": "EXEC SQL (356 findings on 09/06/26).", "typical_fix": "Rewrite to Open SQL where practical, else #EC CI_EXECSQL.", "evidence_file": "KB L213"},
+ {"category": "Critical statement - database hints", "description": "%_HINTS MSSQLNT / ORACLE / DB6.", "typical_fix": "Remove non-HANA hints and re-emit the terminating period; keep %_HINTS HDB.", "evidence_file": "KB L204, L213, L358"},
+ {"category": "ADBC interface", "description": "ADBC usage finding.", "typical_fix": "#EC CI_ADBC_US.", "evidence_file": "KB L493"},
+ {"category": "DDIC view based on a simplified table", "description": "23 'View based on a simplified artifact' findings in both OVL exports.", "typical_fix": "Cannot be pseudo-commented; redefine the view on the successor / MATDOC-based CDS (DDIC task).", "evidence_file": "KB L163-164; HO section 5"},
+ {"category": "CLIENT SPECIFIED on a compatibility view", "description": "Dumps DBSQL_ILLEGAL_CLIENT_SPECIFIED on MBEW, MSEG, MKPF, FAGLFLEXA, BSID/BSAD, KONV.", "typical_fix": "Drop CLIENT SPECIFIED and the mandt condition; leave it on real transparent tables.", "evidence_file": "KB L356; SH L109-116; HO rule 19"},
+ {"category": "Strict Open SQL form", "description": "Any statement that gains @ or targets a view must be fully strict.", "typical_fix": "Comma-separated field and ORDER BY lists, @ on right-hand operands only, clause order FROM - FAE - WHERE - ORDER BY - INTO - UP TO.", "evidence_file": "KB L346, L354, L362, L463; HO rule 17"},
+ {"category": "ORDER BY PRIMARY KEY validity", "description": "Valid only on SELECT * or when the full key is selected.", "typical_fix": "On a projection use ORDER BY <explicit key fields> or drop it.", "evidence_file": "KB L350, L391; HO rule 13"},
+ {"category": "UP TO n ROWS placement and SINGLE removal", "description": "Activation errors from the SELECT SINGLE conversion.", "typical_fix": "Non-strict: UP TO right after the field list; strict: INTO @tgt UP TO 1 ROWS last; always strip the SINGLE keyword.", "evidence_file": "KB L344-348; HO rules 14-16"},
+ {"category": "Pseudo-comment mechanics", "description": "How a #EC token may be placed.", "typical_fix": "Token starts with a double quote; one per line; inside an existing comment; no markers for a pure pseudo; no P1 pseudo without approval.", "evidence_file": "KB L65, L98, L443; HO rules 1, 4-6"},
+ {"category": "Change-marker mechanics", "description": "How changes are bracketed.", "typical_fix": "Comment old code, never delete; never double-wrap; match the marker format already in the file; author tag SAP_ABAP for OVL.", "evidence_file": "KB L67, L72, L89-96; HO section 2, rules 2-3"},
+ {"category": "Worklist handling", "description": "Line drift and false matches.", "typical_fix": "Locate the statement by content, not by worklist line; cross-check the object against the worklist before rewriting.", "evidence_file": "KB L73, L76, L455; HO rules 10-11"},
+ {"category": "Editing-engine safety and post-edit verification", "description": "Rules for scripted edits.", "typical_fix": "rstrip before endswith('.'); skip comment lines; length-preserving literal mask; inline pseudo first then real fixes bottom-up; verify IF/ENDIF, LOOP/ENDLOOP, FORM/ENDFORM, markers and scan for @@ and double commas.", "evidence_file": "KB L360, L364, L454, L459, L521; SH L215-229; HO rules 27-31"},
+ {"category": "FOR ALL ENTRIES guard", "description": "Empty driver table drops the WHERE and scans the whole table.", "typical_fix": "IF driver IS NOT INITIAL around every FOR ALL ENTRIES.", "evidence_file": "KB L377; SH L59; HO rule 24"},
+ {"category": "Runtime dump DBSQL_STMNT_TOO_LARGE", "description": "Huge IN-list from a range table.", "typical_fix": "Guarded FOR ALL ENTRIES on a de-duplicated driver.", "evidence_file": "SH L51"},
+ {"category": "Runtime dump TSV_TNEW_PAGE_ALLOC_FAILED", "description": "SELECT * on a huge table via unguarded FAE.", "typical_fix": "Narrow fields, add the real filter, add the guard, narrow the itab type.", "evidence_file": "SH L52"},
+ {"category": "Performance patterns", "description": "Linear READ in LOOP, unused expensive reads, CDS-for-performance judgment, BOM explosion.", "typical_fix": "SORT + BINARY SEARCH when safe; skip reads whose result is unused; no blanket CDS wrapping; no bulk BOM FM exists.", "evidence_file": "SH L62-73; KB L381"},
+ {"category": "FBL5N -> FBL5H", "description": "SUBMIT rfitemar capture versus FAGL_LINE_ITEM_BROWSER_AR.", "typical_fix": "Parameter map; moderate rework, does not by itself remove the memory risk.", "evidence_file": "SH L181-195"},
+ {"category": "Scope and disposition rules", "description": "Generated LZ* includes, HR/EHS/HSE scope, missing-include findings, fit-gap definition.", "typical_fix": "Decide per project; fit-gap reserved for T012K writes, removed foreign trade, DRC reports; 'Missing include' left manual.", "evidence_file": "KB L78, L149, L190, L231, L411, L536; HO section 8"}
+],
+
+"reusable_patterns_count": 76,
+"reusable_patterns_count_notes": "76 = number of entries in finding_categories_resolved, an enumeration made for this inventory from KB, SH and HO (one entry per distinct finding type / correction pattern; several entries bundle closely related notes). The documents' own counts: 31 numbered correction/activation rules (HO and .claude/skills/atc-fix/SKILL.md), 13 numbered activation pitfalls (KB L344-379), 7 known syntax-error patterns of the ZATC auto-fix program (KB L512-519), 62 distinct SAP note numbers appear in the KB (HO calls it a '~50-note disposition catalogue'), 29 in the handover. HO section 10: the two notes OVL uses most (2431747, 2217206) 'appear nowhere in the KB'.",
+
+"audit": {
+ "files": ["ovl/atc/AUDIT-2026-08-23.md (225 lines)", "ovl/atc/AUDIT-detail-2026-08-23.md (654 lines)"],
+ "tool": "scripts/abap-audit.py (398 lines, committed 23/08/26 in eac551c) - statement-aware text auditor for the standing rules in CLAUDE.md; 'It reads source, it does not compile - findings are candidates for review' (ovl/atc/NOTES.md).",
+ "files_audited": 51,
+ "duplicate_copies_skipped": 102,
+ "total_findings": 433,
+ "objects_with_findings": 41,
+ "by_rule": {"SELECT_IN_LOOP": 238, "SELECT_ENDSEL": 101, "FAE_NO_GUARD": 40, "ORDER_PRIMARY": 26, "CLAUSE_ORDER": 10, "INTO_BEFORE_FROM": 9, "DAD_NO_SORT": 7, "CLIENT_MANDT": 1, "DUP_INLINE_DATA": 1},
+ "expected_activation_failures": {
+  "total": 46,
+  "objects": 18,
+  "by_rule": {"ORDER_PRIMARY": 26, "CLAUSE_ORDER": 10, "INTO_BEFORE_FROM": 9, "DUP_INLINE_DATA": 1},
+  "by_file": {"MZPZ9920_MED_INPATIENT_F01": 10, "MZPSJVCCFCFORMS_GET_TOTALS_F01": 8, "MZMMCODREQ_ERROR_RESETF01": 4, "ZFI_TAX_CREDIT_REPORT": 4, "ZFI_VOUCHER_PRINT": 3, "MZMMCODREQF01": 2, "MZMMVENDORF01": 2, "MZPZ9920_MED_INPATIENT_I01": 2, "ZPME_SFORM_REPORT": 2, "MZMMCODREQO01": 1, "MZMMVENDORI01": 1, "ZFI_JV_TB": 1, "ZFI_TAX_CAPEX_POSTING_E01": 1, "ZFI_TAX_CAPEX_POSTING_F01": 1, "ZFI_TAX_POSTING_F01": 1, "ZFI_TAX_SEC42_AMORT_SCH_F01": 1, "Z_CORR_PRCTR": 1, "Z_CORR_PRCTR_OVL": 1},
+  "quote": "433 findings in 41 of 51 objects. 46 of them, in 18 objects, would be expected to fail activation. Nothing here has been changed - this is a review list, not a set of edits."
+ },
+ "introduced_by_the_remediation_per_audit": {
+  "basis": "38 objects exist in both sources/ and corrections/, so each correction can be compared against its own original.",
+  "table": {"SELECT_ENDSEL": {"added": 13, "resolved": 5}, "FAE_NO_GUARD": {"added": 2, "resolved": 0}, "DAD_NO_SORT": {"added": 0, "resolved": 4}, "ORDER_PRIMARY": {"added": 0, "resolved": 3}, "CLAUSE_ORDER": {"added": 0, "resolved": 2}, "SELECT_IN_LOOP": {"added": 0, "resolved": 2}, "HARDCODED": {"added": 0, "resolved": 1}},
+  "defects_attributed_to_the_remediation": [
+   {"type": "SELECT...ENDSELECT loops created by rewriting SELECT SINGLE as UP TO 1 ROWS + ORDER BY PRIMARY KEY", "count": 13, "quote": "trades one ATC finding for two problems: it creates a SELECT ... ENDSELECT loop (itself an ATC finding), and where the field list is not * the ORDER BY PRIMARY KEY is invalid."},
+   {"type": "unguarded FOR ALL ENTRIES added", "count": 2, "where": "ZFI_JV_TB.abap:595 and ZFI_TAX_CREDIT_REPORT.abap"},
+   {"type": "duplicate inline declaration (DUP_INLINE_DATA)", "count": 1, "where": "ZFI_TAX_CREDIT_REPORT.abap lines 596 and 611", "quote": "The remediation added a CDS-based SELECT at line 596 declaring @DATA(lt_bseg_add), but left the original BSEG SELECT at line 611 declaring the same name again. Both are live. That does not activate, and it also means the intended CDS replacement is being overwritten by the old read."}
+  ],
+  "net_assessment_quote": "The remediation is net positive everywhere except one pattern."
+ },
+ "pre_existing_per_audit": {"SELECT_IN_LOOP": 238, "SELECT_ENDSEL": "101 (minus the 13 the remediation added)", "FAE_NO_GUARD": "40 (2 added by the fix; the rest inherited)", "DAD_NO_SORT": 7, "CLIENT_MANDT": 1, "quote": "Pre-existing, not caused by this work ... Out of scope for S/4 readiness; a performance backlog."},
+ "other_defects_named_in_handover": [
+  {"type": "double-wrapped marker lines", "count": "7 BEGIN + 7 END lines", "where": "ZF_CHECK_OI_BALANCE_EXT.abap, all dated 05.06.2026", "note": "HO rule 3 calls it a 'live defect'; the 14 lines are already present in the snapshot downloaded 08.08.2026, i.e. they predate the August pass."},
+  {"type": "ORDER BY PRIMARY KEY on a field list described as 'the single most common defect in the delivered OVL batch - 26 sites'", "where": "HO rule 13; MEMORY.md M-12", "note": "See independent_check: the audit's own delta table shows 0 ORDER_PRIMARY added by the fix."}
+ ],
+ "independent_check_19_11_26": {
+  "auditor_rerun": "python3 -B scripts/abap-audit.py ovl/atc/corrections -> 'scanned 51 distinct object(s) (102 duplicate copies skipped); 433 finding(s) in 41 object(s)' with the identical per-rule counts. Nothing flagged on 23/08/26 has been changed.",
+  "marker_attribution_of_the_46_candidates": "Only 4 of the 46 flagged statements start inside a '08.08.2026' change block (ZPME_SFORM_REPORT lines 213 and 229; MZPSJVCCFCFORMS_GET_TOTALS_F01 line 39, counted twice); 42 are outside any SAP_ABAP marker block.",
+  "pre_existence_of_the_46_candidates": "21 of the 46 are in files that have a pre-remediation snapshot; all 21 flagged statements are found verbatim (whitespace- and case-normalised, comments removed) in the snapshot downloaded from OCQ/500 on 08.08.2026 - including both ZPME_SFORM_REPORT statements, where the August block only added the #EC token and the marker. The other 25 (MZPZ9920_MED_INPATIENT_F01 10, MZPSJVCCFCFORMS_GET_TOTALS_F01 8, MZPZ9920_MED_INPATIENT_I01 2, ZFI_TAX_CAPEX_POSTING_E01 1, ZFI_TAX_CAPEX_POSTING_F01 1, ZFI_TAX_POSTING_F01 1, ZFI_TAX_SEC42_AMORT_SCH_F01 1, Z_CORR_PRCTR_OVL 1) are in files without a snapshot, so their origin is not determinable. The ZFI_TAX_CREDIT_REPORT statement at line 611 also pre-exists; the duplicate declaration arises because the August block added a second @DATA(lt_bseg_add) at line 596.",
+  "select_endsel_attribution": "13 of the 101 SELECT_ENDSEL sites start inside a 08.08.2026 block, matching the audit's '13 added'.",
+  "caveat": "Whether any of the 46 really fails activation is unverified in either direction; the audit asks: 'Verify one of each kind in SE38 first; if SAP accepts it, tell me and I will drop that rule from the auditor rather than churn 46 sites.'"
+ },
+ "fixed_afterwards": "None of the audit findings. git log -- ovl/atc/corrections shows two commits only: 805da52 (19/08/26, initial add) and 055ad76 (24/08/26, the FI_DOCUMENT_CHANGE parameter typo in ZFI_CHNG_PYBLCK, which is not an audit finding).",
+ "repo_hygiene_finding": "ovl/atc/corrections/ holds 153 files that are only 51 distinct objects - every object is stored three times ... Worth collapsing to one, but that is a deliberate decision, not something I should do unasked.",
+ "stated_blind_spots": ["It reads source text. It does not compile. Every finding is a candidate for review.", "Native SQL (EXEC SQL ... ENDEXEC) is skipped entirely", "FAE_NO_GUARD looks back 25 statements within the same unit", "DAD_NO_SORT looks for the SORT in the same FORM/METHOD", "Dynamic SQL, SELECT built into a string, and ADBC calls are not analysed", "SELECT_IN_LOOP counts what it sees; whether a join or FOR ALL ENTRIES is actually possible is a judgement call per site"]
+},
+
+"validation_status": {
+ "activation_in_target_system": "No evidence found for any of the 51 corrected files. No file under ovl/atc states that a corrected object was imported, activated or transported.",
+ "syntax_check": "No evidence. HO section 7: 'syntax-check one instance in SE38 on this release before applying it to all 26.' Worklog 25/08: 'the SE38 syntax-check plan for the 26 sites' (a plan). CLAUDE.md: 'The system this repo mirrors is NOT reachable' and the abap-adt MCP 'points at a different dev system'.",
+ "atc_rerun": "No evidence. No ATC export in the repo is later than the corrections (latest 'First Found On' in any export is 03/08/26; markers are dated 08.08.2026). HO section 9: 'ATC closure is proven only by re-running ATC in the system. Never present a passed structural scan as \"ATC closed\".'",
+ "offline_checks_that_exist": [
+  "Rule audit of 23/08/26 (text-based, 433 candidates) - see audit.",
+  "Byte identity of the three copies of each file (51 of 51 identical, checked 19/11/26).",
+  "HO rule 31 / skill Phase 4 prescribe structural balance scans after each batch; no saved output of such a scan for the OVL batch is in the repo."
+ ],
+ "evidence_against_deployment": [
+  {"file": "ovl/zfi_jv_tb/ISSUES.md (notes of 13-14/09/26)", "quote": "Base for the corrected file is the 26/08 download. It does **not** contain the ATC change dated 08.08.2026 (SKA1 -> I_GLAccountInChartOfAccounts, in ovl/atc/corrections/ZFI_JV_TB.abap). Two divergent versions exist; which one is live is unconfirmed."},
+  {"file": "ovl/atc/corrections/ONGC_abapgit/UPLOAD_PROCESS.md", "quote": "Our files are the full include source as downloaded on 08.08.2026. If anyone changed those includes in the system since, pulling overwrites that work."},
+  {"file": "ovl/zfi_cp_mass_ven_pay/NOTES.md", "quote": "the ZR_PROG_DOWNLOAD listing of 08.08.2026 taken from OCQ/500 for the ATC work ... It is **not** verified against what is running in the production/dev client"}
+ ],
+ "runtime_evidence": "One runtime failure is recorded for code in this batch: commit 055ad76 (24/08/26) 'CX_SY_DYN_CALL_PARAM_MISSING dump on Preaudit release' in ZFI_CHNG_PYBLCK. The faulty helper FORM is headed 'S/4 helper FORM: change BSEG payment block via FI_DOCUMENT_CHANGE - SAP_ABAP 16.06.2026' and is already in the 08.08.2026 snapshot, so the dump concerns code that was in the system before the August pass.",
+ "validated_elsewhere_not_ovl": "KB statements such as 'activated field-by-field', 'PROVEN applied ... (cipla F2, activated)' and 'worked F2-F5 + smart forms' refer to cipla / Coca-Cola batches by another operator, not to the OVL files.",
+ "explicitly_unvalidated": [
+  "All 46 'expected activation failure' sites (unverified either way).",
+  "The proposed replacement pattern SELECT SINGLE ... ORDER BY PRIMARY KEY (HO section 7: syntax-check first).",
+  "CDS element names: 'DDLS_BASE_FIELDS.txt and ARS_API_SUCCESSOR.xlsx ... cannot be followed here. Neither file exists on Arnav's machine' (HO section 10).",
+  "Notes 2431747 and 2217206, used for 51 and 38 pragmas: 'appears nowhere in the KB. Research it.' (HO section 6).",
+  "J_1IMOVEND -> LFA1 swaps (34 August blocks) are a 'cipla-labelled' disposition listed as gated in HO section 8.",
+  "Functional behaviour of the 16 CDS-read rewrites (KB L268 for the BSEG pattern: 'Needs functional test in system: ledger multiplicity + amount signs')."
+ ]
+},
+
+"before_after": {
+ "full_exports": {
+  "run_09_06_26": {"file": "atc_ovl_090626.xlsx", "findings": 10165, "objects": 1403, "P1": 3306, "P2": 960, "P3": 5899},
+  "later_export": {"file": "export_atc_errors.xlsx (latest First Found On 03/08/26)", "findings": 5220, "objects": 640, "P1": 1748, "P2": 521, "P3": 2951},
+  "difference": {"findings": -4945, "percent": -48.6, "P1": -1558, "P2": -439, "P3": -2948, "objects": -763},
+  "by_check_title": {"NOORDER": "3261 -> 2275", "USAGE": "2687 -> 1434", "FLE": "2431 -> 630", "PREREQ": "804 -> 677", "DBOPS": "369 -> 155", "CRIT": "366 -> 0", "TRANLIT": "217 -> 19", "VIEWBASE": "23 -> 23"},
+  "by_object_type": {"PROG": "5102 -> 2228", "WDYN": "2100 -> 1857", "FUGR": "1401 -> 650", "SSFO": "727 -> 157", "ENHO": "263 -> 1", "SFPF": "210 -> 31", "TABL": "132 -> 112", "CLAS": "96 -> 27", "FUGS": "9 -> 60"},
+  "object_overlap": "613 object/type pairs occur in both (6,248 findings on 09/06/26 -> 5,000 later); 800 pairs only in the 09/06/26 export (3,917 findings); 30 pairs only in the later export (220 findings).",
+  "how": "Row counts of the two Data sheets; objects = distinct 'Object name'; pairs = distinct (Object name, Object Type).",
+  "comparability": "Limited. The repo does not record the ATC check variant, object set or run series of either export; 'Critical Statements' (366) is absent from the later export; the later export has columns the earlier lacks. The reduction happened before the 08.08.2026 corrections and cannot be attributed to them: the later export predates them (latest First Found On 03/08/26) and the corrected files were not in the system. The 09/06/26 Assignment sheet shows the work spread over five named developers, and June SAP_ABAP markers (05-16.06.2026) are present in the system source."
+ },
+ "by_assigned_developer_09_06_26_vs_later_export": {"Arnav (44 ENHO)": "263 -> 0", "Nandeshwari (38 SSFO)": "262 -> 14", "Gaurav (933)": "6632 -> 2781", "Mandeep (102)": "382 -> 43", "Aditi (48)": "293 -> 116", "unassigned (248)": "2333 -> 2046", "status_Done_objects (75)": "490 -> 14", "how": "Findings on each developer's assigned (Object name, Object Type) pairs counted in both exports.", "note": "The 44 ENHO objects assigned to Arnav carry 263 findings on 09/06/26 and none in the later export. ovl/atc holds no corrected source, marker count or document for these enhancement objects, so how they were closed (by which tool or person) is not determinable from the repo."},
+ "the_51_corrected_includes": {
+  "before": "On 09/06/26 the 43 parent programs carry 427 findings (38 of the 43 present; P1 273, P2 4, P3 150); that export has no include column.",
+  "at_scope_time": "In export_atc_errors.xlsx the same 43 parents carry 554 findings; the 51 corrected includes themselves carry 453 (P1 247, P2 2, P3 204).",
+  "after": "not computable - there is no ATC export taken after the 08.08.2026 corrections, and no evidence the corrections were loaded into the system."
+ },
+ "atc_ovl_050826_vs_090626": "not computable as a before/after: atc_ovl_050826.xlsx (132 rows, 10 objects) is a filtered subset of export_atc_errors.xlsx (all 132 rows identical in object, include, line, message), not a full run. For its 10 objects the 09/06/26 export shows 111 findings and the later export 132.",
+ "syntax_error_objects": "ovl_ocq_syntax_error.xlsx lists 278 objects with a P1 'Syntax error in ....' assigned to Arnav; 172 of those objects still show a 'Syntax error in ....' finding in export_atc_errors.xlsx (106 do not). Who resolved the 106 is not recorded."
+},
+
+"errors_introduced_and_fixed": [
+ {"date": "24/08/26", "program": "ZFI_CHNG_PYBLCK (FORM zz_s4_bseg_zlspr)", "what_broke": "CALL FUNCTION 'FI_DOCUMENT_CHANGE' passed TABLES t_acchg (misspelled; the parameter is T_ACCCHG) -> short dump CX_SY_DYN_CALL_PARAM_MISSING 'on Preaudit release'. The helper FORM is headed 'SAP_ABAP 16.06.2026' and is already in the 08.08.2026 snapshot, i.e. it stems from the June in-system remediation, not from the August pass.", "how_fixed": "Parameter name corrected inside a '*BOC By SAP_ABAP on 24/08/26' block in all three repo copies (commit 055ad76). HO section 6 adds the rule 'dynamic calls are not syntax-checked'.", "still_open": "The same active text 'TABLES t_acchg =' remains in 7 other corrected files: ZFI_BCM_REJREC:4416, ZFI_CHNG_PYBLCKD:1801, ZFI_CP_MAS_VEN_E0001:866, ZFI_REM_PYBLCK:4562, ZFI_REP_BLOCK:1548, ZFI_UPDATE_KIDNO:497, ZFI_UPDATE_SECO:76 (grep on active lines, 19/11/26).", "source": "git show 055ad76; HO section 6 dump table"},
+ {"date": "08/08/26 (found 23/08/26)", "program": "13 sites across the batch, e.g. ZFI_VOUCHER_PRINT, MZMMVENDORO01, Z_CORR_PRCTR2", "what_broke": "Closing NOORDER by rewriting SELECT SINGLE as SELECT ... UP TO 1 ROWS ... ORDER BY PRIMARY KEY. + ENDSELECT. created 13 new SELECT...ENDSELECT loops ('itself an ATC finding').", "how_fixed": "Not fixed in the repo. Recorded as rule HO section 7 and MEMORY.md M-12 'An ATC fix that made things worse'; proposed alternative SELECT SINGLE ... ORDER BY PRIMARY KEY pending an SE38 check.", "source": "AUD; HO section 7; MEMORY.md M-12"},
+ {"date": "08/08/26 (found 23/08/26)", "program": "ZFI_TAX_CREDIT_REPORT", "what_broke": "A CDS-based SELECT declaring @DATA(lt_bseg_add) was added at line 596 while the original BSEG SELECT declaring the same name stayed active at line 611 - duplicate inline declaration, and 'the intended CDS replacement is being overwritten by the old read'.", "how_fixed": "Not fixed; both statements are still active in the repo copy on 19/11/26.", "source": "AUD"},
+ {"date": "08/08/26 (found 23/08/26)", "program": "ZFI_JV_TB (line 595), ZFI_TAX_CREDIT_REPORT", "what_broke": "2 FOR ALL ENTRIES added without an IS NOT INITIAL guard ('An unguarded FOR ALL ENTRIES on an empty driver table reads the whole target table').", "how_fixed": "Not fixed in the repo.", "source": "AUD"},
+ {"date": "05/06/26 (noted 25/08/26)", "program": "ZF_CHECK_OI_BALANCE_EXT", "what_broke": "7 marker pairs were re-commented ('\" \" Code Remediation changes S4 2025_1_A Conversion **BEGIN OF CHANGE ...'). Present in the 08.08.2026 download, so not produced by the August pass.", "how_fixed": "Not fixed; turned into rule 3 'Never double-wrap'.", "source": "HO rule 3; SKILL.md L64-66"},
+ {"date": "30/06/26 (other client: cipla)", "program": "five ATC_FINDING folders, 462 statements", "what_broke": "Customer activation failed on automated rewrites: ORDER BY PRIMARY KEY UP TO 1 ROWS in non-strict form, SINGLE left in the rebuilt SELECT ('ORDER is not allowed here'), ORDER BY PRIMARY KEY on projections, VBTYP retype renaming the field, missing commas, CLIENT SPECIFIED left on CDS reads, period lost when a hint line was removed.", "how_fixed": "'Fixed across all 5 folders via fix_upto, 462 stmts'; each case became a numbered pitfall.", "source": "KB L342-358 (third-party notes; not OVL)"},
+ {"date": "27/06/26 (cipla)", "program": "ATC_FINDING_2 and _3", "what_broke": "Literal-masking helper was not length-preserving: #EC landed mid-code and ORDER BY was appended to IF statements - 'F2 had 2 ORDER-BY-on-IF + 13 ineffective #EC; F3 had 16'.", "how_fixed": "'All fixed'; three post-apply scans made mandatory.", "source": "KB L459"},
+ {"date": "03/07/26 (cipla)", "program": "replace.txt batch", "what_broke": "Statement-end detection without rstrip swallowed a following IF sy-subrc = 0. -> 'No open IF' / 'ENDFORM has no open FORM' at activation.", "how_fixed": "rstrip rule and block-count comparison against the backup.", "source": "KB L364"},
+ {"date": "04/07/26 (cipla)", "program": "ZPM programs", "what_broke": "Helper appended #EC without the leading double quote on 23 lines (syntax error).", "how_fixed": "Pragma string always built with the leading quote.", "source": "KB L98"},
+ {"date": "09/07/26 (cipla)", "program": "several .txt sources", "what_broke": "The assistant's Edit tool saved a stale/truncated base on a flaky mounted folder - 'a whole FORM subroutine vanished'.", "how_fixed": "Restored from backup, engine re-run, manual fixes re-applied via scripted replacements, FORM/ENDFORM verified.", "source": "KB L389"},
+ {"date": "19/07/26 (cipla)", "program": "#SCL#KNA1, #CCC#SAPFOTC_DELVBILL, CL_MA_WH_DASHBOARD CM016 and 35 files", "what_broke": "Files reported as truncated on the basis of a stale mount: 'I reported two bogus HIGH re-extract the source warnings'.", "how_fixed": "Re-read with the Read tool; rule to run structural checks on Read output.", "source": "KB L74"},
+ {"date": "30/07/26 (cipla)", "program": "ZQM_QA33_REPORT", "what_broke": "An FLE remediation replaced APPEND LINES OF with a whole-table MOVE-CORRESPONDING; it activated and then dumped OBJECTS_TABLES_NOT_COMPATIBLE at runtime (line 319).", "how_fixed": "Row-wise loop into a typed work area.", "source": "KB L366-375"},
+ {"date": "31/07/26 (Coca-Cola)", "program": "/CCEJ/RDMMPURR_PAYLIST_CREATE", "what_broke": "Decoupled nacha TYPE nach-nacha to TYPE nacha - activation error 'Type NACHA is unknown'.", "how_fixed": "Decouple only the removed field; other refs left / retyped to NAST.", "source": "KB L379; SH L125-127"},
+ {"date": "not dated (cipla)", "program": "ZFI_MATERIL_MASTER_REPORT", "what_broke": "A decouple TYPE mbew-bwtty -> TYPE bwtty resolved to STRING and dumped UC_OBJECTS_NOT_CONVERTIBLE.", "how_fixed": "Reverted to TYPE mbew-bwtty.", "source": "SH L50, L201"},
+ {"date": "not dated (cipla, atc_finding_5, 969 findings / 95 files)", "program": "auto BSEG -> CDS / VBRK DRAFT rewriter", "what_broke": "Double period after ORDER BY PRIMARY KEY, @@ on already strict statements, malformed IN @( ... ), and a VBRK reported as success where DRAFT = SPACE was never inserted; 'found ONLY by eyeballing the rendered statement'.", "how_fixed": "Rule: no batch rewriting of SELECT bodies; per-statement fixes with rendered-statement review.", "source": "KB L398-400"},
+ {"date": "recorded 25/08/26", "program": "process-level (OVL)", "what_broke": "MEMORY.md M-15 'Applied one client's disposition to another' (cipla dispositions are not OVL rules) and M-16 'Matched a code pattern and assumed it was flagged' (of 11 BDC calls only 3 were on the worklist).", "how_fixed": "Recorded as standing rules; no code change referenced.", "source": "MEMORY.md M-15, M-16"}
+],
+
+"effort_evidence": {
+ "statements_in_files": [
+  {"file": "COPILOT_CONTEXT_HANDOFF.md L1116", "quote": "Compiled 2026-08-15 from 30 Claude Code session transcripts (557 prompts, 2026-07-20 -> 2026-08-15)", "note": "All topics, not only ATC."},
+  {"file": "COPILOT_CONTEXT_HANDOFF.md L54", "quote": "These were learned from ~560 turns of real corrections."},
+  {"file": "COPILOT_CONTEXT_HANDOFF.md L340", "quote": "5.6 OVL - ATC S/4 remediation (Aug 5 - Aug 14)"},
+  {"file": "ovl/_engagement/WORKLOG_2026-08.md L14", "quote": "ATC S/4 readiness remediation (05-14/08, audit 23/08, handover 25/08) | 51 programs / 14 packages under ovl/atc/corrections/ | 847 assigned findings worked family by family; rule audit; abapGit upload procedure; handover document"},
+  {"file": "ovl/_engagement/WORKLOG_2026-08.md L3-7", "quote": "Compiled 22/09/26 from COPILOT_CONTEXT_HANDOFF.md ... 18 working days: 03-07, 10-14, 20-21, 24-28, 31 Aug.", "note": "The worklog was compiled after the fact from documents; it also says 'Git history starts only on 31/08', while git log shows the first commit touching ovl/atc on 19/08/26."}
+ ],
+ "worklog_days_mentioning_atc": ["05/08 scope and classification", "06/08 pragma-able families", "07/08 BSEG/SKA1/SKB1/CSKB reads, VBRK/VBUP/KONV, J_1IMOVEND swaps", "10/08 BAPI-note, EHS and tail items (shared with other work)", "20/08 packaging into 14 packages, MANUAL_REVIEW_LIST", "24/08 rule audit (audit file is dated 23/08/26)", "25/08 handover"],
+ "computed": {
+  "marker_dates_of_august_pass": "all 205 blocks carry the single date 08.08.2026",
+  "source_download_window": "73 listings stamped 08.08.2026 15:13:45 to 15:17:36 (OCQ/500, user SAP_ABAP)",
+  "programs_per_day": "not determinable - no per-day or per-session count of corrected objects is recorded; 51 files / 7 worklog days mentioning ATC is the only derivable ratio",
+  "hours_or_cost": "not determinable - no hours, token counts or session counts specific to ATC are recorded",
+  "change_volume": "205 marker blocks; 833 added/changed lines and 296 hunks in the 38 diffable files out of 91,294 lines"
+ },
+ "git_log_ovl_atc": [
+  "805da52 19/08/26 Add OVL ATC remediation, DPR, JV cash call and related work (546 files added under ovl/atc)",
+  "eac551c 23/08/26 ATC corrections rule audit + scripts/abap-audit.py",
+  "055ad76 24/08/26 ZFI_CHNG_PYBLCK: fix T_ACCCHG param typo in FI_DOCUMENT_CHANGE call (zz_s4_bseg_zlspr), CX_SY_DYN_CALL_PARAM_MISSING dump on Preaudit release",
+  "7ca6846 25/08/26 ovl/atc: ATC correction handover - rules, mappings, batch state, open questions",
+  "6f71f00 26/10/26 zmm_arms: fresh SAPMZMMPREPROLE1_PHASEII + ZGRC_CALL_TODE filed ... (touches only sources/modpool/MZMMPREPROLE1_PHASEIIO01.abap)",
+  "9666174 26/10/26 zmm_arms: ZOVL_ARMS role rename ... (same single file; not ATC work)"
+ ]
+},
+
+"timeline": {
+ "first_date": "31/05/26 - earliest 'First Found On' in the ATC exports (8,886 rows of the 09/06/26 export; all 994 rows of ovl_ocq_syntax_error.xlsx)",
+ "last_date_of_atc_work": "25/08/26 - handover written (HO header 'Written: 25/08/26'; commit 7ca6846). Last commit touching ovl/atc at all: 26/10/26 (unrelated zmm_arms source file).",
+ "events": [
+  {"date": "31/05/26 - 08/06/26", "event": "'First Found On' range of the 09/06/26 export"},
+  {"date": "05/06/26 - 16/06/26", "event": "dates of the 172 SAP_ABAP 'Code Remediation changes S4 2025...' marker blocks present in the system source (in-system June remediation; ovl/me_process_po_cust/NOTES.md also mentions 'SAP_ABAP ATC remediation 05-11.06.2026')"},
+  {"date": "09/06/26", "event": "ATC export atc_ovl_090626.xlsx (10,165 findings) with developer Assignment sheet"},
+  {"date": "03/08/26", "event": "latest 'First Found On' in export_atc_errors.xlsx (5,220 findings)"},
+  {"date": "05/08/26", "event": "August scope built (worklog; file atc_ovl_050826.xlsx)"},
+  {"date": "06/08/26 - 10/08/26", "event": "remediation by finding family (worklog)"},
+  {"date": "08/08/26", "event": "source download from OCQ/500 (15:13-15:17) and date of all 205 correction markers"},
+  {"date": "14/08/26", "event": "end of the ATC stream per COPILOT section 5.6"},
+  {"date": "15/08/26", "event": "COPILOT_CONTEXT_HANDOFF.md compiled from Claude Code transcripts"},
+  {"date": "19/08/26", "event": "first commit of ovl/atc (805da52)"},
+  {"date": "20/08/26", "event": "51 files packaged by package; UPLOAD_PROCESS.md; MANUAL_REVIEW_LIST.xlsx (worklog)"},
+  {"date": "23/08/26", "event": "rule audit and auditor script committed (eac551c)"},
+  {"date": "24/08/26", "event": "ZFI_CHNG_PYBLCK dump fix committed (055ad76)"},
+  {"date": "25/08/26", "event": "ATC_HANDOVER.md written and committed (7ca6846)"},
+  {"date": "13-14/09/26", "event": "ZFI_JV_TB issue log notes that the 26/08 download lacks the 08.08.2026 ATC change"},
+  {"date": "19/11/26", "event": "auditor re-run for this inventory: unchanged 433 findings"}
+ ]
+},
+
+"open_items": [
+ "No import, activation, syntax check or ATC re-run is recorded for any of the 51 corrected files; the abapGit folder has no XML and the upload procedure has not been reported as executed.",
+ "46 'expected activation failure' candidates in 18 objects are unverified; the audit asks for one SE38 check per rule before changing anything.",
+ "ZFI_TAX_CREDIT_REPORT: duplicate @DATA(lt_bseg_add) at lines 596 / 611 still present.",
+ "2 unguarded FOR ALL ENTRIES added by the remediation (ZFI_JV_TB:595, ZFI_TAX_CREDIT_REPORT) still present.",
+ "13 SELECT...ENDSELECT loops introduced by the SELECT SINGLE rewrite still present; replacement pattern not yet syntax-checked.",
+ "Misspelled 'TABLES t_acchg' in FI_DOCUMENT_CHANGE calls still active in 7 corrected files (fixed only in ZFI_CHNG_PYBLCK).",
+ "MANUAL_REVIEW_LIST.xlsx: 26 rows, Decision and Comment empty (19 P1 field-length, 5 BSEG statements no CDS can serve, XK01 BDC, 1 class without source).",
+ "Not worked / parked per HO section 7: 'Objects with no source: 13 function groups, 3 classes, 6 smart forms were never exported'; 'BP* reads (20 findings) and all DML writes (24 findings) - parked.'",
+ "Five gated questions marked Open in HO section 8: BDC convert-or-leave; HR/EHS/HSE scope; generated LZ* includes; FLE on RFC-function parameters; marker date format (DD/MM/YY per CLAUDE.md vs DD.MM.YYYY used in all 205 delivered markers).",
+ "Notes 2431747 (51 pragmas) and 2217206 (38 pragmas) are not in the knowledge base ('Research it'); every finding under these notes is Priority 1 in the export, and HO rule 1 requires explicit approval for a P1 pseudo-comment - no approval record for the OVL batch is in ovl/atc.",
+ "107 of the 205 August marker blocks wrap pragma-only lines, contrary to HO rule 6 (markers for real fixes only).",
+ "CDS element names cannot be re-verified locally (DDLS_BASE_FIELDS.txt and ARS_API_SUCCESSOR.xlsx are not on the machine).",
+ "ZFI_JV_TB: two divergent versions (26/08 system download without the ATC change vs the corrected file); which is live is unconfirmed.",
+ "Each corrected object is stored three times (153 files); collapsing is left as the owner's decision.",
+ "The '847 assigned findings' scope figure is not backed by a file in the repo (atc_ovl_050826.xlsx holds 132 rows).",
+ "ovl/atc/object-list (56 files) does not match any object in the OVL exports; its role in the scope is unclear.",
+ "172 of 278 objects listed with a P1 syntax error under Developer = Arnav still show a syntax-error finding in the later export.",
+ "Pre-existing performance backlog flagged by the audit: 238 SELECT in LOOP, 101 SELECT...ENDSELECT, 40 unguarded FOR ALL ENTRIES, 7 DELETE ADJACENT DUPLICATES without SORT ('out of S/4-readiness scope')."
+],
+
+"evidence_files": [
+ "ovl/atc/NOTES.md",
+ "ovl/atc/ATC_HANDOVER.md",
+ "ovl/atc/AUDIT-2026-08-23.md",
+ "ovl/atc/AUDIT-detail-2026-08-23.md",
+ "ovl/atc/kb/ATC_S4_COMPLETE_KNOWLEDGE_BASE.md",
+ "ovl/atc/kb/SESSION_HANDOFF_ATC_S4_LEARNINGS.md",
+ "ovl/atc/worklists/atc_ovl_090626.xlsx",
+ "ovl/atc/worklists/atc_ovl_050826.xlsx",
+ "ovl/atc/worklists/export_atc_errors.xlsx",
+ "ovl/atc/worklists/ovl_ocq_syntax_error.xlsx",
+ "ovl/atc/worklists/OVL_Programs_Highlighted.xlsx",
+ "ovl/atc/worklists/sample_excel_ovl.xlsx",
+ "ovl/atc/corrections/*.abap (51 files)",
+ "ovl/atc/corrections/MANUAL_REVIEW_LIST.xlsx",
+ "ovl/atc/corrections/ONGC_abapgit/MANIFEST.csv",
+ "ovl/atc/corrections/ONGC_abapgit/UPLOAD_PROCESS.md",
+ "ovl/atc/corrections/ONGC_abapgit/src and by_package (102 .prog.abap)",
+ "ovl/atc/sources/modpool, reports, changedoc (326 files)",
+ "ovl/atc/object-list (56 files)",
+ ".claude/skills/atc-fix/SKILL.md",
+ "ovl/_engagement/WORKLOG_2026-08.md",
+ "ovl/_engagement/ocp_tr_list.xls",
+ "COPILOT_CONTEXT_HANDOFF.md (sections 2, 4.2, 5.6, 6.11, footer)",
+ "MEMORY.md (sections on markers, M-12, M-15, M-16, shipping)",
+ "CLAUDE.md",
+ "README.md",
+ "ovl/zfi_jv_tb/ISSUES.md",
+ "ovl/zfi_cp_mass_ven_pay/NOTES.md",
+ "ovl/me_process_po_cust/NOTES.md",
+ "scripts/abap-audit.py (re-run read-only)",
+ "git log --format='%h %ad %s' --date=short -- ovl/atc ; git show 055ad76"
+]
+}

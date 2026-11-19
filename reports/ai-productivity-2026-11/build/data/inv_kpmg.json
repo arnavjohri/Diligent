@@ -1,0 +1,1425 @@
+[
+  {
+    "folder": "kpmg/abapgit_pilot",
+    "title": "abapGit DDIC import pilot (DOMA -> DTEL -> TABL proof of concept)",
+    "sap_objects": [
+      "ZDO_BUDGET_AMT (domain, CURR 15,2)",
+      "ZDE_BUDGET (data element)",
+      "ZDE_ADD_BUDGET (data element)",
+      "ZMM_PO_BUDGET (transparent table, 9 fields in the pilot)",
+      "ZABAPGIT_STANDALONE (report - the abapGit standalone import tool, not built here)"
+    ],
+    "object_types": ["DDIC"],
+    "module": "MM (delivery-tooling pilot; the table is the WRICEF 050_BRD_FS budget table)",
+    "end_client_evidence": "README.md: '`ZMM_PO_BUDGET` is the budget table from WRICEF `050_BRD_FS`'; README.md: 'the DDIC effort on every object (currently costed at ~2.5 days for the Pipes scheme and similar for the forecast object)'; README.md: 'The dev system is `192.168.11.21:8020` and is currently timing out'; NOTES.md: 'outbound internet from the app server is blocked here'. No company name inside this folder. Link to client only via WRICEF 050_BRD_FS, which kpmg/zmm_po_budget/MANUAL_STEPS.md heads 'Astral / UDAY / WRICEF **050_BRD_FS**'.",
+    "wricef_or_ticket": "WRICEF 050_BRD_FS (its budget table is reused as the pilot object)",
+    "dev_type": "Automation utility",
+    "business_requirement": "Prove that domains, data elements and tables can be created in the SAP system by importing an abapGit offline ZIP instead of being built by hand in SE11.",
+    "technical_challenge": "abapGit must create and activate DOMA -> DTEL -> TABL in dependency order for the table to activate; the application server has no outbound internet, so only ZABAPGIT_STANDALONE with an offline ZIP is usable; the XML is hand-written, not serialised from a system.",
+    "ai_contribution": "Hand-written abapGit XML for one domain, two data elements, one table and the package, plus .abapgit.xml, packaged as ZMM_PO_BUDGET_pilot.zip (6 files). README.md with the test procedure, pass criteria and the list of object types abapGit cannot serialise. The files do not record a session log (ISSUES.md is empty).",
+    "manual_intervention": "Not evidenced. README.md lists what the consultant would have to do (connect VPN, install/run ZABAPGIT_STANDALONE, New Offline Repo, import ZIP, pull, assign transport, check SE11); no result of doing so is recorded.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 0,
+    "deliverable_files": [
+      "kpmg/abapgit_pilot/src/zmm_po_budget.tabl.xml (100, abapGit DDIC XML - not counted in code_lines_current)",
+      "kpmg/abapgit_pilot/src/zde_budget.dtel.xml (22, XML - not counted)",
+      "kpmg/abapgit_pilot/src/zde_add_budget.dtel.xml (22, XML - not counted)",
+      "kpmg/abapgit_pilot/src/zdo_budget_amt.doma.xml (17, XML - not counted)",
+      "kpmg/abapgit_pilot/src/package.devc.xml (10, XML - not counted)",
+      "kpmg/abapgit_pilot/.abapgit.xml (10, XML - not counted)",
+      "kpmg/abapgit_pilot/ZMM_PO_BUDGET_pilot.zip (binary, 6 files)",
+      "kpmg/abapgit_pilot/README.md (80)"
+    ],
+    "status": "Unverified",
+    "status_evidence": "NOTES.md: 'nothing here was verified against a live system from the repo alone.' README.md: 'The dev system is `192.168.11.21:8020` and is currently timing out.' ISSUES.md contains only the header line - no import attempt or result is logged.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Pass criteria written down before the test (all four objects active, currency reference ZMM_PO_BUDGET-WAERS, objects on a transport)",
+      "Explains why standalone/offline mode must be used (server cannot reach github.com)",
+      "Name collision with the real kpmg/zmm_po_budget objects is flagged ('Importing both into one system will collide')",
+      "Lists what stays manual regardless of the result (SE51, SE41, SE54, SNRO, SU21, SCDO)"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Building domains, data elements and tables by hand in SE11 (intended; the pilot result is not recorded)",
+      "frequency_evidence": "README.md: 'If this works, the DDIC effort on every object (currently costed at ~2.5 days for the Pipes scheme and similar for the forecast object) collapses to writing XML.'"
+    },
+    "open_items": [
+      "Pilot outcome never recorded - ISSUES.md is empty",
+      "Same object names as kpmg/zmm_po_budget with a different table definition (9 vs 11 fields, no message class)",
+      "$TMP will not transport; package must exist or be creatable",
+      "Table maintenance generation (SE54) not included"
+    ],
+    "evidence_files": [
+      "kpmg/abapgit_pilot/ISSUES.md",
+      "kpmg/abapgit_pilot/NOTES.md",
+      "kpmg/abapgit_pilot/README.md",
+      "kpmg/abapgit_pilot/src/zmm_po_budget.tabl.xml"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "Four DDIC objects as 161 lines of hand-written XML plus a ZIP and a README; no ABAP, no logged iterations."
+  },
+  {
+    "folder": "kpmg/timesheet",
+    "title": "Timesheet September 2026 (time record, not a development)",
+    "sap_objects": [],
+    "object_types": ["Analysis/Document only"],
+    "module": "not applicable (time record covering FI, MM, PP and SD objects)",
+    "end_client_evidence": "Timesheet_KPMG_Sep2026.xlsx, sheet 'Sep-2026': 'Timesheet — Arnav Johri | Associate Consultant (SAP ABAP) | Diligent Global'; 'Client: KPMG   |   Period: 01-Sep-2026 to 30-Sep-2026'; the Client column of every working row is 'KPMG' (leave rows: 'Leave'). Note: ZFI_FB70_CM_APPRV (30/09, 3.5 h) is booked under Client 'KPMG' here although the object's own files point to PAL (see kpmg/zfi_fb70_cm_apprv).",
+    "wricef_or_ticket": "Task descriptions mention 'WRICEF 337' (ZFI_TDS_CL34 TS), 'WRICEF 147' (ZSD_MIS_CUSTOMER), '141A/B' (ZSD_EXC_APPROVAL) and 'FS 057' (ZMM_BP_CREATE_MAIL)",
+    "dev_type": "Documentation only",
+    "business_requirement": "Monthly time record for client KPMG, 01-30 September 2026.",
+    "technical_challenge": "not applicable",
+    "ai_contribution": "Hours per object (computed from column F, rows 5-61; the Total cell is the formula =SUM(F5:F61) = 144.0 h): ZPP_FORECAST 49.5 h (17 rows); General 19.5 h (6 rows: status calls, transport organisation/documentation); ZSD_EXC_APPROVAL 19.0 h (6); ZFI_TDS_CL34 18.0 h (8); ZMM_BP_CREATE_MAIL 11.5 h (4); ZMM_VEND_UPLOAD 8.0 h (3); ZPP_FORECAST_UPLOAD 8.0 h (4); ZSD_MIS_CUSTOMER 4.0 h (2); ZFI_FB70_CM_APPRV 3.5 h (1); ZSD_SCHEME 3.0 h (2). Working days 18, leave days 4 (08-11 Sep), every working day totals 8 h. The workbook does not say who or what produced it; git commit '1a824fd 2026-10-06 kpmg/timesheet: September 2026 timesheet (leave 08-11/09)'.",
+    "manual_intervention": "Not evidenced in the file.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 0,
+    "deliverable_files": [
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx (binary; 57 task rows, sheet range A1:G65)"
+    ],
+    "status": "Analysis only - nothing built",
+    "status_evidence": "Timesheet_KPMG_Sep2026.xlsx is a time record: every task row carries Status 'Completed' (leave rows 'Leave'); there is no ISSUES.md / NOTES.md and no SAP object in the folder.",
+    "tr_numbers": [],
+    "quality_points": [],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [],
+    "evidence_files": ["kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"],
+    "complexity": "Low",
+    "complexity_basis": "One spreadsheet with 57 task rows; no development content."
+  },
+  {
+    "folder": "kpmg/zfi_fb70_cm_apprv",
+    "title": "FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails",
+    "sap_objects": [
+      "Z_FI_CM_APPR_PARK_EVENT (function module on BTE 00002218, FG ZFI_CM_APPR)",
+      "Z_FI_CM_APPR_START_WF (RFC function module, FG ZFI_CM_APPR)",
+      "Z_CM_WF_MAIL_SEND (RFC function module, FG ZFI_CM_APPR)",
+      "ZCL_CM_WORKFLOW (class - START_WORKFLOW, SEND_MAIL and mail body methods)",
+      "ZEI_FI_CM_APPR_POST (implicit enhancement, CL_FDC_ACCDOC_VER->IF_FDC_ACCDOC_VER~POST)",
+      "ZEI_FI_CM_APPR_READ (implicit enhancement, CL_FDC_ACCDOC_PARK_ACCESS=>READ)",
+      "ZEI_FI_CM_APPR_ITM_LIST (implicit enhancement, CL_FAC_FINANCIALS_POST_DPC_EXT GLPOSTINGITEMSET_GET_ENTITYSET)",
+      "ZEI_FI_CM_APPR_ITM_GET (implicit enhancement, GLPOSTINGITEMSET_GET_ENTITY)",
+      "ZEI_FI_CM_APPR_ITM_UPD (implicit enhancement, GLPOSTINGITEMSET_UPDATE_ENTITY)",
+      "ZEI_FI_CM_APPR_REDO (implicit enhancement, CL_FDC_ACCDOC_POST->ACCDOC_POST - obsolete since 27/10/26, deactivated)",
+      "ZEI_GL_WORKLFOW_INTR (team-owned enhancement on CL_FDC_ACCDOC_VER_SERVICES->IS_DOC_VALID_FOR_NEW_WORKFLOW - credit memo branch added, unproven)",
+      "ZCL_AGENT_GL_WF_RULE (team-owned class, method RESPONSIBILITY_RULE patched for mails)",
+      "WS02800046 (standard flexible workflow scenario, reused)",
+      "FIBF P/S entry 00002218 -> Z_FI_CM_APPR_PARK_EVENT, product ZFI (customizing)",
+      "ZCM_WF_MAIL_LOG (table - build sheet written, dropped 30/10/26)"
+    ],
+    "object_types": ["Workflow", "Function module", "Class", "BAdI/Enhancement", "User exit", "Fiori extension", "OData/Gateway"],
+    "module": "FI (FI-AR credit memo / GL journal entry verification workflow)",
+    "end_client_evidence": "ISSUES.md 30/10/26: 'Sender hardcoded to PALAccountsPayable@pal.com.ph per Arnav'; 'Sender PAL Accounts Payable confirmed in SOST'; 'FM name was locked in task DS4K909976 of STAFF from another client'; 'activated in client 400'; ISSUES.md 15/10/26: 'FIBF entry made in client 200, FB70 tested in 400 (not modifiable)'. docs/00_DESIGN.md: 'all four UPD work processes of DS4'; 'Client folder is a placeholder (`kpmg/`) until Arnav names the project'. NOTES.md: 'Client folder is a placeholder until Arnav names the project.' test/README.md: 'Header: PR01, SA, 27.10.2026 / 27.10.2026, CAD (PHP local, USD group as in the template)', template 'GL_MASS_UPLOAD_TEMPLATE_PAYROLL_ADP_CANADA_YYZ-_1007310_15SEP2026_tes6.XLSX', 'customer AIRBUS'. docs/03_EMAIL_MATRIX.md: host 'fiorid.pla.hec.ondemand.com'; approver titles 'Manager', 'AVP', 'SVP-CFO'. People/users: Gaurav, STAFF, PDHANAPAL; SCOT sender 'DONOTREPLY-SAPBCS_UAT'. Indicates PAL (Philippine Airlines), system DS4, company code PR01 - not Astral/KPMG. Corroboration outside this scope: pal/zfi03custinv1/ISSUES.md 'PAL (Philippine Airlines) | FI-AR | Systems DS4 -> QS4 -> PS4'; pal/zinv_gl_upload/NOTES.md names ZCL_GL_WORKFLOW (the class this work copies) under 'PAL, company code PR01'. Counter-hint: kpmg/timesheet books ZFI_FB70_CM_APPRV under Client 'KPMG'.",
+    "wricef_or_ticket": "not stated (docs/03_EMAIL_MATRIX.md: 'Requirement (FS, received 30/10/26)'; no WRICEF or ticket number)",
+    "dev_type": "New development",
+    "business_requirement": "A customer credit memo parked in FB70 must be approved by one, two or three sequential approvers depending on amount and then be posted automatically; rejected documents are corrected in the Verify General Journal Entries app and resubmitted. Per the FS received 30/10/26, e-mails go to initiator/approvers at each stage (parked/L1, L2, L3 needed, final, rejected).",
+    "technical_challenge": "FB70 has no BAdI after park (only BTE 00002218), and the team decided to reuse SAP's GL verification scenario WS02800046 and the Fiori Verify app, which are built for G/L lines: every G/L-only check (posting FDC_POSTING_001 092, opening 092 in two more places, resubmit not saved because FI_DOCUMENT_POST only processes AWTYP BKPFF, item list/edit FIN_ODATA_GL 017) had to be located by debugger, call stack and source reading and lifted by a guarded implicit enhancement. A race between the park update task and the asynchronous workflow start, and an incomplete where-used index on standard code, complicated the diagnosis.",
+    "ai_contribution": "Produced the design, the SWDD skeleton build sheet, both trigger function modules, class ZCL_CM_WORKFLOW (workflow start, then SEND_MAIL with four body builders), the RFC mail wrapper, six implicit enhancements, patches to two team-owned objects, the e-mail matrix and the solution summary (12 source files, 2,146 lines). Diagnosed from evidence Arnav pasted: FIPP.CREATED is not raised without OBWA customising; 092 comes from the Fiori G/L posting model (ACCDOC_FUNC_PARK_DOC_POST / ACCDOC_FUNC_PARKD_DOC_READ_UPD), not from IS_DOC_VALID_FOR_NEW_WORKFLOW; rejection is a Redo decision TS00008267 completed by API call, not an event; the DG resubmit was never written because FI_DOCUMENT_POST stops at 'CHECK process' for AWTYP BKPF - fixed by rewriting AWTYP to BKPFF; the item entity set deletes non-S/A lines. Also built a test upload file (JV with a customer line) and recorded two side findings in team objects (endless loop in ZCL_GL_EXCHANGE_AMOUNT_DET blocking all UPD work processes of DS4; DO/ENDDO hook in ZCL_AGENT_GL_WF_RULE). ISSUES.md holds 81 dated rows from 30/09/26 to 30/10/26.",
+    "manual_intervention": "Arnav created and activated every object in DEV (clients 200/400), made the FIBF entry, ran FB70 / Verify-app / SE37 tests and supplied debugger traces, call stacks, /IWFND/ERROR_LOG, SWEL, workflow logs, SE16/SE11/SE91 results and pasted standard and team source (reference/). Decisions by Arnav / Gaurav / the team: use the Z_JV_MASSGL_WF pattern, own class copied from ZCL_GL_WORKFLOW, stay on the GL scenario, 'Verify app only' for corrections, DG line items must be editable there (taken against the assistant's logged recommendation of 26/10/26), mail sender/content/guard rules. Basis owns the SMTP node; Gaurav's sign-off on the standard-code enhancements is outstanding.",
+    "rework_events": [
+      "05/10/26: design assumed SAP raises FIPP.CREATED on park - wrong without OBWA posting-release customising; object 2 (Z FM on BTE 00002218) added to raise the event",
+      "14/10/26: RFC module built IN BACKGROUND TASK, switched the same day to STARTING NEW TASK + WAIT UP TO 5 SECONDS (team pattern); 21/10/26 reverted to IN BACKGROUND TASK because the asynchronous call raced the park update and both UPDATEs failed",
+      "15/10/26: FIBF entry made in client 200 while FB70 was tested in client 400 - BTE never dispatched",
+      "15/10/26: ZCL_CM_WORKFLOW redelivered four times in one day (fed from BTE X tables; no DOC_READ/_WRITE per Arnav; flattened to one method after review feedback; method body only for an SE24 form-based class); 21/10/26 back to the full version",
+      "16/10/26: end-to-end test - standard posting step refused the credit memo with FDC_POSTING_001 092 'Parked document is no GL posting'; TCODE rewrite alone was not enough",
+      "21/10/26: extension of ZEI_GL_WORKLFOW_INTR (IS_DOC_VALID_FOR_NEW_WORKFLOW) did not clear 092 - not on the posting path; withdrawn and replaced by ZEI_FI_CM_APPR_POST",
+      "21/10/26: activation error in ZEI_FI_CM_APPR_POST - BSTAT retyped as vbkpf-bstat (git 0c929dd); entry guard then rewritten twice on Arnav's instruction (VBSEGD -> work item/BSTAT/BLART -> view C_GLJRNLENTRYTOBEVERIFIED)",
+      "23/10/26: 22/10 display-bypass idea withdrawn (no display-only path); FBV2 correction route built (BTE restart, VBKPF-TCODE rewrite commented out) and withdrawn the same day after the decision 'Verify app only'",
+      "23/10/26: credit memo branch in ZEI_GL_WORKLFOW_INTR activated but 092 persisted on opening - the check is a mid-method copy in ACCDOC_FUNC_PARKD_DOC_READ_UPD; new ZEI_FI_CM_APPR_READ",
+      "23/10/26: ZEI_FI_CM_APPR_READ did not fire - guard compared VBKPF-TCODE; changed to read BLART/TCODE from BKPF, then worked",
+      "23/10/26: branch changed to CO 'SD ' for trailing blanks - later shown to be 'harmless, not the fix' (method not on the Submit path); source scan 'no ->redo(' result later judged unreliable; DO/ENDDO test hook flagged as a risk and removed",
+      "23/10/26: ZEI_FI_CM_APPR_REDO built to complete the Redo decision; 27/10/26 made obsolete by the AWTYP BKPFF fix (standard REDO runs) - deactivated, to be deleted",
+      "26/10/26: editing a DG in the Verify app - changes not applied and the line disappears; fixed 27/10 by the AWTYP rewrite (header) and ZEI_FI_CM_APPR_ITM_LIST/_GET/_UPD (lines)",
+      "27/10/26: ZEI_FI_CM_APPR_ITM_LIST activation - wrong block pasted and 'ET_ENTITYSET ... generic type'; item tables retyped FAC_T_ACCDOC_ITM_ODATA",
+      "30/10/26: first mail test - no mail, no log row; BCS refused sender SAP_WFRT (no address), sender set to the initiator; Z_CM_WF_MAIL_SEND needed the RFC flag and BOOLE_D",
+      "30/10/26: mail design changed several times at Arnav's instruction - sender hardcode added then removed, STVARV link replaced by cl_http_server=>get_location, ZCM_WF_MAIL_LOG table dropped for a SWW_WI2OBJ guard",
+      "30/10/26: open-work-item guard suppressed all mails (the Verify work item already exists when the rule runs) - guard now ignores items younger than 120 s; awaiting retest"
+    ],
+    "issue_log_entries": 81,
+    "first_date": "30/09/26",
+    "last_date": "30/10/26",
+    "code_lines_current": 2146,
+    "deliverable_files": [
+      "kpmg/zfi_fb70_cm_apprv/ZCL_CM_WORKFLOW.abap (694)",
+      "kpmg/zfi_fb70_cm_apprv/ZCL_AGENT_GL_WF_RULE_responsibility_rule.abap (362, team-owned method with the mail patch)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_POST.abap (206)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_ITM_UPD.abap (153)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_ITM_GET.abap (130)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_REDO.abap (125, obsolete)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_ITM_LIST.abap (108)",
+      "kpmg/zfi_fb70_cm_apprv/Z_FI_CM_APPR_PARK_EVENT.abap (106)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_FI_CM_APPR_READ.abap (97)",
+      "kpmg/zfi_fb70_cm_apprv/Z_FI_CM_APPR_START_WF.abap (60)",
+      "kpmg/zfi_fb70_cm_apprv/Z_CM_WF_MAIL_SEND.abap (55)",
+      "kpmg/zfi_fb70_cm_apprv/ZEI_GL_WORKLFOW_INTR.abap (50)",
+      "kpmg/zfi_fb70_cm_apprv/docs/02_SOLUTION_SUMMARY.md (154, not counted)",
+      "kpmg/zfi_fb70_cm_apprv/docs/01_WORKFLOW_SKELETON_SWDD.md (224, build sheet, not counted)",
+      "kpmg/zfi_fb70_cm_apprv/docs/03_EMAIL_MATRIX.md (78, not counted)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "docs/02_SOLUTION_SUMMARY.md: 'Final state 27/10/26 - working end to end in DEV client 400' and 'Not yet transported. Gaurav's sign-off on the standard-code enhancements is still outstanding.' ISSUES.md 23/10/26: 'ZEI_FI_CM_APPR_REDO activated: DG resubmit from the Verify app now returns the workflow to the approver. Full flow working in DEV.' Mail part, ISSUES.md 30/10/26: '1800000082 parked -> P mail to STAFF + PDHANAPAL ..., posted -> F mail to STAFF. Both in SOST, delivery fails 'cannot be transferred to node SMTP, connection error'' (TR column 'P and F proven in DEV'); the last rows are marked 'awaiting activation' / 'awaiting retest'.",
+    "tr_numbers": [
+      "DS4K909976 (ISSUES.md 30/10/26: a task of user STAFF 'from another client' that locked the FM name - not stated to be this development's transport; docs/02_SOLUTION_SUMMARY.md says 'Not yet transported')"
+    ],
+    "quality_points": [
+      "All four/five changes to SAP standard classes are implicit enhancements, not modifications; each is guarded to document type DG plus the app transaction code and can be switched off in SE19",
+      "Control gap identified and closed: workflow amounts were not refreshed on resubmit with amount-based levels - closed by the AWTYP BKPFF change so SAP's own REDO refreshes them",
+      "Every hypothesis proven or dropped by breakpoint/trace before code was written; lesson recorded as MEMORY.md M-28 (where-used index on standard code is incomplete)",
+      "Diagnostic hooks (LOG-POINT, DO/ENDDO) removed; obsolete enhancement ZEI_FI_CM_APPR_REDO identified for deletion",
+      "Two system-wide defects in team objects found and reported (endless loop blocking all update work processes of DS4; DO/ENDDO hanging a dialog process)",
+      "Mail sending in its own LUW through an RFC wrapper with a duplicate guard; addresses and names read from user master, no SWNCONFIG"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Approval routing and automatic posting of parked FB70 customer credit memos, plus notification mails at each approval stage (the files do not describe the previous manual procedure)",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Not transported; Gaurav's sign-off on the standard-code enhancements outstanding",
+      "Rejection mail (kind R, enhancement ZEI_FI_CM_APPR_REJ on the reject method) not built; level 2/3 'A' mail untested; last guard change awaiting retest",
+      "SMTP node: mails fail delivery from DEV in SOST ('SMTP 672 still open with Basis')",
+      "28/10/26: new credit memos default to document type SA instead of DG (OBU1 customising) - a credit memo parked as SA starts no workflow",
+      "Regression still to run: multi-level resubmit, withdraw (decision 0002), SA/JV documents with all enhancements active; document integrity after an edit in the app",
+      "Hardcoded 'DG' in four places; remove ZEI_FI_CM_APPR_REDO and the unproven branch in ZEI_GL_WORKLFOW_INTR; agent rule needs HR data for every requester"
+    ],
+    "evidence_files": [
+      "kpmg/zfi_fb70_cm_apprv/ISSUES.md",
+      "kpmg/zfi_fb70_cm_apprv/NOTES.md",
+      "kpmg/zfi_fb70_cm_apprv/docs/00_DESIGN.md",
+      "kpmg/zfi_fb70_cm_apprv/docs/02_SOLUTION_SUMMARY.md",
+      "kpmg/zfi_fb70_cm_apprv/docs/03_EMAIL_MATRIX.md",
+      "kpmg/zfi_fb70_cm_apprv/docs/05_AGENT_RULE_PATCH.md",
+      "kpmg/zfi_fb70_cm_apprv/reference/README.md",
+      "kpmg/zfi_fb70_cm_apprv/test/README.md",
+      "git log -- kpmg/zfi_fb70_cm_apprv"
+    ],
+    "complexity": "Very High",
+    "complexity_basis": "12 source files (2,146 lines) spanning a BTE, two RFC modules, a class, six implicit enhancements in SAP's Fiori G/L posting/verification classes and a workflow agent rule, with 81 log entries over one month and several design reversals."
+  },
+  {
+    "folder": "kpmg/zfi_tds_cl34",
+    "title": "TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')",
+    "sap_objects": [
+      "ZFI_TDS_CL34 (report)",
+      "ZFI_TDS_CL34_TOP (include)",
+      "ZFI_TDS_CL34_SCR (include)",
+      "ZFI_TDS_CL34_FORMS (include)",
+      "I_WithholdingTaxItem / I_JournalEntry (standard CDS views read as the driver)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "FI",
+    "end_client_evidence": "ISSUES.md: 'Object: `ZFI_TDS_CL34` (+ `_TOP` / `_SCR` / `_FORMS`) | KPMG — UDAY / Astral | FI'; 'Owners: Ankita Parikh (FI/TDS), Bhavin Suthar (MM / account determination)'; '`KTOPL` hardcoded `'ASTL'`'; 'the ADT development system at `192.168.11.21` clnt 200, which is **not** the Astral landscape'; '49 rows, company code 1000, FY 2026'; 'do both 1000 and 4000 run chart of accounts `ASTL`?'. NOTES.md: 'New development for KPMG / UDAY — Astral, module FI'; 'docs/TS_337_ZFI_TDS_CL34_Astral.docx / .doc (the TS in the Astral template, 29/09/26'. BUILD_BRIEF.md: 'Client / project | KPMG - UDAY / Astral'. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF 337 (docs/TS_337_ZFI_TDS_CL34_Astral.docx; timesheet 29/09: 'Prepared TS document (WRICEF 337) in client template'); FS 'Clause 34 TDS Report FS.xlsx' v1, 21/08/2026",
+    "dev_type": "New development",
+    "business_requirement": "A read-only ALV list of every FI document in which withholding tax (TDS) was deducted from a vendor, for Clause 34 reporting: 25 FS columns (GL code and text, vendor, PAN, section, dates, base amount, rate, TDS amount, exemption certificate data) selected by company code, fiscal year, posting date, vendor and section.",
+    "technical_challenge": "The FS could not be implemented literally (T059Z-TXT40 does not exist; 'AWKEY = RMRP' contradicts itself and had to be tested on AWTYP) and no field name could be verified on the unreachable target system. The GL code needs three derivation branches (direct FI via GHKON of the WIT line, RMRP via RSEG -> MBEW -> T030 BSX, EKKN-SAKTO), and the amount signs in WITH_ITEM follow the vendor-line debit/credit, which was first misread as a defect.",
+    "ai_contribution": "Built the report and three includes from the FS on 26/08/26 (3,575 lines today) together with BUILD_BRIEF.md, a verified DDIC fact sheet, a query register Q1-Q28, a markdown TS and the TS in the Astral template (docx/doc, 29/09/26). Added an authorisation check (F_BKPF_BUK) for dialog and background runs that the FS had not asked for, and kept the AWTYP reading of the RMRP rule, which the first live run vindicated. Diagnosed three activation errors (non-existent field, positional SELECT/TYPES misalignment, 256-character line wrapped on paste) and the abapGit PROGDIR element-order defect. Later changes logged 07/09 and 15/09/26: status filter V/D/M/S, vendor F4 with ALPHA, section-code F4 and filter moved to T059Z-QSCOD, Debit/Credit column, GL fallback to the vendor line, exclusion of cleared down payments, one row per document and tax code.",
+    "manual_intervention": "Arnav created/pasted the four programs, made four abapGit import attempts, reported each activation error, ran two live runs (49 rows company code 1000; 17 rows second company code) and reconciled samples, debugged two documents into GT_GLMSG, supplied SE16 values/screenshots (WITH_ITEM signs, document 1700000053), caught the wrong section-code F4 on its first run, confirmed 'column H', relayed Bhavin Suthar's Teams request (rename, title) and the instructions of 15/09/26, and chose to maintain selection texts by hand. Title attribute, fixed-point flag and text elements are manual.",
+    "rework_events": [
+      "27/08/26: five FS instructions had been implemented differently on the basis of a DDIC read from the wrong (ADT rig) system - all five reverted to the FS as written",
+      "27/08/26: abapGit ZIP import short-dumped XML_FORMAT_ERROR / CX_XSLT_FORMAT_ERROR four times; two guessed causes (package.devc.xml, TPOOL KEY) 'were wrong and are recorded as such', the PROGDIR VARCL order was a real defect but the dump persisted - ZIP abandoned, shipped by paste",
+      "27/08/26: activation error 'No component exists with the name TXT40' (FS-literal T059Z-TXT40) - column I moved to T059OT-TEXT40",
+      "27/08/26: activation error 'data type of the component GHKON of GT_BSEG is not compatible with the data type of H_BUDAT' - SELECT list out of position against TY_BSEG; reordered and a field-list checker added",
+      "27/08/26: activation error 'REPORT_GL_GAPS is invalid here (due to grammar)' - a 256-character comment line wrapped on paste; all 8 lines over 120 characters rewritten",
+      "07/09/26: section-code F4 offered codes the report never returns ('Arnav caught it on the first run') - F4 SELECT joined to I_WITHHOLDINGTAXITEM with the same conditions as the report",
+      "07/09/26: selection 'Section Code' filtered BSEG-SECCO (business place) instead of the T059Z-QSCOD shown in column H - select-option renamed S_SECTN and the filter moved to BUILD_OUTPUT",
+      "07/09/26: abs( ) applied to base and TDS amounts, then reverted the same day - 'the mixed signs were the SAP convention, not a defect'; Debit/Credit column Z kept",
+      "15/09/26: activation error 'Field GC_SHKZG_CREDIT is unknown' - drift: the 07/09 column Z change to _TOP had never been pasted into the system; _TOP pasted whole",
+      "15/09/26: GL Code blank on two rows (documents with no WIT line) - fallback to GHKON of the vendor line added"
+    ],
+    "issue_log_entries": 32,
+    "first_date": "26/08/26",
+    "last_date": "29/09/26",
+    "code_lines_current": 3575,
+    "deliverable_files": [
+      "kpmg/zfi_tds_cl34/src/zfi_tds_cl34_forms.prog.abap (2587)",
+      "kpmg/zfi_tds_cl34/src/zfi_tds_cl34_top.prog.abap (684)",
+      "kpmg/zfi_tds_cl34/src/zfi_tds_cl34_scr.prog.abap (172)",
+      "kpmg/zfi_tds_cl34/src/zfi_tds_cl34.prog.abap (132)",
+      "kpmg/zfi_tds_cl34/docs/TS_337_ZFI_TDS_CL34_Astral.docx (binary, TS in client template)",
+      "kpmg/zfi_tds_cl34/docs/TS_ZFI_TDS_CL34.md (383, not counted)",
+      "kpmg/zfi_tds_cl34/docs/DDIC_FACTS.md (559, not counted)",
+      "kpmg/zfi_tds_cl34/docs/QUERIES.md (144, not counted)",
+      "kpmg/zfi_tds_cl34/ZFI_TDS_CL34.zip (binary, 9 files - does not import)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "ISSUES.md 27/08/26: 'First live run — all four objects activated and the report produced output' / '49 rows, company code 1000, FY 2026. Arithmetic reconciled on a sample including the threshold case'; 'Second live run, other company code' / '17 rows, **every one reconciles**, no blank GL and no status message.' ISSUES.md 15/09/26: '`ZFI_TDS_CL34_TOP` pasted whole (684 lines). Column Z is therefore live from today ... Repo and system now agree on all four programs - a `ZR_PROG_DOWNLOAD` is still owed to prove it'. The system is not named (DEV/QAS) and the TR column holds only the placeholder `<TR>`; no test result is logged for the last two changes of 15/09/26.",
+    "tr_numbers": [],
+    "quality_points": [
+      "AUTHORITY-CHECK F_BKPF_BUK (ACTVT 03) added for dialog and background, closing an exposure of TDS amounts and vendor PANs created by reading base tables",
+      "A checker compares every SELECT field list with its target type (13 buffers) and every PROGDIR block with the required element order",
+      "No heuristic GL guess: rows whose GL cannot be derived stay on the list and the distinct reasons are reported in one status message",
+      "Filters (status V/D/M/S, cleared down payments) applied in the database; IS NOT INITIAL guard kept before every FOR ALL ENTRIES",
+      "Results reconciled on live data in two company codes; seven open queries closed by the data",
+      "All source lines under 120 characters after the paste-wrap defect; risky assumptions marked ASSUMPTION in the source and registered as queries"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Q1/Q2 certificate pick and accumulation rule (Ankita); Q3 valuation grouping code (Bhavin)",
+      "Q6 reversed / parked documents are reported - needs a client decision; Q21/Q22/Q24 sign convention, zero-deduction rows, rate mismatch on four rows",
+      "Column Z (Debit/Credit) is a 26th column the FS does not list - 'needs Bhavin Suthar's nod'",
+      "Q27 GL fallback and Q28 'DownPaymentIsCleared' element name 'taken from Arnav's instruction, not verified'",
+      "A fresh ZR_PROG_DOWNLOAD is owed to prove repo and system agree; TR not filled in",
+      "Root cause of the abapGit import dump never established"
+    ],
+    "evidence_files": [
+      "kpmg/zfi_tds_cl34/ISSUES.md",
+      "kpmg/zfi_tds_cl34/NOTES.md",
+      "kpmg/zfi_tds_cl34/BUILD_BRIEF.md",
+      "kpmg/zfi_tds_cl34/docs/QUERIES.md",
+      "kpmg/zfi_tds_cl34/docs/TS_ZFI_TDS_CL34.md",
+      "kpmg/zfi_tds_cl34/docs/DDIC_FACTS.md",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
+      "git log -- kpmg/zfi_tds_cl34"
+    ],
+    "complexity": "High",
+    "complexity_basis": "One report with three includes (3,575 lines) reading 14 standard tables and two CDS views with three GL derivation branches; 32 log entries including three activation errors, a failed abapGit packaging attempt and two rounds of functional changes."
+  },
+  {
+    "folder": "kpmg/zmb5b",
+    "title": "ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for 'Storage Loc./Batch Stock'",
+    "sap_objects": [
+      "ZRM07MLBD (report, Z copy of standard RM07MLBD)",
+      "ZMB5B (transaction)",
+      "RM07MLDD, RM07MLBD_FORM_01, RM07MLBD_FORM_02, RM07MLBD_CUST_FIELDS (standard includes, referenced unchanged)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "MM (TS: 'MM / CO')",
+    "end_client_evidence": "NOTES.md: 'WRICEF 195_BRD_FS, project UDAY / Astral.' docs/TS_ZMB5B.md: '**Client** | Astral Limited', '**Project** | UDAY'. src/ZMB5B_receipt_issue_amount.abap header: 'Project       : UDAY  /  Astral Limited'. COPILOT_CONTEXT_HANDOFF.md section 5.2 heading: 'KPMG — ZMB5B / ZRM07MLBD (MB5B stock report enhancement) (Jul 21–22)'. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF 195_BRD_FS (195_BRD_FS_ZMB5B_Report)",
+    "dev_type": "Enhancement of existing object",
+    "business_requirement": "Copy MB5B to ZMB5B and, for the radio button 'Storage Loc./Batch Stock', show the amount (MSEG-DMBTR) in the detail list (July 2026) and, as a follow-up dated 18.08.2026, two more columns: receipt amount and issue amount.",
+    "technical_challenge": "The standard fills the value fields only for valuated stock: three gates (summen_bilden collects quantities only, bestaende_berechnen fills values only in the BWBST branch, the totals field catalogue appends the amount columns only for BWBST) and an initial currency key leave the columns empty if only the field catalogue is changed. The baseline was an SE38 print listing and the standard includes had to stay under their standard names.",
+    "ai_contribution": "COPILOT_CONTEXT_HANDOFF.md section 5.2 records the July 21-22 work: a ZRM07MLBD Z copy in which only the main program changed (amount column for the storage-location view in f0400_create_fieldcat) and a TS (docs/TS_ZMB5B.md/.docx, dated 2026-07-22). Tool attribution: that file is titled 'Handoff for GitHub Copilot' but says it transfers how 'Claude Code did' the work 'between 2026-07-20 and 2026-08-15' and was 'Compiled 2026-08-15 from 30 Claude Code session transcripts' - it attributes the July work to Claude Code; nothing in it says Copilot produced it. The repo additionally holds the 18.08.2026 follow-up: the whole program (6,206 lines) with BOC/EOC blocks 'By Arnav on 18/08/26' and a 7-unit paste sheet with unit tests UT-01 to UT-07 for receipt/issue amounts. ISSUES.md is empty, so no session log exists for either step.",
+    "manual_intervention": "Not logged in this folder. NOTES.md lists the manual steps (creating ZRM07MLBD, transaction ZMB5B in SE93, pasting in SE38). kpmg/zmm_rm07mlbd/ISSUES.md 15/09/26 reports the amounts as 'fine in ZMB5B', i.e. the program was run in a system by the consultant.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 6652,
+    "deliverable_files": [
+      "kpmg/zmb5b/src/zrm07mlbd.abap (6206, whole Z copy of SAP standard RM07MLBD - mostly standard code with marked change blocks)",
+      "kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap (446, 7-unit paste sheet with unit tests)",
+      "kpmg/zmb5b/docs/TS_ZMB5B.md (190, not counted)",
+      "kpmg/zmb5b/docs/TS_ZMB5B.docx (binary)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "Indirect only: kpmg/zmm_rm07mlbd/ISSUES.md 15/09/26: 'Amounts blank in ZMM_MB5B_NEW after the port, fine in ZMB5B'; kpmg/zmm_rm07mlbd/NOTES.md: '`ZRM07MLBD` was copied from the current standard, which forces `gv_newdb = abap_false`, so it never hit this.' This folder's own ISSUES.md has no entries and NOTES.md records no activation, test, system or TR. Source change markers are dated 22/07/26 and 18/08/26.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Only the main program changed; the SAP standard includes are kept under their standard names and unchanged",
+      "Scope held to the FS: ANFWERT / ENDWERT deliberately not delivered because MBEW-SALK3 does not exist per storage location",
+      "Currency key filled for the new amounts so they render with the right currency",
+      "Paste sheet names the target FORM for each unit and lists unit tests UT-01 to UT-07 including regressions for the other radio buttons",
+      "Change blocks carry BOC/EOC markers with the WRICEF tag"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "ISSUES.md empty - no activation record, TR or test result in this folder",
+      "Paste-sheet line numbers are tied to one print; re-locate by FORM name and diff a fresh SE38 download first",
+      "TS fields 'Package' and 'Prepared by' still '<to be filled>'",
+      "ZMB5B function was ported into ZMM_MB5B_NEW on 15/09/26 'so the client has one custom tcode instead of two' (kpmg/zmm_rm07mlbd)"
+    ],
+    "evidence_files": [
+      "kpmg/zmb5b/ISSUES.md",
+      "kpmg/zmb5b/NOTES.md",
+      "kpmg/zmb5b/docs/TS_ZMB5B.md",
+      "kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap",
+      "kpmg/zmb5b/src/zrm07mlbd.abap",
+      "COPILOT_CONTEXT_HANDOFF.md (sections 1, 5.2 and the closing note)",
+      "kpmg/zmm_rm07mlbd/ISSUES.md",
+      "kpmg/zmm_rm07mlbd/NOTES.md"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One 6,206-line copy of a standard report with about ten marked change blocks in the main program plus a 446-line paste sheet (the TS itself rates it 'Medium'); no iterations logged."
+  },
+  {
+    "folder": "kpmg/zmm_bp_mail",
+    "title": "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
+    "sap_objects": [
+      "ZMM_BP_CREATE_MAIL (report)",
+      "ZMM_BP_MAIL (transaction)",
+      "ZMM_BP_MAIL_MDM (TVARVC variable)",
+      "ZMM_BP_MAIL_SENDER (TVARVC variable, optional)",
+      "ZMM_BP_CREATE_MAIL_DAILY (SM36 job)",
+      "BGJOB (report variant)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "MM",
+    "end_client_evidence": "ISSUES.md: 'Object: `ZMM_BP_CREATE_MAIL` | KPMG — UDAY / Astral | MM'; 'FS: 057_BRD_FS (Om Prakash, 28/07/2026), received via Ankit | Owners: Om Prakash, Ankit'. QUERIES.md: 'Subject: *Your Supplier Account Has Been Successfully Created with Astral*'. TS_ZMM_BP_CREATE_MAIL.md: 'Client / project | KPMG - UDAY / Astral Limited'. NOTES.md mentions 'the Ariba SLP inbound' context via the TS. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "FS 057_BRD_FS (New BP creation mail)",
+    "dev_type": "New development",
+    "business_requirement": "Once a day a background job must inform MDM, the supplier manager and the supplier's contact that a new supplier account exists, with its name, address and BP number. Changed on 05/10/26 from one consolidated mail to one mail per BP, sent separately to MDM, the ADR6 004 address and the ADR6 005 address.",
+    "technical_challenge": "Recipients are resolved by ADR6 sequence position (004/005), the MDM address comes from TVARVC, the 63-character subject exceeds the 50-character document title, and each mail is sent and committed on its own through CL_BCS. The first run dumped on a dynamic SALV call, and DEV has no SMTP node.",
+    "ai_contribution": "Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS. Fixed the first-run dump CALL_METHOD_CONFLICT_TYPE in DISPLAY_LOG and the truncated ALV headings, and diagnosed the SAPoffice status 'no node determined' as missing SCOT configuration rather than a program defect. Implemented the 05/10/26 change request (one mail per BP, per-recipient mails, per-mail result in the log; 832 -> 1124 lines).",
+    "manual_intervention": "Functional (Om Prakash, Ankit) and Arnav answered the queries on 25/09/26 and accepted the recipient-by-position risk; Arnav pasted and activated the report ('Activated in the target on first paste'), ran it on a 14-BP range, reported the dump, the SOST status and the heading problem, verified the fix, and confirmed the repo copy as the running version before the 05/10 change. Basis was asked to configure the SMTP node; TVARVC, SE93, variant and SM36 are manual.",
+    "rework_events": [
+      "25/09/26: first run dumped CALL_METHOD_CONFLICT_TYPE / CX_SY_DYN_CALL_ILLEGAL_TYPE in DISPLAY_LOG (text symbol passed to SET_MEDIUM_TEXT) - new FORM set_column_text with typed SCRTEXT_* variables; 777 -> 820 lines",
+      "25/09/26: ALV headings truncated to 'Business P' / 'Supplier M' (set_optimize fell back to the 10-character short text) - set_optimize removed and output length set; activated and verified",
+      "05/10/26: the design 'one consolidated mail per day to everyone' (functional decision of 25/09, flagged as risk R1) was replaced by one mail per BP with separate mails to MDM / ADR6 004 / ADR6 005 - change request, 832 -> 1124 lines"
+    ],
+    "issue_log_entries": 8,
+    "first_date": "22/09/26",
+    "last_date": "05/10/26",
+    "code_lines_current": 1124,
+    "deliverable_files": [
+      "kpmg/zmm_bp_mail/ZMM_BP_CREATE_MAIL.abap (1124)",
+      "kpmg/zmm_bp_mail/ZMM_BP_CREATE_MAIL_TEXTS.md (92, text elements and manual steps - not counted)",
+      "kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md (121, not counted)",
+      "kpmg/zmm_bp_mail/QUERIES.md (31, not counted)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "ISSUES.md 25/09/26: 'Activated in the target on first paste' / 'No activation errors.'; 'DISPLAY_LOG fix activated; run on a 14-BP range gave \"Mail sent to 3 recipient(s)\" and the ALV'; 'Column-width fix activated and verified'; 'SCOT on DEV has no active SMTP node covering internet addresses' (mails not delivered). The 05/10/26 row (one mail per BP, 832 -> 1124 lines) records no activation or test; TR is the placeholder `<TR>`.",
+    "tr_numbers": [],
+    "quality_points": [
+      "MDM address and sender taken from TVARVC instead of being hardcoded",
+      "Each mail committed on its own so one failure does not undo the rest; the per-BP result is written to the log column",
+      "A BP without an LFA1 row is logged as a warning, not silently skipped",
+      "Risks registered before build (R1 data exposure of one mail to everyone, R3 ADR6 organisation addresses only) and the missing authorisation check flagged (Q15)",
+      "Replaced code kept commented inside BOC/EOC markers; the as-supplied running version filed as original/ before the change"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Informing MDM, the supplier manager and the supplier contact that a new supplier BP was created (the files do not describe how this was done before)",
+      "frequency_evidence": "NOTES.md: 'Daily job that e-mails the details of every supplier BP created the previous day'; TS: 'Once a day a background job must inform MDM, the supplier manager and the supplier's direct contact'; QUERIES.md Q12: 'Time 12:05 AM on the selection screen' read as the SM36 schedule"
+    },
+    "open_items": [
+      "SCOT SMTP node on DEV (Basis) - no mail has left the system; delivered subject/body still to be checked",
+      "05/10/26 one-mail-per-BP version has no activation or test record",
+      "Sender address (Q6), package (Q13), target release (Q14) and authorisation (Q15) open",
+      "Functional sign-off on two logged behaviours (no LFA1 -> excluded; no 004/005 -> only MDM)",
+      "SE93, variant BGJOB and SM36 job still to be created; TR not filled in"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_bp_mail/ISSUES.md",
+      "kpmg/zmm_bp_mail/NOTES.md",
+      "kpmg/zmm_bp_mail/QUERIES.md",
+      "kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
+      "git log -- kpmg/zmm_bp_mail"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "A single 1,124-line report with CL_BCS mailing and a SALV log, built in one day from an FS with 15 queries; 8 log entries, two defects fixed and one change request."
+  },
+  {
+    "folder": "kpmg/zmm_me35k_release",
+    "title": "ZMMME35K - contract release not working after ECC -> S/4 conversion (root cause and fix)",
+    "sap_objects": [
+      "ZMM_RM06EF00 (report, Z copy of RM06EF00)",
+      "SAPMZFM06L (program / form pool, Z copy of SAPFM06L)",
+      "ZFM06LFFR (include, Z copy of FM06LFFR)",
+      "ZFM06LFFR_FRG_SET (include, new - main program SAPMZFM06L)",
+      "ZMM_FM06LTO1 / ZMM_FM06LCFR / ZMM_FM06LCEK (includes, Z copies)",
+      "ZMMME35K (transaction)",
+      "ZMMME28 (transaction, related)"
+    ],
+    "object_types": ["Report"],
+    "module": "MM (purchasing document release)",
+    "end_client_evidence": "README.md: 'ECC → S/4 (system **OCQ**, S4 2025_1_A)'; 'Original copy taken 22.09.2003 by SAB_VAIBHAV; ATC-remediated 17.07.2026 by SAP_ABAP'; package 'ZMM_PO'; 'CAB_SPYADAV CR 30011813', 'Lipsy CR 30008101'; 'tender-committee governance'; conversion 'to INR'. No company name in the folder. Indicates the OVL / ONGC system, not Astral: outside this scope MEMORY.md says 'OVL system | **OCQ**, client 500' and CLAUDE.md says 'the OVL/ATC remediation work uses `SAP_ABAP`'.",
+    "wricef_or_ticket": "not stated (CR 30011813 and CR 30008101 are historical change requests of the original custom code)",
+    "dev_type": "S/4 migration or ATC remediation",
+    "business_requirement": "The custom release transaction ZMMME35K (contract release with checks that a linked PR is released and that the OLA value does not exceed the PR value) stopped releasing after the S/4 conversion and had to work again.",
+    "technical_challenge": "Two independent causes in frozen 2003 Z copies of SAP code: FEKKO and HIDK are program-local (not in a COMMON PART), so they were built in SAPFM06L but read in SAPMZFM06L, where FRG_SET exits silently and FRG_UPDATE reports 06 022 'No data changed'; and on S/4 ZFM06LFFR had been rebuilt from the modular standard, losing every custom block inside FRG_SET. The form pool has 23,890 lines and 270 includes.",
+    "ai_contribution": "README.md documents the analysis: the standard release flow on S/4, both root causes, the inventory of live and dead custom business logic and a list of known issues not fixed. Delivered a new include ZFM06LFFR_FRG_SET (602 lines) restoring the custom FRG_SET and four helper FORMs, the one-line include swap in ZFM06LFFR and the 13 PERFORM target corrections in ZMM_RM06EF00. The files contain no session log (ISSUES.md is empty), so who found what is not separately recorded.",
+    "manual_intervention": "Not logged. NOTES.md lists the manual work (creating the include and assigning SAPMZFM06L as main program, the include swap, the 13 PERFORM corrections, activation in a fixed order, the T160 entry). The fix sheet refers to 'the 21.08.2026 print of ZMM_RM06EF00', i.e. a supplied print listing; README.md names a debugger comparison of (SAPFM06L)FEKKO[] and (SAPMZFM06L)FEKKO[] as proof.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 714,
+    "deliverable_files": [
+      "kpmg/zmm_me35k_release/ZFM06LFFR_FRG_SET.abap (602)",
+      "kpmg/zmm_me35k_release/ZMM_RM06EF00_perform_fix.abap (72, edit instructions for 13 PERFORMs)",
+      "kpmg/zmm_me35k_release/ZFM06LFFR_change.abap (40, one-line include swap)",
+      "kpmg/zmm_me35k_release/README.md (174, analysis - not counted)"
+    ],
+    "status": "Implemented - confirmed working in system",
+    "status_evidence": "README.md: '**Status: fixed and confirmed working.**' Caveat in NOTES.md: '`README.md` records it as fixed and confirmed working — that is the author's claim; nothing here is reproducible from the repo alone.' ISSUES.md has no entries, no date and no TR.",
+    "tr_numbers": [],
+    "quality_points": [
+      "SAP's own include FM06LFFR_FRG_SET is not edited (it is shared by standard ME35K / ME28 / ME35L); the custom logic goes into a separate Z include",
+      "ME_REL_SET keeps the S/4 standard EXCEPTIONS block with E102/E103/E104 handling instead of ECC's commented-out version that risks a short dump",
+      "'No executable statement changed' relative to the ECC logic; dead commented blocks dropped",
+      "Never-called governance routines (BDP_CHECK, CHECK_FINAL_REL, READ_CHANGE_DOC) identified and explicitly not activated without a business decision",
+      "Activation order and S/4 prerequisites (messages ZMM 192, ZMM_OTH 239) documented",
+      "Seven known issues documented rather than silently carried"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Known issues not fixed: lo_buffer->close( ) deleted, start_via_table_manager deleted, SAP notes since 2005 missing in the clone",
+      "MM_SFWS_P2PSE: central contracts can silently disappear from the list",
+      "MESSAGE a239 reads wa_ekko_ola-bedat after the LOOP ended",
+      "T160 entry needed for SY-TCODE ZMMME35K",
+      "No ISSUES log, date or TR in the folder",
+      "Strategic: move the business logic into a BAdI or Flexible Workflow precondition"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_me35k_release/ISSUES.md",
+      "kpmg/zmm_me35k_release/NOTES.md",
+      "kpmg/zmm_me35k_release/README.md",
+      "kpmg/zmm_me35k_release/ZFM06LFFR_FRG_SET.abap",
+      "kpmg/zmm_me35k_release/ZMM_RM06EF00_perform_fix.abap",
+      "kpmg/zmm_me35k_release/ZFM06LFFR_change.abap"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Root-cause analysis across four Z copies of standard purchasing programs (a 23,890-line form pool with 270 includes) with two independent causes; three deliverable files of 714 lines; no iteration log."
+  },
+  {
+    "folder": "kpmg/zmm_po_budget",
+    "title": "Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)",
+    "sap_objects": [
+      "ZMM_PO_BUDGET (transparent table, 11 fields)",
+      "ZDO_BUDGET_AMT (domain)",
+      "ZDE_BUDGET (data element)",
+      "ZDE_ADD_BUDGET (data element)",
+      "ZMM_BUDGET (message class, 10 messages)",
+      "ME_PROCESS_PO_CUST (classic BAdI - insert block <002> in method IF_EX_ME_PROCESS_PO_CUST~CHECK of the existing implementation)",
+      "ZMM_BUDGET_BEFORE_SAVE (SE54 table-maintenance event 01 form routine)",
+      "ZMM_BUDGET_MODIFY_SCREEN (PBO module in maintenance function group ZMM_PO_BUDGET)",
+      "ZMM_PO_BUDGET (SE93 parameter transaction on SM30)",
+      "SAPMM06E (standard program - implicit enhancement for scheduling agreements and two read-only probes)",
+      "ZCL_MM_PO_BUDGET_CHECK (class named in MANUAL_STEPS.md; source lives in kpmg/zmm_po_budget_deferred)"
+    ],
+    "object_types": ["BAdI/Enhancement", "DDIC"],
+    "module": "MM",
+    "end_client_evidence": "NOTES.md: 'WRICEF 050_BRD_FS, Astral / UDAY — budget control on indirect purchase.' MANUAL_STEPS.md: 'Astral / UDAY / WRICEF **050_BRD_FS** — Budget control on indirect purchase.' NOTES.md on the existing BAdI implementation: '`<001>` Saurabh Saumya 20.01.2026, plus blocks by other authors, e.g. \"Start change by archna gupta\"'. Indicates Astral / Project UDAY.",
+    "wricef_or_ticket": "WRICEF 050_BRD_FS",
+    "dev_type": "New development",
+    "business_requirement": "Block a purchase order (ME21N / ME22N) when its account-assigned value exceeds Budget + Additional Budget maintained per plant, purchasing group and year; the budget table is maintained in SM30 with only Additional Budget changeable after creation. The FS also covers scheduling agreements.",
+    "technical_challenge": "The check must be inserted into an existing classic BAdI implementation that carries other developers' code, exactly before 'CHECK sy-tcode NE 'ME29N''. Scheduling agreements (ME31L / ME32L) do not run through that BAdI and carry no EFFWR/NETWR, so their value must be derived (target or scheduled quantity x NETPR / PEINH) in an implicit enhancement of SAPMM06E where only classic Open SQL compiles. The maintenance rule needs both an SE54 event and a screen module because the latter is lost on regeneration.",
+    "ai_contribution": "Produced the DDIC and message class as abapGit XML with ZMM_PO_BUDGET.zip (7 files), the BAdI CHECK insert block (111 lines) and the whole method with the block in place (973 lines), the SE54 event-01 routine, the PBO screen module, and MANUAL_STEPS.md with seven open points. For scheduling agreements: two read-only probe enhancements and a 281-line implicit enhancement for SAPMM06E. No session log exists (ISSUES.md is empty); source headers are dated 19.08.2026 and 24.08.2026.",
+    "manual_intervention": "Not logged. The source headers show the consultant ran the probes in the system: ZMM_BUDGET_SA_PROBE2.abap 'PROBE 1 established: XEKPO-EFFWR and XEKPO-NETWR are both empty on a scheduling agreement, and XEKPO-NETPR is populated'; ZMM_BUDGET_SA_ENHANCEMENT.abap 'The anchor where XEKPO is populated - the one found with the watchpoint'. The existing CHECK method was supplied from the system. TMG generation, SE54 event, screen module, SE19 and SE93 are manual.",
+    "rework_events": [
+      "date not stated: MANUAL_STEPS.md describes the ZIP as containing zcl_mm_po_budget_check.clas.* and says 'activate the six objects', but the ZIP holds 7 files and no class (NOTES.md 'Known documentation contradictions')",
+      "date not stated: two mutually exclusive designs are present - a fresh SE19 implementation calling ZCL_MM_PO_BUDGET_CHECK (MANUAL_STEPS.md) and inline code pasted into the existing implementation; the class design was set aside (kpmg/zmm_po_budget_deferred)",
+      "24/08/26: scheduling-agreement probe first placed at the start of FORM BUCHEN 'where XEKPO is still empty' and written with new Open SQL, which SAPMM06E rejects - moved to the anchor where XEKPO is populated and rewritten in classic Open SQL (file headers)"
+    ],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 1666,
+    "deliverable_files": [
+      "kpmg/zmm_po_budget/ZME_PROCESS_PO_CUST_CHECK_full.abap (973, whole existing method including other authors' code plus the insert)",
+      "kpmg/zmm_po_budget/BADI_CHECK_SNIPPET.abap (111, the insert block alone - also contained in the full method)",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_ENHANCEMENT.abap (281)",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_BEFORE_SAVE.abap (78)",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_PROBE2.abap (123, diagnostic probe)",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_PROBE.abap (100, diagnostic probe)",
+      "kpmg/zmm_po_budget/src/zmm_po_budget.tabl.xml (117, XML - not counted)",
+      "kpmg/zmm_po_budget/src/zmm_budget.msag.xml (74, XML - not counted)",
+      "kpmg/zmm_po_budget/src/zde_budget.dtel.xml (22, XML - not counted)",
+      "kpmg/zmm_po_budget/src/zde_add_budget.dtel.xml (22, XML - not counted)",
+      "kpmg/zmm_po_budget/src/zdo_budget_amt.doma.xml (17, XML - not counted)",
+      "kpmg/zmm_po_budget/MANUAL_STEPS.md (258, not counted)",
+      "kpmg/zmm_po_budget/ZMM_PO_BUDGET.zip (binary, 7 files)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "NOTES.md: 'Two mutually exclusive designs are both present ... **Confirm which one was actually delivered before activating either.**' kpmg/zmm_po_budget_deferred/NOTES.md: 'The delivered path went **inline** into the existing `ME_PROCESS_PO_CUST` implementation'. MANUAL_STEPS.md section 4: 'Still open — needs a decision before this goes to test'. ISSUES.md has no entries - no activation, test or TR is recorded.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Currency field WAERS added although not in the FS, because the FS compares an amount with no currency",
+      "Maintenance rule enforced in SE54 event 01 (survives regeneration, cannot be bypassed) in addition to the cosmetic screen module",
+      "Check placed in CHECK (where ch_failed stops the save), using the standard macro mmpur_message_forced",
+      "Read-only probes used to establish which amount field is filled on a scheduling agreement before any logic was written",
+      "Price unit PEINH included in the value formula; open decisions marked OPEN POINT in the source"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Scheduling agreements: scope decision / enhancement in SAPMM06E not confirmed; whether an SA consumes target value or scheduled value is not stated in the FS",
+      "No budget row for plant/group/year - block or allow; calendar vs fiscal year; currency conversion",
+      "Direct vs indirect: logic filters KNTTP = K while the FS overview claims both",
+      "No authorisation object named; no report showing remaining budget",
+      "Documentation contradictions between MANUAL_STEPS.md and what was delivered; ME22N double-count case must be tested",
+      "Name collision with kpmg/abapgit_pilot"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_po_budget/ISSUES.md",
+      "kpmg/zmm_po_budget/NOTES.md",
+      "kpmg/zmm_po_budget/MANUAL_STEPS.md",
+      "kpmg/zmm_po_budget/BADI_CHECK_SNIPPET.abap",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_BEFORE_SAVE.abap",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_ENHANCEMENT.abap",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_PROBE.abap",
+      "kpmg/zmm_po_budget/ZMM_BUDGET_SA_PROBE2.abap",
+      "kpmg/zmm_po_budget_deferred/NOTES.md"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Four DDIC objects and a message class, an insert into an existing classic BAdI method, an SE54 event routine, a screen module and an implicit enhancement of SAPMM06E with two probes (6 ABAP files, 1,666 lines); no iteration log."
+  },
+  {
+    "folder": "kpmg/zmm_po_budget_deferred",
+    "title": "ZCL_MM_PO_BUDGET_CHECK - standalone PO budget check class (alternative design, wired to nothing)",
+    "sap_objects": ["ZCL_MM_PO_BUDGET_CHECK (class)"],
+    "object_types": ["Class"],
+    "module": "MM",
+    "end_client_evidence": "zcl_mm_po_budget_check.clas.abap: 'Budget check for indirect purchase' / 'Astral / UDAY / WRICEF 050_BRD_FS'. Indicates Astral / Project UDAY.",
+    "wricef_or_ticket": "WRICEF 050_BRD_FS",
+    "dev_type": "New development",
+    "business_requirement": "The same PO budget check as kpmg/zmm_po_budget, written as a reusable class so it could serve the ME21N / ME22N BAdI and later a scheduling-agreement enhancement for ME31L / ME32L.",
+    "technical_challenge": "The logic had to be independent of the BAdI interface, and one check is needed per plant because plant is an item field while purchasing group is a header field - one document can consume several budgets.",
+    "ai_contribution": "A 224-line global class with check_document( ) taking ebeln / ekgrp / bedat / waers / items and returning bapiret2_t, plus its abapGit .clas.xml; three decisions are marked OPEN POINT in the source. No session log (ISSUES.md is empty).",
+    "manual_intervention": "Not evidenced.",
+    "rework_events": [
+      "date not stated: the class-based design was not used - 'The delivered path went inline into the existing ME_PROCESS_PO_CUST implementation instead'; the class is kept as the alternative design and 'is currently wired to nothing' (NOTES.md)"
+    ],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 224,
+    "deliverable_files": [
+      "kpmg/zmm_po_budget_deferred/zcl_mm_po_budget_check.clas.abap (224)",
+      "kpmg/zmm_po_budget_deferred/zcl_mm_po_budget_check.clas.xml (16, XML - not counted)"
+    ],
+    "status": "Superseded",
+    "status_evidence": "NOTES.md: 'The delivered path went **inline** into the existing `ME_PROCESS_PO_CUST` implementation instead ... This class is the alternative design ... It is currently wired to nothing.' and 'As it stands it **cannot be imported**'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "No dependency on the BAdI interface, so the logic is reusable for scheduling agreements",
+      "Per-plant check so one document consuming several budgets is handled",
+      "Returns messages as bapiret2_t instead of raising; open decisions marked OPEN POINT"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Folder is not a valid abapGit repo (no src/, no .abapgit.xml)",
+      "Decide which design is live before touching either - 'do not activate both'",
+      "Three OPEN POINTs: no budget row -> block or allow; calendar vs fiscal year; currency handling"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_po_budget_deferred/ISSUES.md",
+      "kpmg/zmm_po_budget_deferred/NOTES.md",
+      "kpmg/zmm_po_budget_deferred/zcl_mm_po_budget_check.clas.abap"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "One 224-line class with no iterations logged and no consumer."
+  },
+  {
+    "folder": "kpmg/zmm_po_validity_fs",
+    "title": "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing",
+    "sap_objects": [
+      "ME_PROCESS_PO_CUST (classic BAdI, method IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER of the existing implementation)",
+      "ZPO_VALIDITY_DOCTYPE (TVARVC variable - part of the withdrawn approach)",
+      "NBF (field selection key, OMF4)",
+      "ZBRD (field selection key)"
+    ],
+    "object_types": ["BAdI/Enhancement", "Customizing advice"],
+    "module": "MM",
+    "end_client_evidence": "NOTES.md: 'Udayan (KPMG, via Vaibhav), 12.10.2026'; 'document type **SBP** (MM- SRV Board PO)'; 'same implementation that carries the budget check in `CHECK`, see `kpmg/zmm_po_budget/`'. ISSUES.md: '(Udayan, Fiori + GUI demo)'; 'Mail drafted to Udayan'. No company name in the folder; the shared BAdI implementation ties it to the system of kpmg/zmm_po_budget ('WRICEF 050_BRD_FS, Astral / UDAY').",
+    "wricef_or_ticket": "not stated (request from Udayan, 12.10.2026)",
+    "dev_type": "Analysis / feasibility only",
+    "business_requirement": "The PO header fields Validity Start / Validity End (EKKO-KDATB / KDATE) must be input-ready for PO document type SBP only, in SAP GUI as in Fiori; no validation is wanted.",
+    "technical_challenge": "The status of a standard field is the most restrictive of the merged field-selection keys (transaction, activity, document type, release), and the BAdI method FIELDSELECTION_HEADER only ever receives customer metafields, never the standard metafields 37/38 - so it cannot show or hide these fields.",
+    "ai_contribution": "First delivered a FIELDSELECTION_HEADER method body that hides the two fields unless the document type is listed in TVARVC ZPO_VALIDITY_DOCTYPE, then corrected the metafield constants. After Arnav's debugger finding, concluded that the BAdI cannot reach standard metafields, located the cause in OMF4 key NBF (the two fields have no option ticked = Hide; T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to Udayan. The withdrawn code is kept as the record of why.",
+    "manual_intervention": "Arnav supplied the existing method body (original/), checked type group MMMFD, debugged FIELDSELECTION_HEADER ('CH_FIELDSELECTION holds only customer metafields (90000121–90000141)') and checked OMF4 / T161. The customizing change is for the functional consultant; sending the mail is manual.",
+    "rework_events": [
+      "12/10/26: first delivered method assumed metafield constants MMMFD_VALIDITY_START / MMMFD_VALIDITY_END (marked ASSUMPTION; git 0a4cc83) - corrected to mmmfd_valid_from / mmmfd_valid_to (037/038) after the type group was checked (git df2eb5b)",
+      "12/10/26: BAdI approach withdrawn - the debugger showed the method never receives standard metafields 37/38; 'The delivered ELSEIF is dead code; the method should be reverted to the original'; fix is customizing in OMF4"
+    ],
+    "issue_log_entries": 1,
+    "first_date": "12/10/26",
+    "last_date": "12/10/26",
+    "code_lines_current": 45,
+    "deliverable_files": [
+      "kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap (45, withdrawn - dead code kept as a record)",
+      "kpmg/zmm_po_validity_fs/NOTES.md (51, root-cause record - not counted)"
+    ],
+    "status": "Analysis only - nothing built",
+    "status_evidence": "ISSUES.md row 1: '**Customizing only**: tick Opt. entry for both fields in NBF (functional, customizing TR). No ABAP. BAdI `FIELDSELECTION_HEADER` withdrawn — it receives only customer metafields, never 37/38 (debugger)'; Status column: 'Mail drafted to Udayan; awaiting customizing change'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Root cause proven in the debugger instead of shipping a change that could not work",
+      "Document types read from TVARVC rather than hardcoded (in the withdrawn version)",
+      "Other developers' customer metafields in the same method left untouched",
+      "Negative finding recorded so the BAdI route is not tried again; FIELDSELECTION_HEADER_REFKEYS named as the route if per-document-type hiding is wanted later"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Awaiting the customizing change (OMF4 key NBF, Opt. entry for both validity fields) by the functional consultant",
+      "The delivered BAdI change is dead code and should be reverted to the original in the system",
+      "ME23N stays display-only by the transaction key"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_po_validity_fs/ISSUES.md",
+      "kpmg/zmm_po_validity_fs/NOTES.md",
+      "kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap",
+      "git log / git show 0a4cc83, df2eb5b -- kpmg/zmm_po_validity_fs"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "One 45-line BAdI method and four commits in a single day; the outcome is a customizing recommendation."
+  },
+  {
+    "folder": "kpmg/zmm_rm07mlbd",
+    "title": "ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom MB5B copy",
+    "sap_objects": [
+      "ZMM_RM07MLBD (report, existing custom copy of RM07MLBD)",
+      "ZMM_MB5B_NEW (transaction)",
+      "ZMM_RM07MLDD (include, untouched)",
+      "ZMM_RM07MLBD_FORM_01 (include, untouched)",
+      "ZMM_RM07MLBD_FORM_02 (include, untouched)",
+      "RM07MLBD_CUST_FIELDS (standard include)",
+      "ZMB5B_NEW1 (authorization check already in the program)",
+      "RM07MLBD_DBSYS_OPT (standard BAdI involved in the defect)"
+    ],
+    "object_types": ["Report", "ALV"],
+    "module": "MM",
+    "end_client_evidence": "NOTES.md: 'package `ZMM_ABAP`. An existing custom copy of standard `RM07MLBD` (MB5B) built by VC-ERP (Rahul Vasita, TR DEVK937941, Dec 2023)'; 'ATC type fixes (UDAYABAP03 13/02/26), EWM `gt_mblnr` type added (KPMG-JP 01/12/25)'. ISSUES.md: 'Port ZMB5B receipt/issue amount (195_BRD_FS) into the existing custom tcode ZMM_MB5B_NEW'. No company name in the folder; 195_BRD_FS and the user UDAYABAP03 tie it to project UDAY / Astral (kpmg/zmb5b/NOTES.md: 'WRICEF 195_BRD_FS, project UDAY / Astral').",
+    "wricef_or_ticket": "WRICEF 195_BRD_FS (ported function)",
+    "dev_type": "Enhancement of existing object",
+    "business_requirement": "Bring the ZMB5B receipt amount / issue amount and the DMBTR detail column for the storage-location view into the existing custom transaction ZMM_MB5B_NEW 'so one report serves both'.",
+    "technical_challenge": "This copy predates the standard line that forces gv_newdb = abap_false, so on HANA the BAdI RM07MLBD_DBSYS_OPT routes through the stored-procedure path and skips the classic aggregation - the new amounts came out blank. The source arrived as an SE38 print listing that had to be reconstructed, and the running program already has lines over 120 characters that would wrap on a whole-file paste.",
+    "ai_contribution": "Reconstructed the five objects from the SE38 print listing (drafts/parsed), ported the ZMB5B units into the main program only (5,960 -> 6,137 lines at first delivery) and as a paste sheet of named blocks with unit tests. Diagnosed the blank amounts as the HANA BAdI code path and added unit 11 (gv_newdb = abap_false for the storage-location view only). Deliberately did not port the header-block values because that would reverse the original author's 'WITHOUT VALUE VIEW' design and bypass the ZMB5B_NEW1 check.",
+    "manual_intervention": "Arnav supplied the SE38 print of 15/09/26, applied and activated the port, and reported 'Amounts blank in ZMM_MB5B_NEW after the port, fine in ZMB5B'. Pasting the units in SE38 is manual.",
+    "rework_events": [
+      "15/09/26: amounts blank in ZMM_MB5B_NEW after the first port was activated - the older-release copy lacks gv_newdb = abap_false and the HANA BAdI path skipped summen_bilden / bestaende_berechnen; unit 11 added (commit 0bd66f0)",
+      "15/09/26: spaces dropped at SE38 print wrap points in the reconstructed source (line 5975, TVARVC select) - restored (git dca3e0d)"
+    ],
+    "issue_log_entries": 2,
+    "first_date": "15/09/26",
+    "last_date": "15/09/26",
+    "code_lines_current": 6446,
+    "deliverable_files": [
+      "kpmg/zmm_rm07mlbd/ZMM_RM07MLBD.abap (6153, whole main program - a copy of SAP standard with marked change blocks)",
+      "kpmg/zmm_rm07mlbd/ZMM_RM07MLBD_units.abap (293, paste sheet of the change blocks with unit tests)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "ISSUES.md 15/09/26 row 2: 'Amounts blank in ZMM_MB5B_NEW after the port, fine in ZMB5B' with the fix 'unit 11: `gv_newdb = abap_false` for LGBST', TR '_tbc_' - no result after the fix is logged. NOTES.md: 'Why the amounts were blank on the first activation (15/09/26)' shows the first port was activated in the system.",
+    "tr_numbers": [
+      "DEVK937941 (pre-existing: original build by VC-ERP / Rahul Vasita, Dec 2023 - not this change; this change's TR is '_tbc_')"
+    ],
+    "quality_points": [
+      "Main program only; the three Z includes are untouched",
+      "Delivered as named paste blocks to avoid SE38 wrapping the existing over-length lines of a whole-file paste",
+      "Original author's design and authorisation check respected - header values not ported, 'Ask before adding'",
+      "gv_newdb forced off for the storage-location view only, not for every view",
+      "Existing authorisation gating (ZMB5B_NEW1) verified to cover the new value columns; restricted-user test specified",
+      "Lesson recorded in MEMORY.md M-18 (running release takes a different code path)"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "No confirmation logged after unit 11; TR '_tbc_'",
+      "Test with a user restricted on ZMB5B_NEW1",
+      "Hierarchical list (check_matner_xsum) has effectively no value gating - pre-existing, flagged to functional",
+      "Header-block values (ZMB5B unit 7) not ported pending a decision"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_rm07mlbd/ISSUES.md",
+      "kpmg/zmm_rm07mlbd/NOTES.md",
+      "kpmg/zmm_rm07mlbd/ZMM_RM07MLBD_units.abap",
+      "git log -- kpmg/zmm_rm07mlbd"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "One 6,153-line copy of a standard report with about eleven change blocks (293-line paste sheet), reconstructed from a print listing, with one failed first activation."
+  },
+  {
+    "folder": "kpmg/zmm_vend_upload",
+    "title": "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
+    "sap_objects": [
+      "ZMM_VEND_MASTER (report)",
+      "ZMM_VEND_MASTER_TOP (include)",
+      "ZMM_VEND_MASTER_SCR (include)",
+      "ZMM_VEND_MASTER_CL (include)",
+      "ZMM_VEND_MASTER_FORMS (include)",
+      "ZMM_VEND_UPLOAD (transaction)"
+    ],
+    "object_types": ["Report", "Upload/Download utility", "Interface/BAPI/IDoc", "ALV"],
+    "module": "MM",
+    "end_client_evidence": "docs/TS_ZMM_VEND_UPLOAD.md: '**Client** | Astral Limited', '**Project** | UDAY', '**Package** | `ZMM_ABAP`'. src/zmm_vend_master.abap header: 'Instructed by:    KPMG - Junaid Khan', 'Devloped by:      KPMG - Jayprakash Tiwari', '<001>   Jayprakash Tiwari       DEVK900394'. COPILOT_CONTEXT_HANDOFF.md section 5.3 heading: 'KPMG / UDAY-Astral — ZMM_VEND_UPLOAD vendor master upload (Jul 21–24)'; section 1: 'UDAY / Astral | Vendor master upload program (FSD 30) | MM'. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "FSD 30 (FSD_ZMM_VEND_UPLOAD); the TS leaves 'WRICEF number' as '<to be filled>'",
+    "dev_type": "Enhancement of existing object",
+    "business_requirement": "Enhance the existing supplier upload: (R1) record-level processing log and download of failed records only, (R2) automatic extension to company code and purchasing organisation with separate status and 'already extended' detection, (R3) a separate Change mode in which blank cells never overwrite master data, (R4) validation and duplicate checks (GST/PAN/Tax) that skip a bad record without stopping the batch.",
+    "technical_challenge": "The baseline was an SE38 print listing, not compilable source. Create/extend/change runs through vmd_ei_api=>maintain_bapi and Change mode is only safe if datax flags are set solely for populated cells; the baseline's hard stop (MESSAGE ... LEAVE LIST-PROCESSING) had to be removed.",
+    "ai_contribution": "COPILOT_CONTEXT_HANDOFF.md section 5.3 records the July 21-24 work: ten compile-ready change units tagged FSD30 with exact placement, later the full per-include .abap files, and the TS (dated 2026-07-21). Tool attribution: the file is titled 'Handoff for GitHub Copilot' but states it captures how 'Claude Code did' the work 'between 2026-07-20 and 2026-08-15' and was 'Compiled 2026-08-15 from 30 Claude Code session transcripts' - it attributes the work to Claude Code; it does not say Copilot produced it. The repo's src/ holds the five includes (2,601 lines) with markers 'By Arnav on 21/07/2026' and 'Changes by Arnav on 22/07/26'; drafts/ holds the 569-line unit sheet. ISSUES.md is empty.",
+    "manual_intervention": "Not logged in the folder. kpmg/timesheet (Sep 2026) books 8 h on ZMM_VEND_UPLOAD: 01/09 'Analysed BP/vendor master fields for upload template' and 16-17/09 'Reviewed FSD for vendor upload program; clarifications raised'.",
+    "rework_events": [
+      "date not stated: first delivery was a 10-unit delta against the print-listing baseline rather than whole files; 'Later the full per-include .abap files were reconstructed' (COPILOT_CONTEXT_HANDOFF.md section 5.3)"
+    ],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 2601,
+    "deliverable_files": [
+      "kpmg/zmm_vend_upload/src/zmm_vend_master_forms.abap (1836)",
+      "kpmg/zmm_vend_upload/src/zmm_vend_master_top.abap (343)",
+      "kpmg/zmm_vend_upload/src/zmm_vend_master_cl.abap (281)",
+      "kpmg/zmm_vend_upload/src/zmm_vend_master.abap (118)",
+      "kpmg/zmm_vend_upload/src/zmm_vend_master_scr.abap (23)",
+      "kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md (237, not counted)",
+      "kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.docx (binary)"
+    ],
+    "status": "Unverified",
+    "status_evidence": "ISSUES.md has no entries. NOTES.md is stale and contradicts the folder: 'The folder exists at repository top level and contains **no files** on the `main` branch' - src/, drafts/ and docs/ are present. drafts/README.md lists 'Open points to confirm before transport'. No activation, test or TR for the enhancement is recorded anywhere in the folder.",
+    "tr_numbers": [
+      "DEVK900394 (pre-existing: '<001> Jayprakash Tiwari', reason 'Mass vendor upload' in the program header - the original program, not this enhancement)"
+    ],
+    "quality_points": [
+      "A bad record is logged and skipped instead of stopping the whole batch (hard stop removed)",
+      "Blank-safe Change mode: datax set only when the source cell is filled",
+      "Error-only download of failed records; row number and per-role status in the log",
+      "Dead form change_bp_vendor retired in favour of a change-aware extend_bp",
+      "Requirement-to-unit mapping table (R1-R4) in the TS and drafts/README.md"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it restartable and adds extend/change handling)",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "O4: duplicate-check precedence (GST vs PAN vs Tax No.) and whether a database PAN match is an error or a warning",
+      "Company-code / purchasing-org fields assumed present and valid in the file",
+      "Message class vs literal texts to be confirmed",
+      "NOTES.md is stale; no activation or test record; WRICEF number and package owner fields in the TS unfilled"
+    ],
+    "evidence_files": [
+      "kpmg/zmm_vend_upload/ISSUES.md",
+      "kpmg/zmm_vend_upload/NOTES.md",
+      "kpmg/zmm_vend_upload/drafts/README.md",
+      "kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md",
+      "kpmg/zmm_vend_upload/src/zmm_vend_master.abap",
+      "COPILOT_CONTEXT_HANDOFF.md (sections 1, 5.3 and the closing note)",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "Enhancement of a five-include upload program (2,601 lines) in ten change units using BAPI/vmd_ei_api calls (the TS rates it 'Medium–High'); no iterations logged."
+  },
+  {
+    "folder": "kpmg/zmmims",
+    "title": "ZMMIMS (SAPMZMMIMS) - GeM Invoice No. F4 correction and automatic display (marker +019)",
+    "sap_objects": [
+      "SAPMZMMIMS (module pool)",
+      "ZMMIMS (transaction)",
+      "MZMMIMSF01 (include)",
+      "MZMMIMSI01 (include)",
+      "MZMMIMSTOP (include, referenced)",
+      "ZGEM_BILL (table)",
+      "ZGEM_BILLDET (table)",
+      "ZMM_IMS (table)"
+    ],
+    "object_types": ["Module pool"],
+    "module": "MM",
+    "end_client_evidence": "MZMMIMSF01.abap: 'AND    bukrs in ( 'OVL', 'OVC' ).'; '*Begin 14.03.2024-CR4000000194-Incnt No 8000002622-SAP_ABAP(OVL Conslt)'; '*+006 - Search string \"ongc.co.in\"'; 'MOVE 'OVL' TO wa_zmm_ims_rio-bukrs.'; '24/11/2008  <RD1K960611>  SAB_SURJIT'. MZMMIMSI01.abap: 'MESSAGE 'Return within OVL not possible' TYPE 'E'.'; 'Please enter correct CPF No.'. NOTES.md names no client. Indicates OVL (ONGC Videsh), not Astral/KPMG.",
+    "wricef_or_ticket": "not stated (change marker +019; example PO 4200000203 in the module header)",
+    "dev_type": "Bug fix / debugging",
+    "business_requirement": "In change mode the GeM Invoice No. was not displayed, and F4 returned 'No values found' (DH801) while a number still appeared in the field. The GeM invoice is to be determined from the purchase order, shown without F4 and saved with the document.",
+    "technical_challenge": "IST_RETURN_TAB is a header-line table shared by every search help of the program and was neither refreshed nor guarded, so a cancelled F4 left the value picked in a different search help; DELETE ADJACENT DUPLICATES ran before the PO filter and removed the right invoice; EBELN was missing from the WHERE clause. A proposed number must also exist in ZGEM_BILLDET or the document becomes unsaveable.",
+    "ai_contribution": "A replacement MODULE get_geminv (136 lines) whose header states the three root causes, a patch sheet with the new FORM get_gem_invoice_no and three call points (create, safety net before the MODIFY, change/display), and the two whole includes with the +019 lines in place. No session log exists (ISSUES.md is empty).",
+    "manual_intervention": "Not evidenced; NOTES.md says to apply the changes in SE80 against a fresh download and to check EKKO-BSART / PROCSTAT of the affected PO in SE16.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 5821,
+    "deliverable_files": [
+      "kpmg/zmmims/MZMMIMSF01.abap (3511, whole include of the existing module pool with +019 lines)",
+      "kpmg/zmmims/MZMMIMSI01.abap (2002, whole include)",
+      "kpmg/zmmims/ZMMIMS_GEM_INV_AUTO_DISPLAY.abap (172, patch sheet)",
+      "kpmg/zmmims/MZMMIMSI01_GET_GEMINV.abap (136, replacement module)"
+    ],
+    "status": "Unverified",
+    "status_evidence": "ISSUES.md has no entries. NOTES.md describes the corrections and how to ship them ('Apply in SE80 against a fresh download') but records no activation, test or TR.",
+    "tr_numbers": [
+      "RD1K960611 (pre-existing: '24/11/2008 <RD1K960611> SAB_SURJIT' in the include header - program history, not this change)"
+    ],
+    "quality_points": [
+      "PO number added to the WHERE clause - the whole ZGEM_BILL table is no longer read on every F4",
+      "Shared return table cleared and refreshed and its assignment guarded, removing the stale value from another search help",
+      "Duplicate removal moved after the PO filter with a matching SORT",
+      "Auto-fill writes only into an initial field, so a stored or user-entered value is never overwritten",
+      "Only invoices that also exist in ZGEM_BILLDET are proposed, so the existing save-time validation cannot be tripped",
+      "Document-type / status restriction isolated in a RANGE so it can be switched off in one place"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "No activation or test record",
+      "Verify EKKO-BSART (MMGM / MMGS) and PROCSTAT = '05' of the affected PO - 'the likeliest cause of an empty hit list'",
+      "Patch sheets locate inserts by line number; locate by FORM / MODULE name and diff a fresh SE80 download first"
+    ],
+    "evidence_files": [
+      "kpmg/zmmims/ISSUES.md",
+      "kpmg/zmmims/NOTES.md",
+      "kpmg/zmmims/MZMMIMSI01_GET_GEMINV.abap",
+      "kpmg/zmmims/ZMMIMS_GEM_INV_AUTO_DISPLAY.abap",
+      "kpmg/zmmims/MZMMIMSF01.abap",
+      "kpmg/zmmims/MZMMIMSI01.abap"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "Two includes of a 2008 module pool (5,513 lines) with one replaced F4 module, one new FORM and three call points; three root causes identified, no iteration log."
+  },
+  {
+    "folder": "kpmg/zpp_forecast",
+    "title": "ZFORECAST (Adhesive) v1 - forecast generation, report and upload (superseded by v2)",
+    "sap_objects": [
+      "ZPP_FORECAST (report, transaction ZFCST)",
+      "ZPP_FORECAST_REPORT (report)",
+      "ZPP_FORECAST_UPLOAD (report)",
+      "ZCL_PP_FORECAST (class)",
+      "ZCL_PP_FORECAST_UTIL (class)",
+      "ZPP_FORECAST (message class)",
+      "ZPPT_FCST_YR / ZPPT_FCST_QT / ZPPT_FCST_MN / ZPPT_FCST_ADJ / ZPPT_FCST_BUS / ZPPT_PROD_CAT / ZPPT_LOAD_FCT / ZPPT_FCST_EXCL / ZPPT_SLS_HIST / ZPPT_MTS_MTO / ZPPT_FCST_CFG (tables, defined in docs/00_TECHNICAL_OBJECTS.md)",
+      "ZPPS_FCST_ALV / ZPPS_FCST_HIST (structures)"
+    ],
+    "object_types": ["Report", "ALV", "Class", "DDIC", "Upload/Download utility"],
+    "module": "PP (assumption register: 'PP / SD')",
+    "end_client_evidence": "docs/00_TECHNICAL_OBJECTS.md: 'Astral Limited / Project UDAY / Adhesive division / WRICEF **ID-2A** — `ZFORECAST`'. src/ZPP_FORECAST.abap header: 'Reference     WRICEF ID-2A Forecast Template-Adhesive.xlsx, 14.08.2026'. Indicates Astral / Project UDAY.",
+    "wricef_or_ticket": "WRICEF ID-2A",
+    "dev_type": "New development",
+    "business_requirement": "Annual, quarterly and monthly forecast generation for the Adhesive division from sales history and load factor, compared with the business forecast, with adjustments, uploads and a final report (template of 14.08.2026).",
+    "technical_challenge": "Every table name in the BRD exceeds SAP's 16-character limit, and the annual table is keyed on plant + material + financial year so that 'same material cannot be saved twice in a financial year' is a property of the data model. The generation report drives its ALV through CALL SCREEN 0100 with a custom container, which needs a hand-built SE51 screen and SE41 status and cannot be shipped as an abapGit ZIP.",
+    "ai_contribution": "Five source files (2,462 lines): the calculation engine class, a utility class, the generation report, the final report and the upload program, plus the technical object list with DDIC definitions and rename decisions, built to the assumption register B01-B42 (docs/ZFORECAST_Adhesive_Assumptions_and_Queries.docx). No session log (ISSUES.md is empty).",
+    "manual_intervention": "Not evidenced.",
+    "rework_events": [
+      "date not stated: v1 displays through CALL SCREEN 0100 / cl_gui_custom_container, 'so v1 could never ship as a ZIP' - rebuilt as v2 on CL_SALV_TABLE to the revised template of 20.08.2026 (NOTES.md)"
+    ],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 2462,
+    "deliverable_files": [
+      "kpmg/zpp_forecast/src/ZCL_PP_FORECAST.abap (964)",
+      "kpmg/zpp_forecast/src/ZPP_FORECAST.abap (494)",
+      "kpmg/zpp_forecast/src/ZPP_FORECAST_UPLOAD.abap (410)",
+      "kpmg/zpp_forecast/src/ZCL_PP_FORECAST_UTIL.abap (318)",
+      "kpmg/zpp_forecast/src/ZPP_FORECAST_REPORT.abap (276)",
+      "kpmg/zpp_forecast/docs/00_TECHNICAL_OBJECTS.md (not counted)"
+    ],
+    "status": "Superseded",
+    "status_evidence": "NOTES.md: '**Superseded by `zpp_forecast_v2/`.** Keep for the reasoning trail; do not ship.' and 'Shipping: paste-only as written, and preferably not shipped at all'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Formulae 'all reconciled against the worked example in the BRD' (class header)",
+      "One engine class shared by the three programs so they cannot diverge (assumption B42)",
+      "16-character rename decisions and the data-model reasoning documented"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated (superseded version)",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Do not ship; do not mix v1 and v2 DDIC or class names - 'Pulling a v1 table definition into a v2 system produces orphans'"
+    ],
+    "evidence_files": [
+      "kpmg/zpp_forecast/ISSUES.md",
+      "kpmg/zpp_forecast/NOTES.md",
+      "kpmg/zpp_forecast/docs/00_TECHNICAL_OBJECTS.md",
+      "kpmg/zpp_forecast/src/ZPP_FORECAST.abap",
+      "kpmg/zpp_forecast/src/ZCL_PP_FORECAST.abap"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Five programs/classes (2,462 lines) and an 11-table data model designed from a draft BRD; superseded before any test was logged."
+  },
+  {
+    "folder": "kpmg/zpp_forecast_paints",
+    "title": "ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine (WRICEF ID-2B)",
+    "sap_objects": [
+      "ZPP_FORECAST_PAINTS (report, transaction ZFCST_PAINTS)",
+      "ZCL_PP_FCST_PNT (class)",
+      "ZPPT_BRAND (table)",
+      "ZPPT_PNT_FCST_YR (table)",
+      "ZPPT_PNT_FCST_QT (table)",
+      "ZPPT_PNT_FCST_MN (table)",
+      "ZDO_BRAND / ZDO_FCST_KL / ZDO_FCST_CR (domains)",
+      "ZDE_BRAND / ZDE_PACK_SIZE / ZDE_QTY_CARTON / ZDE_FCST_KL / ZDE_FCST_CR (data elements)",
+      "ZPP_FORECAST_PAINTS (package)",
+      "ZPP_FORECAST_UPLOAD (report of the Adhesive package - Brand upload and four-value indicator added 22/10/26)",
+      "ZPP_FORECAST_PAINTS_UPL (report - built 19/10/26, withdrawn 22/10/26)",
+      "ZPPV_BRAND (SM30 view, optional)",
+      "PF_STATUS (GUI status of ZPP_FORECAST_PAINTS, created by hand)"
+    ],
+    "object_types": ["Report", "ALV", "Class", "DDIC", "Upload/Download utility"],
+    "module": "PP (HANDOVER.md: 'modules PP / SD')",
+    "end_client_evidence": "NOTES.md: 'ZFORECAST for the **Paints** division (WRICEF ID-2B), Astral / UDAY, KPMG.' HANDOVER.md: 'Astral Limited / Project UDAY (KPMG) · Paints division, WRICEF ID-2B · modules PP / SD'; 'transport **DEVK930479** (UDAYABAP03, \"UDAY: PP: 2B: Forcast Paints\")'. ISSUES.md: 'sales organisation 4000 hardcoded'. Program header: 'Project        : KPMG / Astral UDAY'. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF ID-2B (FS Forecast_Template-Paints_1.xlsx, received 19/10/26)",
+    "dev_type": "New development",
+    "business_requirement": "The Paints division needs the same annual / quarterly / monthly forecast as Adhesive but in the Paints template layout: plant name, brand, MTS/MTO/DIS/TIN, material groups from sales organisation 4000, pack size, dealer price, quantity per carton, volume in KL and value in crores per month, tonnage on gross weight, a brand upload and Paints forecast tables.",
+    "technical_challenge": "The FS is the Adhesive template with a different layout, names the Adhesive tables as its own and carried 28 defects and 17 queries that were never answered, so the build stands on documented assumptions. The Adhesive engine had to be reused without being edited, and everything had to ship as hand-written abapGit ZIPs across two packages.",
+    "ai_contribution": "Read the FS and issued Assumptions and Queries (M1-M7, P01-P26, Q1-Q10, 28 FS defects F01-F28) with a reuse decision per Adhesive object. Built on 19/10/26 the DDIC, class ZCL_PP_FCST_PNT and report ZPP_FORECAST_PAINTS (2,426 ABAP lines today) plus an upload program, as a ZIP that imported - 'the first hand-written abapGit ZIP to import on this landscape'. Generated the three Paints tables and the upload changes with small generator scripts (tools/mktables.py, mkupl_adhesive.py) and a static checker (abapcheck.py). Wrote the TS, manual steps, KT note, a functional test pack (22 test cases), a technical handover and HANDOVER.md.",
+    "manual_intervention": "Arnav made the design calls (Sheet1 as the authority, build without answers, no Adhesive object edited - later reversed for the upload program, Paints tables to mirror the displayed list, sales organisation 4000 hardcoded per the FS), imported the ZIPs through ZABAPGIT_STANDALONE and activated them ('everything is imported and activated'), created the SE41 status and SE93 transaction and the transport DEVK930479. The functional test is with the functional team.",
+    "rework_events": [
+      "19/10/26: the first object list changed two Adhesive objects - withdrawn on Arnav's rule 'the Adhesive code works and stays as it is'; replaced by a separate Paints upload program and an own price read",
+      "19/10/26: first ZPP_FORECAST_PAINTS_UPL carried only two upload types ('in paints only 2 buttons are there not all so why you giving all?') - rebuilt with all nine types",
+      "19/10/26 -> 22/10/26: Paints tables first built as 'Adhesive table plus extras' (92 / 68 / 50 fields), then reshaped to mirror the displayed list (73 / 58 / 45 fields)",
+      "22/10/26: separate upload program ZPP_FORECAST_PAINTS_UPL withdrawn - Brand upload and four-value indicator moved into the Adhesive ZPP_FORECAST_UPLOAD (reversing the 19/10 rule for that one program)",
+      "22/10/26: sales organisation read from the config table replaced by hardcoded 4000 'as per the fs'; READ_CONFIG / READ_CARTONS removed",
+      "23/10/26: stale references (READ_CARTONS, ZFCST_PAINTS_UPL, config-row scenarios) cleaned from all Paints documents"
+    ],
+    "issue_log_entries": 12,
+    "first_date": "19/10/26",
+    "last_date": "23/10/26",
+    "code_lines_current": 2426,
+    "deliverable_files": [
+      "kpmg/zpp_forecast_paints/src/zpp_forecast_paints.prog.abap (1581)",
+      "kpmg/zpp_forecast_paints/src/zcl_pp_fcst_pnt.clas.abap (845)",
+      "kpmg/zpp_forecast_paints/src/zppt_pnt_fcst_yr.tabl.xml (660, XML - not counted)",
+      "kpmg/zpp_forecast_paints/src/zppt_pnt_fcst_qt.tabl.xml (540, XML - not counted)",
+      "kpmg/zpp_forecast_paints/src/zppt_pnt_fcst_mn.tabl.xml (418, XML - not counted)",
+      "kpmg/zpp_forecast_paints/src/zppt_brand.tabl.xml (89, XML - not counted)",
+      "kpmg/zpp_forecast_paints/ZPP_FORECAST_PAINTS.zip (binary, 18 files)",
+      "kpmg/zpp_forecast_paints/ZPP_FORECAST_PAINTS_22-10-26_delta.zip (binary, 15 files)",
+      "kpmg/zpp_forecast_paints/ZPP_FORECAST_PAINTS_22-10-26_vkorg_delta.zip (binary, 4 files)",
+      "kpmg/zpp_forecast_paints/HANDOVER.md (451, not counted)",
+      "kpmg/zpp_forecast_paints/docs/ZFORECAST_Paints_Test_Handover.md (functional test pack, not counted)",
+      "kpmg/zpp_forecast_paints/docs/TS_ZFORECAST_Paints.md (TS, not counted)",
+      "kpmg/zpp_forecast_paints/tools/mktables.py (94, generator - not counted)",
+      "kpmg/zpp_forecast_paints/tools/mkupl_adhesive.py (218, generator - not counted)",
+      "kpmg/zpp_forecast_paints/tools/abapcheck.py (63, static checker - not counted)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "ISSUES.md 22/10/26: 'Arnav: \"everything is imported and activated\". `ZPP_FORECAST_UPLOAD` (brand, four-value indicator), the three Paints forecast tables with their domains and data elements, `ZCL_PP_FCST_PNT` and `ZPP_FORECAST_PAINTS` are active in DEV.' NOTES.md: 'TR DEVK930479 (not released) ... Pending: the functional test.' HANDOVER.md: 'Functional test | **Not started.**' - i.e. activated in DEV only, not functionally tested, nothing in QAS.",
+    "tr_numbers": ["DEVK930479"],
+    "quality_points": [
+      "Static checks before every delivery: no line over 120, balanced blocks, every PERFORM matched to its FORM's parameter count, XML well-formed",
+      "Delta ZIPs per package so a pull cannot touch the running Adhesive objects",
+      "Generated code built by anchored replacement with each anchor asserted to occur exactly once",
+      "Every assumption marked ASSUMPTION in the code and listed in the technical object list; 28 FS defects and 17 queries documented",
+      "Functional test pack with 22 test cases and a technical handover written for the next developer"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated (forecast calculation and list for Paints; the Brand mass upload it needs was added to ZPP_FORECAST_UPLOAD - see kpmg/zpp_forecast_v2)",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Functional test not started; transport DEVK930479 not released, nothing in QAS",
+      "Queries M1-M7 and Q1-Q10 unanswered - the build stands on assumptions",
+      "Authorisation checks bypassed in ZCL_PP_FCST_UTIL since 07/09/26 - restore before any release (affects Adhesive and Paints)",
+      "Confirm in SE24 that the system copy of ZCL_PP_FCST_PNT is the version with GC_VKORG (sales org 4000 hardcoded)",
+      "Withdrawn program ZPP_FORECAST_PAINTS_UPL still to be deleted in SE38",
+      "A923 price read and upload file handling exist twice - a fix on the Adhesive side has to be repeated"
+    ],
+    "evidence_files": [
+      "kpmg/zpp_forecast_paints/ISSUES.md",
+      "kpmg/zpp_forecast_paints/NOTES.md",
+      "kpmg/zpp_forecast_paints/HANDOVER.md",
+      "kpmg/zpp_forecast_paints/00_TECHNICAL_OBJECTS.md",
+      "kpmg/_docs/ZFORECAST_KT_Tcodes.md",
+      "git log -- kpmg/zpp_forecast_paints"
+    ],
+    "complexity": "High",
+    "complexity_basis": "A report and a class (2,426 lines) plus four tables, three domains and five data elements on top of a shared engine, shipped as three ZIPs; 12 log entries in five days with five design reversals."
+  },
+  {
+    "folder": "kpmg/zpp_forecast_v2",
+    "title": "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report",
+    "sap_objects": [
+      "ZPP_FORECAST (report, transaction ZFCST)",
+      "ZPP_FORECAST_UPLOAD (report, transaction ZFCST_UPL)",
+      "ZPP_FORECAST_REPORT (report, transaction ZFCST_RPT)",
+      "ZCL_PP_FCST (class - calculation engine)",
+      "ZCL_PP_FCST_UTIL (class - helpers and authority checks)",
+      "ZPPT_FCST_YR / ZPPT_FCST_QT / ZPPT_FCST_MN (tables - saved forecasts)",
+      "ZPPT_PROD_CAT / ZPPT_MAT_TRACK / ZPPT_MAT_EXCL / ZPPT_SLS_HIST / ZPPT_FCST_CFG (tables)",
+      "ZPP_FCST (message class)",
+      "ZPPFCST (number range object)",
+      "ZPP_FCST (authorization object)",
+      "ZPPV_PROD_CAT / ZPPV_MAT_TRACK / ZPPV_MAT_EXCL / ZPPV_FCST_CFG (SM30 views)",
+      "ZDO_FCST_VAL (domain), ZDE_FCST_PRICE / ZDE_FCST_VAL (data elements) and the other 7 domains / 8 data elements in src/",
+      "ZPP_FORECAST_MTART / ZPP_FCST_LEGACY (TVARVC variables)",
+      "PF_STATUS (GUI status of ZPP_FORECAST, created by hand)"
+    ],
+    "object_types": ["Report", "ALV", "Class", "DDIC", "Upload/Download utility"],
+    "module": "PP (KT note: 'PP / SD')",
+    "end_client_evidence": "NOTES.md: 'ZFORECAST (Adhesive), Astral / UDAY, built to `Forecast Template-Adhesive.xlsx` dated 20.08.2026.' 00_TECHNICAL_OBJECTS.md: 'Astral / UDAY / Adhesive'. kpmg/_docs/ZFORECAST_KT_Tcodes.md: 'Astral Limited / Project UDAY (KPMG) · Adhesive and Paints forecasting · PP / SD'. ISSUES.md: 'AUTHORITY CHECKS DISABLED FOR QAS TESTING', 'plant 2439', 'VKORG default 1100' (NOTES.md). Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF ID-2A (Adhesive; v2 built to the template dated 20.08.2026); change requests of 02/09/26 and 15/09/26 logged in ISSUES.md",
+    "dev_type": "New development",
+    "business_requirement": "Adhesive forecasting in three modes from billing history, load factor and the business forecast, with eight (later nine) mass uploads with downloadable templates and a final report. Change requests added per-month additional quantities, price and value columns from condition records, five superseded material codes per material, MSL, a material-type restriction and independent saving of the three modes under one forecast number.",
+    "technical_challenge": "The object had to stay screen-free (CL_SALV_TABLE only) to be shippable as an abapGit ZIP, on a release that rejects some modern syntax. Twice the work was built on a stale git base and overwrote or contradicted the system state, and the FS mixes two history sources (billing vs MATDOC) and leaves the superseded-material and legacy-history rules to be settled case by case.",
+    "ai_contribution": "Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files). The 35 dated log sections (02/09-22/10/26) record: two change-request builds; root causes of 16 activation errors (VALUE with literal rows), a FORM/PERFORM parameter mismatch, the abapGit PROGDIR order import error and the legacy-history bug (left-aligned string template writing months into wrong columns); price derivation from A923/KONP; material-type filter; shared forecast number; superseded-code relabelling with legacy fallback; MSL across four objects; SALV toolbar and layouts. It also audited every changed line against the QA copy and reverted two changes nobody had asked for, and wrote the assumption registers and annual-logic confirmation notes (kpmg/_docs).",
+    "manual_intervention": "Arnav supplied the change requests, the QA copy of ZPP_FORECAST_UPLOAD, activation and import errors, screenshots and a debugger finding (do_history ASSIGN returning sy-subrc 4), ran his own tests and relayed the testers' cases (plant 2439), activated the objects (15/09, 23/09), created the SE41 status and the SE11 field by hand, and made the decisions (MONTH convention, single REASON field, monthly history from billing, numbers shared across modes, toolbar back to full screen, authority checks bypassed for QAS testing).",
+    "rework_events": [
+      "02/09/26: 16 activation errors ''PLANT' and the row type of 'CT_HEAD' are incompatible'; attempt 1 (string templates) 'rejected the same way'; fixed with APPEND instead of VALUE",
+      "03/09/26: MONTH convention of the quarterly change upload implemented as 1/2/3, changed to fiscal period, reverted and changed again in one session - finally put behind the switch GV_QMONTH",
+      "03/09/26: the whole CR had been built on the wrong git base; 'The ZIP built from it overwrote all of that in the system ... a fresh SE80 download was never requested' - four sources restored from commit 5906927 and the CR re-applied",
+      "03/09/26: REASON1/2/3 'was my addition, not in the CR' - reverted to a single REASON at Arnav's call",
+      "03/09/26: activation error 'Different number of parameters in FORM and PERFORM (routine: FINAL_QTY ...)' - two monthly call sites not updated; fixed and a PERFORM/FORM signature check added",
+      "03/09/26: audit against the QA base found two unrequested changes (price retyped with WAERS; a Currency column) - reverted; a literal column heading reverted to the DDIC label",
+      "03/09/26: abapGit pull error 'REPORT/PROGRAM statement is missing, or the program type is INCLUDE' - PROGDIR listed SUBC before VARCL in all three .prog.xml; reordered and both ZIPs rebuilt",
+      "15/09/26: first build of the day made on stale main failed activation with 'Unknown column name \"BUS_FCST_ADD\"'; the advice to add the field back in SE11 'was wrong and is withdrawn'; branch merged (28 unmerged commits) and the request re-applied",
+      "15/09/26: earlier diagnosis blaming the MATDOC source for missing monthly values 'was made against the stale base and is withdrawn'",
+      "15/09/26: quarterly and monthly rows would not save without an annual forecast (message 005) - SHARED_NUMBER across the three tables; material-type filter built for two modes only - added to annual the same afternoon",
+      "15/09/26: a continuation line starting with * was dropped from the comment-stripped paste copy (git 4b8a67c) - expression moved to a variable and the stripper fixed",
+      "18/09/26: legacy history upload stored months in the wrong columns (M10, M20..M90) and refused single-month files - found by Arnav in the debugger; ALIGN = RIGHT added; previously loaded history must be re-uploaded",
+      "23/09/26: EXTEND_BY_TRACK (range widening) showed successor plus all old codes, not the tester's rule - withdrawn the same day and replaced by RELABEL_OLD_CODES",
+      "23/09/26: toolbar solution changed three times (SE41 status -> container without status -> back to full screen with status after Arnav's screenshot; container kept behind GV_CONTAINER)",
+      "30/09/26: with Legacy ticked a successor that had its own sales history lost its old codes' figures - absorption moved after the legacy merge"
+    ],
+    "issue_log_entries": 35,
+    "first_date": "21/08/26",
+    "last_date": "22/10/26",
+    "code_lines_current": 7634,
+    "deliverable_files": [
+      "kpmg/zpp_forecast_v2/src/zpp_forecast_upload.prog.abap (2615)",
+      "kpmg/zpp_forecast_v2/src/zcl_pp_fcst.clas.abap (2309)",
+      "kpmg/zpp_forecast_v2/src/zpp_forecast.prog.abap (1875)",
+      "kpmg/zpp_forecast_v2/src/zpp_forecast_report.prog.abap (442)",
+      "kpmg/zpp_forecast_v2/src/zcl_pp_fcst_util.clas.abap (393)",
+      "kpmg/zpp_forecast_v2/src/zppt_fcst_yr.tabl.xml (582, XML - not counted)",
+      "kpmg/zpp_forecast_v2/src/zppt_fcst_qt.tabl.xml (536, XML - not counted)",
+      "kpmg/zpp_forecast_v2/src/zppt_fcst_mn.tabl.xml (378, XML - not counted)",
+      "kpmg/zpp_forecast_v2/src/zpp_fcst.msag.xml (170, XML - not counted)",
+      "kpmg/zpp_forecast_v2/ZPP_FORECAST.zip (binary, 39 files)",
+      "kpmg/zpp_forecast_v2/ZPP_FORECAST1.zip (binary, 17 files - delta)",
+      "kpmg/zpp_forecast_v2/ZPP_FORECAST_UPLOAD_22-10-26_delta.zip (binary, 4 files)",
+      "kpmg/zpp_forecast_v2/zcl_pp_fcst_nocomments.abap (1562, comment-stripped paste copy of the class - not counted)",
+      "kpmg/zpp_forecast_v2/PATCH_2026-09-03_CR.diff (1227, patch record - not counted)",
+      "kpmg/zpp_forecast_v2/00_TECHNICAL_OBJECTS.md (294, not counted)"
+    ],
+    "status": "Activated / tested in DEV",
+    "status_evidence": "ISSUES.md 15/09/26: '**Activated by Arnav on 15/09/26** — `ZCL_PP_FCST`, `ZPP_FORECAST`, message `ZPP_FCST 025`.' ISSUES.md 23/09/26: 'Status: SE11 field and all four objects activated in DEV on 23/09/26, pasted from chat. Functional test pending'. ISSUES.md 30/09/26: 'Status 30/09/26 PM: active in DEV - the tester's monthly run (plant 2439, ...) shows ... exactly the month sums of the two old codes' `ZPPT_SLS_HIST` rows'. Every section ends 'TR: not yet transported'; kpmg/_docs/ZFORECAST_KT_Tcodes.md: 'Adhesive has no transport yet'. The 22/10/26 upload change is confirmed active in DEV in kpmg/zpp_forecast_paints/ISSUES.md.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Screen-free design (CL_SALV_TABLE only) keeps the whole object importable as an abapGit ZIP",
+      "Every PERFORM compared against its FORM signature across all five sources after the parameter-count error (0 mismatches)",
+      "Audit of every changed line against the QA copy, with unrequested changes reverted and every replaced line kept commented in BOC/EOC blocks",
+      "Configuration (sales organisation, legacy users, material types) held in a config table / TVARVC instead of being hardcoded",
+      "Run-time situations written to the application log (messages 023, 025, 026) instead of being silent",
+      "Delta ZIPs carry only changed objects so a pull cannot touch what is already correct"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Row-by-row SM30 maintenance of product category, material tracking, exclusions, legacy sales history and business forecasts, replaced by the ZFCST_UPL mass uploads with templates; the forecast calculation itself is automated, but the files do not describe how forecasting was done before",
+      "frequency_evidence": "not stated (the three modes are annual, quarterly and monthly; kpmg/_docs/ZFORECAST_KT_Tcodes.md: SM30 view ZPPV_PROD_CAT 'Also loaded by upload')"
+    },
+    "open_items": [
+      "Both authority checks in ZCL_PP_FCST_UTIL are bypassed for QAS testing - 'MUST BE RESTORED' before release",
+      "Nothing transported; functional testing ongoing",
+      "ZPP_FORECAST_REPORT heads a PRICE column it never fills",
+      "Quantities are summed in sales unit (FKIMG) while tonnage multiplies by net weight per base unit",
+      "Tracking table has no validity and the upload accepts one old code under two successors",
+      "FS still names MATDOC 601 for the monthly mode although the build reads billing; no fresh SE80 download of the upload program since 03/09"
+    ],
+    "evidence_files": [
+      "kpmg/zpp_forecast_v2/ISSUES.md",
+      "kpmg/zpp_forecast_v2/NOTES.md",
+      "kpmg/zpp_forecast_v2/00_TECHNICAL_OBJECTS.md",
+      "kpmg/_docs/ZFORECAST_KT_Tcodes.md",
+      "kpmg/zpp_forecast_paints/ISSUES.md",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
+      "git log --all -- kpmg/zpp_forecast_v2"
+    ],
+    "complexity": "Very High",
+    "complexity_basis": "Five code objects (7,634 lines) with eight tables, a message class, number range and authorisation object, delivered as abapGit ZIPs; 35 log sections over seven weeks including two rebuilds on the correct base and several change requests."
+  },
+  {
+    "folder": "kpmg/zsd_exc_approval",
+    "title": "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload",
+    "sap_objects": [
+      "ZSD_EXC_APPR_ADHESIVE (report)",
+      "ZSD_EXC_APPR_PAINTS (report)",
+      "ZSD_EXP_PAINTS_UPLOAD (report)",
+      "ZSD_EXP_PAINTS (transparent table)",
+      "ZSD_DO_EXC_SRNO / ZSD_DO_EXC_MONTH / ZSD_DO_EXC_TYPE / ZSD_DO_EXC_AMOUNT / ZSD_DO_EXC_REMARKS (domains)",
+      "ZSD_DE_EXC_SRNO / ZSD_DE_EXC_MONTH / ZSD_DE_EXC_TYPE / ZSD_DE_EXC_AMOUNT / ZSD_DE_CM_AMOUNT / ZSD_DE_EXC_REMARKS (data elements)",
+      "ZSD_EXC_PAINTS (function group for the table maintenance generator)"
+    ],
+    "object_types": ["Report", "ALV", "DDIC", "Upload/Download utility"],
+    "module": "SD (credit management)",
+    "end_client_evidence": "NOTES.md: 'WRICEF 141 A/B — Exceptional Approval (Astral / project UDAY, SD)'; 'FS documents supplied 02/09/26, both dated 24.08.2026, prepared by Sanjay Modhvadiya.' ISSUES.md: 'Parth Shah's comment'. ZSD_EXC_APPR_ADHESIVE.abap header: 'Project        : KPMG / UDAY - Astral Limited        Module: SD'. BUILD_SPEC_141A.md: 'client Astral Limited · project UDAY'. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF 141.A (Adhesives) and WRICEF 141.B (Paints)",
+    "dev_type": "New development",
+    "business_requirement": "Reports of exceptional credit approvals against actual outstanding / collections with fulfilment status. Adhesives: report only, over the BP credit-management Additional Information (BP3100). Paints: a custom table with maintenance, a mass upload / change program and a report over it.",
+    "technical_challenge": "The FS documents contradict themselves and name unusable sources (16 questions; the L4/L5/L6 names are to come from 'SAPLSLVC_FULLSCREEN'), and no field name could be checked on the system - one FS-supplied name failed the first activation. Outstanding 'as on' a past date needs BSID plus BSAD, the table definition lacked a currency key, and no hand-written abapGit ZIP had yet imported on the landscape.",
+    "ai_contribution": "Reviewed both FS documents and raised 16 numbered questions before build; wrote locked build specs for 141.A and 141.B that settle the FS contradictions explicitly. Built ZSD_EXC_APPR_ADHESIVE (1,247 lines), ZSD_EXP_PAINTS_UPLOAD (1,522) and ZSD_EXC_APPR_PAINTS (982) on 02/09/26 with text-element sheets, two TS documents, an SE11 build sheet and SE11 pre-paste checklists that grade every FS-sourced name by confidence. Packaged the Paints objects as ZSD_EXC_APPROVAL.zip (19 files, 14 objects) with upload steps, and later produced a functional flow note (05/10/26) and an Excel upload template (git 09/10/26).",
+    "manual_intervention": "Arnav supplied the FS documents (02/09/26) and activated ZSD_EXC_APPR_ADHESIVE in the system after correcting the BP3100 field name himself - the corrected name 'was never sent back to me' (ABAPGIT_UPLOAD_STEPS.md). DDIC by SE11 or ZIP, the table maintenance generator, foreign keys and enhancement category are manual. kpmg/timesheet books 'Supported testing of exceptional approval formats (Adhesives/Paints)' on 18, 21, 24 and 28/09 (11 h), which the folder's own logs do not record.",
+    "rework_events": [
+      "02/09/26: ZSD_EXC_APPR_ADHESIVE 'failed its first activation' with 'Unknown column name INFOCATEGORY' - a WHERE-clause field name taken from the FS; corrected in the system by Arnav, the repo copy still carries the old name (VERIFY_IN_SE11_141B.md, ABAPGIT_UPLOAD_STEPS.md)"
+    ],
+    "issue_log_entries": 16,
+    "first_date": "02/09/26",
+    "last_date": "05/10/26",
+    "code_lines_current": 3751,
+    "deliverable_files": [
+      "kpmg/zsd_exc_approval/ZSD_EXP_PAINTS_UPLOAD.abap (1522; identical copy in src/zsd_exp_paints_upload.prog.abap counted once)",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPR_ADHESIVE.abap (1247; repo copy still has the field name that failed activation)",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPR_PAINTS.abap (982; identical copy in src/zsd_exc_appr_paints.prog.abap counted once)",
+      "kpmg/zsd_exc_approval/src/zsd_exp_paints.tabl.xml (165, XML - not counted)",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPROVAL.zip (binary, 19 files)",
+      "kpmg/zsd_exc_approval/ZSD_EXP_PAINTS_DDIC.md (600, SE11 build sheet - not counted)",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPR_PAINTS_TS.md (559, not counted)",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPR_ADHESIVE_TS.md (372, not counted)",
+      "kpmg/zsd_exc_approval/BUILD_SPEC_141B.md (317, not counted)",
+      "kpmg/zsd_exc_approval/BUILD_SPEC_141A.md (211, not counted)",
+      "kpmg/zsd_exc_approval/VERIFY_IN_SE11_141B.md (234, not counted)",
+      "kpmg/zsd_exc_approval/VERIFY_IN_SE11.md (134, not counted)",
+      "kpmg/zsd_exc_approval/ZSD_EXP_PAINTS_UPLOAD_TEMPLATE.xlsx (binary)",
+      "kpmg/zsd_exc_approval/WRICEF_141AB_Exceptional_Approval_Flow.docx (binary)"
+    ],
+    "status": "Delivered - awaiting verification",
+    "status_evidence": "ABAPGIT_UPLOAD_STEPS.md: '`ZSD_EXC_APPR_ADHESIVE` is already active in your system with the corrected `BP3100` field name. The repo copy still carries the old `INFOCATEGORY` that failed activation, because that name was never sent back to me.' ZIP_IMPORT_NOTES.md: 'try the ZIP, and if it dumps, fall back to the manual path ... do not schedule around it working.' NOTES.md: 'Open questions blocking build'. No import, activation or test of the three Paints objects is recorded in ISSUES.md or NOTES.md (only the timesheet mentions testing support).",
+    "tr_numbers": [],
+    "quality_points": [
+      "FS reviewed before build: 16 numbered questions with what is needed from functional for each",
+      "Build specs settle the four FS contradictions explicitly and each carries an ASSUMPTION note in the code",
+      "SE11 checklists rank every FS-sourced DDIC name by confidence and by what it would stop at activation",
+      "Currency key WAERS added to the table because a CURR field cannot activate without one",
+      "ZIP status stated honestly ('No hand-written abapGit ZIP has ever been confirmed to import on this landscape') with a manual fallback",
+      "Text elements carried in the ZIP (about 107 lines not typed by hand); strict Open SQL, no SELECT in a LOOP"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Row-by-row entry of exceptional-approval records for Paints through table maintenance, replaced by ZSD_EXP_PAINTS_UPLOAD ('Upload / change program for mass data entry'); the Adhesives part is a report only",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "16 FS questions unanswered in the log - hard blocker is the source of the L4/L5/L6 names",
+      "Repo copy of ZSD_EXC_APPR_ADHESIVE still has the failing BP3100 field name; the corrected name is not recorded",
+      "Import / activation result of the 141.B ZIP not recorded; TR not filled in",
+      "Table maintenance generator, foreign keys, enhancement category and change logging are manual",
+      "Authorisation 'TBD' in the FS; credit segment for UKMBP_CMS_SGM not specified",
+      "Non-fulfilment formula / sign and the collection date window need functional confirmation"
+    ],
+    "evidence_files": [
+      "kpmg/zsd_exc_approval/ISSUES.md",
+      "kpmg/zsd_exc_approval/NOTES.md",
+      "kpmg/zsd_exc_approval/ABAPGIT_UPLOAD_STEPS.md",
+      "kpmg/zsd_exc_approval/ZIP_IMPORT_NOTES.md",
+      "kpmg/zsd_exc_approval/BUILD_SPEC_141A.md",
+      "kpmg/zsd_exc_approval/BUILD_SPEC_141B.md",
+      "kpmg/zsd_exc_approval/VERIFY_IN_SE11_141B.md",
+      "kpmg/zsd_exc_approval/ZSD_EXC_APPR_PAINTS_TS.md",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
+      "git log -- kpmg/zsd_exc_approval"
+    ],
+    "complexity": "High",
+    "complexity_basis": "Three reports (3,751 lines), one table with five domains and six data elements, two build specs and two TS documents built from two contradictory FS documents; one logged activation failure."
+  },
+  {
+    "folder": "kpmg/zsd_mis_customer",
+    "title": "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)",
+    "sap_objects": [
+      "ZSD_MIS_CUSTOMER (report - specified in the FS, not built)",
+      "ZSD_CUST_SDFI_DATA (custom table - specified, not built)",
+      "ZSD_PAINT_CUSTGRP2 / ZSD_PAINT_OLDCUSTGRP2 (STVARV variables - specified)",
+      "ZSD_RCL_NEW / ZSD_SALRCL / ZFI_COLL_CRN_P / ZFI_COLL_CRN / ZFI_EXCP_APPROVAL / ZFICUSTAG / ZFI_CRITICAL_OD / ZCUSTAGDUE (existing Z reports the FS refers to; source not supplied)",
+      "ZSD_CUST (existing custom source for the L1-L6 hierarchy, per the FS)"
+    ],
+    "object_types": ["Analysis/Document only"],
+    "module": "SD (with FI-AR data)",
+    "end_client_evidence": "NOTES.md: 'WRICEF 147 — Overall CC MIS, summary-wise and customer-wise (Astral / project UDAY, SD)'; 'V.01, dated 14.08.2026, prepared by Satyendra Singh / Rajesh Vagashiya'; 'Paint and Adhesive divisions'. FS_QUERIES.md: 'Ask Parth Shah'. NOTES.md: '`kpmg/zsd_exc_approval/` (WRICEF 141 A/B, same client)'. Indicates Astral / Project UDAY.",
+    "wricef_or_ticket": "WRICEF 147",
+    "dev_type": "Analysis / feasibility only",
+    "business_requirement": "An ALV report with one row per customer and 80 columns (customer master and sales-officer hierarchy, sales / returns / collections for several periods, outstanding and overdue, credit limit, exception approval, legal status, security deposits) and a custom table, maintained by the user, for everything 'not available in SAP'.",
+    "technical_challenge": "Roughly a third of the columns are specified as 'fetch from Z report X' for seven existing Z reports whose source was not supplied, and the FS and the logic sheet disagree on the Z table (18 annual fields vs a 94-column monthly layout with misspelt and duplicate field names).",
+    "ai_contribution": "A feasibility check dated 21/09/26 with the verdict 'Not buildable end to end from what was supplied. Roughly half of it is', a classification of all 80 columns by source ('about 44 columns buildable now, about 36 blocked'), 21 numbered queries (15 blocking) and design recommendations (a narrow keyed table instead of 94 columns; read the underlying tables rather than SUBMIT seven reports). No code.",
+    "manual_intervention": "Arnav supplied the FS and the two logic sheets on 21/09/26; the query list is for him to send to the functional team. kpmg/timesheet books 4 h on 21/09 (FS review, feasibility assessment and query list).",
+    "rework_events": [],
+    "issue_log_entries": 1,
+    "first_date": "21/09/26",
+    "last_date": "21/09/26",
+    "code_lines_current": 0,
+    "deliverable_files": [
+      "kpmg/zsd_mis_customer/FS_QUERIES.md (140, feasibility check and query list - not counted)",
+      "kpmg/zsd_mis_customer/NOTES.md (43, not counted)"
+    ],
+    "status": "Analysis only - nothing built",
+    "status_evidence": "NOTES.md: '**Assessment only — not started.** The FS cannot be built end to end from what was supplied'. ISSUES.md 21/09/26: 'Feasibility checked; 21 queries raised, 15 blocking' / 'Awaiting source of the seven referenced Z reports and answers'.",
+    "tr_numbers": [],
+    "quality_points": [
+      "Every one of the 80 output columns classified by source and by whether it can be built now",
+      "Defects in the proposed Z table found before build (duplicate / misspelt field names, amounts as length 30, text in a numeric field, no key, no MANDT)",
+      "FS-internal contradictions surfaced (channel finance required or not; 'summary wise' never specified)",
+      "Recommends reading the tables directly instead of submitting seven reports and scraping their ALV output"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not stated",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Source (ZR_PROG_DOWNLOAD) or written logic of the seven referenced Z reports",
+      "Z table design: FS vs sheet; channel finance contradiction",
+      "'Summary wise' view not specified",
+      "Source of the L1-L6 hierarchy and of 'MPC date' (same open point as WRICEF 141 A/B)",
+      "Answers to the 15 blocking queries"
+    ],
+    "evidence_files": [
+      "kpmg/zsd_mis_customer/ISSUES.md",
+      "kpmg/zsd_mis_customer/NOTES.md",
+      "kpmg/zsd_mis_customer/FS_QUERIES.md",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"
+    ],
+    "complexity": "Medium",
+    "complexity_basis": "Assessment of an 80-column report specification and a 94-column table proposal against three FS documents, producing 21 queries; no code."
+  },
+  {
+    "folder": "kpmg/zsd_scheme",
+    "title": "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload",
+    "sap_objects": [
+      "SAPMZSD_SCHEME (module pool; includes ZSD_SCHEME_TOP / _CLS / _O01 / _I01 / _F01)",
+      "ZCL_SD_SCHEME (class - model and validation)",
+      "ZCL_SD_SCHEME_SETTLE (class - volume, early bird, cascading, CN posting)",
+      "ZCL_SD_SCHEME_UI (class)",
+      "ZSD_SCHEME_REPORT (report, transaction ZSCHM_RPT)",
+      "ZSD_SCHEME_UPLOAD (report, transaction ZSCHM_UPL)",
+      "ZSCHM01 / ZSCHM02 / ZSCHM03 (transactions)",
+      "ZSDT_SCHM_HDR / ZSDT_SCHM_RNG / ZSDT_SCHM_RAT / ZSDT_SCHM_SLB / ZSDT_SCHM_SETL / ZSDT_SCHM_FKA / ZSDT_SCHM_CFG (tables, defined in docs/00_TECHNICAL_OBJECTS.md)",
+      "ZSD_SCHEME (message class)",
+      "ZSDSCHEME (number range object; change document object)",
+      "EZSDT_SCHM_HDR (lock object)",
+      "ZSD_SCHM / ZSD_SCHM_ST (authorization objects)",
+      "ZSDV_SCHM_FKA / ZSDV_SCHM_CFG (SM30 views)",
+      "ZSH_SCHM_NO (search help)"
+    ],
+    "object_types": ["Module pool", "Class", "Report", "ALV", "Upload/Download utility", "DDIC"],
+    "module": "SD",
+    "end_client_evidence": "NOTES.md: 'The Scheme (Pipes) build for Astral / UDAY / SD.' docs/00_TECHNICAL_OBJECTS.md: 'Astral Limited / Project UDAY / Module SD / WRICEF **SCHEME**'; 'If Astral has a registered customer namespace'. docs/Scheme_Pipes_Assumptions_and_Queries.docx: 'Client Astral Limited', 'Project UDAY', 'Scheme - Pipes, V.01 dated 10.08.2026, prepared by Sanjay Modhvadiya'. Indicates Astral / Project UDAY.",
+    "wricef_or_ticket": "WRICEF 'SCHEME' (FS 'Scheme - Pipes' V.01, 10.08.2026)",
+    "dev_type": "New development",
+    "business_requirement": "Create, change and display sales schemes for the Pipes business with selection ranges and product ratios, evaluate each customer's volume against targets per settlement period (volume, early bird, cascading), calculate and post the credit notes, report on them, and upload schemes in mass.",
+    "technical_challenge": "A module pool with four screens, a tabstrip and two ALV grids; one generic range table replacing seven child tables; settlement and credit-note posting driven entirely by configuration; segregation of duties; and an FS still in draft with blank sections and fields (analytical billing fields, customer extension fields) that may not exist in the system.",
+    "ai_contribution": "Six source files (3,579 lines): the module pool (five includes in one file), three global classes, the report with settlement and the mass upload, plus the technical object list with DDIC definitions and build order (36 objects), a screen layout document and the assumptions and queries register A01-A42. No session log (ISSUES.md is empty).",
+    "manual_intervention": "Not logged. NOTES.md lists everything that must be built by hand (SE51 screens, SE41 statuses, SNRO, SU21, SCDO, lock object, SE54 views, SE93). kpmg/timesheet books 3 h (01/09 and 28/09): 'Reviewed open queries on scheme application with SD functional'.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 3579,
+    "deliverable_files": [
+      "kpmg/zsd_scheme/src/ZCL_SD_SCHEME_SETTLE.abap (893)",
+      "kpmg/zsd_scheme/src/SAPMZSD_SCHEME.abap (855, five includes concatenated)",
+      "kpmg/zsd_scheme/src/ZCL_SD_SCHEME.abap (790)",
+      "kpmg/zsd_scheme/src/ZSD_SCHEME_REPORT.abap (464)",
+      "kpmg/zsd_scheme/src/ZSD_SCHEME_UPLOAD.abap (397)",
+      "kpmg/zsd_scheme/src/ZCL_SD_SCHEME_UI.abap (180)",
+      "kpmg/zsd_scheme/docs/00_TECHNICAL_OBJECTS.md (not counted)",
+      "kpmg/zsd_scheme/docs/01_SCREEN_LAYOUT.md (not counted)",
+      "kpmg/zsd_scheme/docs/Scheme_Pipes_Assumptions_and_Queries.docx (binary)"
+    ],
+    "status": "Unverified",
+    "status_evidence": "ISSUES.md has no entries. NOTES.md records no creation, activation or test: 'Nothing here is serialised today — flat `.abap` files, no `src/`, no `.abapgit.xml`' and an 'Open point (Q2)' on the field mapping. The FS is described as 'Draft — sections 1.2, 2.2, 2.3 and 3 are blank; document not yet approved' (assumption register).",
+    "tr_numbers": [],
+    "quality_points": [
+      "Validation lives only in ZCL_SD_SCHEME so the online transaction and the mass upload cannot diverge",
+      "Nothing about the posting is hardcoded - order type, billing type, material and condition come from a configuration table",
+      "Segregation of duties enforced by removing the Post button when the settlement authorisation is missing",
+      "Optional customer extension fields read through ASSIGN COMPONENT so the class compiles whether or not they exist",
+      "One generic range table instead of seven child tables; lock object, change documents and number range designed in",
+      "42 assumptions and the open queries documented for functional confirmation before sign-off"
+    ],
+    "automation": {
+      "is_automation": true,
+      "manual_process_replaced": "Entering schemes one at a time (ZSD_SCHEME_UPLOAD mass upload) and calculating and posting scheme credit notes per customer and period (the files do not describe the previous manual procedure)",
+      "frequency_evidence": "docs/Scheme_Pipes_Assumptions_and_Queries.docx A02: 'Scheme Type (Daily / Monthly / Quarterly / Half-Yearly / Yearly) defines the settlement periodicity.'"
+    },
+    "open_items": [
+      "No creation / activation / test record; FS still a draft",
+      "Q2: FS maps sold-to and distribution channel to analytical fields VBRP-KUNAG_ANA / VTWEG_AUFT; code uses VBRK-KUNAG / VBRK-VTWEG",
+      "Q1 namespace and package; Q12 message section of the FS blank",
+      "All screens, GUI statuses, number range, authorisation objects, change-document object and SM30 views are manual",
+      "ZSD_SCHEME_REPORT needs its own hand-built screen 0100 and status before it will activate"
+    ],
+    "evidence_files": [
+      "kpmg/zsd_scheme/ISSUES.md",
+      "kpmg/zsd_scheme/NOTES.md",
+      "kpmg/zsd_scheme/docs/00_TECHNICAL_OBJECTS.md",
+      "kpmg/zsd_scheme/src/SAPMZSD_SCHEME.abap",
+      "kpmg/zsd_scheme/src/ZCL_SD_SCHEME_SETTLE.abap",
+      "kpmg/zsd_scheme/docs/Scheme_Pipes_Assumptions_and_Queries.docx",
+      "kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"
+    ],
+    "complexity": "Very High",
+    "complexity_basis": "A module pool with four screens, three classes and two reports (3,579 lines) and a 36-object inventory including seven tables, authorisation objects, change documents and a number range; no iterations logged."
+  },
+  {
+    "folder": "kpmg/_docs",
+    "title": "Shared documents for the KPMG / Astral work - assumption registers, confirmation notes, KT note, TS template",
+    "sap_objects": [
+      "ZFCST / ZFCST_UPL / ZFCST_RPT / ZFCST_PAINTS (transactions described in ZFORECAST_KT_Tcodes.md)"
+    ],
+    "object_types": ["Analysis/Document only"],
+    "module": "PP / SD / MM (documents only)",
+    "end_client_evidence": "ZFORECAST_KT_Tcodes.md: 'Astral Limited / Project UDAY (KPMG) · Adhesive and Paints forecasting · PP / SD'; 'Paints is in TR DEVK930479 (not released), Adhesive has no transport yet'; 'The repository `arnavjohri/Diligent`'. ZFORECAST_Adhesive_Assumptions_v2.docx and Scheme_Pipes_Assumptions_and_Queries.docx: 'Client Astral Limited', 'Project UDAY'. File name templates/Technical_Specification_Astral_XXX.doc. Indicates Astral / Project UDAY via KPMG.",
+    "wricef_or_ticket": "WRICEF ID-2A (ZFORECAST Adhesive), WRICEF ID-2B (Paints), WRICEF 'SCHEME' (Pipes), FSD 30 (ZMM_VEND_UPLOAD)",
+    "dev_type": "Documentation only",
+    "business_requirement": "Documents for functional confirmation and knowledge transfer: assumption and query registers, plain-language logic notes for the annual forecast, a transaction overview, and the client's TS template.",
+    "technical_challenge": "not applicable",
+    "ai_contribution": "The folder holds: two ZFORECAST Adhesive assumption registers (against the 14.08.2026 template, and version 2 against the 20.08.2026 template with six mandatory queries), 'ZFORECAST - Annual Forecast' flow and complete-logic notes 'for functional confirmation', the Scheme (Pipes) assumptions and queries register (A01-A42), the KT note ZFORECAST_KT_Tcodes.md/.docx ('prepared 19.10.2026, updated 23.10.2026, by Arnav Johri'), the Astral TS template and a copy of FSD 30 as received. Three of the files are byte-identical copies of documents in zpp_forecast/docs, zsd_scheme/docs and zmm_vend_upload/docs. The documents do not state which tool wrote them; git shows the KT note committed 2026-10-19 ('kpmg/_docs: ZFORECAST KT note') and updated in the 2026-10-23 handover commit.",
+    "manual_intervention": "Not evidenced; the FSD and the TS template are client-supplied documents.",
+    "rework_events": [],
+    "issue_log_entries": 0,
+    "first_date": "not stated",
+    "last_date": "not stated",
+    "code_lines_current": 0,
+    "deliverable_files": [
+      "kpmg/_docs/ZFORECAST_KT_Tcodes.md (38, not counted)",
+      "kpmg/_docs/ZFORECAST_KT_Tcodes.docx (binary)",
+      "kpmg/_docs/ZFORECAST_Adhesive_Assumptions_v2.docx (binary)",
+      "kpmg/_docs/ZFORECAST_Adhesive_Assumptions_and_Queries.docx (binary)",
+      "kpmg/_docs/ZFORECAST_Annual_Logic_for_Confirmation.docx (binary)",
+      "kpmg/_docs/ZFORECAST_Annual_Flow_for_Confirmation.docx (binary)",
+      "kpmg/_docs/Scheme_Pipes_Assumptions_and_Queries.docx (binary)",
+      "kpmg/_docs/templates/Technical_Specification_Astral_XXX.doc (binary, client template)",
+      "kpmg/_docs/30 FSD_ZMM_VEND_UPLOAD - upload program.doc (binary, FS as received)"
+    ],
+    "status": "Analysis only - nothing built",
+    "status_evidence": "The folder contains documents only (no ISSUES.md, NOTES.md or source). ZFORECAST_KT_Tcodes.md: 'Development system only; Paints is in TR DEVK930479 (not released), Adhesive has no transport yet.'",
+    "tr_numbers": [
+      "DEVK930479 (cited in ZFORECAST_KT_Tcodes.md for the Paints forecast, 'not released')"
+    ],
+    "quality_points": [
+      "Assumption registers put every development assumption in front of the functional team for confirmation before build",
+      "Annual-logic note lists where the build knowingly differs from the FS and needs a decision",
+      "KT note states the live authority-check bypass and that nothing has been transported"
+    ],
+    "automation": {
+      "is_automation": false,
+      "manual_process_replaced": "not applicable",
+      "frequency_evidence": "not stated"
+    },
+    "open_items": [
+      "Mandatory queries in the Adhesive assumption register v2 (e.g. M1 billing vs goods-issue source) - no answers filed in this folder",
+      "No log in the folder; duplicates of documents held in the object folders"
+    ],
+    "evidence_files": [
+      "kpmg/_docs/ZFORECAST_KT_Tcodes.md",
+      "kpmg/_docs/ZFORECAST_Adhesive_Assumptions_v2.docx",
+      "kpmg/_docs/ZFORECAST_Adhesive_Assumptions_and_Queries.docx",
+      "kpmg/_docs/ZFORECAST_Annual_Flow_for_Confirmation.docx",
+      "kpmg/_docs/ZFORECAST_Annual_Logic_for_Confirmation.docx",
+      "kpmg/_docs/Scheme_Pipes_Assumptions_and_Queries.docx",
+      "git log -- kpmg/_docs"
+    ],
+    "complexity": "Low",
+    "complexity_basis": "Nine document files (one 38-line markdown note, the rest Word files); no code."
+  }
+]
