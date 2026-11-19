@@ -91,6 +91,8 @@ Attachments:
 2. AI_Use_Case_Register.xlsx - use-case register with formulas and productivity dashboard
 3. AI_Success_Story_JIB_Status.pptx - success-story presentation
 
+**Work repository** (commit history, issue logs and delivered objects): https://github.com/arnavjohri/Diligent
+
 Kindly review and let me know if you need any further detail.
 
 Thanks & Regards,
@@ -102,7 +104,8 @@ open(os.path.join(HERE, "..", "Management_Summary_Email.md"), "w").write(mail)
 def mail_html(text):
     """Same mail as HTML, so that the bold survives copy and paste into Outlook."""
     import html as _h
-    fmt = lambda t: re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", _h.escape(t, quote=False))
+    link = lambda t: re.sub(r"(https://[^\s<]+)", r'<a href="\1">\1</a>', t)
+    fmt = lambda t: link(re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", _h.escape(t, quote=False)))
     lines = text.strip().split("\n")
     out, mode = [], None
     for ln in lines[1:]:

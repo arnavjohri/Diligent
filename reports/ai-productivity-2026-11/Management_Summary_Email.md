@@ -18,6 +18,8 @@ Attachments:
 2. AI_Use_Case_Register.xlsx - use-case register with formulas and productivity dashboard
 3. AI_Success_Story_JIB_Status.pptx - success-story presentation
 
+**Work repository** (commit history, issue logs and delivered objects): https://github.com/arnavjohri/Diligent
+
 Kindly review and let me know if you need any further detail.
 
 Thanks & Regards,
