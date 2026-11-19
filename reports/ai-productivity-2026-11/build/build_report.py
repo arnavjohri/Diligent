@@ -1,7 +1,7 @@
 """Management report: Deliverable-1 headings in the body, register / ATC / effort / evidence detail in annexes.
 python3 -I build_report.py  -> data/report.json, data/casestudy.json, ../Management_Summary_Email.md   (render with render_docx.js)
 """
-import json, os
+import json, os, re
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 D = os.path.join(HERE, "data")
@@ -78,13 +78,13 @@ Dear [Manager name],
 As requested, please find attached my report on AI utilisation in SAP ABAP delivery from July to November 2026, with the detailed use-case register and the success-story presentation.
 
 Summary:
-- AI-assisted developments: {S['n_counted']} completed - ONGC (OVL) {BP['ONGC (OVL)']['n']}, Astral (KPMG) {BP['Astral (KPMG)']['n']}, PAL {BP['PAL']['n']}, common tools {BP['Common (all projects)']['n']}; {COMMITS} commits in the work repository.
-- Significant applications: ONGC JIB Status dashboard, DPR Fiori dashboard and CPI interface, Bank Revaluation and Per-Barrel analytics; PAL FB70 credit-memo approval workflow; Astral ZFORECAST (Adhesive and Paints), Exceptional Approval and Clause 34 TDS report.
-- ATC corrections (ONGC): 847 findings worked across 51 program includes, with {len(PAT)} documented correction patterns.
-- Automations: {len(autos)}, including the daily BP-creation mail, mass uploads, the approval workflow and developer tools.
-- Effort: about {md(S['saved'])} man-days saved, {pc(S['red'])} overall effort reduction.
-- Success story: the JIB Status dashboard was built in three working days and confirmed by the client in writing on 17 November after their testing.
-- Benefits: three projects handled in parallel with production support, faster root-cause analysis, and reusable assets for the team.
+- AI-assisted developments: **{S['n_counted']} completed** - ONGC (OVL) {BP['ONGC (OVL)']['n']}, Astral (KPMG) {BP['Astral (KPMG)']['n']}, PAL {BP['PAL']['n']}, common tools {BP['Common (all projects)']['n']}; **{COMMITS} commits** in the work repository.
+- Significant applications: ONGC **JIB Status dashboard**, DPR Fiori dashboard and CPI interface, Bank Revaluation and Per-Barrel analytics; PAL **FB70 credit-memo approval workflow**; Astral **ZFORECAST** (Adhesive and Paints), Exceptional Approval and Clause 34 TDS report.
+- ATC corrections (ONGC): **847 findings** worked across 51 program includes, with {len(PAT)} documented correction patterns.
+- Automations: **{len(autos)}**, including the daily BP-creation mail, mass uploads, the approval workflow and developer tools.
+- Effort: about **{md(S['saved'])} man-days saved, {pc(S['red'])} overall effort reduction**.
+- Success story: the JIB Status dashboard was **built in three working days** and **confirmed by the client in writing** on 17 November after their testing.
+- Benefits: **three projects handled in parallel** with production support, faster root-cause analysis, and reusable assets for the team.
 
 Attachments:
 1. AI_Utilisation_Report.docx - report with use-case register, ATC register, effort calculation and evidence annexure
@@ -97,6 +97,34 @@ Thanks & Regards,
 Arnav Johri | Associate Consultant | Diligent Global
 """
 open(os.path.join(HERE, "..", "Management_Summary_Email.md"), "w").write(mail)
+
+
+def mail_html(text):
+    """Same mail as HTML, so that the bold survives copy and paste into Outlook."""
+    import html as _h
+    fmt = lambda t: re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", _h.escape(t, quote=False))
+    lines = text.strip().split("\n")
+    out, mode = [], None
+    for ln in lines[1:]:
+        kind = "ul" if ln.startswith("- ") else "ol" if re.match(r"\d+\. ", ln) else None
+        if mode and kind != mode:
+            out.append(f"</{mode}>")
+        if kind and kind != mode:
+            out.append(f"<{kind}>")
+        mode = kind
+        if kind:
+            out.append("<li>" + fmt(re.sub(r"^(- |\d+\. )", "", ln)) + "</li>")
+        elif ln.strip():
+            out.append("<p>" + fmt(ln) + "</p>")
+    body = "\n".join(out).replace("</p>\n<p>Arnav Johri", "<br>\nArnav Johri")
+    return ("<!doctype html>\n<html><head><meta charset=\"utf-8\"><title>Cover mail</title>\n"
+            "<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#000;background:#fff;max-width:820px;margin:24px auto;padding:0 16px}"
+            ".subj{background:#eef2f4;padding:8px 12px;margin-bottom:18px;font-size:10pt}p{margin:0 0 11pt}ul,ol{margin:0 0 11pt}</style></head>\n<body>\n"
+            f"<div class=\"subj\"><b>Subject</b> (paste into the subject field): {_h.escape(lines[0].replace('Subject: ', ''), quote=False)}</div>\n"
+            f"<div id=\"mail\">\n{body}\n</div>\n</body></html>\n")
+
+
+open(os.path.join(HERE, "..", "Management_Summary_Email.html"), "w", encoding="utf-8").write(mail_html(mail))
 
 # ------------------------------------------------------------------ building blocks
 cats = {}
