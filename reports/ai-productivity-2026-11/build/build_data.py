@@ -33,9 +33,9 @@ EVIDENCE_CLIENT = {
     "PENDING": "ONGC Videsh (OVL)",
     "GAIL": "GAIL",
 }
-WORKING_DAYS = 63          # weekdays 19/08/26-19/11/26 (67) less 4 leave days (08-11/09)
+WORKING_DAYS = 69          # weekdays 19/08/26-19/11/26 (67) less 4 leave days (08-11/09), plus 6 weekend days worked
 HOURS_PER_DAY = 8
-ADMIN_SHARE = 19.5 / 144   # 'General' share of the filed September timesheet
+ADMIN_SHARE = 0.0          # all working time counted, incl. status calls and transport work for these developments
 PRE_REPO_HOURS_PER_DAY = 4 # dated pre-repository days: half a day per stream (two engagements ran in parallel)
 
 # Baseline (conventional, manual) hours by work type x complexity.
@@ -47,18 +47,18 @@ RUBRIC_LABEL = {
 }
 COMPLEX = ["Low", "Medium", "High", "Very High"]
 RUBRIC = {
-    "NEW": [8, 20, 36, 60], "ENH": [4, 10, 20, 36], "FIX": [3, 6, 12, 20], "S4": [3, 8, 16, 28],
-    "ANA": [2, 5, 10, 16], "TOOL": [4, 10, 20, 32], "DOC": [1, 3, 6, 10],
+    "NEW": [6, 14, 25, 42], "ENH": [3, 7, 14, 25], "FIX": [2, 4, 8, 14], "S4": [2, 6, 11, 20],
+    "ANA": [1, 4, 7, 11], "TOOL": [3, 7, 14, 22], "DOC": [1, 2, 4, 7],
 }
 # Minimum human effort per use case (prompting, review, paste / activation, unit test, TR notes) by
 # complexity; code tiers A/B and analysis tier C. Git timestamps cannot see this time per object.
-FLOOR = {"code": [2, 4, 8, 16], "analysis": [1, 2, 4, 6]}
+FLOOR = {"code": [1.5, 3, 6, 11], "analysis": [1, 1.5, 3, 4]}
 TIER_LABEL = {
     "D": "D - Development completed", "R": "R - Analysis / root cause completed", "X": "Excluded",
 }
 # ATC baseline: minutes per correction block by type, plus per-object and packaging effort
 ATC = dict(pragma_blocks=107, replace_blocks=65, newcode_blocks=33, objects=51,
-           min_pragma=10, min_replace=25, min_newcode=40, h_per_object=0.25, h_packaging=8,
+           min_pragma=7, min_replace=18, min_newcode=28, h_per_object=0.2, h_packaging=6,
            pre_repo_h=28, rework_sites=46, h_per_rework_site=0.25)
 
 g = load("gitstats.json")
@@ -163,7 +163,7 @@ U = {
     "ovl/rgjv_update_acc_data_in_acdoca": ("ONGC", "ANA", "High", 1, "C", "Debugging and Troubleshooting", 0, [], None),
     "ovl/z_jva_alignment": ("ONGC", "ANA", "High", 1, "C", "Analysis & Solution Design", 0, [], None),
     "ovl/capex_provisional": ("ONGC", "ANA", "Medium", 1, "C", "Analysis & Solution Design", 0, [], None),
-    "ovl/cnsldtn_grpjrnl_api": ("ONGC", "ANA", "Medium", 1, "C", "Interfaces and Integration", 0, [], None),
+    "ovl/cnsldtn_grpjrnl_api": ("ONGC", "ANA", "High", 1, "C", "Interfaces and Integration", 0, [], None),
     "ovl/fagl_settings_restrict_mig": ("ONGC", "ANA", "Low", 1, "C", "S/4HANA Modernisation", 0, [], None),
     "ovl/zf01_exchange_rate": ("ONGC", "NEW", "Medium", 1, "NQ", "Interfaces and Integration", 0, [], None),
     "kpmg/zmm_me35k_release": ("ONGC", "S4", "High", 1, "NQ", "S/4HANA Modernisation", 0, [], None),
@@ -186,10 +186,10 @@ U = {
     "kpmg/zfi_tds_cl34": ("ASTRAL", "NEW", "High", 1, "A", "ABAP Program Development", 0, [], None),
     "kpmg/zmm_bp_mail": ("ASTRAL", "NEW", "Medium", 1, "A", "Business Process Automation", 0, [], None),
     "kpmg/zmm_po_budget": ("ASTRAL", "NEW", "High", 1, "B", "Enhancements", 0, ["kpmg/zmm_po_budget_deferred"], None),
-    "kpmg/zmb5b": ("ASTRAL", "ENH", "Medium", 1, "A", "ABAP Program Development", 8, [], None),
+    "kpmg/zmb5b": ("ASTRAL", "ENH", "High", 1, "A", "ABAP Program Development", 8, [], None),
     "kpmg/zmm_rm07mlbd": ("ASTRAL", "ENH", "Medium", 1, "B", "ABAP Program Development", 0, [], None),
-    "kpmg/zmm_vend_upload": ("ASTRAL", "ENH", "High", 1, "B", "Business Process Automation", 16, [], None),
-    "kpmg/zmm_po_validity_fs": ("ASTRAL", "ANA", "Low", 1, "C", "Debugging and Troubleshooting", 0, [], None),
+    "kpmg/zmm_vend_upload": ("ASTRAL", "ENH", "Very High", 1, "B", "Business Process Automation", 16, [], None),
+    "kpmg/zmm_po_validity_fs": ("ASTRAL", "ANA", "Medium", 1, "C", "Debugging and Troubleshooting", 0, [], None),
     "kpmg/zsd_mis_customer": ("ASTRAL", "ANA", "Medium", 1, "C", "Analysis & Solution Design", 0, [], None),
     "kpmg/zsd_scheme": ("ASTRAL", "NEW", "Very High", 1, "NQ", "Custom Application Development", 0, [], None),
     # Cross-project
@@ -197,7 +197,7 @@ U = {
                        "AI delivery toolkit: rulebook, release-constraint memory, 7 workflow skills, sync / audit scripts"),
     "tools/zr_find_enh": ("CROSS", "TOOL", "High", 1, "B", "Reusable Technical Components", 0, [], None),
     "tools/zr_icf_url_list": ("CROSS", "TOOL", "Low", 1, "B", "Reusable Technical Components", 0, [], None),
-    "research/copilot-btp-mcp": ("CROSS", "ANA", "Medium", 1, "C", "Analysis & Solution Design", 0, [], None),
+    "research/copilot-btp-mcp": ("CROSS", "ANA", "High", 1, "C", "Analysis & Solution Design", 0, [], None),
     "ovl/ztest_t001": ("CROSS", "TOOL", "Medium", 1, "B", "Reusable Technical Components", 0, ["kpmg/abapgit_pilot"],
                        "abapGit offline-ZIP delivery path: DDIC and report pilots, XML element-order root cause"),
 }
@@ -295,22 +295,24 @@ def add(**k):
 
 
 def solve_uplift():
-    """Allocation factor U so that the git-period hours (floors included) add up to the available working hours."""
+    """Allocation: git-period hours = a x session hours + c x baseline (half each), floors applied, total = available hours."""
     budget = WORKING_DAYS * HOURS_PER_DAY * (1 - ADMIN_SHARE)
     in_rows = sum(k["session_h"] for k in ROWS)
     excluded = SESSION_TOTAL - in_rows
+    b_git = sum(k["baseline_h"] for k in ROWS if k["session_h"] > 0)
+    ratio = SESSION_TOTAL / b_git
 
     def used(u):
         t = excluded * u
         for k in ROWS:
             if k["session_h"] > 0:
-                t += max(k["floor_h"], k["session_h"] * u + k["pre_h"]) - k["pre_h"]
+                t += max(k["floor_h"], k["session_h"] * u + k["baseline_h"] * u * ratio + k["pre_h"]) - k["pre_h"]
         return t
     lo, hi = 0.0, 10.0
     for _ in range(80):
         mid = (lo + hi) / 2
         lo, hi = (mid, hi) if used(mid) < budget else (lo, mid)
-    return round(lo, 4), round(excluded, 3), round(budget, 2)
+    return round(lo, 4), round(lo * ratio, 4), round(excluded, 3), round(budget, 2)
 
 
 def status_conf(status, tier):
@@ -349,9 +351,10 @@ add(folder="ovl/atc", client="ONGC", work="ATC", cx="Very High", scope=1, tier="
 for k in ROWS:  # every use case is completed (confirmed by Arnav 19/11/26)
     k["tier"] = "R" if k["tier"] == "C" else "D"
     k["floor_h"] = FLOOR["analysis" if k["tier"] == "R" else "code"][COMPLEX.index(k["cx"])]
-UPLIFT, EXCLUDED_SESSION, BUDGET = solve_uplift()
+UPLIFT, SIZE_FACTOR, EXCLUDED_SESSION, BUDGET = solve_uplift()
 for k in ROWS:
-    k["actual_h"] = round(max(k["floor_h"], k["session_h"] * UPLIFT + k["pre_h"]) + k.get("rework_h", 0), 2)
+    git_part = (k["session_h"] * UPLIFT + k["baseline_h"] * SIZE_FACTOR) if k["session_h"] > 0 else 0
+    k["actual_h"] = round(max(k["floor_h"], git_part + k["pre_h"]) + k.get("rework_h", 0), 2)
 
 # ----------------------------------------------------------------- not in U
 EXCLUDED = {
@@ -441,7 +444,7 @@ for i, k in enumerate(sorted(ROWS, key=lambda x: (["PAL", "ONGC", "PENDING", "AS
 counted = [o for o in out if o["counted"]]
 tot = lambda rows, f: round(sum(o[f] for o in rows), 2)
 summary = dict(
-    uplift=UPLIFT, excluded_session=EXCLUDED_SESSION, budget=BUDGET, raw_uplift=round(BUDGET / SESSION_TOTAL, 4), session_total=round(SESSION_TOTAL, 2), working_days=WORKING_DAYS, admin_share=round(ADMIN_SHARE, 4),
+    uplift=UPLIFT, size_factor=SIZE_FACTOR, excluded_session=EXCLUDED_SESSION, budget=BUDGET, raw_uplift=round(BUDGET / SESSION_TOTAL, 4), session_total=round(SESSION_TOTAL, 2), working_days=WORKING_DAYS, admin_share=round(ADMIN_SHARE, 4),
     n_all=len(out), n_counted=len(counted), baseline=tot(counted, "baseline_h"), actual=tot(counted, "actual_h"),
     saved=tot(counted, "saved_h"),
 )

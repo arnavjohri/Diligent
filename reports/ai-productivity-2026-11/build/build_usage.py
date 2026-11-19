@@ -53,10 +53,22 @@ hb = g["hours_by_day"]
 long_days = sum(1 for v in hb.values() if v >= 6)
 d0, d1 = datetime.date(2026, 7, 20), datetime.date(2026, 11, 19)
 weekdays = sum(1 for i in range((d1 - d0).days + 1) if (d0 + datetime.timedelta(i)).weekday() < 5) - 4
+IST = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+stamps = [datetime.datetime.fromisoformat(x).astimezone(IST) for x in git("log", "--all", "--no-merges", "--format=%ad", "--date=iso-strict").split()]
+byday = collections.defaultdict(list)
+for t in stamps:
+    byday[t.date()].append(t)
+spans = {d: (max(v) - min(v)).total_seconds() / 3600 for d, v in byday.items()}
+peak = max(byday, key=lambda d: len(byday[d]))
+late = sum(1 for t in stamps if t.hour >= 19 or t.hour < 7)
+wk_dates = ", ".join(d.strftime("%d/%m") for d in sorted(byday) if d.weekday() >= 5)
 metrics = [
     ("Total commits in the repository, 19/08 - 19/11/26 (all branches)", all_commits, "git rev-list --all --count"),
     ("Working days in the period 20/07 - 19/11/26 (less 4 days leave)", weekdays, "Calendar"),
-    ("Weekend days with AI-assisted work", weekend, "git commit dates"),
+    ("Weekend days with AI-assisted work", weekend, f"git commit dates: {wk_dates}"),
+    (f"Peak day ({peak.strftime('%d/%m/%y')}): commits", len(byday[peak]), f"work from {min(byday[peak]).strftime('%H:%M')} to {max(byday[peak]).strftime('%H:%M')} IST ({spans[peak]:.1f} h)"),
+    ("Days with 8+ hours between first and last commit", sum(1 for v in spans.values() if v >= 8), "git commit timestamps (IST)"),
+    ("Commits made after 19:00 or before 07:00 IST", late, "git commit timestamps (IST)"),
     ("Days with 6 or more hours of measured AI session time", long_days, "Commit work blocks"),
     ("Average commits per active day", round(all_commits / len(days), 1), "Total commits / active days"),
     ("Period of AI-assisted delivery covered", "20/07/26 - 19/11/26", "Claude Code handoff record (from 20/07) and git history (from 19/08)"),
@@ -93,7 +105,7 @@ gaps = [
 ]
 highlights = [
     f"{all_commits} commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about {round(all_commits / len(days))} commits per active day.",
-    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on {len(days)} active AI-session days, {weekend} of them weekends; {long_days} days with 6+ hours of measured AI session time.",
+    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on {len(days)} active days including {weekend} weekends; peak day {peak.strftime('%d/%m')} with {len(byday[peak])} commits over {spans[peak]:.1f} hours.",
     "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
     "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
     f"{len(objs)} custom SAP objects built, enhanced or analysed; {len(ts_docs)} technical specifications; {issue_entries} issue-log entries; {code_lines:,} lines of code written.",

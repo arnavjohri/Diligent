@@ -72,25 +72,27 @@ for col, w in zip("ABCDEFGH", [44, 16, 16, 16, 16, 16, 16, 40]):
 r = 4
 A.cell(r, 1, "1. Available working time (period 19/08/26 - 19/11/26)").font = f_bold
 params = [
-    ("Working days in period (67 weekdays less 4 days leave, 08-11/09/26)", S["working_days"], "input", "Weekday count; public holidays not deducted (conservative: more hours on the 'with AI' side)."),
+    ("Days worked in period (63 weekdays after 4 days leave + 6 weekend days)", S["working_days"], "input", "Weekdays 19/08-19/11/26 less leave 08-11/09, plus weekend days with commits (23/08, 29/08, 05/09, 13/09, 27/09, 10/10)."),
     ("Hours per working day", 8, "input", "Eight-hour day per the request."),
-    ("Admin / non-development share", S["admin_share"], "input", "Share of 'General' rows (status calls, TR organisation) in the filed September timesheet: 19.5 of 144 h."),
+    ("Non-development share", S["admin_share"], "input", "All working time counted, including status calls and transport work for these developments."),
     ("Development hours available in period", "=B5*B6*(1-B7)", "f", "Every development hour of the period is treated as spent on the use cases below."),
     ("AI-assisted session hours measured in git (all work)", S["session_total"], "input", "Commits within 75 min of each other form one work block; each block counts its span plus a 20-min lead-in; block time split over objects by files changed."),
     ("  of which on excluded / non-development items", S["excluded_session"], "input", "Timesheet files, sandbox, archive imports."),
-    ("Allocation factor (session hour -> total hour with AI)", S["uplift"], "input", "Solved so that line 'Check' equals the available hours after minimum-effort floors are applied (without floors it would be B8/B9)."),
+    ("Allocation factor per session hour", S["uplift"], "input", "Half of the working time is distributed by measured session time, half by work size (B16); both solved so that 'Check' equals the available hours."),
     ("Check: git-period hours allocated across the register", "=SUMPRODUCT(('Master Register'!S5:S200>0)*('Master Register'!W5:W200-'Master Register'!T5:T200-'Master Register'!U5:U200))+B10*B11", "f", "Should equal B8 (difference = rounding)."),
     ("Difference to available hours", "=B12-B8", "f", "Close to zero when the allocation factor is consistent."),
     ("Hours per man-day", "=B6", "f", ""),
     ("Hours per pre-repository dated day per stream", 4, "input", "Before 19/08/26 only dated records exist (work log, handoff, timesheet narrative); two engagements ran in parallel, so each dated stream-day counts 4 h."),
+    ("Allocation factor per baseline hour (work size)", S["size_factor"], "input", "Second half of the allocation: hours distributed in proportion to the size of each development."),
 ]
 for i, (lab, val, kind, note) in enumerate(params):
     rr = r + 1 + i
     put(A, rr, 1, lab)
-    c = put(A, rr, 2, val, font=f_blue if kind == "input" else f_body, fmt="0.0000" if i in (2, 6) else NUM,
-            fillc=KEY if i == 6 else None)
+    c = put(A, rr, 2, val, font=f_blue if kind == "input" else f_body, fmt="0.0000" if i in (2, 6, 11) else NUM,
+            fillc=KEY if i in (6, 11) else None)
     put(A, rr, 8, note, font=f_sub)
 UPL = "'Effort Assumptions'!$B$11"
+SIZ = "'Effort Assumptions'!$B$16"
 MDH = "'Effort Assumptions'!$B$14"
 
 r = 17
@@ -179,7 +181,7 @@ r = 77
 A.cell(r, 1, "7. Formulas").font = f_bold
 for i, t in enumerate([
     "Effort without AI = rubric(work type, complexity) x scope factor   (ATC row: section 6).",
-    "Actual effort with AI = MAX(minimum-effort floor, session hours x allocation factor + pre-repository hours) + rework allowance.",
+    "Actual effort with AI = MAX(minimum-effort floor, session hours x B11 + baseline x B16 + pre-repository hours) + review / correction allowance.",
     "Effort saved = without - with (counted tiers only).  Reduction = saved / without.  Man-days = saved / 8.",
     "Productivity improvement = without / with - 1 (not the same as reduction: 75% reduction = 300% productivity improvement).",
     "Project totals use summed hours (weighted), never an average of row percentages.",
@@ -219,7 +221,7 @@ for i, o in enumerate(ROWS):
     put(M, r, 21, f"={ATC_RW}" if o["work"] == "ATC" else 0, font=f_green if o["work"] == "ATC" else f_blue, fmt=NUM, fillc=z)
     put(M, r, 22, f"=INDEX({FLO},MATCH(IF(LEFT(AF{r},1)=\"R\",\"analysis\",\"code\"),{FLOK},0),MATCH(P{r},{CXH},0))",
         fmt=NUM, fillc=z)
-    put(M, r, 23, f"=MAX(V{r},S{r}*{UPL}+T{r})+U{r}", fmt=NUM, fillc=z)
+    put(M, r, 23, f"=MAX(V{r},IF(S{r}>0,S{r}*{UPL}+R{r}*{SIZ},0)+T{r})+U{r}", fmt=NUM, fillc=z)
     put(M, r, 24, f"=IF(OR(LEFT(AF{r},2)=\"D \",LEFT(AF{r},2)=\"R \"),\"Yes\",\"No\")", fillc=z)
     put(M, r, 25, f"=IF(X{r}=\"Yes\",R{r}-W{r},0)", fmt=NUM, fillc=z)
     put(M, r, 26, f"=Y{r}/{MDH}", fmt=MD, fillc=z)

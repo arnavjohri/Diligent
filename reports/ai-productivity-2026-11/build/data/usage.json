@@ -2,7 +2,7 @@
  "metrics": [
   [
    "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-   867,
+   869,
    "git rev-list --all --count"
   ],
   [
@@ -13,7 +13,22 @@
   [
    "Weekend days with AI-assisted work",
    6,
-   "git commit dates"
+   "git commit dates: 23/08, 29/08, 05/09, 13/09, 27/09, 10/10"
+  ],
+  [
+   "Peak day (22/10/26): commits",
+   68,
+   "work from 09:37 to 22:08 IST (12.5 h)"
+  ],
+  [
+   "Days with 8+ hours between first and last commit",
+   6,
+   "git commit timestamps (IST)"
+  ],
+  [
+   "Commits made after 19:00 or before 07:00 IST",
+   33,
+   "git commit timestamps (IST)"
   ],
   [
    "Days with 6 or more hours of measured AI session time",
@@ -22,7 +37,7 @@
   ],
   [
    "Average commits per active day",
-   14.9,
+   15.0,
    "Total commits / active days"
   ],
   [
@@ -52,12 +67,12 @@
   ],
   [
    "Commits in the repository (all branches, non-merge)",
-   796,
+   798,
    "git log --all --no-merges"
   ],
   [
    "  of which AI co-authored or AI-authored",
-   726,
+   728,
    "Co-Authored-By: Claude trailer or author 'Claude'"
   ],
   [
@@ -122,8 +137,8 @@
   ]
  ],
  "highlights": [
-  "867 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
-  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on 58 active AI-session days, 6 of them weekends; 6 days with 6+ hours of measured AI session time.",
+  "869 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
+  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on 58 active days including 6 weekends; peak day 22/10 with 68 commits over 12.5 hours.",
   "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
   "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
   "312 custom SAP objects built, enhanced or analysed; 17 technical specifications; 371 issue-log entries; 150,384 lines of code written."

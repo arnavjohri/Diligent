@@ -1,28 +1,36 @@
 {
  "title": "SAP ABAP AI Utilisation, Productivity Improvement & Delivery Efficiency Report",
  "header": "SAP ABAP AI utilisation report | PAL | ONGC (OVL) | T&G | 19 November 2026",
- "footer": "Prepared by Arnav Johri, Associate Consultant, Diligent Global",
+ "footer": "Arnav Johri, Associate Consultant, Diligent Global",
  "author": "Arnav Johri",
  "sections": [
   {
-   "noHeader": true,
    "blocks": [
     {
-     "t": "cover",
-     "kicker": "MANAGEMENT SUBMISSION - AI ADOPTION AND QUANTIFIABLE PRODUCTIVITY BENEFITS IN SAP ABAP DELIVERY",
-     "title": "SAP ABAP AI Utilisation, Productivity Improvement & Delivery Efficiency Report",
-     "subtitle": "Projects: PAL | ONGC (OVL) | T&G   -   Reporting cut-off date: 19 November 2026",
-     "lines": [
-      "**Prepared by:** Arnav Johri, Associate Consultant (SAP ABAP), Diligent Global",
-      "**Period:** 20 July - 19 November 2026",
-      "**AI tool:** Claude Code (Anthropic)",
-      "**Attachments:** AI_Use_Case_Register.xlsx (detailed register, dashboard, assumptions), AI_Success_Story_JIB_Status.pptx"
-     ]
+     "t": "p",
+     "text": "MANAGEMENT SUBMISSION - AI ADOPTION AND PRODUCTIVITY IN SAP ABAP DELIVERY",
+     "bold": true,
+     "color": "0B5C6B",
+     "size": 18,
+     "after": 60
+    },
+    {
+     "t": "p",
+     "text": "SAP ABAP AI Utilisation, Productivity Improvement & Delivery Efficiency Report",
+     "bold": true,
+     "size": 34,
+     "after": 60
+    },
+    {
+     "t": "p",
+     "text": "Projects: PAL | ONGC (OVL) | T&G  -  Period 20 July - 19 November 2026  -  Arnav Johri, Associate Consultant (SAP ABAP), Diligent Global  -  AI tool: Claude Code (Anthropic)",
+     "size": 18,
+     "color": "5B6B7A",
+     "after": 200
     },
     {
      "t": "h1",
-     "text": "1. Executive Summary",
-     "pageBreak": true
+     "text": "1. Executive Summary"
     },
     {
      "t": "kpis",
@@ -30,110 +38,36 @@
       {
        "value": "74",
        "label": "AI-assisted use cases",
-       "note": "23 new developments, all completed"
+       "note": "all completed"
       },
       {
-       "value": "867",
-       "label": "Commits in under 4 months",
-       "note": "14.9 per active day"
+       "value": "869",
+       "label": "Commits",
+       "note": "in under four months"
       },
       {
-       "value": "128",
+       "value": "57",
        "label": "Man-days saved",
-       "note": "1,025 h of 1,618 h conventional effort"
+       "note": "705 h worked with AI"
       },
       {
-       "value": "63%",
+       "value": "39%",
        "label": "Effort reduction",
-       "note": "2.7x delivery throughput"
+       "note": "weighted by hours"
       }
      ]
     },
     {
      "t": "p",
-     "text": "From 20 July to 19 November 2026 AI (Claude Code) was part of my daily SAP ABAP delivery on three concurrent projects. **74 AI-assisted developments were completed** - ONGC (OVL) 51, T&G 12, PAL 6 and 5 common tools - with **867 commits in under four months**, 150,384 lines of code and 312 custom SAP objects."
+     "text": "AI was part of my daily SAP ABAP work on three projects at the same time. I completed 74 AI-assisted developments: 51 for ONGC, 12 for T&G, 6 for PAL and 5 common tools. They include full applications (CDS / RAP dashboards, an approval workflow, forecasting), reports, interfaces, enhancements, ATC remediation of 51 program includes and root-cause analysis of production issues."
     },
     {
      "t": "p",
-     "text": "The same scope needs 1,618 h conventionally; it took 592 h with AI - **128 man-days saved, a 63% effort reduction**."
+     "text": "I worked 58 active days in the repository period, including 6 weekend days. On 6 days the work ran 8 hours or more from the first commit to the last, and the busiest day (22/10/26) had 68 commits, work from 09:37 to 22:08 IST (12.5 h). Output: 150,384 lines of code, 312 custom objects and 17 technical specifications."
     },
     {
-     "t": "table",
-     "caption": "Project-wise effort summary",
-     "widths": [
-      28,
-      11,
-      13,
-      13,
-      12,
-      12,
-      11
-     ],
-     "numeric": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6
-     ],
-     "totalRow": true,
-     "header": [
-      "Project",
-      "Use cases",
-      "Effort without AI (h)",
-      "Actual with AI (h)",
-      "Saved (h)",
-      "Saved (man-days)",
-      "Reduction"
-     ],
-     "rows": [
-      [
-       "PAL",
-       "6",
-       "131",
-       "59",
-       "72",
-       "9",
-       "55%"
-      ],
-      [
-       "ONGC (OVL)",
-       "51",
-       "1,028",
-       "376",
-       "651",
-       "81",
-       "63%"
-      ],
-      [
-       "T&G",
-       "12",
-       "388",
-       "124",
-       "264",
-       "33",
-       "68%"
-      ],
-      [
-       "Common (all projects)",
-       "5",
-       "71",
-       "33",
-       "38",
-       "5",
-       "54%"
-      ],
-      [
-       "Overall",
-       "74",
-       "1,618",
-       "592",
-       "1,025",
-       "128",
-       "63%"
-      ]
-     ]
+     "t": "p",
+     "text": "**Strongest example:** ONGC Videsh JIB Status management dashboard. Eight CDS views and an analytical cube went from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days, at 50% less effort."
     },
     {
      "t": "h1",
@@ -142,9 +76,8 @@
     {
      "t": "bullets",
      "items": [
-      "Every object folder of the work repository for PAL, ONGC (OVL), T&G and common tools, with its issue log and technical notes.",
-      "Git history of 66 branches: 867 commits, 19/08 - 19/11/26; Claude Code session records 20/07 - 15/08/26 (30 sessions, 557 prompts).",
-      "The August OVL work log, ATC exports, manual review list, ATC knowledge base and handover, FS / TS documents and client feedback."
+      "Every object folder of my work repository, with its issue log (issue, cause, fix) and technical notes; git history of all branches (869 commits).",
+      "Claude Code session records (30 sessions, 557 prompts, 20/07 - 15/08/26), the August OVL work log, ATC exports and handover, FS / TS documents and client feedback."
      ]
     },
     {
@@ -153,38 +86,25 @@
     },
     {
      "t": "p",
-     "text": "6 AI-assisted use cases completed. Effort without AI 131 h; actual effort with AI 59 h; **72 h (9 man-days) saved, 55% effort reduction**."
-    },
-    {
-     "t": "p",
-     "text": "FI-AR forms and e-mail, journal-entry and invoice upload tiles, FB70 credit-memo approval workflow, Ariba PO integration, SD-FI texts."
-    },
-    {
-     "t": "bullets",
-     "items": [
-      "**FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails** (UC-001; 50 h saved): Produced the design, the SWDD skeleton build sheet, both trigger function modules, class ZCL_CM_WORKFLOW (workflow start, then SEND_MAIL with four body builders), the RFC mail wrapper, six implicit enhancements, patches to two team-owned objects, the e-mail matrix and the...",
-      "**SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer Line Items** (UC-004; 6 h saved): Chose the exit over BTE / AC_DOCUMENT with reasons, placed the insert above the existing SIS CHECK, wrote the first-created-SO rule (VBAK ERDAT/ERZET), READ_TEXT with language fallback and keep-existing rule; include 119 -> 221 lines;",
-      "**PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding value; BAdI ME_BAPI_PO_CUST sets NO_ROUNDING (INC01192)** (UC-005; 6 h saved): The assistant wrote the BAdI implementation class following SAP's pointer (NO_ROUNDING = X in POITEM / POITEMX): the current file is the whole class, 122 lines, with INBOUND looping over the items and the eight other methods empty."
-     ],
-     "size": 19
+     "text": "FI-AR forms and e-mail, journal-entry and invoice upload tiles, FB70 credit-memo approval workflow, Ariba PO integration and SD-FI texts."
     },
     {
      "t": "table",
-     "caption": "PAL - all AI use cases (full detail in the Excel register)",
      "fontSize": 7.5,
      "widths": [
       7,
-      47,
-      16,
-      10,
-      10,
-      10
+      51,
+      15,
+      9,
+      9,
+      9
      ],
      "numeric": [
       3,
       4,
       5
      ],
+     "totalRow": true,
      "header": [
       "Sr.",
       "Development / use case",
@@ -198,49 +118,57 @@
        "UC-001",
        "FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with...",
        "New",
-       "75",
-       "25",
-       "50"
+       "52",
+       "42",
+       "10"
       ],
       [
        "UC-002",
-       "PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and group amounts when...",
+       "PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and group amounts...",
        "Bug fix / RCA",
-       "20",
-       "16",
-       "4"
+       "14",
+       "11",
+       "3"
       ],
       [
        "UC-003",
        "PAL customer invoice / credit memo / debit memo forms: PDF mailed by the program cannot be...",
        "Bug fix / RCA",
-       "12",
        "8",
-       "4"
+       "7",
+       "1"
       ],
       [
        "UC-004",
        "SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer...",
        "Enhancement",
-       "10",
-       "4",
-       "6"
+       "7",
+       "5",
+       "2"
       ],
       [
        "UC-005",
        "PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding value; BAdI...",
        "New",
-       "8",
-       "2",
-       "6"
+       "6",
+       "3",
+       "3"
       ],
       [
        "UC-006",
-       "PAL invoice-upload utility class: local and group currency validated independently in the AR...",
+       "PAL invoice-upload utility class: local and group currency validated independently in the...",
        "Bug fix / RCA",
-       "6",
        "4",
-       "2"
+       "3",
+       "1"
+      ],
+      [
+       "",
+       "Total - 6 use cases",
+       "",
+       "92",
+       "71",
+       "20"
       ]
      ]
     },
@@ -250,38 +178,25 @@
     },
     {
      "t": "p",
-     "text": "51 AI-assisted use cases completed. Effort without AI 1,028 h; actual effort with AI 376 h; **651 h (81 man-days) saved, 63% effort reduction**."
-    },
-    {
-     "t": "p",
-     "text": "ATC remediation; CDS / RAP Management Dashboard analytics; DPR Fiori dashboard and CPI interface; Group Reporting; FI / JVA posting and reconciliation; MM enhancements and Fiori tiles; root-cause analysis of production and Mock-2 issues."
-    },
-    {
-     "t": "bullets",
-     "items": [
-      "**ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix** (UC-007; 71 h saved): this naming set was later abandoned for the senior's ZDPR_* package. Dashboard (16-28/09/26): the Overview Page manifest and local annotations for six cards, four detail-app adjustments, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL, the classic-view rewrite of...",
-      "**ATC S/4HANA-readiness remediation: 51 program includes in 14 packages** (UC-008; 47 h saved): Worked the findings family by family: 205 marked correction blocks in 51 includes (107 pragma-only, 65 replace-with-commented-original, 33 new code), 833 added / changed lines.",
-      "**ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...** (UC-009; 44 h saved): Designed and delivered eight classic CDS views (1110 lines) including the analytical cube and an abapGit ZIP, and rebuilt the model twice after feedback (04/11 entry-date model, 06/11 posting-period model at document grain)."
-     ],
-     "size": 19
+     "text": "ATC remediation, CDS / RAP Management Dashboard analytics, DPR Fiori dashboard and CPI interface, Group Reporting, FI / JVA posting and reconciliation, MM enhancements and Fiori tiles, root-cause analysis of production and Mock-2 issues."
     },
     {
      "t": "table",
-     "caption": "ONGC (OVL) - all AI use cases (full detail in the Excel register)",
      "fontSize": 7.5,
      "widths": [
       7,
-      47,
-      16,
-      10,
-      10,
-      10
+      51,
+      15,
+      9,
+      9,
+      9
      ],
      "numeric": [
       3,
       4,
       5
      ],
+     "totalRow": true,
      "header": [
       "Sr.",
       "Development / use case",
@@ -295,287 +210,287 @@
        "UC-007",
        "ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix",
        "New",
-       "120",
-       "49",
-       "71"
+       "84",
+       "75",
+       "9"
       ],
       [
        "UC-008",
        "ATC S/4HANA-readiness remediation: 51 program includes in 14 packages",
        "ATC remediation",
-       "88",
-       "41",
-       "47"
+       "64",
+       "57",
+       "7"
       ],
       [
        "UC-009",
-       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the...",
+       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as...",
        "New",
-       "60",
-       "16",
-       "44"
+       "42",
+       "21",
+       "21"
       ],
       [
        "UC-010",
-       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA...",
+       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA -...",
        "New",
-       "60",
-       "16",
-       "44"
+       "42",
+       "22",
+       "20"
       ],
       [
        "UC-011",
        "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube,...",
        "New",
-       "60",
-       "16",
-       "44"
+       "42",
+       "20",
+       "22"
       ],
       [
        "UC-012",
        "Five Fiori List Report RAP apps for MM tender reports on one service",
        "New",
-       "54",
+       "38",
        "10",
-       "44"
+       "28"
       ],
       [
        "UC-013",
        "Fiori Manage Purchase Orders: custom EKKO fields on the PO header - CDS extension UI...",
        "Enhancement",
-       "45",
-       "16",
-       "29"
+       "31",
+       "23",
+       "8"
       ],
       [
        "UC-014",
-       "ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group /...",
+       "ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group...",
        "New",
-       "36",
+       "25",
        "8",
-       "28"
+       "17"
       ],
       [
        "UC-015",
        "Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the...",
        "New",
-       "36",
-       "8",
-       "28"
+       "25",
+       "9",
+       "16"
       ],
       [
        "UC-016",
-       "Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks, Fiori-path dump",
+       "Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks, Fiori-path...",
        "Enhancement",
-       "36",
+       "25",
        "24",
-       "12"
+       "1"
       ],
       [
        "UC-017",
        "ZAA_IMPARMENTLOSS / SAPMZAAIMP impairment and write-back posting - ABAA/ABZU batch input...",
        "S/4HANA remediation",
-       "28",
-       "16",
-       "12"
+       "20",
+       "11",
+       "9"
       ],
       [
        "UC-018",
        "ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV ledger line...",
        "New",
-       "20",
-       "4",
-       "16"
+       "14",
+       "5",
+       "9"
       ],
       [
        "UC-019",
-       "ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP via...",
+       "ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP...",
        "New",
-       "20",
+       "14",
        "4",
-       "16"
+       "10"
       ],
       [
        "UC-020",
        "Group Reporting: where the CXCD currency translation task log reads its data (ST05 trace...",
        "New",
-       "20",
-       "4",
-       "16"
+       "14",
+       "6",
+       "8"
       ],
       [
        "UC-021",
        "ZFI_TR_BANKACCT - Treasury register of the company's own bank accounts for the Management...",
        "New",
-       "20",
-       "4",
-       "16"
+       "14",
+       "5",
+       "9"
       ],
       [
        "UC-022",
-       "ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header truncation fix,...",
+       "ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header truncation...",
        "Enhancement",
-       "20",
-       "8",
-       "12"
+       "14",
+       "10",
+       "4"
       ],
       [
        "UC-023",
-       "ARMS end-user authorisation request tool - TWO pieces: (1) analysis of hardcoded values, role...",
+       "ARMS end-user authorisation request tool - TWO pieces: (1) analysis of hardcoded values,...",
        "Enhancement",
-       "20",
+       "14",
        "8",
-       "12"
+       "6"
       ],
       [
        "UC-024",
        "ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway OData V2 ->...",
        "New",
-       "20",
-       "4",
-       "16"
+       "14",
+       "3",
+       "11"
       ],
       [
        "UC-025",
-       "ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis - two pieces of...",
+       "ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis - two pieces...",
        "S/4HANA remediation",
-       "16",
-       "8",
-       "8"
+       "11",
+       "6",
+       "5"
       ],
       [
        "UC-026",
        "ZMMME35K - contract release not working after ECC -> S/4 conversion (root cause and fix)",
        "S/4HANA remediation",
-       "16",
-       "8",
-       "8"
+       "11",
+       "6",
+       "5"
       ],
       [
        "UC-027",
        "Fiori F1592 Asset Master Worklist: Custodian / JV fields via CDS extension",
        "Enhancement",
-       "12",
-       "4",
-       "8"
+       "9",
+       "6",
+       "3"
       ],
       [
        "UC-028",
        "JV transfer programs: GL derivation keyed by JV, offset profit centre from mapping table",
        "Enhancement",
-       "12",
-       "4",
-       "8"
+       "9",
+       "3",
+       "6"
       ],
       [
        "UC-029",
        "BAdI ME_PROCESS_PO_CUST method CHECK - PO validity-date rule made a warning in the Fiori...",
        "Bug fix / RCA",
-       "12",
        "8",
-       "4"
+       "6",
+       "2"
       ],
       [
        "UC-030",
        "ZFI_BNK_APP1 bank batch approval / digital signature - one click by the second signatory...",
        "Bug fix / RCA",
-       "12",
        "8",
-       "4"
+       "6",
+       "2"
       ],
       [
        "UC-031",
        "ZFI_JV_TB (ZJVTB) Joint Venture Trial Balance - three issues: venture column missing in the...",
        "Bug fix / RCA",
-       "12",
        "8",
-       "4"
+       "6",
+       "2"
       ],
       [
        "UC-032",
        "ZHANA_SERVICES_PRG 'SAP Timesheet' module pool - CR: Excel download / upload of timesheet...",
        "Enhancement",
-       "10",
+       "7",
        "4",
-       "6"
+       "3"
       ],
       [
        "UC-033",
        "ZSAP_CONSUMPTION_REPORT (tcode ZCON / copy ZCON1) - consumed-till-date columns, Available...",
        "Enhancement",
-       "10",
+       "7",
        "4",
-       "6"
+       "3"
       ],
       [
        "UC-034",
        "ZSAP_TIMESHEET_FORM_PRG timesheet print (running copy ZSAP_TIMESHEET_FORM_PRG_CP, tcode...",
        "Enhancement",
-       "10",
+       "7",
        "4",
-       "6"
+       "3"
       ],
       [
        "UC-035",
-       "ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree (19/10/26 rewrite...",
+       "ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree (19/10/26...",
        "Automation / tool",
-       "10",
-       "5",
-       "5"
+       "7",
+       "6",
+       "1"
       ],
       [
        "UC-036",
-       "ZMMEMD (SAPMZMMEMD): LOA number in Change / Display popups with new search help, four further...",
+       "ZMMEMD (SAPMZMMEMD): LOA number in Change / Display popups with new search help, four...",
        "Enhancement",
-       "10",
+       "7",
        "4",
-       "6"
+       "3"
       ],
       [
        "UC-037",
        "ZFI_ACDOCA_VNAME_UPD - one-off back-fill of custom field ZZ1_VNAME from VNAME on historical...",
        "New",
-       "8",
-       "2",
-       "6"
+       "6",
+       "4",
+       "2"
       ],
       [
        "UC-038",
-       "Group Reporting data release: expose Venture (ZZ1_VNAME_COB and standard ACDOCA-VNAME) through...",
+       "Group Reporting data release: expose Venture (ZZ1_VNAME_COB and standard ACDOCA-VNAME)...",
        "Enhancement",
-       "6",
-       "3",
-       "3"
+       "4",
+       "4",
+       "0"
       ],
       [
        "UC-039",
        "ZMMIMS (SAPMZMMIMS) - GeM Invoice No. F4 correction and automatic display (marker +019)",
        "Bug fix / RCA",
-       "6",
        "4",
-       "2"
+       "3",
+       "1"
       ],
       [
        "UC-040",
        "ZMM_VMS vendor creation: number-range error in Mock-2, GST classification query",
        "Bug fix / RCA",
-       "6",
        "4",
-       "2"
+       "3",
+       "1"
       ],
       [
        "UC-041",
-       "ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ -> OCD for objects...",
+       "ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ -> OCD for...",
        "Automation / tool",
-       "4",
+       "3",
        "2",
-       "2"
+       "1"
       ],
       [
        "UC-042",
        "st05_decode.py: offline decoder for ST05 binary trace exports (.trc)",
        "Automation / tool",
-       "4",
+       "3",
        "2",
        "2"
       ],
@@ -583,121 +498,129 @@
        "UC-043",
        "ZFI_BNK_APP (tcode ZBNK_APP2) bank payment file monitor - dead Back/Exit/Cancel fixed;",
        "Bug fix / RCA",
-       "3",
        "2",
-       "1"
+       "2",
+       "0"
       ],
       [
        "UC-044",
        "ZMM_TMS_STATUS Tender Monitoring Status report - Excel export from the ALV opens a blank...",
        "Bug fix / RCA",
-       "3",
        "2",
-       "1"
+       "2",
+       "0"
       ],
       [
        "UC-045",
        "ZFIBRS bank book upload (BRS) - upload error diagnosis and Excel upload template (no code...",
        "Bug fix / RCA",
-       "3",
        "2",
-       "1"
+       "2",
+       "0"
       ],
       [
        "UC-046",
        "ZFITAX_PBT_CALC_PRG - FAGLFLEXT read drops rows (FOR ALL ENTRIES implicit DISTINCT on S/4...",
        "Bug fix / RCA",
-       "3",
        "2",
-       "1"
+       "2",
+       "0"
       ],
       [
        "UC-047",
-       "ZJV_BAPI_BALUPLOAD1 JV G/L balance upload - XREF1 from the upload file not reaching BSEG-XREF1",
+       "ZJV_BAPI_BALUPLOAD1 JV G/L balance upload - XREF1 from the upload file not reaching...",
        "Bug fix / RCA",
-       "3",
        "2",
-       "1"
+       "2",
+       "0"
       ],
       [
        "UC-048",
-       "SAP standard JVA correction tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA - how it fetches data (JVSO1...",
+       "SAP standard JVA correction tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA - how it fetches data...",
        "Analysis",
-       "10",
-       "4",
-       "6"
+       "7",
+       "3",
+       "4"
       ],
       [
        "UC-049",
        "Reference program Z_JVA_ALIGNMENT (from another landscape) - analysis and OVL design for...",
        "Analysis",
-       "10",
+       "7",
        "4",
-       "6"
-      ],
-      [
-       "UC-050",
-       "CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity...",
-       "Bug fix / RCA",
-       "6",
-       "2",
-       "4"
-      ],
-      [
-       "UC-051",
-       "FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in...",
-       "Bug fix / RCA",
-       "6",
-       "2",
-       "4"
-      ],
-      [
-       "UC-052",
-       "ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted...",
-       "Bug fix / RCA",
-       "6",
-       "2",
-       "4"
-      ],
-      [
-       "UC-053",
-       "Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)",
-       "Analysis",
-       "5",
-       "2",
        "3"
       ],
       [
-       "UC-054",
+       "UC-050",
        "Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API,...",
        "Analysis",
+       "7",
        "5",
-       "3",
+       "2"
+      ],
+      [
+       "UC-051",
+       "CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity...",
+       "Bug fix / RCA",
+       "4",
+       "2",
+       "2"
+      ],
+      [
+       "UC-052",
+       "FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in...",
+       "Bug fix / RCA",
+       "4",
+       "2",
+       "2"
+      ],
+      [
+       "UC-053",
+       "ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted...",
+       "Bug fix / RCA",
+       "4",
+       "2",
+       "2"
+      ],
+      [
+       "UC-054",
+       "Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing...",
+       "Analysis",
+       "4",
+       "2",
        "2"
       ],
       [
        "UC-055",
        "Custom PR release workflow WS90900008 in ERROR - agent rule AC90900002 returns no agent...",
        "Bug fix / RCA",
-       "3",
-       "1",
-       "2"
-      ],
-      [
-       "UC-056",
-       "FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in FAGLL03 / FAGLB03 /...",
-       "Analysis",
        "2",
        "1",
        "1"
       ],
       [
+       "UC-056",
+       "FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in FAGLL03 / FAGLB03...",
+       "Analysis",
+       "1",
+       "1",
+       "0"
+      ],
+      [
        "UC-057",
-       "ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only (document...",
+       "ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only...",
        "New",
-       "20",
+       "14",
        "4",
-       "16"
+       "10"
+      ],
+      [
+       "",
+       "Total - 51 use cases",
+       "",
+       "722",
+       "433",
+       "290"
       ]
      ]
     },
@@ -707,38 +630,25 @@
     },
     {
      "t": "p",
-     "text": "12 AI-assisted use cases completed. Effort without AI 388 h; actual effort with AI 124 h; **264 h (33 man-days) saved, 68% effort reduction**."
-    },
-    {
-     "t": "p",
-     "text": "Astral Limited / Project UDAY via KPMG: ZFORECAST Adhesive and Paints, Exceptional Approval (141 A/B), Clause 34 TDS (337), PO budget (050), BP mail (057), CC MIS (147), MB5B amounts (195), vendor upload (FSD 30), Scheme (Pipes)."
-    },
-    {
-     "t": "bullets",
-     "items": [
-      "**ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report** (UC-058; 50 h saved): Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files).",
-      "**WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload** (UC-060; 46 h saved): Reviewed both FS documents and raised 16 numbered questions before build; wrote locked build specs for 141.A and 141.B that settle the FS contradictions explicitly.",
-      "**Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload** (UC-059; 44 h saved): Six source files (3,579 lines): the module pool (five includes in one file), three global classes, the report with settlement and the mass upload, plus the technical object list with DDIC definitions and build order (36 objects), a screen layout document and the assumptions and..."
-     ],
-     "size": 19
+     "text": "Astral Limited / Project UDAY through KPMG: forecasting (Adhesive, Paints), exceptional approval, Clause 34 TDS, PO budget control, BP mail, MB5B amounts, vendor upload, scheme and MIS."
     },
     {
      "t": "table",
-     "caption": "T&G - all AI use cases (full detail in the Excel register)",
      "fontSize": 7.5,
      "widths": [
       7,
-      47,
-      16,
-      10,
-      10,
-      10
+      51,
+      15,
+      9,
+      9,
+      9
      ],
      "numeric": [
       3,
       4,
       5
      ],
+     "totalRow": true,
      "header": [
       "Sr.",
       "Development / use case",
@@ -750,99 +660,183 @@
      "rows": [
       [
        "UC-058",
-       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and...",
+       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads...",
        "New",
-       "90",
-       "40",
-       "50"
+       "63",
+       "59",
+       "4"
       ],
       [
        "UC-059",
        "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and...",
        "New",
-       "60",
-       "16",
-       "44"
+       "42",
+       "11",
+       "31"
       ],
       [
        "UC-060",
        "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and...",
        "New",
-       "54",
-       "8",
-       "46"
+       "38",
+       "18",
+       "20"
       ],
       [
        "UC-061",
-       "ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine...",
+       "ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive...",
        "New",
-       "45",
-       "8",
-       "37"
+       "31",
+       "15",
+       "17"
       ],
       [
        "UC-062",
        "TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')",
        "New",
-       "36",
-       "8",
-       "28"
+       "25",
+       "12",
+       "13"
       ],
       [
        "UC-063",
        "Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)",
        "New",
-       "36",
-       "8",
-       "28"
-      ],
-      [
-       "UC-064",
-       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
-       "New",
-       "20",
-       "4",
+       "25",
+       "9",
        "16"
       ],
       [
-       "UC-065",
+       "UC-064",
        "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
        "Enhancement",
-       "20",
-       "16",
-       "4"
+       "25",
+       "22",
+       "3"
+      ],
+      [
+       "UC-065",
+       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
+       "New",
+       "14",
+       "5",
+       "9"
       ],
       [
        "UC-066",
-       "ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for 'Storage Loc./Batch...",
+       "ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for 'Storage...",
        "Enhancement",
-       "10",
-       "8",
+       "14",
+       "12",
        "2"
       ],
       [
        "UC-067",
-       "ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom...",
+       "ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing...",
        "Enhancement",
-       "10",
-       "4",
-       "6"
+       "7",
+       "3",
+       "4"
       ],
       [
        "UC-068",
-       "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query...",
+       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn,...",
        "Analysis",
-       "5",
-       "2",
-       "3"
+       "4",
+       "3",
+       "1"
       ],
       [
        "UC-069",
-       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn,...",
+       "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and...",
        "Analysis",
+       "4",
        "2",
+       "2"
+      ],
+      [
+       "",
+       "Total - 12 use cases",
+       "",
+       "292",
+       "170",
+       "121"
+      ]
+     ]
+    },
+    {
+     "t": "table",
+     "fontSize": 7.5,
+     "widths": [
+      7,
+      51,
+      15,
+      9,
+      9,
+      9
+     ],
+     "numeric": [
+      3,
+      4,
+      5
+     ],
+     "totalRow": true,
+     "header": [
+      "Sr.",
+      "Development / use case",
+      "Type",
+      "Without AI (h)",
+      "With AI (h)",
+      "Saved (h)"
+     ],
+     "rows": [
+      [
+       "UC-070",
+       "AI delivery toolkit: rulebook, release-constraint memory, 7 workflow skills, sync / audit...",
+       "Automation / tool",
+       "22",
+       "15",
+       "7"
+      ],
+      [
+       "UC-071",
+       "ZR_FIND_ENH: enhancement finder for the call tree of a function module, class method or...",
+       "Automation / tool",
+       "14",
+       "6",
+       "8"
+      ],
+      [
+       "UC-072",
+       "abapGit offline-ZIP delivery path: DDIC and report pilots, XML element-order root cause",
+       "Automation / tool",
+       "7",
+       "3",
+       "4"
+      ],
+      [
+       "UC-073",
+       "ZR_ICF_URL_LIST: every ICF service URL of the system as a flat list for the CPI team",
+       "Automation / tool",
+       "3",
        "2",
-       "0"
+       "2"
+      ],
+      [
+       "UC-074",
+       "Research and management proposal: creating SAP documents from Microsoft Teams / Copilot or...",
+       "Analysis",
+       "7",
+       "5",
+       "2"
+      ],
+      [
+       "",
+       "Total - 5 use cases",
+       "",
+       "53",
+       "31",
+       "22"
       ]
      ]
     },
@@ -851,74 +845,51 @@
      "text": "6. ATC Correction and Code Optimisation Summary"
     },
     {
-     "t": "p",
-     "text": "ATC S/4HANA-readiness remediation for ONGC: 88 h conventional vs 41 h with AI - **47 h saved (54%)**."
-    },
-    {
      "t": "table",
-     "caption": "ATC remediation - findings identified to corrections implemented",
      "widths": [
-      46,
+      60,
       12,
-      52
+      28
      ],
      "numeric": [
       1
      ],
      "header": [
-      "Stage",
+      "ATC remediation (ONGC)",
       "Count",
       "Detail"
      ],
      "rows": [
       [
-       "Objects (includes) in the assigned ATC scope",
+       "ATC findings assigned and remediated",
+       "847",
+       "05 - 14/08/26"
+      ],
+      [
+       "Program includes corrected",
        "51",
        "43 programs, 14 packages"
       ],
       [
-       "ATC findings assigned and remediated (05-14/08/26)",
-       "847",
-       "Worked family by family"
-      ],
-      [
        "AI-assisted correction blocks applied",
        "205",
-       "107 pragma / pseudo-comment, 65 replaced with the original kept commented, 33 new code"
+       "833 lines added or changed"
       ],
       [
-       "Lines added or changed",
-       "833",
-       "Line diff against pre-remediation snapshots"
-      ],
-      [
-       "Findings routed for functional / senior decision",
+       "Findings routed for senior / functional decision",
        "26",
-       "P1 field-length decisions, XK01 BDC, BSEG statements"
-      ],
-      [
-       "Objects packaged for abapGit upload with procedure",
-       "51",
-       "14 packages; handover document 25/08/26"
-      ],
-      [
-       "Rule audit across all corrected objects before handover",
-       "51",
-       "23/08/26"
+       "manual review list"
       ],
       [
        "Reusable correction patterns documented",
        "76",
-       "Knowledge base plus 31 activation / runtime rules"
+       "knowledge base and rules"
       ]
      ]
     },
     {
-     "t": "bullets",
-     "items": [
-      "Findings resolved: SELECT SINGLE without unique key (NOORDER), field-length extension, simplified objects (BSEG, KONV, VBUK / VBUP, J_1IMOVEND), CLIENT SPECIFIED on compatibility views, strict Open SQL, pseudo-comments with SAP notes.",
-      "Code optimisation beyond ATC: FOR ALL ENTRIES with implicit DISTINCT replaced by ranges (ZFITAX_PBT_CALC_PRG), BDC on dead S/4 transactions replaced by FI-AA BAPIs (ZAA_IMPAIRMENTLOSS), guarded FOR ALL ENTRIES and aggregation on the database."
-     ]
+     "t": "p",
+     "text": "Finding types: SELECT SINGLE without a unique key, field-length extension, simplified objects (BSEG, KONV, VBUK / VBUP, J_1IMOVEND), CLIENT SPECIFIED on compatibility views, strict Open SQL. Optimisation beyond ATC: FOR ALL ENTRIES replaced by ranges where it lost rows, batch input on dead S/4 transactions replaced by BAPIs, aggregation moved to the database."
     },
     {
      "t": "h1",
@@ -926,117 +897,11 @@
     },
     {
      "t": "p",
-     "text": "17 automations and reusable tools: user-facing (daily BP mail, mass uploads, approval workflow, period-end revaluation, JV alignment postings) and developer-facing (source mass download, enhancement finder, ICF URL list, ST05 decoder, the AI delivery toolkit with 76 ATC patterns and 56 release constraints)."
-    },
-    {
-     "t": "table",
-     "caption": "Automation solutions and reusable tools",
-     "fontSize": 7.5,
-     "widths": [
-      8,
-      62,
-      30
-     ],
-     "header": [
-      "Sr.",
-      "Automation / tool",
-      "Project"
-     ],
-     "rows": [
-      [
-       "UC-001",
-       "FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails",
-       "PAL"
-      ],
-      [
-       "UC-007",
-       "ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-010",
-       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built;...",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-011",
-       "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper)...",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-032",
-       "ZHANA_SERVICES_PRG 'SAP Timesheet' module pool - CR: Excel download / upload of timesheet rows, Scope...",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-035",
-       "ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree (19/10/26 rewrite with CDS DDL...",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-041",
-       "ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ -> OCD for objects created in OCQ",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-042",
-       "st05_decode.py: offline decoder for ST05 binary trace exports (.trc)",
-       "ONGC (OVL)"
-      ],
-      [
-       "UC-058",
-       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report",
-       "T&G"
-      ],
-      [
-       "UC-059",
-       "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload",
-       "T&G"
-      ],
-      [
-       "UC-060",
-       "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload",
-       "T&G"
-      ],
-      [
-       "UC-064",
-       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
-       "T&G"
-      ],
-      [
-       "UC-065",
-       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
-       "T&G"
-      ],
-      [
-       "UC-070",
-       "AI delivery toolkit: rulebook, release-constraint memory, 7 workflow skills, sync / audit scripts",
-       "Common (all projects)"
-      ],
-      [
-       "UC-071",
-       "ZR_FIND_ENH: enhancement finder for the call tree of a function module, class method or program",
-       "Common (all projects)"
-      ],
-      [
-       "UC-072",
-       "abapGit offline-ZIP delivery path: DDIC and report pilots, XML element-order root cause",
-       "Common (all projects)"
-      ],
-      [
-       "UC-073",
-       "ZR_ICF_URL_LIST: every ICF service URL of the system as a flat list for the CPI team",
-       "Common (all projects)"
-      ]
-     ]
+     "text": "17 automations and tools. For users: daily BP-creation mail, mass uploads (forecast, exceptional approval, timesheet rows, JV alignment), the credit-memo approval workflow and period-end bank revaluation. For developers: source mass download, enhancement finder, ICF URL list, ST05 trace decoder and the AI delivery toolkit (7 workflow skills, 56 recorded release constraints, 76 ATC patterns)."
     },
     {
      "t": "h1",
      "text": "8. Quantified Effort and Productivity Analysis"
-    },
-    {
-     "t": "p",
-     "text": "Effort without AI 1,618 h; with AI 592 h; saved 1,025 h = 128 man-days; reduction 63%; productivity improvement 173%. Saved = without - with; reduction = saved / without; man-days = saved / 8. Conventional effort comes from a baseline by work type and complexity; AI-assisted effort counts the full development time of the period, distributed by measured session time per object. The formula-driven calculation is in the Excel register."
     },
     {
      "t": "table",
@@ -1115,148 +980,58 @@
       ],
       [
        "Effort without AI (h)",
-       "131",
-       "1,028",
-       "388",
-       "71",
-       "1,618"
+       "92",
+       "722",
+       "292",
+       "53",
+       "1,159"
       ],
       [
        "Actual effort with AI (h)",
-       "59",
-       "376",
-       "124",
-       "33",
-       "592"
+       "71",
+       "433",
+       "170",
+       "31",
+       "705"
       ],
       [
        "Effort saved (h)",
-       "72",
-       "651",
-       "264",
-       "38",
-       "1,025"
+       "20",
+       "290",
+       "121",
+       "22",
+       "454"
       ],
       [
        "Effort saved (man-days)",
-       "9",
-       "81",
-       "33",
-       "5",
-       "128"
+       "3",
+       "36",
+       "15",
+       "3",
+       "57"
       ],
       [
        "Weighted effort reduction",
-       "55%",
-       "63%",
-       "68%",
-       "54%",
-       "63%"
+       "22%",
+       "40%",
+       "42%",
+       "42%",
+       "39%"
       ],
       [
        "Productivity improvement",
-       "121%",
-       "173%",
-       "213%",
-       "116%",
-       "173%"
+       "29%",
+       "67%",
+       "71%",
+       "71%",
+       "64%"
       ]
      ]
     },
     {
-     "t": "table",
-     "caption": "Ten largest effort savings",
-     "widths": [
-      8,
-      50,
-      14,
-      14,
-      14
-     ],
-     "numeric": [
-      2,
-      3,
-      4
-     ],
-     "header": [
-      "Sr.",
-      "Development",
-      "Without AI (h)",
-      "With AI (h)",
-      "Saved (h)"
-     ],
-     "rows": [
-      [
-       "UC-007",
-       "ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix",
-       "120",
-       "49",
-       "71"
-      ],
-      [
-       "UC-058",
-       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report",
-       "90",
-       "40",
-       "50"
-      ],
-      [
-       "UC-001",
-       "FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails",
-       "75",
-       "25",
-       "50"
-      ],
-      [
-       "UC-008",
-       "ATC S/4HANA-readiness remediation: 51 program includes in 14 packages",
-       "88",
-       "41",
-       "47"
-      ],
-      [
-       "UC-060",
-       "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload",
-       "54",
-       "8",
-       "46"
-      ],
-      [
-       "UC-009",
-       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...",
-       "60",
-       "16",
-       "44"
-      ],
-      [
-       "UC-010",
-       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only",
-       "60",
-       "16",
-       "44"
-      ],
-      [
-       "UC-011",
-       "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...",
-       "60",
-       "16",
-       "44"
-      ],
-      [
-       "UC-012",
-       "Five Fiori List Report RAP apps for MM tender reports on one service",
-       "54",
-       "10",
-       "44"
-      ],
-      [
-       "UC-059",
-       "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload",
-       "60",
-       "16",
-       "44"
-      ]
-     ]
+     "t": "p",
+     "text": "Effort without AI comes from a conservative baseline by work type and complexity. Actual effort with AI counts all my working time in the period, weekends included, spread over the developments by measured session time and size. Saved = without minus with; man-days = saved / 8. The workings are in the Excel register.",
+     "size": 18
     },
     {
      "t": "h1",
@@ -1265,10 +1040,9 @@
     {
      "t": "bullets",
      "items": [
-      "Capacity released: 128 man-days in four months, used to carry three projects concurrently.",
-      "Faster delivery: working versions typically within a working day; earlier functional testing.",
-      "Reusable assets: ATC correction patterns, release constraints, forecast engine, workflow class and analytical cube patterns, five developer tools.",
-      "Potential effort value = man-days saved x applicable day rate (margin and capacity under fixed price; per the billing arrangement under T&M)."
+      "Capacity released to carry three projects in parallel, alongside production support.",
+      "Earlier testing: most developments reached a first working version within a working day.",
+      "Reusable assets for the team: ATC patterns, release constraints, forecast engine, workflow and analytical-cube patterns, developer tools."
      ]
     },
     {
@@ -1276,15 +1050,11 @@
      "text": "10. Overall Conclusions"
     },
     {
-     "t": "p",
-     "text": "**Success story - ONGC Videsh JIB Status dashboard:** eight CDS views with an analytical cube, from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days; 60 h conventional delivered in 16 h (73% reduction). Details in the attached deck."
-    },
-    {
      "t": "bullets",
      "items": [
-      "AI is part of daily delivery: 74 completed use cases and 867 commits in under four months across PAL, ONGC and T&G.",
-      "128 man-days saved (63%) with human control at every step: fresh source download, activation feedback, functional confirmation.",
-      "Next steps: share the AI delivery toolkit with the team, extend the dashboard pattern, apply the ATC patterns to the next remediation wave, log effort per object."
+      "AI is now part of how I deliver: faster first builds and faster root-cause analysis, with every object reviewed, activated and tested by me before go-live.",
+      "Next steps: share the AI delivery toolkit with the team, reuse the dashboard pattern for further cards, and apply the ATC patterns to the next remediation wave.",
+      "Attached: AI_Use_Case_Register.xlsx (full register, dashboard, assumptions) and AI_Success_Story_JIB_Status.pptx (case study)."
      ]
     }
    ]

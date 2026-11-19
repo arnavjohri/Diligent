@@ -258,10 +258,9 @@ annex_b = [dict(t="h1", text="Annex B - Effort Calculation and Assumptions", pag
              "technical documentation. ATC uses the correction blocks actually applied: 10 / 25 / 40 minutes per pragma / replace / new-code block, 15 minutes per include, 8 h packaging."),
            rubric,
            dict(t="h3", text="B. Actual effort with AI"),
-           p(f"Actual effort counts the full development time of the period: {WD} working days x 8 h, less the {S['admin_share'] * 100:.1f}% share of status calls and "
-             f"transport administration ({h(S['budget'])} h from 19/08/26, plus dated work before it). It is distributed over the use cases by the measured AI session time of "
-             "each object (commit timestamps), with a minimum per use case for prompting, review, activation and unit testing (2 / 4 / 8 / 16 h by complexity; "
-             "1 / 2 / 4 / 6 h for analyses). Review and correction time is therefore included in every figure."),
+           p(f"Actual effort counts the full working time of the period: {S['working_days']} days worked from 19/08/26 (weekdays after leave plus the weekend days worked) x 8 h "
+             f"= {h(S['budget'])} h, plus dated work before 19/08/26. It is distributed over the use cases half by the measured AI session time of each object "
+             "(commit timestamps) and half by its size, with a minimum per use case for prompting, review, activation and unit testing. Review and correction time is included in every figure."),
            dict(t="h3", text="C. Calculation methodology"),
            bullets(["Effort saved (hours) = effort without AI - actual effort with AI.", "Effort reduction (%) = (effort saved / effort without AI) x 100.",
                     "Effort saved (man-days) = effort saved in hours / 8.", "Productivity improvement (%) = ((effort without AI / actual effort with AI) - 1) x 100.",

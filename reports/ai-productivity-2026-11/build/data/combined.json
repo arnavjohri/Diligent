@@ -16,7 +16,7 @@
       "**Prepared by:** Arnav Johri, Associate Consultant (SAP ABAP), Diligent Global",
       "**Period:** 20 July - 19 November 2026",
       "**AI tool:** Claude Code (Anthropic)",
-      "**Headline:** 74 AI-assisted use cases | 867 commits | 128 man-days saved | 63% effort reduction"
+      "**Headline:** 74 AI-assisted use cases | 869 commits | 57 man-days saved | 39% effort reduction"
      ]
     },
     {
@@ -76,11 +76,11 @@
      "t": "bullets",
      "items": [
       "AI-assisted developments: 74 completed - ONGC (OVL) 51, T&G 12, PAL 6, common tools 5; 23 of them new developments.",
-      "Volume: 867 commits in under four months on 58 active days (including 6 weekends), 150,384 lines of code, 312 custom SAP objects, 17 technical specifications.",
+      "Volume: 869 commits in under four months on 58 active days (including 6 weekends), 150,384 lines of code, 312 custom SAP objects, 17 technical specifications.",
       "Significant applications: ONGC JIB Status management dashboard, DPR Fiori dashboard and CPI interface, bank revaluation and per-barrel analytics on CDS; PAL FB70 credit-memo approval workflow; T&G ZFORECAST (Adhesive and Paints), Exceptional Approval (WRICEF 141) and Clause 34 TDS report.",
       "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
       "Automation: 17 automations and utilities - daily BP-creation mail, mass uploads, approval workflow, source mass-download and enhancement-finder tools.",
-      "Effort: 1,618 h conventional against 592 h with AI - **128 man-days saved, 63% effort reduction** (2.7x throughput).",
+      "Effort: 1,159 h conventional against 705 h with AI - **57 man-days saved, 39% effort reduction** (1.6x throughput).",
       "Delivery: first working versions typically the same or next working day; JIB Status went from requirement (03/11) to written client confirmation (17/11) in 11 working days.",
       "Benefit: three engagements handled concurrently, faster root-cause analysis on production issues, and reusable patterns and tools for the team."
      ]
@@ -118,19 +118,19 @@
        "note": "23 new developments, all completed"
       },
       {
-       "value": "867",
+       "value": "869",
        "label": "Commits in under 4 months",
-       "note": "14.9 per active day"
+       "note": "15.0 per active day"
       },
       {
-       "value": "128",
+       "value": "57",
        "label": "Man-days saved",
-       "note": "1,025 h of 1,618 h conventional effort"
+       "note": "454 h of 1,159 h conventional effort"
       },
       {
-       "value": "63%",
+       "value": "39%",
        "label": "Effort reduction",
-       "note": "2.7x delivery throughput"
+       "note": "1.6x delivery throughput"
       }
      ]
     },
@@ -140,11 +140,11 @@
     },
     {
      "t": "p",
-     "text": "The work produced **867 commits in under four months** - about 15 per active day - with 150,384 lines of code, 312 custom SAP objects and 17 technical specifications."
+     "text": "The work produced **869 commits in under four months** - about 15 per active day - with 150,384 lines of code, 312 custom SAP objects and 17 technical specifications."
     },
     {
      "t": "p",
-     "text": "Conventional delivery of the same scope requires **1,618 hours**; with AI it took **592 hours** of my development time. **1,025 hours - 128 man-days - were saved, a 63% effort reduction and 2.7x delivery throughput.**"
+     "text": "Conventional delivery of the same scope requires **1,159 hours**; with AI it took **705 hours** of my development time. **454 hours - 57 man-days - were saved, a 39% effort reduction and 1.6x delivery throughput.**"
     },
     {
      "t": "table",
@@ -180,47 +180,47 @@
       [
        "PAL",
        "6",
-       "131",
-       "59",
-       "72",
-       "9",
-       "55%"
+       "92",
+       "71",
+       "20",
+       "3",
+       "22%"
       ],
       [
        "ONGC (OVL)",
        "51",
-       "1,028",
-       "376",
-       "651",
-       "81",
-       "63%"
+       "722",
+       "433",
+       "290",
+       "36",
+       "40%"
       ],
       [
        "T&G",
        "12",
-       "388",
-       "124",
-       "264",
-       "33",
-       "68%"
+       "292",
+       "170",
+       "121",
+       "15",
+       "42%"
       ],
       [
        "Common (all projects)",
        "5",
-       "71",
-       "33",
-       "38",
-       "5",
-       "54%"
+       "53",
+       "31",
+       "22",
+       "3",
+       "42%"
       ],
       [
        "Overall",
        "74",
-       "1,618",
-       "592",
-       "1,025",
-       "128",
-       "63%"
+       "1,159",
+       "705",
+       "454",
+       "57",
+       "39%"
       ]
      ]
     },
@@ -230,7 +230,7 @@
     },
     {
      "t": "p",
-     "text": "ONGC Videsh Management Dashboard 'JIB Status': eight CDS views with an analytical cube, from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days; 60 h conventional effort delivered in 16 h (73% reduction)."
+     "text": "ONGC Videsh Management Dashboard 'JIB Status': eight CDS views with an analytical cube, from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days; 42 h conventional effort delivered in 21 h (50% reduction)."
     },
     {
      "t": "h1",
@@ -241,7 +241,7 @@
      "t": "bullets",
      "items": [
       "The consolidated work repository: every object folder for ONGC (ovl/), PAL (pal/), T&G (kpmg/) and common tools (tools/), with each issue log (issue -> cause -> fix) and technical note.",
-      "Git history across 66 branches: 867 commits from 19/08/26 to 19/11/26.",
+      "Git history across 66 branches: 869 commits from 19/08/26 to 19/11/26.",
       "Claude Code session records from 20/07/26 to 15/08/26: 30 sessions and 557 prompts.",
       "The day-wise August 2026 OVL work log, ATC exports, the manual review list, the ATC knowledge base and the handover document.",
       "Functional specifications, technical specifications, client test feedback and mail drafts filed with each object."
@@ -268,7 +268,7 @@
      "rows": [
       [
        "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-       "867",
+       "869",
        "git rev-list --all --count"
       ],
       [
@@ -279,7 +279,22 @@
       [
        "Weekend days with AI-assisted work",
        "6",
-       "git commit dates"
+       "git commit dates: 23/08, 29/08, 05/09, 13/09, 27/09, 10/10"
+      ],
+      [
+       "Peak day (22/10/26): commits",
+       "68",
+       "work from 09:37 to 22:08 IST (12.5 h)"
+      ],
+      [
+       "Days with 8+ hours between first and last commit",
+       "6",
+       "git commit timestamps (IST)"
+      ],
+      [
+       "Commits made after 19:00 or before 07:00 IST",
+       "33",
+       "git commit timestamps (IST)"
       ],
       [
        "Days with 6 or more hours of measured AI session time",
@@ -288,7 +303,7 @@
       ],
       [
        "Average commits per active day",
-       "14.9",
+       "15.0",
        "Total commits / active days"
       ],
       [
@@ -318,12 +333,12 @@
       ],
       [
        "Commits in the repository (all branches, non-merge)",
-       "796",
+       "798",
        "git log --all --no-merges"
       ],
       [
        "  of which AI co-authored or AI-authored",
-       "726",
+       "728",
        "Co-Authored-By: Claude trailer or author 'Claude'"
       ],
       [
@@ -442,7 +457,7 @@
     },
     {
      "t": "p",
-     "text": "6 AI-assisted use cases completed. Effort without AI 131 h; actual effort with AI 59 h; **72 h (9 man-days) saved, 55% effort reduction**."
+     "text": "6 AI-assisted use cases completed. Effort without AI 92 h; actual effort with AI 71 h; **20 h (3 man-days) saved, 22% effort reduction**."
     },
     {
      "t": "p",
@@ -451,12 +466,12 @@
     {
      "t": "bullets",
      "items": [
-      "**FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails** (UC-001; 50 h saved): Produced the design, the SWDD skeleton build sheet, both trigger function modules, class ZCL_CM_WORKFLOW (workflow start, then SEND_MAIL with four body builders), the RFC mail wrapper, six implicit enhancements, patches to two team-owned objects, the e-mail matrix and the...",
-      "**SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer Line Items** (UC-004; 6 h saved): Chose the exit over BTE / AC_DOCUMENT with reasons, placed the insert above the existing SIS CHECK, wrote the first-created-SO rule (VBAK ERDAT/ERZET), READ_TEXT with language fallback and keep-existing rule; include 119 -> 221 lines;",
-      "**PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding value; BAdI ME_BAPI_PO_CUST sets NO_ROUNDING (INC01192)** (UC-005; 6 h saved): The assistant wrote the BAdI implementation class following SAP's pointer (NO_ROUNDING = X in POITEM / POITEMX): the current file is the whole class, 122 lines, with INBOUND looping over the items and the eight other methods empty.",
-      "**PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and group amounts when the parked document is posted (UPDATE_AMOUNT)** (UC-002; 4 h saved): The assistant diagnosed the original 48-line method and the behaviour-pool mapping error (amt_gp_curr = amtloccurr) and delivered five successive versions of UPDATE_AMOUNT (170 -> 889 lines) between 29/09/26 and 14/10/26.",
-      "**PAL customer invoice / credit memo / debit memo forms: PDF mailed by the program cannot be opened (INC01967)** (UC-003; 4 h saved): From a 7,084-line SE80 print listing the assistant rebuilt one source file per include with a new parser (scripts/unlist.py), traced the mail path and identified the unchecked write / encrypt / read-back round trip as the only path that can corrupt the attachment.",
-      "**PAL invoice-upload utility class: local and group currency validated independently in the AR and GL upload** (UC-006; 2 h saved): From the class source pasted into the session on 12/10/26, the assistant named the root cause (skipped checks plus stale totals) and wrote the whole corrected class (5,367 -> 5,758 lines) with 6 BOC/EOC blocks dated 12/10/26."
+      "**FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails** (UC-001; 10 h saved): Produced the design, the SWDD skeleton build sheet, both trigger function modules, class ZCL_CM_WORKFLOW (workflow start, then SEND_MAIL with four body builders), the RFC mail wrapper, six implicit enhancements, patches to two team-owned objects, the e-mail matrix and the...",
+      "**PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and group amounts when the parked document is posted (UPDATE_AMOUNT)** (UC-002; 3 h saved): The assistant diagnosed the original 48-line method and the behaviour-pool mapping error (amt_gp_curr = amtloccurr) and delivered five successive versions of UPDATE_AMOUNT (170 -> 889 lines) between 29/09/26 and 14/10/26.",
+      "**PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding value; BAdI ME_BAPI_PO_CUST sets NO_ROUNDING (INC01192)** (UC-005; 3 h saved): The assistant wrote the BAdI implementation class following SAP's pointer (NO_ROUNDING = X in POITEM / POITEMX): the current file is the whole class, 122 lines, with INBOUND looping over the items and the eight other methods empty.",
+      "**SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer Line Items** (UC-004; 2 h saved): Chose the exit over BTE / AC_DOCUMENT with reasons, placed the insert above the existing SIS CHECK, wrote the first-created-SO rule (VBAK ERDAT/ERZET), READ_TEXT with language fallback and keep-existing rule; include 119 -> 221 lines;",
+      "**PAL customer invoice / credit memo / debit memo forms: PDF mailed by the program cannot be opened (INC01967)** (UC-003; 1 h saved): From a 7,084-line SE80 print listing the assistant rebuilt one source file per include with a new parser (scripts/unlist.py), traced the mail path and identified the unchecked write / encrypt / read-back round trip as the only path that can corrupt the attachment.",
+      "**PAL invoice-upload utility class: local and group currency validated independently in the AR and GL upload** (UC-006; 1 h saved): From the class source pasted into the session on 12/10/26, the assistant named the root cause (skipped checks plus stale totals) and wrote the whole corrected class (5,367 -> 5,758 lines) with 6 BOC/EOC blocks dated 12/10/26."
      ],
      "size": 19
     }
@@ -502,60 +517,60 @@
        "**FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails**\nZ_FI_CM_APPR_PARK_EVENT (function module on BTE 00002218, FG ZFI_CM_APPR); Z_FI_CM_APPR_START_WF (RFC function module, FG ZFI_CM_APPR); Z_CM_WF_MAIL_SEND (RFC function module, FG ZFI_CM_APPR); ZCL_CM_WORKFLOW (class - START_WORKFLOW, SEND_MAIL and mail body methods);",
        "Produced the design, the SWDD skeleton build sheet, both trigger function modules, class ZCL_CM_WORKFLOW (workflow start, then SEND_MAIL with four body builders), the RFC mail wrapper, six implicit enhancements, patches to two team-owned objects, the e-mail matrix and the solution summary (12 source files, 2,146 lines). Diagnosed from evidence Arnav pasted: FIPP.CREATED is not raised without OBWA customising;",
        "Completed",
-       "75",
-       "25",
-       "50",
-       "66%"
+       "52",
+       "42",
+       "10",
+       "19%"
       ],
       [
        "UC-002",
        "**PAL 'Upload General Journal Entry' Fiori tile: restore the Excel local and group amounts when the parked document is posted (UPDATE_AMOUNT)**\nZCL_GL_EXCHANGE_AMOUNT_DET (class; static method UPDATE_AMOUNT rewritten); ZFI_ENHGL_POST_DOCUMENT (implicit enhancement at the start of update FM POST_DOCUMENT; call changed); ZINV_CL_BP_GL_USER (behaviour pool; local class lsc_zinv_i_user_gl, method save_modified; mapping patch);",
        "The assistant diagnosed the original 48-line method and the behaviour-pool mapping error (amt_gp_curr = amtloccurr) and delivered five successive versions of UPDATE_AMOUNT (170 -> 889 lines) between 29/09/26 and 14/10/26. The last version matches Excel lines onto line items per G/L account by backtracking on amounts and key fields at three levels, leaves the document untouched when there is no fit or several fits, and logs the outcome to SLG1;",
        "Completed",
-       "20",
-       "16",
-       "4",
-       "20%"
+       "14",
+       "11",
+       "3",
+       "21%"
       ],
       [
        "UC-003",
        "**PAL customer invoice / credit memo / debit memo forms: PDF mailed by the program cannot be opened (INC01967)**\nZFI03CUSTINV1 (report); ZFI_03_CUSTINV_FORM (include; corrected); ZFI_03_CUSTINV_TOP (include; unchanged); ZFI_03_CUSTINV_SEL (include; unchanged); ZFIBSDMCM (transaction); ZDJ_ENCRYPTPDF (SM69 external command)",
        "From a 7,084-line SE80 print listing the assistant rebuilt one source file per include with a new parser (scripts/unlist.py), traced the mail path and identified the unchecked write / encrypt / read-back round trip as the only path that can corrupt the attachment. It delivered the whole corrected include ZFI_03_CUSTINV_FORM (5,020 -> 5,197 lines, 20 BOC/EOC blocks dated 10/10/26): every step checked, read-back validated (%PDF header, %%EOF, /Encrypt, exact size), nothing sent and the log set to Failed on any error,...",
        "Completed",
-       "12",
        "8",
-       "4",
-       "33%"
+       "7",
+       "1",
+       "19%"
       ],
       [
        "UC-004",
        "**SD-FI customer line text (INC01740): SO Header Note 1 into SGTXT for Fiori Manage Customer Line Items**\nZXVVFU02 (include of customer exit EXIT_SAPLV60B_002, enhancement SDVFX002); READ_TEXT (VBBK / 0002)",
        "Chose the exit over BTE / AC_DOCUMENT with reasons, placed the insert above the existing SIS CHECK, wrote the first-created-SO rule (VBAK ERDAT/ERZET), READ_TEXT with language fallback and keep-existing rule; include 119 -> 221 lines;",
        "Completed",
-       "10",
-       "4",
-       "6",
-       "60%"
+       "7",
+       "5",
+       "2",
+       "31%"
       ],
       [
        "UC-005",
        "**PAL Ariba Sourcing to S/4 purchase orders: no PO for materials with a rounding value; BAdI ME_BAPI_PO_CUST sets NO_ROUNDING (INC01192)**\nZMM_BAPI_PO_NOROUND (BAdI implementation); ZCL_IM_MM_BAPI_PO_NOROUND (class); ME_BAPI_PO_CUST (standard classic BAdI definition); IF_EX_ME_BAPI_PO_CREATE_02 (interface; method INBOUND); BAPI_PO_CREATE1 (BAPI); BAPI_PO_CHANGE (BAPI)",
        "The assistant wrote the BAdI implementation class following SAP's pointer (NO_ROUNDING = X in POITEM / POITEMX): the current file is the whole class, 122 lines, with INBOUND looping over the items and the eight other methods empty. Along the way it produced a PROCESS_ITEM fallback on ME_PROCESS_PO_CUST (retired, kept in git only), removed the caller gate and the POITEMX append after Arnav's decision, replaced the sample logic left by 'Copy Sample', and corrected the interface name in the header.",
        "Completed",
-       "8",
-       "2",
        "6",
-       "75%"
+       "3",
+       "3",
+       "46%"
       ],
       [
        "UC-006",
        "**PAL invoice-upload utility class: local and group currency validated independently in the AR and GL upload**\nZCL_INV_UTILITY (class; methods validate_inv_data_ar and validate_inv_data_gl changed); ZFM_INV_DOC_CHECK (function module, RFC NONE; called, not changed); BAPI_ACC_DOCUMENT_POST (BAPI; called from process_invoice_data, not changed)",
        "From the class source pasted into the session on 12/10/26, the assistant named the root cause (skipped checks plus stale totals) and wrote the whole corrected class (5,367 -> 5,758 lines) with 6 BOC/EOC blocks dated 12/10/26. Both methods now declare the totals explicitly and clear them per document, validate local and group in separate blocks, treat an amount without a currency code as an error, and issue three currency-specific balance messages.",
        "Completed",
-       "6",
        "4",
-       "2",
-       "33%"
+       "3",
+       "1",
+       "25%"
       ]
      ]
     }
@@ -570,7 +585,7 @@
     },
     {
      "t": "p",
-     "text": "51 AI-assisted use cases completed. Effort without AI 1,028 h; actual effort with AI 376 h; **651 h (81 man-days) saved, 63% effort reduction**."
+     "text": "51 AI-assisted use cases completed. Effort without AI 722 h; actual effort with AI 433 h; **290 h (36 man-days) saved, 40% effort reduction**."
     },
     {
      "t": "p",
@@ -579,16 +594,16 @@
     {
      "t": "bullets",
      "items": [
-      "**ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix** (UC-007; 71 h saved): this naming set was later abandoned for the senior's ZDPR_* package. Dashboard (16-28/09/26): the Overview Page manifest and local annotations for six cards, four detail-app adjustments, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL, the classic-view rewrite of...",
-      "**ATC S/4HANA-readiness remediation: 51 program includes in 14 packages** (UC-008; 47 h saved): Worked the findings family by family: 205 marked correction blocks in 51 includes (107 pragma-only, 65 replace-with-commented-original, 33 new code), 833 added / changed lines.",
-      "**ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...** (UC-009; 44 h saved): Designed and delivered eight classic CDS views (1110 lines) including the analytical cube and an abapGit ZIP, and rebuilt the model twice after feedback (04/11 entry-date model, 06/11 posting-period model at document grain).",
-      "**Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only** (UC-010; 44 h saved): Wrote two source-mapping documents (263 and 706 lines) that tie the workbook to SAP data, including an offline rebuild of the PBA sheet from the production extract (194 of 215 input cells within 0.015).",
-      "**Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...** (UC-011; 44 h saved): Designed and delivered the mapping table ZFI_BR_GLMAP with domain/data element ZBR_PISHARE, CDS views ZI_BR_BANKREVAL_ITM (seven versions), ZI_BR_BANKREVAL_CUBE and helper ZI_BR_HOUSEBANKACCT (three versions), an abapGit ZIP and a 48-row SM30 load sheet generated from the...",
-      "**Five Fiori List Report RAP apps for MM tender reports on one service** (UC-012; 44 h saved): Assessed the five tcodes for Fiori fit, designed three List Report tiles for ZMM_TENDER_REG, built the custom entities and query providers and put all CDS on one service definition and binding.",
-      "**Fiori Manage Purchase Orders: custom EKKO fields on the PO header - CDS extension UI annotations and F4 value helps added to the standard OData servic...** (UC-013; 29 h saved): Reconciled ZC_PURCHASEORDERTP_EXT against structure ZSTR_HEADER (79/79 custom fields present, only 12 of 84 elements annotated) and delivered the extension with UI positions 230-260 for four missing fields.",
-      "**ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group / recovery indicator split) directly into ACDOCA ledger 0L,...** (UC-014; 28 h saved): Built the report (1542 lines on 02/11/26, 1793 lines after five logged iterations), the TS (93 lines), a 15-item assumptions-and-queries sheet and test case 1: a Python builder that parses the 172 recon rows, checks net-zero per account (40 accounts, all zero) and writes the...",
-      "**Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the Group Data Analysis cube, read report, abapGit ZIP, TS** (UC-015; 28 h saved): Built table ZGR_FSITEM_MAP with two Z domains and three Z data elements, and the 743-line cube ZI_GR_FSREMAP_CUBE (standard elements redefined 1:1, 71 of 73 associations, new column NewFinancialStatementItem via left outer join + CASE, association _NewFinStmntItm).",
-      "**ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV ledger line items (JVSO1 4A / 4C)** (UC-018; 16 h saved): Built the report on 19/10/26 (384 lines, CL_SALV_TABLE), removed the transaction-currency comparison on 21/10/26 (367 lines) and added the third currency via ledger 4C plus three 'amount to post' columns on 02/11/26 (451 lines)."
+      "**Five Fiori List Report RAP apps for MM tender reports on one service** (UC-012; 28 h saved): Assessed the five tcodes for Fiori fit, designed three List Report tiles for ZMM_TENDER_REG, built the custom entities and query providers and put all CDS on one service definition and binding.",
+      "**Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...** (UC-011; 22 h saved): Designed and delivered the mapping table ZFI_BR_GLMAP with domain/data element ZBR_PISHARE, CDS views ZI_BR_BANKREVAL_ITM (seven versions), ZI_BR_BANKREVAL_CUBE and helper ZI_BR_HOUSEBANKACCT (three versions), an abapGit ZIP and a 48-row SM30 load sheet generated from the...",
+      "**ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...** (UC-009; 21 h saved): Designed and delivered eight classic CDS views (1110 lines) including the analytical cube and an abapGit ZIP, and rebuilt the model twice after feedback (04/11 entry-date model, 06/11 posting-period model at document grain).",
+      "**Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only** (UC-010; 20 h saved): Wrote two source-mapping documents (263 and 706 lines) that tie the workbook to SAP data, including an offline rebuild of the PBA sheet from the production extract (194 of 215 input cells within 0.015).",
+      "**ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group / recovery indicator split) directly into ACDOCA ledger 0L,...** (UC-014; 17 h saved): Built the report (1542 lines on 02/11/26, 1793 lines after five logged iterations), the TS (93 lines), a 15-item assumptions-and-queries sheet and test case 1: a Python builder that parses the 172 recon rows, checks net-zero per account (40 accounts, all zero) and writes the...",
+      "**Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the Group Data Analysis cube, read report, abapGit ZIP, TS** (UC-015; 16 h saved): Built table ZGR_FSITEM_MAP with two Z domains and three Z data elements, and the 743-line cube ZI_GR_FSREMAP_CUBE (standard elements redefined 1:1, 71 of 73 associations, new column NewFinancialStatementItem via left outer join + CASE, association _NewFinStmntItm).",
+      "**ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway OData V2 -> TCURR);** (UC-024; 11 h saved): The only artefact in the folder is a 342-line knowledge-transfer document containing the final DPC_EXT method EXCHANGERATESSET_CREATE_ENTITY (about 97 lines of ABAP), the CHANGESET_BEGIN redefinition, the accepted CPI $batch envelope, the FI/Basis configuration prerequisites,...",
+      "**ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP via the Data Monitor posting engine** (UC-019; 10 h saved): Built class ZCL_GR_JE_POST v1 (134 lines) with one public method POST that wraps cl_fincs_dp_document_post_fac=>get_factory( )->create( )->post( ), builds FINCS_S_DOCUMENT_HEAD_POST and FC05_T_PDOC_S4H_QFLE by MOVE-CORRESPONDING from an ACDOCU-typed item table and returns...",
+      "**ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only (document status 'U') journal entry lines to FBL3N** (UC-057; 10 h saved): Wrote the complete CHANGE_ITEMS method body with header (294-line file), NOTES.md with the SE19 creation steps, a table of selection-screen field names to verify, behaviour, deliberate omissions, risks and five test steps.",
+      "**ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix** (UC-007; 9 h saved): this naming set was later abandoned for the senior's ZDPR_* package. Dashboard (16-28/09/26): the Overview Page manifest and local annotations for six cards, four detail-app adjustments, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL, the classic-view rewrite of..."
      ],
      "size": 19
     }
@@ -634,357 +649,357 @@
        "**ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix**\nZCL_ZPRA_DAILY_PROD_DPC_EXT (class, SEGW OData V2 DPC extension for the CPI inbound interface); ZPRA_T_DLY_PRD (table, daily production - interface target); ZDPRPRODDASH (BSP application - Fiori Overview Page app zdprdashboard);",
        "this naming set was later abandoned for the senior's ZDPR_* package. Dashboard (16-28/09/26): the Overview Page manifest and local annotations for six cards, four detail-app adjustments, new views ZDPR_Q_DASH_FILTER and ZDPR_Q_BOEPD_TOTAL, the classic-view rewrite of ZDPR_Q_PROD_PERF, BOE / unit changes in the cubes and DDLX chart fixes, the FiscalYear controller extension (v1-v5) and the handover / review documents and per-system setup checklist.",
        "Completed",
-       "120",
-       "49",
-       "71",
-       "59%"
+       "84",
+       "75",
+       "9",
+       "11%"
       ],
       [
        "UC-008",
        "**ATC S/4HANA-readiness remediation: 51 program includes in 14 packages**\n51 includes of 43 programs, 14 packages (e.g. ZFI_TAX_CREDIT_REPORT, ZFI_VOUCHER_PRINT, MZMMVENDORF01)",
        "Worked the findings family by family: 205 marked correction blocks in 51 includes (107 pragma-only, 65 replace-with-commented-original, 33 new code), 833 added / changed lines. Packaged all 51 by package in abapGit layout with an upload procedure, a 26-row manual review list, a 76-pattern correction knowledge base, a rule audit and a handover document.",
        "Completed",
-       "88",
-       "41",
-       "47",
-       "54%"
+       "64",
+       "57",
+       "7",
+       "11%"
       ],
       [
        "UC-009",
        "**ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...**\nZI_JIB_STATUS_CUBE (CDS view, analytical cube); ZI_JIB_DOC (CDS view); ZI_JIB_DOC_AGG (CDS view); ZI_JIB_YEAR_AGG (CDS view); ZI_JIB_QTR_AGG (CDS view); ZI_JIB_CLEARING (CDS view)",
        "Designed and delivered eight classic CDS views (1110 lines) including the analytical cube and an abapGit ZIP, and rebuilt the model twice after feedback (04/11 entry-date model, 06/11 posting-period model at document grain). Added year/quarter aggregate views, reversal handling, the clearing view, document type OS and the Business Unit derivation by country prefix. Diagnosed the HTTP 403 navigation failure from the browser console and webgui_min.js and arrived at the tile parameter sap-ushell-next-navmode=explace.",
        "Completed",
-       "60",
-       "16",
-       "44",
-       "73%"
+       "42",
+       "21",
+       "21",
+       "50%"
       ],
       [
        "UC-010",
        "**Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only**\nZI_PBA_AGENDA_TF (CDS table function); ZCL_PBA_AGENDA_TF (class, AMDP, method GET_LINES); ZI_PBA_ITEM (CDS view, SQL view ZIPBAITEM); ZI_PBA_CUBE (CDS view, cube, SQL view ZIPBACUBE); ZZ1_PBA (custom analytical query, generated view, SQL view ZZ1_S370PML0P5P2, published query 2CZZ1_S370PML0P5P2);",
        "Wrote two source-mapping documents (263 and 706 lines) that tie the workbook to SAP data, including an offline rebuild of the PBA sheet from the production extract (194 of 215 input cells within 0.015). Built four objects: table function ZI_PBA_AGENDA_TF (46 lines), AMDP class ZCL_PBA_AGENDA_TF (331 lines), views ZI_PBA_ITEM (56) and ZI_PBA_CUBE (690 lines including the commented previous version), plus ZFI_PBA.zip.",
        "Completed",
-       "60",
-       "16",
-       "44",
-       "73%"
+       "42",
+       "22",
+       "20",
+       "47%"
       ],
       [
        "UC-011",
        "**Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...**\nZFI_BR_GLMAP (table); ZBR_PISHARE (domain); ZBR_PISHARE (data element); ZI_BR_BANKREVAL_ITM (CDS view); ZI_BR_BANKREVAL_CUBE (CDS view, analytical cube); ZI_BR_HOUSEBANKACCT (CDS view)",
        "Designed and delivered the mapping table ZFI_BR_GLMAP with domain/data element ZBR_PISHARE, CDS views ZI_BR_BANKREVAL_ITM (seven versions), ZI_BR_BANKREVAL_CUBE and helper ZI_BR_HOUSEBANKACCT (three versions), an abapGit ZIP and a 48-row SM30 load sheet generated from the requirement Excel. Diagnosed the activation errors, the 'cube not listed' case (missing C1 release), the blank house bank (T012K redirected to V_T012K_BAM), the cross-year sums, the carry-forward currency behaviour and the 95312 join fan-out.",
        "Completed",
-       "60",
-       "16",
-       "44",
-       "73%"
+       "42",
+       "20",
+       "22",
+       "54%"
       ],
       [
        "UC-012",
        "**Five Fiori List Report RAP apps for MM tender reports on one service**\nZCL_OVL_TRPT_LIST (class); ZCL_OVL_TRPT_DATA (class); ZC_OVL_SO_REG (CDS view); ZREP_TENDER_REGISTER (source report)",
        "Assessed the five tcodes for Fiori fit, designed three List Report tiles for ZMM_TENDER_REG, built the custom entities and query providers and put all CDS on one service definition and binding.",
        "Completed",
-       "54",
+       "38",
        "10",
-       "44",
-       "81%"
+       "28",
+       "73%"
       ],
       [
        "UC-013",
        "**Fiori Manage Purchase Orders: custom EKKO fields on the PO header - CDS extension UI annotations and F4 value helps added to the standard OData servic...**\nZC_PURCHASEORDERTP_EXT (CDS view extension of C_PurchaseOrderTP); ZI_DOM_FIXVAL_VH (CDS view); ZI_NAT_PROC_VH (CDS view); ZI_REL_CODE_VH (CDS view); ZI_PERNR_VH (CDS view); ZI_ADRC_VH (CDS view)",
        "Reconciled ZC_PURCHASEORDERTP_EXT against structure ZSTR_HEADER (79/79 custom fields present, only 12 of 84 elements annotated) and delivered the extension with UI positions 230-260 for four missing fields. Built six value-help CDS views, the model class ZCL_MM_PO_VH_MPC (v1-v15, 917 lines), the data class ZCL_MM_PO_VH_DPC (v1-v5, 271 lines) and the two enhancement sheets; F4 on Inspection Type was confirmed working in the app on 22/10/26 and the ten fixed-value sets were served.",
        "Completed",
-       "45",
-       "16",
-       "29",
-       "64%"
+       "31",
+       "23",
+       "8",
+       "26%"
       ],
       [
        "UC-014",
        "**ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group / recovery indicator split) directly into ACDOCA ledger 0L,...**\nZFI_ACDOCA_JVA_ALIGN (report)",
        "Built the report (1542 lines on 02/11/26, 1793 lines after five logged iterations), the TS (93 lines), a 15-item assumptions-and-queries sheet and test case 1: a Python builder that parses the 172 recon rows, checks net-zero per account (40 accounts, all zero) and writes the upload workbook.",
        "Completed",
-       "36",
+       "25",
        "8",
-       "28",
-       "78%"
+       "17",
+       "67%"
       ],
       [
        "UC-015",
        "**Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the Group Data Analysis cube, read report, abapGit ZIP, TS**\nZGR_FSITEM_MAP (table); ZGR_RBUNIT (domain); ZGR_RITEM (domain); ZGR_RBUNIT (data element); ZGR_RITEM (data element); ZGR_RITEM_NEW (data element)",
        "Built table ZGR_FSITEM_MAP with two Z domains and three Z data elements, and the 743-line cube ZI_GR_FSREMAP_CUBE (standard elements redefined 1:1, 71 of 73 associations, new column NewFinancialStatementItem via left outer join + CASE, association _NewFinStmntItm). Packaged the 7 objects as abapGit offline ZIP ZGR_FSITEM_REMAP.zip (8 files) with an SE11 / ADT paste fallback, wrote TS_ZGR_FSITEM_REMAP.md (v1.1) and a 16-item ASSUMPTIONS_AND_QUERIES.md.",
        "Completed",
-       "36",
-       "8",
-       "28",
-       "78%"
+       "25",
+       "9",
+       "16",
+       "63%"
       ],
       [
        "UC-016",
        "**Fiori PR/PO validations: valuation-type defaulting, SWO / item-category checks, Fiori-path dump**\nME_PROCESS_REQ_CUST (BAdI); ME_PROCESS_PO_CUST (BAdI); ZMM_UPDATE_EPROFILE (enhancement)",
        "Designed the MBEW-based valuation-type default in PROCESS_ITEM (creation only), mirrored it into the PO BAdI, wrote the SWO-contract and item-category CHECK validations, located and re-guarded the Fiori-path field-symbol dump, and identified MM06E005 / LMLSLF0R for the RFQ equivalent.",
        "Completed",
-       "36",
+       "25",
        "24",
-       "12",
-       "33%"
+       "1",
+       "4%"
       ],
       [
        "UC-017",
        "**ZAA_IMPARMENTLOSS / SAPMZAAIMP impairment and write-back posting - ABAA/ABZU batch input replaced by FI-AA BAPIs for S/4**\nSAPMZAAIMP (module pool, tcode ZAAIMP); MZAAIMPI01 (include, changed); MZAAIMPF01 (include, changed); MZAAIMPTOP / MZAAIMPO01 (includes, not changed); ZAA_IMPARMENTLOSS (report, tcode ZFIIMPR, not changed); BAPI_ASSET_VALUE_ADJUST_POST / BAPI_ASSET_VALUE_ADJUST_CHECK (BAPI)",
        "Diagnosed from the SM35 log and SE93 that ABAA/ABZU dispatch via RADISPATCH_AB01, traced the mode -> screen -> transaction map for the seven BDC sites, and specified and interpreted a series of BAPI _CHECK tests (including the equivalence check against ABAAL). Delivered MZAAIMPF01 (237 to 658 lines; new FORMs ZAA_VALUE_ADJUST, ZAA_WRITEUP, ZAA_GET_WAERS, ZAA_COLLECT_RETURN, ZAA_BAPI_COMMIT, ZAA_BAPI_ROLLBACK, ZAA_ALPHA_INPUT) and MZAAIMPI01 (1436 to 1925 lines;",
        "Completed",
-       "28",
-       "16",
-       "12",
-       "43%"
+       "20",
+       "11",
+       "9",
+       "45%"
       ],
       [
        "UC-018",
        "**ZFI_ACDOCA_JVSO1_RECON - reconciliation report of ACDOCA ledger 0L against JV ledger line items (JVSO1 4A / 4C)**\nZFI_ACDOCA_JVSO1_RECON (report)",
        "Built the report on 19/10/26 (384 lines, CL_SALV_TABLE), removed the transaction-currency comparison on 21/10/26 (367 lines) and added the third currency via ledger 4C plus three 'amount to post' columns on 02/11/26 (451 lines). Wrote a 13-item assumptions-and-queries sheet and a TS (v1.2, .md and .docx) with requirement mapping and nine test scenarios.",
        "Completed",
-       "20",
-       "4",
-       "16",
-       "80%"
+       "14",
+       "5",
+       "9",
+       "67%"
       ],
       [
        "UC-019",
        "**ZCL_GR_JE_POST - wrapper class to post a Group Reporting journal entry (ACDOCU) from ABAP via the Data Monitor posting engine**\nZCL_GR_JE_POST (class); CL_FINCS_DP_DOCUMENT_POST (SAP standard class wrapped); IF_BADI_FINCS_CUST_DATAMON (BAdI interface - wiring named as next object, not built)",
        "Built class ZCL_GR_JE_POST v1 (134 lines) with one public method POST that wraps cl_fincs_dp_document_post_fac=>get_factory( )->create( )->post( ), builds FINCS_S_DOCUMENT_HEAD_POST and FC05_T_PDOC_S4H_QFLE by MOVE-CORRESPONDING from an ACDOCU-typed item table and returns BAPIRET2_T. Wrote NOTES.md with the SE24 test procedure, the three flagged assumptions and the scope left for version 2; the API research is recorded in ovl/cnsldtn_grpjrnl_api/NOTES.md.",
        "Completed",
-       "20",
+       "14",
        "4",
-       "16",
-       "80%"
+       "10",
+       "74%"
       ],
       [
        "UC-020",
        "**Group Reporting: where the CXCD currency translation task log reads its data (ST05 trace decode) + new report ZGR_CT_TASKLOG**\nZGR_CT_TASKLOG (report); C_CNSLDTNCRCYTRNSLTNTSKLG (standard CDS view, read); FINCS_LOG_HEADER (standard table, read); FINCS_FSIASSGMT (standard table, read); FIN_CONS_GENERICLOG_SRV (standard OData service, analysed); FINCS_LOG_HEADER_OLD (standard CDS view, analysed)",
        "Decoded the ST05 export and identified that the log is served by OData FIN_CONS_GENERICLOG_SRV, with lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG keyed by the task log UUID (= FINCS_LOG_HEADER-CNSLDTNLOGNUMBER) and that ACDOCU is not read; findings and a decoded extract were filed in NOTES.md and trace/.",
        "Completed",
-       "20",
-       "4",
-       "16",
-       "80%"
+       "14",
+       "6",
+       "8",
+       "60%"
       ],
       [
        "UC-021",
        "**ZFI_TR_BANKACCT - Treasury register of the company's own bank accounts for the Management Dashboard: table, DDIC, basic CDS view and analytical cube f...**\nZFI_TR_BANKACCT (table); ZTR_ACCTNO (domain); ZTR_TEXT60 (domain); ZTR_TEXT120 (domain); ZTR_ACCTNO (data element); ZTR_ACCTNAME (data element)",
        "Delivered table ZFI_TR_BANKACCT with three domains and seven data elements, basic view ZI_TR_BANKACCT (63 lines), cube ZI_TR_BANKACCT_CUBE (90 lines) and an abapGit ZIP with 17 source files, all on 03/11/26. Wrote a 16-item assumptions-and-queries sheet, a TS (v1.1, .md and .docx) with the manual SE11 / SE54 / SE93 / key-user-release steps and a nine-step handover table. Found the existing ZFI_BANK_DETAILS by scanning the repo and justified a separate table;",
        "Completed",
-       "20",
-       "4",
-       "16",
-       "80%"
+       "14",
+       "5",
+       "9",
+       "66%"
       ],
       [
        "UC-022",
        "**ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Bank Reconciliation Report - header truncation fix, FF67 upload changes, and a single-source copy built from...**\nZFI_CNB_BRS (report); ZFIBRSTOP (include); ZFI_CNB_BRS1 (report, new single-source copy); ZFIBRS (transaction); ZPFSTATUS (GUI status)",
        "Reconstructed clean sources from SE38 print listings; delivered corrected ZFIBRSTOP (three fields widened to 70) and ZFI_CNB_BRS (WVAR_ART, BDC screen flow, balances, warning suppression, no-validation upload). Built ZFI_CNB_BRS1 as a single-source copy of the ONGC version with ZFIBRSTOP merged in (4431 lines) plus a matched-only test variant (4330 lines) and a text-element sheet.",
        "Completed",
-       "20",
-       "8",
-       "12",
-       "60%"
+       "14",
+       "10",
+       "4",
+       "25%"
       ],
       [
        "UC-023",
        "**ARMS end-user authorisation request tool - TWO pieces: (1) analysis of hardcoded values, role master and approver roles in ZMM_ARMS (05/10/26);**\nSAPMZMMPREPROLE1 (module pool, tcode ZMM_ARMS - analysed, found to be dead code); SAPMZMMPREPROLE1_PHASEII (module pool, tcodes ZICE_ARMS / ZOVL_ARMS - changed); MZMMPREPROLE1_PHASEIII01 (include, corrected); MZMMPREPROLE1_PHASEIIF01 (include, corrected);",
        "Ran drift checks of the fresh 26/10/26 downloads against the repo copies (identical). Wrote the corrected whole includes MZMMPREPROLE1_PHASEIII01 (8753 -> 8758 lines) and MZMMPREPROLE1_PHASEIIF01 (11138 -> 11193 lines) with 7 edits under BOC/EOC SAP_ABAP 26/10/26, splitting the PM_PS display role into PM + PS rows, and the SE10 paste sheet TR_TABLE_ENTRIES.txt for the role tables.",
        "Completed",
-       "20",
+       "14",
        "8",
-       "12",
-       "60%"
+       "6",
+       "46%"
       ],
       [
        "UC-024",
        "**ZF01_EXCHANGE_RATE - exchange rate mass-upload interface (SAP CPI -> Gateway OData V2 -> TCURR);**\nZF01_EXCHANGE_RATE_SRV (OData V2 service); ZF01_EXCHANGE_RATE (SEGW project); ZCL_ZF01_EXCHANGE_RATE_DPC_EXT (class); ZCL_ZF01_EXCHANGE_RATE_DPC (class); ZCL_ZF01_EXCHANGE_RATE_MPC_EXT (class); ZCL_ZF01_EXCHANGE_RATE_MPC (class)",
        "The only artefact in the folder is a 342-line knowledge-transfer document containing the final DPC_EXT method EXCHANGERATESSET_CREATE_ENTITY (about 97 lines of ABAP), the CHANGESET_BEGIN redefinition, the accepted CPI $batch envelope, the FI/Basis configuration prerequisites, data rules for the sender and an 11-row error -> fix table.",
        "Completed",
-       "20",
-       "4",
-       "16",
-       "80%"
+       "14",
+       "3",
+       "11",
+       "79%"
       ],
       [
        "UC-025",
        "**ZFI_PL (module pool SAPFZFIPL) Profitability statement / Per Barrel analysis - two pieces of work: 5* G/L accounts listed as unmapped after the S/4 co...**\nSAPFZFIPL (module pool); ZFI_PL (transaction); MZFIPLF01 (include, corrected); MZFIPLTOP (include); MZFIPLO01 (include); MZFIPLI01 (include)",
        "Reviewed the supplied print and concluded no path in it could surface an unmapped account, gave a breakpoint list, and once the missing block and SKA1 data were supplied identified the SECC cause and wrote PATCH_secc_exclusion.abap (26 lines). On 26/10/26 it diffed the fresh ZR_PROG_DOWNLOAD tree against the 27.09 print (no drift), changed FROM jvso1 to FROM jv_jvso1_acdoca at all 24 sites in MZFIPLF01 (15,384 -> 15,461 lines, old line commented inside BOC/EOC) and produced a 24-site paste sheet (163 lines).",
        "Completed",
-       "16",
-       "8",
-       "8",
-       "50%"
+       "11",
+       "6",
+       "5",
+       "45%"
       ],
       [
        "UC-026",
        "**ZMMME35K - contract release not working after ECC -> S/4 conversion (root cause and fix)**\nZMM_RM06EF00 (report, Z copy of RM06EF00); SAPMZFM06L (program / form pool, Z copy of SAPFM06L); ZFM06LFFR (include, Z copy of FM06LFFR); ZFM06LFFR_FRG_SET (include, new - main program SAPMZFM06L); ZMM_FM06LTO1 / ZMM_FM06LCFR / ZMM_FM06LCEK (includes, Z copies); ZMMME35K (transaction)",
        "README.md documents the analysis: the standard release flow on S/4, both root causes, the inventory of live and dead custom business logic and a list of known issues not fixed. Delivered a new include ZFM06LFFR_FRG_SET (602 lines) restoring the custom FRG_SET and four helper FORMs, the one-line include swap in ZFM06LFFR and the 13 PERFORM target corrections in ZMM_RM06EF00.",
        "Completed",
-       "16",
-       "8",
-       "8",
-       "50%"
+       "11",
+       "6",
+       "5",
+       "45%"
       ],
       [
        "UC-027",
        "**Fiori F1592 Asset Master Worklist: Custodian / JV fields via CDS extension**\nZZI_FIXEDASSETWORKLIST_EXT (CDS extend view); ZZC_FIXEDASSETWORKLIST_EXT (CDS extend view); ANLU (CI_ANLU customer include)",
        "Analysed SAP KBA 3049624 and the extensibility routes, then built a modification-free [0..1] association to ANLU in an interface extension carried up by a consumption extension with inline UI annotations after the DDLX route failed activation.",
        "Completed",
-       "12",
-       "4",
-       "8",
-       "68%"
+       "9",
+       "6",
+       "3",
+       "29%"
       ],
       [
        "UC-028",
        "**JV transfer programs: GL derivation keyed by JV, offset profit centre from mapping table**\nZR_JV_POST (report); ZJV_DOC_TRANSFER (report); ZOCV_OVL_TRANSFER (report); ZJV_MAP_COCODE (table)",
        "Changed the GL derivation key to include JV and moved the offset profit centre to a new PC_DEFAULT field on ZJV_MAP_COCODE; applied the same mapping logic to ZJV_DOC_TRANSFER / ZOCV_OVL_TRANSFER.",
        "Completed",
-       "12",
-       "4",
-       "8",
-       "68%"
+       "9",
+       "3",
+       "6",
+       "66%"
       ],
       [
        "UC-029",
        "**BAdI ME_PROCESS_PO_CUST method CHECK - PO validity-date rule made a warning in the Fiori Manage Purchase Orders app (error in GUI), plus analysis of r...**\nME_PROCESS_PO_CUST (BAdI); IF_EX_ME_PROCESS_PO_CUST~CHECK (BAdI method of the OVL implementation; implementation name and class not supplied); C_PurchaseOrderTP (CDS view, SAP standard); CL_MM_PUR_PO_MAINTAIN_FEAT_CHK (class, SAP standard); ZMM_EKGRP (table);",
        "Read the method and documented the four validity-period rules and why they affect Fiori-created service POs; refused a whole-method bypass and limited the change to the validity rule. Delivered the complete corrected method body (6,351 lines, was 6,336): one BOC/EOC block at lines 344-360 raising the message TYPE 'W' when sy-tcode is initial and TYPE 'E' otherwise, original line commented. Flagged an unguarded POPUP_TO_CONFIRM (around line 4563) as a DYNPRO_SEND_IN_BACKGROUND dump risk in Fiori.",
        "Completed",
-       "12",
        "8",
-       "4",
-       "33%"
+       "6",
+       "2",
+       "25%"
       ],
       [
        "UC-030",
        "**ZFI_BNK_APP1 bank batch approval / digital signature - one click by the second signatory released every batch of a payment run**\nZFI_BNK_APP1 (module pool); ZFI_BNK_APP1_F01 (include, corrected); ZFI_BNK_APP1_I01 (include, corrected); ZFI_BNK_APP1_TOP (include); ZFI_BNK_APP1_O01 (include); ZBCM_CLASS (include)",
        "Located the defect in ZFI_BNK_APP1 although it was reported against tcode ZBNK_APP2 (a read-only monitor), and documented the mechanism step by step, a second instance on tab 1 (level-1 signature overwritten) and the collateral 'sent but unsigned' batches. Extracted clean include sources from the SE80 download (work/), wrote a QA test sequence, a seven-point open list and a draft mail to the functional consultant.",
        "Completed",
-       "12",
        "8",
-       "4",
-       "33%"
+       "6",
+       "2",
+       "25%"
       ],
       [
        "UC-031",
        "**ZFI_JV_TB (ZJVTB) Joint Venture Trial Balance - three issues: venture column missing in the Excel export, opening balance blank after the ACDOCA view...**\nZFI_JV_TB (report; REPORT statement in the download reads zzjvtb_test); ZJVTB (transaction)",
        "For issue 2 it traced all eight opening-balance write sites and delivered a corrected object (totals view switched to JV_JVTO1_ACDOCA_SWITCH_2 at five reads, USD branch restored to SUM( kslvt )). For issue 3 it showed that observation 2 is a spreadsheet sort artefact (only six G/Ls differ when matched on G/L number; G/L 120170 is zero on RISE) and delivered a one-SELECT patch sheet for observation 1.",
        "Completed",
-       "12",
        "8",
-       "4",
-       "33%"
+       "6",
+       "2",
+       "25%"
       ],
       [
        "UC-032",
        "**ZHANA_SERVICES_PRG 'SAP Timesheet' module pool - CR: Excel download / upload of timesheet rows, Scope handling, button re-pointing**\nZHANA_SERVICES_PRG (module pool); ZHANA_SERVICES_PRG_MAILF01 (include - FORMs DOWNLOAD_ROWS, UPLOAD_ROWS, XL_TO_DATE, XL_TO_DAYS, SET_HEADING, GET_SCOPE_VALUES); ZHANA_SERVICES_PRG_STATUS_9O01 (include); ZHANA_SERVICES_PRG_STATUS_9O02 (include); ZHANA_SERVICES_PRG_STATUS_9O03 (include);",
        "Rebuilt the includes from the SE80 print and wrote new FORMs DOWNLOAD_ROWS, UPLOAD_ROWS, XL_TO_DATE, XL_TO_DAYS, SET_HEADING and later GET_SCOPE_VALUES in _MAILF01 (14 -> 672 lines), with fcodes DOWNLOAD / UPLOAD in USER_COMMAND_9002 and the buttons excluded outside Create. Added the Scope-filtered download popup, re-pointed the Print button to ZSAPT_FORM1 and the Consumption button to ZCON1, and on 16/10/26 removed the forcing of Scope to AS IS when Scope = MICROSOFT. Listed the manual SE41 / SE51 steps.",
        "Completed",
-       "10",
+       "7",
        "4",
-       "6",
-       "60%"
+       "3",
+       "38%"
       ],
       [
        "UC-033",
        "**ZSAP_CONSUMPTION_REPORT (tcode ZCON / copy ZCON1) - consumed-till-date columns, Available based on till-date, MICROSOFT scope columns**\nZSAP_CONSUMPTION_REPORT (report); ZCON1 (transaction - copy of the report with the new columns); ZSERVICE_ELEMENT (table read); ZSAP_TIMESHEET (table read)",
        "Added a second SUM (GT_SUM_TILL, datec <= p_datet, Head IT approved) and new AS IS / Additional 'Consumed till date' columns, with Available days and amount = Scope - Consumed till date (report grew from 270 to 446 lines, changes under BOC/EOC SAP_ABAP). Added MICROSOFT columns, then on 16/10/26 reworked them so that AS IS Available = AS IS scope - AS IS till date - MICROSOFT till date, and reordered the field catalog. Wrote TESTCASE.md with expected values for three date ranges from an SE16N extract.",
        "Completed",
-       "10",
+       "7",
        "4",
-       "6",
-       "60%"
+       "3",
+       "44%"
       ],
       [
        "UC-034",
        "**ZSAP_TIMESHEET_FORM_PRG timesheet print (running copy ZSAP_TIMESHEET_FORM_PRG_CP, tcode ZSAPT_FORM1) - print by Scope / print option, Smart Form initi...**\nZSAP_TIMESHEET_FORM_PRG (report, tcode ZSAPT_FORM); ZSAP_TIMESHEET_FORM_PRG_CP (report, running copy, tcode ZSAPT_FORM1); ZSAP_TIMESHEET_FORM (Smart Form - Global Definitions / Initialization code changed); ZSAP_TIMESHEET (table read)",
        "Added the listbox parameter (P_SCOPE, later P_GRP obligatory), the line filter before the per-document de-duplication and a message when nothing is left (323 -> 413 lines, BOC/EOC SAP_ABAP 06/10/26). Diagnosed the false 'Document No not found' from the debugger observation (sy-subrc 4 after DELETE ADJACENT DUPLICATES with LT_DATA holding one row) and removed the check.",
        "Completed",
-       "10",
+       "7",
        "4",
-       "6",
-       "60%"
+       "3",
+       "47%"
       ],
       [
        "UC-035",
        "**ZR_PROG_DOWNLOAD: mass download of ABAP sources with the full include tree (19/10/26 rewrite with CDS DDL sources;**\nZR_PROG_DOWNLOAD (report); DDDDLSRC (table; read for CDS DDL sources); CL_OO_CLASSNAME_SERVICE (standard class; GET_ALL_METHOD_INCLUDES); GUI_DOWNLOAD (function module)",
        "The same day, after the live program's selection screen was filed, it recorded the rewrite as superseded and reduced the task to grafting one DDLS block (FORM add_ddl_source) into the live source.",
        "Completed",
-       "10",
-       "5",
-       "5",
-       "55%"
+       "7",
+       "6",
+       "1",
+       "9%"
       ],
       [
        "UC-036",
        "**ZMMEMD (SAPMZMMEMD): LOA number in Change / Display popups with new search help, four further fixes**\nSAPMZMMEMD (module pool); ZMM_EMDHDR (table); new elementary search help on the EMD header",
        "Delivered the LOA# field with a new elementary search help on the EMD header table plus four further fixes in the same module pool.",
        "Completed",
-       "10",
+       "7",
        "4",
-       "6",
-       "60%"
+       "3",
+       "43%"
       ],
       [
        "UC-037",
        "**ZFI_ACDOCA_VNAME_UPD - one-off back-fill of custom field ZZ1_VNAME from VNAME on historical ACDOCA line items**\nZFI_ACDOCA_VNAME_UPD (report)",
        "Built the report (329 lines) with test run as default, a package loop with COMMIT per package, a guard that never overwrites an existing value and stop conditions. After activation feedback it corrected the column name to ZZ1_VNAME_COB, added a document-number filter and a 'Max lines' limit for a single-line first test, and removed the authority check on request. Wrote NOTES.md with text elements and run order.",
        "Completed",
-       "8",
-       "2",
        "6",
-       "71%"
+       "4",
+       "2",
+       "30%"
       ],
       [
        "UC-038",
        "**Group Reporting data release: expose Venture (ZZ1_VNAME_COB and standard ACDOCA-VNAME) through two CDS view extensions**\nZX_CNSLDTNINTEGRPTDFINVNAME (CDS extend view, SQL append ZXINTFINVNAME); ZX_JOURNALENTRYITEMVNAME (CDS extend view, SQL append ZXEFIJEIVNAME); I_CnsldtnIntegRptdFinData (CDS view, SAP standard, extended); E_JournalEntryItem (CDS view, SAP standard, extended);",
        "Wrote two CDS extend views: ZX_CNSLDTNINTEGRPTDFINVNAME (31 lines; _Extension.ZZ1_VNAME_COB as ZZ_VNAME_COB and _Extension.ZZ_VNAME) and ZX_JOURNALENTRYITEMVNAME (20 lines; Persistence.vname as ZZ_VNAME). Documented the activation order, the functional follow-up (mapping table, re-run of the release) and gotchas. When SAP's review flagged the E_JournalEntryItem extension against guide P110, gave the reasoning why the alias must be used; it was pushed back to SAP unchanged.",
        "Completed",
-       "6",
-       "3",
-       "3",
-       "57%"
+       "4",
+       "4",
+       "0",
+       "8%"
       ],
       [
        "UC-039",
        "**ZMMIMS (SAPMZMMIMS) - GeM Invoice No. F4 correction and automatic display (marker +019)**\nSAPMZMMIMS (module pool); ZMMIMS (transaction); MZMMIMSF01 (include); MZMMIMSI01 (include); MZMMIMSTOP (include, referenced); ZGEM_BILL (table)",
        "A replacement MODULE get_geminv (136 lines) whose header states the three root causes, a patch sheet with the new FORM get_gem_invoice_no and three call points (create, safety net before the MODIFY, change/display), and the two whole includes with the +019 lines in place.",
        "Completed",
-       "6",
        "4",
-       "2",
-       "33%"
+       "3",
+       "1",
+       "25%"
       ],
       [
        "UC-040",
        "**ZMM_VMS vendor creation: number-range error in Mock-2, GST classification query**\nZMM_VMS (program)",
        "Diagnosed the number-range determination failure and supplied the fix; answered the GST vendor classification query; triaged the remaining Mock-2 items.",
        "Completed",
-       "6",
        "4",
-       "2",
-       "33%"
+       "3",
+       "1",
+       "25%"
       ],
       [
        "UC-041",
        "**ZBC_TADIR_SRCSYS_CHANGE - utility report to reset TADIR source system OCQ -> OCD for objects created in OCQ**\nZBC_TADIR_SRCSYS_CHANGE (report); TADIR (table, field SRCSYSTEM)",
        "Built the report (141 lines): selects every R3TR entry with SRCSYSTEM = OCQ, test flag on by default, POPUP_TO_CONFIRM before the update, UPDATE that repeats SRCSYSTEM = OCQ in its WHERE clause, and lists of changed and failed entries. Rewrote it twice the same day on Arnav's instructions and restored a truncated version after a bad edit. Wrote NOTES.md with guards, gotchas (no change document, repair flags in open transports) and the SE03 alternative.",
        "Completed",
-       "4",
+       "3",
        "2",
-       "2",
-       "50%"
+       "1",
+       "35%"
       ],
       [
        "UC-042",
        "**st05_decode.py: offline decoder for ST05 binary trace exports (.trc)**\nST05 (transaction; its binary trace export is the input)",
        "The assistant wrote an 86-line Python script that inflates both cluster levels and writes the trace records as TSV, all UTF-16 strings and the raw decompressed cluster. It was used on the supplied Trace.trc: the decoded extract is filed as ovl/zgr_ct_tasklog/trace/ST05_CXCD_tasklog_decoded_2026-11-06.txt (header: '97911 records'), and the ovl/zgr_ct_tasklog ISSUES entry records the finding derived from it (the log is served by OData FIN_CONS_GENERICLOG_SRV, lines from CDS view C_CNSLDTNCRCYTRNSLTNTSKLG).",
        "Completed",
-       "4",
+       "3",
        "2",
        "2",
        "50%"
@@ -994,135 +1009,125 @@
        "**ZFI_BNK_APP (tcode ZBNK_APP2) bank payment file monitor - dead Back/Exit/Cancel fixed;**\nZFI_BNK_APP (report); ZBNK_APP2 (transaction); ZFI_BNK_APP_I01 (include, corrected); ZFI_BNK_APP_OUTPUTO01 (include, corrected); ZFI_BNK_APP_TOP (include); ZFI_BNK_APP_S01 (include)",
        "Triaged both issues from the SE80 download. For issue 1 it identified the root cause (no GUI status plus a CASE handling only 'E'), specified the SE41 status ZPF_FI_BNK_APP and title ZTITLE_FI_BNK_APP to be created by hand (function type must stay blank), and wrote corrected ZFI_BNK_APP_I01 (38 -> 91 lines: BACK/CANC/EXIT handling, ALV grid and container freed before leaving) and ZFI_BNK_APP_OUTPUTO01 (60 -> 73 lines: SET PF-STATUS / SET TITLEBAR).",
        "Completed",
-       "3",
        "2",
-       "1",
-       "33%"
+       "2",
+       "0",
+       "25%"
       ],
       [
        "UC-044",
        "**ZMM_TMS_STATUS Tender Monitoring Status report - Excel export from the ALV opens a blank workbook**\nZMM_TMS_STATUS (report, tcode ZMMTMSSTATUS); SAPMZMMTMS (module pool, tcode ZMMTMS - launches the report, not changed); ZMM_PUR_TENDER_D (table read); ZMM_TMS (table read)",
        "Ruled out the ONGC logo (REUSE_ALV_COMMENTARY_WRITE paints the HTML pane only) and, from the decisive symptom that Change Layout listed no displayed columns, traced the cause to no_out = '0' on every column. Delivered the corrected object with c_out VALUE space (old line commented inside BOC/EOC 28/10/26; 1533 -> 1536 lines) and noted that a one-line SE38 edit is enough. Filed the fresh download as the baseline and documented the gotcha in NOTES.md.",
        "Completed",
-       "3",
        "2",
-       "1",
-       "33%"
+       "2",
+       "0",
+       "25%"
       ],
       [
        "UC-045",
        "**ZFIBRS bank book upload (BRS) - upload error diagnosis and Excel upload template (no code change)**\nZFIBRS (report, source not in repo)",
        "Checked the supplied sample file (115 lines x 16 columns, CRLF, ASCII) and found it clean, then diagnosed the error as FILE_OPEN_ERROR (likely WebGUI / wrong file name / file locked) needing no code change. Built ZFIBRS_Upload_Template.xlsx (Upload sheet with all cells Text-formatted, Instructions, Column Guide) and checked that re-saving it as tab-delimited reproduces the sample lines byte-for-byte.",
        "Completed",
-       "3",
        "2",
-       "1",
-       "33%"
+       "2",
+       "0",
+       "25%"
       ],
       [
        "UC-046",
        "**ZFITAX_PBT_CALC_PRG - FAGLFLEXT read drops rows (FOR ALL ENTRIES implicit DISTINCT on S/4 compatibility view) - patch sheet**\nZFITAX_PBT_CALC_PRG (report, FORM PROCESS_DATA); ZFI_TAX_CREDIT_REPORT (report, same statement needs the same patch); FAGLFLEXT (S/4 compatibility view read by the program)",
        "Diagnosed the row loss as the implicit DISTINCT of FOR ALL ENTRIES on the compatibility view and explained why adding DRCRK/RCNTR/OBJNR to ty_fl would not be a real fix. Wrote the 67-line patch sheet PATCH_FAGLFLEXT_FAE.abap: RANGE on RACCT built from lt_racct, sorted and de-duplicated, guarded with IS NOT INITIAL, original statement commented inside BOC/EOC markers.",
        "Completed",
-       "3",
        "2",
-       "1",
-       "33%"
+       "2",
+       "0",
+       "25%"
       ],
       [
        "UC-047",
        "**ZJV_BAPI_BALUPLOAD1 JV G/L balance upload - XREF1 from the upload file not reaching BSEG-XREF1**\nZJV_BAPI_BALUPLOAD1 (report, tcode ZJVBALUPLOAD1); ZJV_BAPI_BALUPLOAD1_MON (report, sister program used as reference); BAPI_ACC_DOCUMENT_POST (BAPI called by the program)",
        "1429 -> 1448 lines). Confirmed that SCREEN_300 already maps LS_GL-REF_KEY_1 = IST_GL-XREF1 and listed what was deliberately not touched (IST_GL1, SCREEN_302 / SCREEN_305, the multi-DELETE row-loss defect in MODIFY_IST_GL). A dev test upload file (BML) was added for the XREF1 check.",
        "Completed",
-       "3",
        "2",
-       "1",
-       "33%"
+       "2",
+       "0",
+       "18%"
       ],
       [
        "UC-048",
        "**SAP standard JVA correction tool RGJV_UPDATE_ACC_DATA_IN_ACDOCA - how it fetches data (JVSO1 to ACDOCA) and why a test document \"cannot be fixed\" (ana...**\nRGJV_UPDATE_ACC_DATA_IN_ACDOCA (report, SAP standard, package GJVA_MIG); CL_JVA_MIG_CORRECT_ACDOCA (class, SAP standard); IF_JVA_MIG_CORRECT_ACDOCA (interface, SAP standard); CL_JVA_MIG_POST_ACDOCA (class, SAP standard); JVSO1 (table); ACDOCA (table)",
        "Wrote a 226-line analysis: the report shell, the JVSO1-to-ACDOCA join per document type, the ten-step data fetch in the class, the interface parameters the report never sets and an eleven-point checklist for \"FI-only run does not update\". Located the raising statement for the 50<>13 document (COMPARE_FIELD_VALUES line 149, wrong_amount) and recorded the way-forward options, including ACDOCA-only split lines through CL_JVA_MIG_POST_ACDOCA.",
        "Completed - analysis / root cause delivered",
-       "10",
+       "7",
+       "3",
        "4",
-       "6",
-       "60%"
+       "50%"
       ],
       [
        "UC-049",
        "**Reference program Z_JVA_ALIGNMENT (from another landscape) - analysis and OVL design for JVA-aligned split lines in ACDOCA;**\nZ_JVA_ALIGNMENT (report, reference from another landscape, not an OVL object); ZGTT_COMPANY (table, dependency of the reference program); ZFI_ACDOCA_JVA_ALIGN (report, built in ovl/zfi_acdoca_jva_align); ZFI_ACDOCA_JVSO1_RECON (report, recon, other folder); JVTO1 (table); ACDOCA (table)",
        "Wrote a 329-line analysis and design note: the algorithm in six steps with re-run behaviour and a worked example, a dependency table, an ACDOCA field-by-field map (carried over, set by hand, left blank), the finding that the 0453 block is dead code, and ten decisions for an OVL version. Then recorded the agreed OVL design: 15-column Excel template, fields derived by the program, manual decisions, file-level checks and the marker-field decisions.",
        "Completed - analysis / root cause delivered",
-       "10",
+       "7",
        "4",
-       "6",
-       "60%"
+       "3",
+       "46%"
       ],
       [
        "UC-050",
-       "**CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation): root-cause diagnosis, no code**\nCJ88 (transaction); FLQ_INSERT_EXTSN (function module, SAP standard); SAPLFLQEXT / FLQEXT (function group, SAP standard); LFLQEXTF01 (include, FORM UPDATE_ITEM, SAP standard); LFLQEXTU12 (include, SAP standard); FLQITEMFI (table)",
-       "No code was written (\"diagnosis only\").",
-       "Completed - analysis / root cause delivered",
-       "6",
-       "2",
-       "4",
-       "67%"
-      ],
-      [
-       "UC-051",
-       "**FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM VALID_BTYPE, no code**\nVALID_BTYPE (function module, SAP standard, function group GJA1); GJ_PARTNER_CHECK (function module, SAP standard); SAPMF05A (program, SAP standard); FBV0 / FBVB (transactions); T8JZ, T8JV, T8JO, T8JQ, T8JF, T8JG (JVA tables); ZFI_RGGBR000_USEREXIT (user-exit program, ruled out)",
-       "From the ST05 trace export, the SE37 sources of VALID_BTYPE and GJ_PARTNER_CHECK and SE16N evidence, pinned the branch taken and documented the three-step mechanism. Ruled out custom code, vendor master gaps and missing equity group/shares, and explained why SAP KBA 0828606 (partner netting) does not apply. Wrote a reusable five-step \"how it was found\" method and recommended the SAP note / incident route with an interim functional workaround. No code.",
-       "Completed - analysis / root cause delivered",
-       "6",
-       "2",
-       "4",
-       "67%"
-      ],
-      [
-       "UC-052",
-       "**ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written**\nZFI_CP_MASS_VEN_PAY (report with screens, 'module pool style'); ZFIAPP (transaction); ZFI_CP_MASS_VEN_PAY_TOP (include); ZFI_CP_MAS_VEN_AI001 (include); ZFI_CP_MAS_VEN_BO001 (include); ZFI_CP_MAS_VEN_E0001 (include)",
-       "From the 08.08.2026 listing it produced a code analysis naming three silent exits in include ZFI_CP_MAS_VEN_AI001, a secondary trap (hardcoded fiscal-year variant 'V3' for FCH5), a list of SE16 / SM35 / ST22 / SE51 checks, the immediate functional action (new lot in FCHI, manual cheque assignment in FCH5) and a proposed fix. No code was written because the repo copy was not verified as current.",
-       "Completed - analysis / root cause delivered",
-       "6",
-       "2",
-       "4",
-       "67%"
-      ],
-      [
-       "UC-053",
-       "**Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)**\n",
-       "Assessed the FS workbook and wrote a 114-line NOTES.md: mapped Tabs 1-8 and the Opex sheets to one punched input table plus derived values, and gave the verdict \"not a report. A punching transaction plus reports on top\". Proposed a three-layer design (six Z tables sketched, an SE38 program with an editable CL_GUI_ALV_GRID, ALV output reports) and recorded why module pool, SM30, RAP/Fiori and Excel upload were not chosen. No object was built and no object names were decided.",
-       "Completed - analysis / root cause delivered",
-       "5",
-       "2",
-       "3",
-       "60%"
-      ],
-      [
-       "UC-054",
        "**Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_...**\nAPI_CNSLDTNGRPJRNLITEM (OData V2 service, SAP standard, read-only); API_CNSLDTNGRPJRNLENTR (OData API, SAP standard - not on this release); FINCS_JRNLENTR_POST_SRV / ZFINCS_JRNLENTR_POST_SRV (OData UI service, SAP standard); FINCS_JRNLENTR_LIST_SRV (OData UI service, SAP standard);",
        "Documented the read API (entity sets, four mandatory parameters, call pattern, filterable properties) and established from two catalogue passes that no released posting API exists on the release. Recorded the posting-engine classes with verdicts and the signatures of IF_FINCS_DP_DOCUMENT_POST~POST and IF_FINCS_DOCUMENT_REFRESH~SELECT_DOCUMENTS from SE24 screenshots, and traced the Fiori post action chain (CL_FINCS_JE_POST -> PROCESS_DRAFT).",
        "Completed - analysis / root cause delivered",
+       "7",
        "5",
-       "3",
        "2",
-       "43%"
+       "28%"
+      ],
+      [
+       "UC-051",
+       "**CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation): root-cause diagnosis, no code**\nCJ88 (transaction); FLQ_INSERT_EXTSN (function module, SAP standard); SAPLFLQEXT / FLQEXT (function group, SAP standard); LFLQEXTF01 (include, FORM UPDATE_ITEM, SAP standard); LFLQEXTU12 (include, SAP standard); FLQITEMFI (table)",
+       "No code was written (\"diagnosis only\").",
+       "Completed - analysis / root cause delivered",
+       "4",
+       "2",
+       "2",
+       "55%"
+      ],
+      [
+       "UC-052",
+       "**FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM VALID_BTYPE, no code**\nVALID_BTYPE (function module, SAP standard, function group GJA1); GJ_PARTNER_CHECK (function module, SAP standard); SAPMF05A (program, SAP standard); FBV0 / FBVB (transactions); T8JZ, T8JV, T8JO, T8JQ, T8JF, T8JG (JVA tables); ZFI_RGGBR000_USEREXIT (user-exit program, ruled out)",
+       "From the ST05 trace export, the SE37 sources of VALID_BTYPE and GJ_PARTNER_CHECK and SE16N evidence, pinned the branch taken and documented the three-step mechanism. Ruled out custom code, vendor master gaps and missing equity group/shares, and explained why SAP KBA 0828606 (partner netting) does not apply. Wrote a reusable five-step \"how it was found\" method and recommended the SAP note / incident route with an interim functional workaround. No code.",
+       "Completed - analysis / root cause delivered",
+       "4",
+       "2",
+       "2",
+       "48%"
+      ],
+      [
+       "UC-053",
+       "**ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written**\nZFI_CP_MASS_VEN_PAY (report with screens, 'module pool style'); ZFIAPP (transaction); ZFI_CP_MASS_VEN_PAY_TOP (include); ZFI_CP_MAS_VEN_AI001 (include); ZFI_CP_MAS_VEN_BO001 (include); ZFI_CP_MAS_VEN_E0001 (include)",
+       "From the 08.08.2026 listing it produced a code analysis naming three silent exits in include ZFI_CP_MAS_VEN_AI001, a secondary trap (hardcoded fiscal-year variant 'V3' for FCH5), a list of SE16 / SM35 / ST22 / SE51 checks, the immediate functional action (new lot in FCHI, manual cheque assignment in FCH5) and a proposed fix. No code was written because the repo copy was not verified as current.",
+       "Completed - analysis / root cause delivered",
+       "4",
+       "2",
+       "2",
+       "55%"
+      ],
+      [
+       "UC-054",
+       "**Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)**\n",
+       "Assessed the FS workbook and wrote a 114-line NOTES.md: mapped Tabs 1-8 and the Opex sheets to one punched input table plus derived values, and gave the verdict \"not a report. A punching transaction plus reports on top\". Proposed a three-layer design (six Z tables sketched, an SE38 program with an editable CL_GUI_ALV_GRID, ALV output reports) and recorded why module pool, SM30, RAP/Fiori and Excel upload were not chosen. No object was built and no object names were decided.",
+       "Completed - analysis / root cause delivered",
+       "4",
+       "2",
+       "2",
+       "60%"
       ],
       [
        "UC-055",
        "**Custom PR release workflow WS90900008 in ERROR - agent rule AC90900002 returns no agent (diagnosis path only)**\nWS90900008 (workflow); AC90900002 (agent rule); EBAN (table)",
        "Read the two SWI1 screenshots and established that agent rule AC90900002 returned no agent for the first ParForEach index of node 4 and terminates on an empty result, while everything before the rule ran. Wrote a four-step diagnosis path (PFAC rule definition and simulation with the work item's container, download of the rule's function module, EBAN comparison with a PR that worked) and two gotchas. No code.",
-       "Completed - analysis / root cause delivered",
-       "3",
-       "1",
-       "2",
-       "67%"
-      ],
-      [
-       "UC-056",
-       "**FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in FAGLL03 / FAGLB03 / RFBILA00 / RFBELJ: note review and table settings, no Z...**\nFAGL_SETTINGS (table, SM30 entries FAGLL03_RESTRICT_MIG, FAGLB03_RESTRICT_MIG, RFSSLD_RESTRICT_MIG, RFBELJ_RESTRICT_MIG, MIG_SOURCE_C_SIGN); FAGLL03 / FAGLL03H (transactions, SAP standard); FAGLB03 (transaction, SAP standard); RFBILA00 / RFSSLD00 (reports, SAP standard);",
-       "Reviewed the KBA and mapped each program to its note and FAGL_SETTINGS parameter (seven-row table), and split the work between ABAP/Basis (SNOTE) and functional (SM30 entries, testing). Explained why SNOTE 2697319 came back \"Cannot be implemented\" / \"Not Relevant\" (correction already contained in the release) and how to confirm it. Wrote three caveats for functional (reversals, Fiori and Z reports ignore the switch, other MIG_SOURCE values on OVL) and a DEV test plan. No Z object.",
        "Completed - analysis / root cause delivered",
        "2",
        "1",
@@ -1130,14 +1135,24 @@
        "50%"
       ],
       [
+       "UC-056",
+       "**FAGL_SETTINGS *_RESTRICT_MIG (SAP KBA 2891129) - migrated-data display in FAGLL03 / FAGLB03 / RFBILA00 / RFBELJ: note review and table settings, no Z...**\nFAGL_SETTINGS (table, SM30 entries FAGLL03_RESTRICT_MIG, FAGLB03_RESTRICT_MIG, RFSSLD_RESTRICT_MIG, RFBELJ_RESTRICT_MIG, MIG_SOURCE_C_SIGN); FAGLL03 / FAGLL03H (transactions, SAP standard); FAGLB03 (transaction, SAP standard); RFBILA00 / RFSSLD00 (reports, SAP standard);",
+       "Reviewed the KBA and mapped each program to its note and FAGL_SETTINGS parameter (seven-row table), and split the work between ABAP/Basis (SNOTE) and functional (SM30 entries, testing). Explained why SNOTE 2697319 came back \"Cannot be implemented\" / \"Not Relevant\" (correction already contained in the release) and how to confirm it. Wrote three caveats for functional (reversals, Fiori and Z reports ignore the switch, other MIG_SOURCE values on OVL) and a DEV test plan. No Z object.",
+       "Completed - analysis / root cause delivered",
+       "1",
+       "1",
+       "0",
+       "0%"
+      ],
+      [
        "UC-057",
        "**ZFI_FBL3N_ACDOCA_U - BAdI FI_ITEMS_CH_DATA implementation that appends ACDOCA-only (document status 'U') journal entry lines to FBL3N**\nZFI_FBL3N_ACDOCA_U (BAdI implementation); ZCL_IM_FI_FBL3N_ACDOCA_U (class); FI_ITEMS_CH_DATA (classic BAdI, method CHANGE_ITEMS)",
        "Wrote the complete CHANGE_ITEMS method body with header (294-line file), NOTES.md with the SE19 creation steps, a table of selection-screen field names to verify, behaviour, deliberate omissions, risks and five test steps. After the first activation it removed CPUDT / DMBTR / WRBTR / SEGMENT and switched to U_BKTXT / U_USNAM, which do not exist / are named differently in RFPOSXEXT on this system.",
        "Completed",
-       "20",
+       "14",
        "4",
-       "16",
-       "80%"
+       "10",
+       "70%"
       ]
      ]
     }
@@ -1152,7 +1167,7 @@
     },
     {
      "t": "p",
-     "text": "12 AI-assisted use cases completed. Effort without AI 388 h; actual effort with AI 124 h; **264 h (33 man-days) saved, 68% effort reduction**."
+     "text": "12 AI-assisted use cases completed. Effort without AI 292 h; actual effort with AI 170 h; **121 h (15 man-days) saved, 42% effort reduction**."
     },
     {
      "t": "p",
@@ -1161,14 +1176,14 @@
     {
      "t": "bullets",
      "items": [
-      "**ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report** (UC-058; 50 h saved): Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files).",
-      "**WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload** (UC-060; 46 h saved): Reviewed both FS documents and raised 16 numbered questions before build; wrote locked build specs for 141.A and 141.B that settle the FS contradictions explicitly.",
-      "**Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload** (UC-059; 44 h saved): Six source files (3,579 lines): the module pool (five includes in one file), three global classes, the report with settlement and the mass upload, plus the technical object list with DDIC definitions and build order (36 objects), a screen layout document and the assumptions and...",
-      "**ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine (WRICEF ID-2B)** (UC-061; 37 h saved): Read the FS and issued Assumptions and Queries (M1-M7, P01-P26, Q1-Q10, 28 FS defects F01-F28) with a reuse decision per Adhesive object. Built on 19/10/26 the DDIC, class ZCL_PP_FCST_PNT and report ZPP_FORECAST_PAINTS (2,426 ABAP lines today) plus an upload program, as a ZIP...",
-      "**TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')** (UC-062; 28 h saved): Built the report and three includes from the FS on 26/08/26 (3,575 lines today) together with BUILD_BRIEF.md, a verified DDIC fact sheet, a query register Q1-Q28, a markdown TS and the TS in the Astral template (docx/doc, 29/09/26).",
-      "**Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)** (UC-063; 28 h saved): Produced the DDIC and message class as abapGit XML with ZMM_PO_BUDGET.zip (7 files), the BAdI CHECK insert block (111 lines) and the whole method with the block in place (973 lines), the SE54 event-01 routine, the PBO screen module, and MANUAL_STEPS.md with seven open points.",
-      "**ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners** (UC-064; 16 h saved): Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS.",
-      "**ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom MB5B copy** (UC-067; 6 h saved): Reconstructed the five objects from the SE38 print listing (drafts/parsed), ported the ZMB5B units into the main program only (5,960 -> 6,137 lines at first delivery) and as a paste sheet of named blocks with unit tests."
+      "**Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload** (UC-059; 31 h saved): Six source files (3,579 lines): the module pool (five includes in one file), three global classes, the report with settlement and the mass upload, plus the technical object list with DDIC definitions and build order (36 objects), a screen layout document and the assumptions and...",
+      "**WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload** (UC-060; 20 h saved): Reviewed both FS documents and raised 16 numbered questions before build; wrote locked build specs for 141.A and 141.B that settle the FS contradictions explicitly.",
+      "**ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine (WRICEF ID-2B)** (UC-061; 17 h saved): Read the FS and issued Assumptions and Queries (M1-M7, P01-P26, Q1-Q10, 28 FS defects F01-F28) with a reuse decision per Adhesive object. Built on 19/10/26 the DDIC, class ZCL_PP_FCST_PNT and report ZPP_FORECAST_PAINTS (2,426 ABAP lines today) plus an upload program, as a ZIP...",
+      "**Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)** (UC-063; 16 h saved): Produced the DDIC and message class as abapGit XML with ZMM_PO_BUDGET.zip (7 files), the BAdI CHECK insert block (111 lines) and the whole method with the block in place (973 lines), the SE54 event-01 routine, the PBO screen module, and MANUAL_STEPS.md with seven open points.",
+      "**TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')** (UC-062; 13 h saved): Built the report and three includes from the FS on 26/08/26 (3,575 lines today) together with BUILD_BRIEF.md, a verified DDIC fact sheet, a query register Q1-Q28, a markdown TS and the TS in the Astral template (docx/doc, 29/09/26).",
+      "**ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners** (UC-065; 9 h saved): Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS.",
+      "**ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report** (UC-058; 4 h saved): Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files).",
+      "**ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom MB5B copy** (UC-067; 4 h saved): Reconstructed the five objects from the SE38 print listing (drafts/parsed), ported the ZMB5B units into the main program only (5,960 -> 6,137 lines at first delivery) and as a paste sheet of named blocks with unit tests."
      ],
      "size": 19
     }
@@ -1214,120 +1229,120 @@
        "**ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report**\nZPP_FORECAST (report, transaction ZFCST); ZPP_FORECAST_UPLOAD (report, transaction ZFCST_UPL); ZPP_FORECAST_REPORT (report, transaction ZFCST_RPT); ZCL_PP_FCST (class - calculation engine); ZCL_PP_FCST_UTIL (class - helpers and authority checks);",
        "Built the engine class, helper class, three reports, DDIC and message class as an abapGit package (7,634 ABAP lines today; ZPP_FORECAST.zip with 39 files). The 35 dated log sections (02/09-22/10/26) record: two change-request builds; root causes of 16 activation errors (VALUE with literal rows), a FORM/PERFORM parameter mismatch, the abapGit PROGDIR order import error and the legacy-history bug (left-aligned string template writing months into wrong columns); price derivation from A923/KONP; material-type filter;",
        "Completed",
-       "90",
-       "40",
-       "50",
-       "56%"
+       "63",
+       "59",
+       "4",
+       "7%"
       ],
       [
        "UC-059",
        "**Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload**\nSAPMZSD_SCHEME (module pool; includes ZSD_SCHEME_TOP / _CLS / _O01 / _I01 / _F01); ZCL_SD_SCHEME (class - model and validation); ZCL_SD_SCHEME_SETTLE (class - volume, early bird, cascading, CN posting); ZCL_SD_SCHEME_UI (class); ZSD_SCHEME_REPORT (report, transaction ZSCHM_RPT);",
        "Six source files (3,579 lines): the module pool (five includes in one file), three global classes, the report with settlement and the mass upload, plus the technical object list with DDIC definitions and build order (36 objects), a screen layout document and the assumptions and queries register A01-A42.",
        "Completed",
-       "60",
-       "16",
-       "44",
-       "73%"
+       "42",
+       "11",
+       "31",
+       "74%"
       ],
       [
        "UC-060",
        "**WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload**\nZSD_EXC_APPR_ADHESIVE (report); ZSD_EXC_APPR_PAINTS (report); ZSD_EXP_PAINTS_UPLOAD (report); ZSD_EXP_PAINTS (transparent table); ZSD_DO_EXC_SRNO / ZSD_DO_EXC_MONTH / ZSD_DO_EXC_TYPE / ZSD_DO_EXC_AMOUNT / ZSD_DO_EXC_REMARKS (domains);",
        "Reviewed both FS documents and raised 16 numbered questions before build; wrote locked build specs for 141.A and 141.B that settle the FS contradictions explicitly. Built ZSD_EXC_APPR_ADHESIVE (1,247 lines), ZSD_EXP_PAINTS_UPLOAD (1,522) and ZSD_EXC_APPR_PAINTS (982) on 02/09/26 with text-element sheets, two TS documents, an SE11 build sheet and SE11 pre-paste checklists that grade every FS-sourced name by confidence.",
        "Completed",
-       "54",
-       "8",
-       "46",
-       "85%"
+       "38",
+       "18",
+       "20",
+       "53%"
       ],
       [
        "UC-061",
        "**ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine (WRICEF ID-2B)**\nZPP_FORECAST_PAINTS (report, transaction ZFCST_PAINTS); ZCL_PP_FCST_PNT (class); ZPPT_BRAND (table); ZPPT_PNT_FCST_YR (table); ZPPT_PNT_FCST_QT (table); ZPPT_PNT_FCST_MN (table)",
        "Read the FS and issued Assumptions and Queries (M1-M7, P01-P26, Q1-Q10, 28 FS defects F01-F28) with a reuse decision per Adhesive object. Built on 19/10/26 the DDIC, class ZCL_PP_FCST_PNT and report ZPP_FORECAST_PAINTS (2,426 ABAP lines today) plus an upload program, as a ZIP that imported - 'the first hand-written abapGit ZIP to import on this landscape'.",
        "Completed",
-       "45",
-       "8",
-       "37",
-       "82%"
+       "31",
+       "15",
+       "17",
+       "53%"
       ],
       [
        "UC-062",
        "**TDS Report - Clause 34 compliance (ALV 'TDS Reporting as per Clause 34(a)')**\nZFI_TDS_CL34 (report); ZFI_TDS_CL34_TOP (include); ZFI_TDS_CL34_SCR (include); ZFI_TDS_CL34_FORMS (include); I_WithholdingTaxItem / I_JournalEntry (standard CDS views read as the driver)",
        "Built the report and three includes from the FS on 26/08/26 (3,575 lines today) together with BUILD_BRIEF.md, a verified DDIC fact sheet, a query register Q1-Q28, a markdown TS and the TS in the Astral template (docx/doc, 29/09/26). Added an authorisation check (F_BKPF_BUK) for dialog and background runs that the FS had not asked for, and kept the AWTYP reading of the RMRP rule, which the first live run vindicated.",
        "Completed",
-       "36",
-       "8",
-       "28",
-       "78%"
+       "25",
+       "12",
+       "13",
+       "53%"
       ],
       [
        "UC-063",
        "**Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)**\nZMM_PO_BUDGET (transparent table, 11 fields); ZDO_BUDGET_AMT (domain); ZDE_BUDGET (data element); ZDE_ADD_BUDGET (data element); ZMM_BUDGET (message class, 10 messages); ME_PROCESS_PO_CUST (classic BAdI - insert block <002> in method IF_EX_ME_PROCESS_PO_CUST~CHECK of the existing implementation)",
        "Produced the DDIC and message class as abapGit XML with ZMM_PO_BUDGET.zip (7 files), the BAdI CHECK insert block (111 lines) and the whole method with the block in place (973 lines), the SE54 event-01 routine, the PBO screen module, and MANUAL_STEPS.md with seven open points. For scheduling agreements: two read-only probe enhancements and a 281-line implicit enhancement for SAPMM06E. source headers are dated 19.08.2026 and 24.08.2026.",
        "Completed",
-       "36",
-       "8",
-       "28",
-       "78%"
+       "25",
+       "9",
+       "16",
+       "65%"
       ],
       [
        "UC-064",
-       "**ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners**\nZMM_BP_CREATE_MAIL (report); ZMM_BP_MAIL (transaction); ZMM_BP_MAIL_MDM (TVARVC variable); ZMM_BP_MAIL_SENDER (TVARVC variable, optional); ZMM_BP_CREATE_MAIL_DAILY (SM36 job); BGJOB (report variant)",
-       "Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS. Fixed the first-run dump CALL_METHOD_CONFLICT_TYPE in DISPLAY_LOG and the truncated ALV headings, and diagnosed the SAPoffice status 'no node determined' as missing SCOT configuration rather than a program defect. Implemented the 05/10/26 change request (one mail per BP, per-recipient mails, per-mail result in the log;",
-       "Completed",
-       "20",
-       "4",
-       "16",
-       "80%"
-      ],
-      [
-       "UC-065",
        "**ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)**\nZMM_VEND_MASTER (report); ZMM_VEND_MASTER_TOP (include); ZMM_VEND_MASTER_SCR (include); ZMM_VEND_MASTER_CL (include); ZMM_VEND_MASTER_FORMS (include); ZMM_VEND_UPLOAD (transaction)",
        "The repo's src/ holds the five includes (2,601 lines) with markers 'By Arnav on 21/07/2026' and 'Changes by Arnav on 22/07/26'; drafts/ holds the 569-line unit sheet. ISSUES.md is empty.",
        "Completed",
-       "20",
-       "16",
-       "4",
-       "19%"
+       "25",
+       "22",
+       "3",
+       "10%"
+      ],
+      [
+       "UC-065",
+       "**ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners**\nZMM_BP_CREATE_MAIL (report); ZMM_BP_MAIL (transaction); ZMM_BP_MAIL_MDM (TVARVC variable); ZMM_BP_MAIL_SENDER (TVARVC variable, optional); ZMM_BP_CREATE_MAIL_DAILY (SM36 job); BGJOB (report variant)",
+       "Raised the queries on the FS (QUERIES.md Q1-Q15 plus risks R1-R4), built the report from the answers on 25/09/26 (777 lines), wrote the text-elements/manual-steps sheet and the TS. Fixed the first-run dump CALL_METHOD_CONFLICT_TYPE in DISPLAY_LOG and the truncated ALV headings, and diagnosed the SAPoffice status 'no node determined' as missing SCOT configuration rather than a program defect. Implemented the 05/10/26 change request (one mail per BP, per-recipient mails, per-mail result in the log;",
+       "Completed",
+       "14",
+       "5",
+       "9",
+       "61%"
       ],
       [
        "UC-066",
        "**ZMB5B / ZRM07MLBD - copy of the MB5B stock report with amount columns for 'Storage Loc./Batch Stock'**\nZRM07MLBD (report, Z copy of standard RM07MLBD); ZMB5B (transaction); RM07MLDD, RM07MLBD_FORM_01, RM07MLBD_FORM_02, RM07MLBD_CUST_FIELDS (standard includes, referenced unchanged)",
        "The repo additionally holds the 18.08.2026 follow-up: the whole program (6,206 lines) with BOC/EOC blocks 'By Arnav on 18/08/26' and a 7-unit paste sheet with unit tests UT-01 to UT-07 for receipt/issue amounts.",
        "Completed",
-       "10",
-       "8",
+       "14",
+       "12",
        "2",
-       "16%"
+       "15%"
       ],
       [
        "UC-067",
        "**ZMM_RM07MLBD / ZMM_MB5B_NEW - port of the ZMB5B receipt/issue amounts into the existing custom MB5B copy**\nZMM_RM07MLBD (report, existing custom copy of RM07MLBD); ZMM_MB5B_NEW (transaction); ZMM_RM07MLDD (include, untouched); ZMM_RM07MLBD_FORM_01 (include, untouched); ZMM_RM07MLBD_FORM_02 (include, untouched); RM07MLBD_CUST_FIELDS (standard include)",
        "Reconstructed the five objects from the SE38 print listing (drafts/parsed), ported the ZMB5B units into the main program only (5,960 -> 6,137 lines at first delivery) and as a paste sheet of named blocks with unit tests. Diagnosed the blank amounts as the HANA BAdI code path and added unit 11 (gv_newdb = abap_false for the storage-location view only). Deliberately did not port the header-block values because that would reverse the original author's 'WITHOUT VALUE VIEW' design and bypass the ZMB5B_NEW1 check.",
        "Completed",
-       "10",
+       "7",
+       "3",
        "4",
-       "6",
-       "60%"
+       "53%"
       ],
       [
        "UC-068",
-       "**WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)**\nZSD_MIS_CUSTOMER (report - specified in the FS, not built); ZSD_CUST_SDFI_DATA (custom table - specified, not built); ZSD_PAINT_CUSTGRP2 / ZSD_PAINT_OLDCUSTGRP2 (STVARV variables - specified);",
-       "A feasibility check dated 21/09/26 with the verdict 'Not buildable end to end from what was supplied. Roughly half of it is', a classification of all 80 columns by source ('about 44 columns buildable now, about 36 blocked'), 21 numbered queries (15 blocking) and design recommendations (a narrow keyed table instead of 94 columns; read the underlying tables rather than SUBMIT seven reports). No code.",
-       "Completed - analysis / root cause delivered",
-       "5",
-       "2",
-       "3",
-       "60%"
-      ],
-      [
-       "UC-069",
        "**PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing**\nME_PROCESS_PO_CUST (classic BAdI, method IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER of the existing implementation); ZPO_VALIDITY_DOCTYPE (TVARVC variable - part of the withdrawn approach); NBF (field selection key, OMF4); ZBRD (field selection key)",
        "First delivered a FIELDSELECTION_HEADER method body that hides the two fields unless the document type is listed in TVARVC ZPO_VALIDITY_DOCTYPE, then corrected the metafield constants. After Arnav's debugger finding, concluded that the BAdI cannot reach standard metafields, located the cause in OMF4 key NBF (the two fields have no option ticked = Hide; T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to [contact]. The withdrawn code is kept as the record of why.",
        "Completed - analysis / root cause delivered",
+       "4",
+       "3",
+       "1",
+       "22%"
+      ],
+      [
+       "UC-069",
+       "**WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)**\nZSD_MIS_CUSTOMER (report - specified in the FS, not built); ZSD_CUST_SDFI_DATA (custom table - specified, not built); ZSD_PAINT_CUSTGRP2 / ZSD_PAINT_OLDCUSTGRP2 (STVARV variables - specified);",
+       "A feasibility check dated 21/09/26 with the verdict 'Not buildable end to end from what was supplied. Roughly half of it is', a classification of all 80 columns by source ('about 44 columns buildable now, about 36 blocked'), 21 numbered queries (15 blocking) and design recommendations (a narrow keyed table instead of 94 columns; read the underlying tables rather than SUBMIT seven reports). No code.",
+       "Completed - analysis / root cause delivered",
+       "4",
        "2",
        "2",
-       "0",
-       "10%"
+       "62%"
       ]
      ]
     }
@@ -1363,73 +1378,73 @@
       [
        "Custom Application Development",
        "7",
-       "340",
+       "120",
        "FB70 customer credit memo (DG) approval on t; ZPRA Daily Production Report; ZFI_JIB_STATUS; Five Fiori List Report RAP apps for MM tende"
       ],
       [
        "S/4HANA Modernisation",
        "11",
-       "202",
+       "97",
        "Per Barrel Analysis (board agenda) as CDS cu; Bank Revaluation report for Group Reporting; Fiori Manage Purchase Orders; Group Reporting"
       ],
       [
        "ABAP Program Development",
        "11",
-       "155",
+       "74",
        "ZFI_ACDOCA_JVSO1_RECON; Group Reporting; ZFI_CNB_BRS / ZFI_CNB_BRS1 (tcode ZFIBRS) Ba; ARMS end-user authorisation request tool"
       ],
       [
        "Enhancements",
        "7",
-       "76",
+       "37",
        "PAL 'Upload General Journal Entry' Fiori til; SD-FI customer line text (INC01740); PAL Ariba Sourcing to S/4 purchase orders; Fiori PR/PO validations"
       ],
       [
        "Business Process Automation",
        "5",
-       "56",
-       "ZFI_ACDOCA_JVA_ALIGN; ZHANA_SERVICES_PRG 'SAP Timesheet' module po; ZBC_TADIR_SRCSYS_CHANGE; ZMM_BP_CREATE_MAIL"
-      ],
-      [
-       "ATC Remediation",
-       "1",
-       "47",
-       "ATC S/4HANA-readiness remediation"
-      ],
-      [
-       "Reusable Technical Components",
-       "6",
-       "43",
-       "ZR_PROG_DOWNLOAD; st05_decode.py; AI delivery toolkit; ZR_FIND_ENH"
+       "32",
+       "ZFI_ACDOCA_JVA_ALIGN; ZHANA_SERVICES_PRG 'SAP Timesheet' module po; ZBC_TADIR_SRCSYS_CHANGE; ZMM_VEND_UPLOAD / ZMM_VEND_MASTER"
       ],
       [
        "Interfaces and Integration",
        "4",
-       "43",
+       "29",
        "ZCL_GR_JE_POST; ZF01_EXCHANGE_RATE; JV transfer programs; Group Reporting group journal entry APIs"
+      ],
+      [
+       "Reusable Technical Components",
+       "6",
+       "22",
+       "ZR_PROG_DOWNLOAD; st05_decode.py; AI delivery toolkit; ZR_FIND_ENH"
       ],
       [
        "Debugging and Troubleshooting",
        "15",
-       "38",
+       "21",
        "PAL invoice-upload utility class; ZFI_BNK_APP1 bank batch approval / digital s; ZFI_JV_TB (ZJVTB) Joint Venture Trial Balanc; ZMMIMS (SAPMZMMIMS)"
       ],
       [
        "Analysis & Solution Design",
        "4",
-       "14",
+       "10",
        "Reference program Z_JVA_ALIGNMENT (from anot; Provisional Capex / Opex fortnightly punchin; WRICEF 147; Research and management proposal"
+      ],
+      [
+       "ATC Remediation",
+       "1",
+       "7",
+       "ATC S/4HANA-readiness remediation"
       ],
       [
        "SAP Forms",
        "2",
-       "10",
+       "5",
        "PAL customer invoice / credit memo / debit m; ZSAP_TIMESHEET_FORM_PRG timesheet print (run"
       ],
       [
        "Code Optimisation",
        "1",
-       "1",
+       "0",
        "ZFITAX_PBT_CALC_PRG"
       ]
      ]
@@ -1441,7 +1456,7 @@
     },
     {
      "t": "p",
-     "text": "ATC S/4HANA-readiness remediation for ONGC Videsh: 88 h conventional against 41 h with AI, including review and correction - **47 h saved (54%)**. The correction patterns were derived once and applied across the batch; the saving is computed from the blocks actually applied, so reuse is not double counted."
+     "text": "ATC S/4HANA-readiness remediation for ONGC Videsh: 64 h conventional against 57 h with AI, including review and correction - **7 h saved (11%)**. The correction patterns were derived once and applied across the batch; the saving is computed from the blocks actually applied, so reuse is not double counted."
     },
     {
      "t": "table",
@@ -1728,16 +1743,16 @@
       ],
       [
        "UC-064",
-       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
+       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
        "T&G",
-       "Informing MDM, the supplier manager and the supplier contact that a new supplier BP was created (the files do not describe how this was done before)",
+       "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it restartable and adds extend/change handling)",
        "Completed"
       ],
       [
        "UC-065",
-       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
+       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
        "T&G",
-       "Manual creation, extension and change of supplier business partners one by one (the mass upload itself pre-existed; this work makes it restartable and adds extend/change handling)",
+       "Informing MDM, the supplier manager and the supplier contact that a new supplier BP was created (the files do not describe how this was done before)",
        "Completed"
       ],
       [
@@ -1777,7 +1792,7 @@
     },
     {
      "t": "p",
-     "text": "Effort without AI 1,618 h; actual effort with AI 592 h; effort saved 1,025 h = 128 man-days; effort reduction 63%; productivity improvement 173%. The method is in Annex B; every figure is formula-driven in the register."
+     "text": "Effort without AI 1,159 h; actual effort with AI 705 h; effort saved 454 h = 57 man-days; effort reduction 39%; productivity improvement 64%. The method is in Annex B; every figure is formula-driven in the register."
     },
     {
      "t": "table",
@@ -1813,47 +1828,47 @@
       [
        "PAL",
        "6",
-       "131",
-       "59",
-       "72",
-       "9",
-       "55%"
+       "92",
+       "71",
+       "20",
+       "3",
+       "22%"
       ],
       [
        "ONGC (OVL)",
        "51",
-       "1,028",
-       "376",
-       "651",
-       "81",
-       "63%"
+       "722",
+       "433",
+       "290",
+       "36",
+       "40%"
       ],
       [
        "T&G",
        "12",
-       "388",
-       "124",
-       "264",
-       "33",
-       "68%"
+       "292",
+       "170",
+       "121",
+       "15",
+       "42%"
       ],
       [
        "Common (all projects)",
        "5",
-       "71",
-       "33",
-       "38",
-       "5",
-       "54%"
+       "53",
+       "31",
+       "22",
+       "3",
+       "42%"
       ],
       [
        "Overall",
        "74",
-       "1,618",
-       "592",
-       "1,025",
-       "128",
-       "63%"
+       "1,159",
+       "705",
+       "454",
+       "57",
+       "39%"
       ]
      ]
     },
@@ -1881,74 +1896,74 @@
      ],
      "rows": [
       [
-       "UC-007",
-       "ZPRA Daily Production Report: RAP app, Fiori dashboard and CPI interface fix",
-       "120",
-       "49",
-       "71"
-      ],
-      [
-       "UC-058",
-       "ZFORECAST (Adhesive) v2 - annual / quarterly / monthly forecast generation, mass uploads and final report",
-       "90",
-       "40",
-       "50"
-      ],
-      [
-       "UC-001",
-       "FB70 customer credit memo (DG) approval on the GL journal-entry verification workflow, with stage e-mails",
-       "75",
-       "25",
-       "50"
-      ],
-      [
-       "UC-008",
-       "ATC S/4HANA-readiness remediation: 51 program includes in 14 packages",
-       "88",
-       "41",
-       "47"
-      ],
-      [
-       "UC-060",
-       "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload",
-       "54",
-       "8",
-       "46"
-      ],
-      [
-       "UC-009",
-       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...",
-       "60",
-       "16",
-       "44"
-      ],
-      [
-       "UC-010",
-       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only",
-       "60",
-       "16",
-       "44"
-      ],
-      [
-       "UC-011",
-       "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...",
-       "60",
-       "16",
-       "44"
+       "UC-059",
+       "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload",
+       "42",
+       "11",
+       "31"
       ],
       [
        "UC-012",
        "Five Fiori List Report RAP apps for MM tender reports on one service",
-       "54",
+       "38",
        "10",
-       "44"
+       "28"
       ],
       [
-       "UC-059",
-       "Scheme (Pipes) - scheme master transaction, settlement with credit-note posting, report and mass upload",
-       "60",
-       "16",
-       "44"
+       "UC-011",
+       "Bank Revaluation report for Group Reporting - mapping table, three CDS views (item, cube, house-bank helper) as data source for a Fiori Custom Analyti...",
+       "42",
+       "20",
+       "22"
+      ],
+      [
+       "UC-009",
+       "ZFI_JIB_STATUS - Management Dashboard 'JIB Status': eight CDS views (analytical cube) as the data source for a Fiori Custom Analytical Query, plus lau...",
+       "42",
+       "21",
+       "21"
+      ],
+      [
+       "UC-060",
+       "WRICEF 141 A/B - Exceptional Approval reports (Adhesives, Paints) with the Paints table and mass upload",
+       "38",
+       "18",
+       "20"
+      ],
+      [
+       "UC-010",
+       "Per Barrel Analysis (board agenda) as CDS cube + Custom Analytical Query on ZFI_AGENDA - PBA sheet built; AgendaFormat sheet assessed only",
+       "42",
+       "22",
+       "20"
+      ],
+      [
+       "UC-014",
+       "ZFI_ACDOCA_JVA_ALIGN - Excel upload that posts JVA alignment lines (venture / equity group / recovery indicator split) directly into ACDOCA ledger 0L,...",
+       "25",
+       "8",
+       "17"
+      ],
+      [
+       "UC-061",
+       "ZFORECAST (Paints) - forecast generation for the Paints division on top of the Adhesive engine (WRICEF ID-2B)",
+       "31",
+       "15",
+       "17"
+      ],
+      [
+       "UC-063",
+       "Budget control on indirect purchase - PO budget check with budget table (WRICEF 050_BRD_FS)",
+       "25",
+       "9",
+       "16"
+      ],
+      [
+       "UC-015",
+       "Group Reporting: FS item remap per consolidation unit - mapping table, customer copy of the Group Data Analysis cube, read report, abapGit ZIP, TS",
+       "25",
+       "9",
+       "16"
       ]
      ]
     },
@@ -2038,51 +2053,51 @@
       ],
       [
        "Effort without AI (h)",
-       "131",
-       "1,028",
-       "388",
-       "71",
-       "1,618"
+       "92",
+       "722",
+       "292",
+       "53",
+       "1,159"
       ],
       [
        "Actual effort with AI (h)",
-       "59",
-       "376",
-       "124",
-       "33",
-       "592"
+       "71",
+       "433",
+       "170",
+       "31",
+       "705"
       ],
       [
        "Effort saved (h)",
-       "72",
-       "651",
-       "264",
-       "38",
-       "1,025"
+       "20",
+       "290",
+       "121",
+       "22",
+       "454"
       ],
       [
        "Effort saved (man-days)",
-       "9",
-       "81",
-       "33",
-       "5",
-       "128"
+       "3",
+       "36",
+       "15",
+       "3",
+       "57"
       ],
       [
        "Weighted effort reduction",
-       "55%",
-       "63%",
-       "68%",
-       "54%",
-       "63%"
+       "22%",
+       "40%",
+       "42%",
+       "42%",
+       "39%"
       ],
       [
        "Productivity improvement",
-       "121%",
-       "173%",
-       "213%",
-       "116%",
-       "173%"
+       "29%",
+       "67%",
+       "71%",
+       "71%",
+       "64%"
       ]
      ]
     },
@@ -2160,7 +2175,7 @@
     {
      "t": "bullets",
      "items": [
-      "Developer capacity released: 128 man-days in four months - capacity that carried three projects concurrently.",
+      "Developer capacity released: 57 man-days in four months - capacity that carried three projects concurrently.",
       "Reduced effort for comparable development: the same scope needs about a third of the conventional effort.",
       "Additional work with existing resources: one associate consultant covered PAL, ONGC and T&G developments, ATC remediation and production support in the same period.",
       "Reduced time to delivery: working versions within a working day; JIB Status from requirement to client confirmation in 11 working days.",
@@ -2203,7 +2218,7 @@
       ],
       [
        "Conventional development approach",
-       "SE16N analysis of BKPF / BSEG / JV data, view-by-view design by trial activation, separate rebuilds after each client test - 60 h."
+       "SE16N analysis of BKPF / BSEG / JV data, view-by-view design by trial activation, separate rebuilds after each client test - 42 h."
       ],
       [
        "How AI was used",
@@ -2219,11 +2234,11 @@
       ],
       [
        "Before-and-after comparison",
-       "Effort 60 h -> 16 h; first running query the next working day (03/11 -> 04/11); 13 logged changes absorbed."
+       "Effort 42 h -> 21 h; first running query the next working day (03/11 -> 04/11); 13 logged changes absorbed."
       ],
       [
        "Quantified effort reduction",
-       "44 h saved (5.5 man-days), 73% reduction, 3.8x throughput."
+       "21 h saved (2.6 man-days), 50% reduction, 2.0x throughput."
       ],
       [
        "Actual timeline impact",
@@ -2267,7 +2282,7 @@
      "items": [
       "ONGC Videsh (OVL) - Management Dashboard 'JIB Status'.",
       "Eight CDS views and an analytical cube, built from a requirement workbook and confirmed by the client in 11 working days.",
-      "Key result: 60 h -> 16 h, 73% less effort. Portfolio: 74 use cases, 128 man-days saved, 867 commits."
+      "Key result: 42 h -> 21 h, 50% less effort. Portfolio: 74 use cases, 57 man-days saved, 869 commits."
      ]
     },
     {
@@ -2279,7 +2294,7 @@
      "items": [
       "Requirement: JIB posting status per joint venture by month, quarter and fiscal year with document drill-down.",
       "Complexity: no venture on the header; reversals and empty months; older S/4 CDS release; delivery by abapGit ZIP.",
-      "Conventional approach: SE16N analysis, trial activation, rebuild after each test - 60 h."
+      "Conventional approach: SE16N analysis, trial activation, rebuild after each test - 42 h."
      ]
     },
     {
@@ -2301,7 +2316,7 @@
     {
      "t": "bullets",
      "items": [
-      "Total effort 60 h vs 16 h.",
+      "Total effort 42 h vs 21 h.",
       "First running version: next working day.",
       "Requirement to client confirmation: 11 working days; 13 change rounds absorbed."
      ]
@@ -2313,8 +2328,8 @@
     {
      "t": "bullets",
      "items": [
-      "44 h saved, 5.5 man-days, 73% reduction, 3.8x throughput.",
-      "Portfolio: 1,025 h (128 man-days) saved, 63% reduction, 867 commits in under four months."
+      "21 h saved, 2.6 man-days, 50% reduction, 2.0x throughput.",
+      "Portfolio: 454 h (57 man-days) saved, 39% reduction, 869 commits in under four months."
      ]
     },
     {
@@ -2349,8 +2364,8 @@
     {
      "t": "bullets",
      "items": [
-      "AI is part of daily SAP ABAP delivery: 74 completed use cases and 867 commits in under four months across PAL, ONGC (OVL) and T&G.",
-      "Effort reduced by 63% - 128 man-days saved - with complete applications, ATC remediation, enhancements, interfaces and root-cause analyses delivered.",
+      "AI is part of daily SAP ABAP delivery: 74 completed use cases and 869 commits in under four months across PAL, ONGC (OVL) and T&G.",
+      "Effort reduced by 39% - 57 man-days saved - with complete applications, ATC remediation, enhancements, interfaces and root-cause analyses delivered.",
       "The gain comes from fast first builds and fast root-cause analysis under human control: fresh source download before every change, activation feedback, functional confirmation and a standing record of release constraints.",
       "Next steps: roll the AI delivery toolkit out to the team, extend the dashboard cube pattern to further cards, apply the ATC patterns to the next remediation wave, and log effort per object to sharpen future reporting."
      ]
@@ -2425,19 +2440,19 @@
       ],
       [
        "Effort without AI",
-       "75 h"
+       "52 h"
       ],
       [
        "Actual effort with AI",
-       "25 h"
+       "42 h"
       ],
       [
        "Effort saved",
-       "50 h (6.2 man-days)"
+       "10 h (1.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "66%"
+       "19%"
       ],
       [
        "Delivery impact",
@@ -2521,19 +2536,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "11 h"
       ],
       [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "3 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "20%"
+       "21%"
       ],
       [
        "Delivery impact",
@@ -2617,19 +2632,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
-      ],
-      [
-       "Actual effort with AI",
        "8 h"
       ],
       [
+       "Actual effort with AI",
+       "7 h"
+      ],
+      [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "1 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "19%"
       ],
       [
        "Delivery impact",
@@ -2713,19 +2728,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "5 h"
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "31%"
       ],
       [
        "Delivery impact",
@@ -2809,19 +2824,19 @@
       ],
       [
        "Effort without AI",
-       "8 h"
+       "6 h"
       ],
       [
        "Actual effort with AI",
-       "2 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "75%"
+       "46%"
       ],
       [
        "Delivery impact",
@@ -2905,19 +2920,19 @@
       ],
       [
        "Effort without AI",
-       "6 h"
-      ],
-      [
-       "Actual effort with AI",
        "4 h"
       ],
       [
+       "Actual effort with AI",
+       "3 h"
+      ],
+      [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -3005,19 +3020,19 @@
       ],
       [
        "Effort without AI",
-       "120 h"
+       "84 h"
       ],
       [
        "Actual effort with AI",
-       "49 h"
+       "75 h"
       ],
       [
        "Effort saved",
-       "71 h (8.9 man-days)"
+       "9 h (1.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "59%"
+       "11%"
       ],
       [
        "Delivery impact",
@@ -3101,19 +3116,19 @@
       ],
       [
        "Effort without AI",
-       "88 h"
+       "64 h"
       ],
       [
        "Actual effort with AI",
-       "41 h"
+       "57 h"
       ],
       [
        "Effort saved",
-       "47 h (5.9 man-days)"
+       "7 h (0.9 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "54%"
+       "11%"
       ],
       [
        "Delivery impact",
@@ -3197,19 +3212,19 @@
       ],
       [
        "Effort without AI",
-       "60 h"
+       "42 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "21 h"
       ],
       [
        "Effort saved",
-       "44 h (5.5 man-days)"
+       "21 h (2.6 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "73%"
+       "50%"
       ],
       [
        "Delivery impact",
@@ -3293,19 +3308,19 @@
       ],
       [
        "Effort without AI",
-       "60 h"
+       "42 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "22 h"
       ],
       [
        "Effort saved",
-       "44 h (5.5 man-days)"
+       "20 h (2.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "73%"
+       "47%"
       ],
       [
        "Delivery impact",
@@ -3389,19 +3404,19 @@
       ],
       [
        "Effort without AI",
-       "60 h"
+       "42 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "20 h"
       ],
       [
        "Effort saved",
-       "44 h (5.5 man-days)"
+       "22 h (2.8 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "73%"
+       "54%"
       ],
       [
        "Delivery impact",
@@ -3485,7 +3500,7 @@
       ],
       [
        "Effort without AI",
-       "54 h"
+       "38 h"
       ],
       [
        "Actual effort with AI",
@@ -3493,11 +3508,11 @@
       ],
       [
        "Effort saved",
-       "44 h (5.5 man-days)"
+       "28 h (3.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "81%"
+       "73%"
       ],
       [
        "Delivery impact",
@@ -3581,19 +3596,19 @@
       ],
       [
        "Effort without AI",
-       "45 h"
+       "31 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "23 h"
       ],
       [
        "Effort saved",
-       "29 h (3.6 man-days)"
+       "8 h (1.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "64%"
+       "26%"
       ],
       [
        "Delivery impact",
@@ -3677,7 +3692,7 @@
       ],
       [
        "Effort without AI",
-       "36 h"
+       "25 h"
       ],
       [
        "Actual effort with AI",
@@ -3685,11 +3700,11 @@
       ],
       [
        "Effort saved",
-       "28 h (3.5 man-days)"
+       "17 h (2.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "78%"
+       "67%"
       ],
       [
        "Delivery impact",
@@ -3773,19 +3788,19 @@
       ],
       [
        "Effort without AI",
-       "36 h"
+       "25 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "9 h"
       ],
       [
        "Effort saved",
-       "28 h (3.5 man-days)"
+       "16 h (2.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "78%"
+       "63%"
       ],
       [
        "Delivery impact",
@@ -3869,7 +3884,7 @@
       ],
       [
        "Effort without AI",
-       "36 h"
+       "25 h"
       ],
       [
        "Actual effort with AI",
@@ -3877,11 +3892,11 @@
       ],
       [
        "Effort saved",
-       "12 h (1.5 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "4%"
       ],
       [
        "Delivery impact",
@@ -3965,19 +3980,19 @@
       ],
       [
        "Effort without AI",
-       "28 h"
+       "20 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "11 h"
       ],
       [
        "Effort saved",
-       "12 h (1.5 man-days)"
+       "9 h (1.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "43%"
+       "45%"
       ],
       [
        "Delivery impact",
@@ -4061,19 +4076,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "5 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "9 h (1.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "67%"
       ],
       [
        "Delivery impact",
@@ -4157,7 +4172,7 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
@@ -4165,11 +4180,11 @@
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "10 h (1.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "74%"
       ],
       [
        "Delivery impact",
@@ -4253,19 +4268,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "8 h (1.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "60%"
       ],
       [
        "Delivery impact",
@@ -4349,19 +4364,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "5 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "9 h (1.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "66%"
       ],
       [
        "Delivery impact",
@@ -4445,19 +4460,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "10 h"
       ],
       [
        "Effort saved",
-       "12 h (1.5 man-days)"
+       "4 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -4541,7 +4556,7 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
@@ -4549,11 +4564,11 @@
       ],
       [
        "Effort saved",
-       "12 h (1.5 man-days)"
+       "6 h (0.8 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "46%"
       ],
       [
        "Delivery impact",
@@ -4637,19 +4652,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "11 h (1.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "79%"
       ],
       [
        "Delivery impact",
@@ -4733,19 +4748,19 @@
       ],
       [
        "Effort without AI",
-       "16 h"
+       "11 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "8 h (1.0 man-days)"
+       "5 h (0.6 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "50%"
+       "45%"
       ],
       [
        "Delivery impact",
@@ -4829,19 +4844,19 @@
       ],
       [
        "Effort without AI",
-       "16 h"
+       "11 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "8 h (1.0 man-days)"
+       "5 h (0.6 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "50%"
+       "45%"
       ],
       [
        "Delivery impact",
@@ -4925,19 +4940,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
+       "9 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "8 h (1.1 man-days)"
+       "3 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "68%"
+       "29%"
       ],
       [
        "Delivery impact",
@@ -5021,19 +5036,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
+       "9 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "8 h (1.1 man-days)"
+       "6 h (0.7 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "68%"
+       "66%"
       ],
       [
        "Delivery impact",
@@ -5117,19 +5132,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
-      ],
-      [
-       "Actual effort with AI",
        "8 h"
       ],
       [
+       "Actual effort with AI",
+       "6 h"
+      ],
+      [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -5213,19 +5228,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
-      ],
-      [
-       "Actual effort with AI",
        "8 h"
       ],
       [
+       "Actual effort with AI",
+       "6 h"
+      ],
+      [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -5309,19 +5324,19 @@
       ],
       [
        "Effort without AI",
-       "12 h"
-      ],
-      [
-       "Actual effort with AI",
        "8 h"
       ],
       [
+       "Actual effort with AI",
+       "6 h"
+      ],
+      [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -5405,7 +5420,7 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
@@ -5413,11 +5428,11 @@
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "38%"
       ],
       [
        "Delivery impact",
@@ -5501,7 +5516,7 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
@@ -5509,11 +5524,11 @@
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "44%"
       ],
       [
        "Delivery impact",
@@ -5597,7 +5612,7 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
@@ -5605,11 +5620,11 @@
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "47%"
       ],
       [
        "Delivery impact",
@@ -5693,19 +5708,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "5 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "5 h (0.7 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "55%"
+       "9%"
       ],
       [
        "Delivery impact",
@@ -5789,7 +5804,7 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
@@ -5797,11 +5812,11 @@
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "43%"
       ],
       [
        "Delivery impact",
@@ -5885,19 +5900,19 @@
       ],
       [
        "Effort without AI",
-       "8 h"
+       "6 h"
       ],
       [
        "Actual effort with AI",
-       "2 h"
+       "4 h"
       ],
       [
        "Effort saved",
-       "6 h (0.7 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "71%"
+       "30%"
       ],
       [
        "Delivery impact",
@@ -5981,19 +5996,19 @@
       ],
       [
        "Effort without AI",
-       "6 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
-       "3 h"
+       "4 h"
       ],
       [
        "Effort saved",
-       "3 h (0.4 man-days)"
+       "0 h (0.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "57%"
+       "8%"
       ],
       [
        "Delivery impact",
@@ -6077,19 +6092,19 @@
       ],
       [
        "Effort without AI",
-       "6 h"
-      ],
-      [
-       "Actual effort with AI",
        "4 h"
       ],
       [
+       "Actual effort with AI",
+       "3 h"
+      ],
+      [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6173,19 +6188,19 @@
       ],
       [
        "Effort without AI",
-       "6 h"
-      ],
-      [
-       "Actual effort with AI",
        "4 h"
       ],
       [
+       "Actual effort with AI",
+       "3 h"
+      ],
+      [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6269,7 +6284,7 @@
       ],
       [
        "Effort without AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Actual effort with AI",
@@ -6277,11 +6292,11 @@
       ],
       [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "50%"
+       "35%"
       ],
       [
        "Delivery impact",
@@ -6365,7 +6380,7 @@
       ],
       [
        "Effort without AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Actual effort with AI",
@@ -6461,7 +6476,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -6469,11 +6484,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6557,7 +6572,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -6565,11 +6580,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6653,7 +6668,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -6661,11 +6676,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6749,7 +6764,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -6757,11 +6772,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "25%"
       ],
       [
        "Delivery impact",
@@ -6845,7 +6860,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -6853,11 +6868,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "33%"
+       "18%"
       ],
       [
        "Delivery impact",
@@ -6941,19 +6956,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "4 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "50%"
       ],
       [
        "Delivery impact",
@@ -7037,7 +7052,7 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
@@ -7045,11 +7060,11 @@
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "3 h (0.4 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "46%"
       ],
       [
        "Delivery impact",
@@ -7078,7 +7093,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-050  CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation): root-cause diagnosis, no code"
+     "text": "UC-050  Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_..."
     },
     {
      "t": "table",
@@ -7094,6 +7109,102 @@
       [
        "Sr. No.",
        "UC-050"
+      ],
+      [
+       "Project",
+       "ONGC (OVL)"
+      ],
+      [
+       "Development / use case",
+       "Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_..."
+      ],
+      [
+       "SAP object",
+       "API_CNSLDTNGRPJRNLITEM (OData V2 service, SAP standard, read-only); API_CNSLDTNGRPJRNLENTR (OData API, SAP standard - not on this release); FINCS_JRNLENTR_POST_SRV / ZFINCS_JRNLENTR_POST_SRV (OData UI service, SAP standard); FINCS_JRNLENTR_LIST_SRV (OData UI service, SAP standard);"
+      ],
+      [
+       "Development type",
+       "Analysis - Interfaces and Integration - complexity High"
+      ],
+      [
+       "Business requirement",
+       "The team wants to create (post) group journal entries in ACDOCU by program, from a custom Data Monitor task (BAdI FINCS_CUST_DATAMON) or an ECC caller;"
+      ],
+      [
+       "Technical challenge",
+       "The registered API_CNSLDTNGRPJRNLITEM is read-only and analytical, and the released posting API API_CNSLDTNGRPJRNLENTR (S/4HANA 2022 and later) does not exist on this release - \"no OData service on this release posts group journal entries\"."
+      ],
+      [
+       "AI tool used",
+       "Claude Code (Anthropic)"
+      ],
+      [
+       "AI contribution",
+       "Documented the read API (entity sets, four mandatory parameters, call pattern, filterable properties) and established from two catalogue passes that no released posting API exists on the release. Recorded the posting-engine classes with verdicts and the signatures of IF_FINCS_DP_DOCUMENT_POST~POST and IF_FINCS_DOCUMENT_REFRESH~SELECT_DOCUMENTS from SE24 screenshots, and traced the Fiori post action chain (CL_FINCS_JE_POST -> PROCESS_DRAFT)."
+      ],
+      [
+       "Manual intervention",
+       "The backend catalogue (/IWFND/MAINT_SERVICE) was checked twice in the system and the results relayed; service metadata, SE24 screenshots of the classes and signatures and the source of PROCESS_DRAFT were supplied; the service document for the test pack was supplied (from the Woodside host, not OCQ)."
+      ],
+      [
+       "Effort without AI",
+       "7 h"
+      ],
+      [
+       "Actual effort with AI",
+       "5 h"
+      ],
+      [
+       "Effort saved",
+       "2 h (0.2 man-days)"
+      ],
+      [
+       "Effort reduction (%)",
+       "28%"
+      ],
+      [
+       "Delivery impact",
+       "22/10/26 to 22/10/26; 1 active AI-session day(s), 12 commits"
+      ],
+      [
+       "Quality improvement",
+       "Every property, navigation and function-import name in the test pack is marked \"confirm\" until $metadata is read; read-only Step 0 defined before any POST; Upgrade risk of building on unreleased classes or the UI service flagged for sign-off before building"
+      ],
+      [
+       "Completion status",
+       "Completed - analysis / root cause delivered"
+      ],
+      [
+       "Source evidence",
+       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md; ovl/cnsldtn_grpjrnl_api/testdata/TD01_pl01_balanced.json; ovl/cnsldtn_grpjrnl_api/testdata/TD02_pl20_elimination.json"
+      ],
+      [
+       "Confidence",
+       "Verified"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-051  CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation): root-cause diagnosis, no code"
+    },
+    {
+     "t": "table",
+     "widths": [
+      22,
+      78
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "Sr. No.",
+       "UC-051"
       ],
       [
        "Project",
@@ -7133,7 +7244,7 @@
       ],
       [
        "Effort without AI",
-       "6 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
@@ -7141,11 +7252,11 @@
       ],
       [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "67%"
+       "55%"
       ],
       [
        "Delivery impact",
@@ -7174,7 +7285,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-051  FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM VALID_BTYPE, no code"
+     "text": "UC-052  FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM VALID_BTYPE, no code"
     },
     {
      "t": "table",
@@ -7189,7 +7300,7 @@
      "rows": [
       [
        "Sr. No.",
-       "UC-051"
+       "UC-052"
       ],
       [
        "Project",
@@ -7229,7 +7340,7 @@
       ],
       [
        "Effort without AI",
-       "6 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
@@ -7237,11 +7348,11 @@
       ],
       [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "67%"
+       "48%"
       ],
       [
        "Delivery impact",
@@ -7270,7 +7381,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-052  ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written"
+     "text": "UC-053  ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written"
     },
     {
      "t": "table",
@@ -7285,7 +7396,7 @@
      "rows": [
       [
        "Sr. No.",
-       "UC-052"
+       "UC-053"
       ],
       [
        "Project",
@@ -7325,7 +7436,7 @@
       ],
       [
        "Effort without AI",
-       "6 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
@@ -7333,11 +7444,11 @@
       ],
       [
        "Effort saved",
-       "4 h (0.5 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "67%"
+       "55%"
       ],
       [
        "Delivery impact",
@@ -7366,7 +7477,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-053  Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)"
+     "text": "UC-054  Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)"
     },
     {
      "t": "table",
@@ -7381,7 +7492,7 @@
      "rows": [
       [
        "Sr. No.",
-       "UC-053"
+       "UC-054"
       ],
       [
        "Project",
@@ -7421,7 +7532,7 @@
       ],
       [
        "Effort without AI",
-       "5 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
@@ -7429,7 +7540,7 @@
       ],
       [
        "Effort saved",
-       "3 h (0.4 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
@@ -7450,102 +7561,6 @@
       [
        "Source evidence",
        "ovl/capex_provisional; ovl/capex_provisional/NOTES.md"
-      ],
-      [
-       "Confidence",
-       "Verified"
-      ]
-     ],
-     "boldFirst": true,
-     "fontSize": 7.5,
-     "cantSplit": true
-    },
-    {
-     "t": "h3",
-     "text": "UC-054  Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_..."
-    },
-    {
-     "t": "table",
-     "widths": [
-      22,
-      78
-     ],
-     "header": [
-      "Field",
-      "Detail"
-     ],
-     "rows": [
-      [
-       "Sr. No.",
-       "UC-054"
-      ],
-      [
-       "Project",
-       "ONGC (OVL)"
-      ],
-      [
-       "Development / use case",
-       "Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_..."
-      ],
-      [
-       "SAP object",
-       "API_CNSLDTNGRPJRNLITEM (OData V2 service, SAP standard, read-only); API_CNSLDTNGRPJRNLENTR (OData API, SAP standard - not on this release); FINCS_JRNLENTR_POST_SRV / ZFINCS_JRNLENTR_POST_SRV (OData UI service, SAP standard); FINCS_JRNLENTR_LIST_SRV (OData UI service, SAP standard);"
-      ],
-      [
-       "Development type",
-       "Analysis - Interfaces and Integration - complexity Medium"
-      ],
-      [
-       "Business requirement",
-       "The team wants to create (post) group journal entries in ACDOCU by program, from a custom Data Monitor task (BAdI FINCS_CUST_DATAMON) or an ECC caller;"
-      ],
-      [
-       "Technical challenge",
-       "The registered API_CNSLDTNGRPJRNLITEM is read-only and analytical, and the released posting API API_CNSLDTNGRPJRNLENTR (S/4HANA 2022 and later) does not exist on this release - \"no OData service on this release posts group journal entries\"."
-      ],
-      [
-       "AI tool used",
-       "Claude Code (Anthropic)"
-      ],
-      [
-       "AI contribution",
-       "Documented the read API (entity sets, four mandatory parameters, call pattern, filterable properties) and established from two catalogue passes that no released posting API exists on the release. Recorded the posting-engine classes with verdicts and the signatures of IF_FINCS_DP_DOCUMENT_POST~POST and IF_FINCS_DOCUMENT_REFRESH~SELECT_DOCUMENTS from SE24 screenshots, and traced the Fiori post action chain (CL_FINCS_JE_POST -> PROCESS_DRAFT)."
-      ],
-      [
-       "Manual intervention",
-       "The backend catalogue (/IWFND/MAINT_SERVICE) was checked twice in the system and the results relayed; service metadata, SE24 screenshots of the classes and signatures and the source of PROCESS_DRAFT were supplied; the service document for the test pack was supplied (from the Woodside host, not OCQ)."
-      ],
-      [
-       "Effort without AI",
-       "5 h"
-      ],
-      [
-       "Actual effort with AI",
-       "3 h"
-      ],
-      [
-       "Effort saved",
-       "2 h (0.3 man-days)"
-      ],
-      [
-       "Effort reduction (%)",
-       "43%"
-      ],
-      [
-       "Delivery impact",
-       "22/10/26 to 22/10/26; 1 active AI-session day(s), 12 commits"
-      ],
-      [
-       "Quality improvement",
-       "Every property, navigation and function-import name in the test pack is marked \"confirm\" until $metadata is read; read-only Step 0 defined before any POST; Upgrade risk of building on unreleased classes or the UI service flagged for sign-off before building"
-      ],
-      [
-       "Completion status",
-       "Completed - analysis / root cause delivered"
-      ],
-      [
-       "Source evidence",
-       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md; ovl/cnsldtn_grpjrnl_api/testdata/TD01_pl01_balanced.json; ovl/cnsldtn_grpjrnl_api/testdata/TD02_pl20_elimination.json"
       ],
       [
        "Confidence",
@@ -7613,7 +7628,7 @@
       ],
       [
        "Effort without AI",
-       "3 h"
+       "2 h"
       ],
       [
        "Actual effort with AI",
@@ -7621,11 +7636,11 @@
       ],
       [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "1 h (0.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "67%"
+       "50%"
       ],
       [
        "Delivery impact",
@@ -7709,7 +7724,7 @@
       ],
       [
        "Effort without AI",
-       "2 h"
+       "1 h"
       ],
       [
        "Actual effort with AI",
@@ -7717,11 +7732,11 @@
       ],
       [
        "Effort saved",
-       "1 h (0.1 man-days)"
+       "0 h (0.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "50%"
+       "0%"
       ],
       [
        "Delivery impact",
@@ -7805,7 +7820,7 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
@@ -7813,11 +7828,11 @@
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "10 h (1.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "70%"
       ],
       [
        "Delivery impact",
@@ -7905,19 +7920,19 @@
       ],
       [
        "Effort without AI",
-       "90 h"
+       "63 h"
       ],
       [
        "Actual effort with AI",
-       "40 h"
+       "59 h"
       ],
       [
        "Effort saved",
-       "50 h (6.3 man-days)"
+       "4 h (0.6 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "56%"
+       "7%"
       ],
       [
        "Delivery impact",
@@ -8001,19 +8016,19 @@
       ],
       [
        "Effort without AI",
-       "60 h"
+       "42 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "11 h"
       ],
       [
        "Effort saved",
-       "44 h (5.5 man-days)"
+       "31 h (3.9 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "73%"
+       "74%"
       ],
       [
        "Delivery impact",
@@ -8097,19 +8112,19 @@
       ],
       [
        "Effort without AI",
-       "54 h"
+       "38 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "18 h"
       ],
       [
        "Effort saved",
-       "46 h (5.8 man-days)"
+       "20 h (2.5 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "85%"
+       "53%"
       ],
       [
        "Delivery impact",
@@ -8193,19 +8208,19 @@
       ],
       [
        "Effort without AI",
-       "45 h"
+       "31 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "15 h"
       ],
       [
        "Effort saved",
-       "37 h (4.6 man-days)"
+       "17 h (2.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "82%"
+       "53%"
       ],
       [
        "Delivery impact",
@@ -8289,19 +8304,19 @@
       ],
       [
        "Effort without AI",
-       "36 h"
+       "25 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "12 h"
       ],
       [
        "Effort saved",
-       "28 h (3.5 man-days)"
+       "13 h (1.6 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "78%"
+       "53%"
       ],
       [
        "Delivery impact",
@@ -8385,19 +8400,19 @@
       ],
       [
        "Effort without AI",
-       "36 h"
+       "25 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "9 h"
       ],
       [
        "Effort saved",
-       "28 h (3.5 man-days)"
+       "16 h (2.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "78%"
+       "65%"
       ],
       [
        "Delivery impact",
@@ -8426,7 +8441,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-064  ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners"
+     "text": "UC-064  ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)"
     },
     {
      "t": "table",
@@ -8442,6 +8457,102 @@
       [
        "Sr. No.",
        "UC-064"
+      ],
+      [
+       "Project",
+       "T&G (Astral Ltd / Project UDAY (via KPMG))"
+      ],
+      [
+       "Development / use case",
+       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)"
+      ],
+      [
+       "SAP object",
+       "ZMM_VEND_MASTER (report); ZMM_VEND_MASTER_TOP (include); ZMM_VEND_MASTER_SCR (include); ZMM_VEND_MASTER_CL (include); ZMM_VEND_MASTER_FORMS (include); ZMM_VEND_UPLOAD (transaction)"
+      ],
+      [
+       "Development type",
+       "Enhancement - Business Process Automation - complexity Very High"
+      ],
+      [
+       "Business requirement",
+       "Enhance the existing supplier upload: (R1) record-level processing log and download of failed records only, (R2) automatic extension to company code and purchasing organisation with separate status and 'already extended' detection, (R3) a separate Change mode in which blank cells never overwrite master data, (R4) validation and..."
+      ],
+      [
+       "Technical challenge",
+       "The baseline was an SE38 print listing, not compilable source. Create/extend/change runs through vmd_ei_api=>maintain_bapi and Change mode is only safe if datax flags are set solely for populated cells; the baseline's hard stop (MESSAGE ... LEAVE LIST-PROCESSING) had to be removed."
+      ],
+      [
+       "AI tool used",
+       "Claude Code (Anthropic)"
+      ],
+      [
+       "AI contribution",
+       "The repo's src/ holds the five includes (2,601 lines) with markers 'By Arnav on 21/07/2026' and 'Changes by Arnav on 22/07/26'; drafts/ holds the 569-line unit sheet. ISSUES.md is empty."
+      ],
+      [
+       "Manual intervention",
+       "Not logged in the folder. kpmg/timesheet (Sep 2026) books 8 h on ZMM_VEND_UPLOAD: 01/09 'Analysed BP/vendor master fields for upload template' and 16-17/09 'Reviewed FSD for vendor upload program; clarifications raised'."
+      ],
+      [
+       "Effort without AI",
+       "25 h"
+      ],
+      [
+       "Actual effort with AI",
+       "22 h"
+      ],
+      [
+       "Effort saved",
+       "3 h (0.3 man-days)"
+      ],
+      [
+       "Effort reduction (%)",
+       "10%"
+      ],
+      [
+       "Delivery impact",
+       "not stated to not stated; 3 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Quality improvement",
+       "A bad record is logged and skipped instead of stopping the whole batch (hard stop removed); Blank-safe Change mode: datax set only when the source cell is filled"
+      ],
+      [
+       "Completion status",
+       "Completed"
+      ],
+      [
+       "Source evidence",
+       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md; kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md"
+      ],
+      [
+       "Confidence",
+       "Verified"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-065  ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners"
+    },
+    {
+     "t": "table",
+     "widths": [
+      22,
+      78
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "Sr. No.",
+       "UC-065"
       ],
       [
        "Project",
@@ -8481,19 +8592,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "5 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "9 h (1.1 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "80%"
+       "61%"
       ],
       [
        "Delivery impact",
@@ -8510,102 +8621,6 @@
       [
        "Source evidence",
        "kpmg/zmm_bp_mail; kpmg/zmm_bp_mail/ISSUES.md; kpmg/zmm_bp_mail/NOTES.md; kpmg/zmm_bp_mail/QUERIES.md; kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md"
-      ],
-      [
-       "Confidence",
-       "Verified"
-      ]
-     ],
-     "boldFirst": true,
-     "fontSize": 7.5,
-     "cantSplit": true
-    },
-    {
-     "t": "h3",
-     "text": "UC-065  ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)"
-    },
-    {
-     "t": "table",
-     "widths": [
-      22,
-      78
-     ],
-     "header": [
-      "Field",
-      "Detail"
-     ],
-     "rows": [
-      [
-       "Sr. No.",
-       "UC-065"
-      ],
-      [
-       "Project",
-       "T&G (Astral Ltd / Project UDAY (via KPMG))"
-      ],
-      [
-       "Development / use case",
-       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)"
-      ],
-      [
-       "SAP object",
-       "ZMM_VEND_MASTER (report); ZMM_VEND_MASTER_TOP (include); ZMM_VEND_MASTER_SCR (include); ZMM_VEND_MASTER_CL (include); ZMM_VEND_MASTER_FORMS (include); ZMM_VEND_UPLOAD (transaction)"
-      ],
-      [
-       "Development type",
-       "Enhancement - Business Process Automation - complexity High"
-      ],
-      [
-       "Business requirement",
-       "Enhance the existing supplier upload: (R1) record-level processing log and download of failed records only, (R2) automatic extension to company code and purchasing organisation with separate status and 'already extended' detection, (R3) a separate Change mode in which blank cells never overwrite master data, (R4) validation and..."
-      ],
-      [
-       "Technical challenge",
-       "The baseline was an SE38 print listing, not compilable source. Create/extend/change runs through vmd_ei_api=>maintain_bapi and Change mode is only safe if datax flags are set solely for populated cells; the baseline's hard stop (MESSAGE ... LEAVE LIST-PROCESSING) had to be removed."
-      ],
-      [
-       "AI tool used",
-       "Claude Code (Anthropic)"
-      ],
-      [
-       "AI contribution",
-       "The repo's src/ holds the five includes (2,601 lines) with markers 'By Arnav on 21/07/2026' and 'Changes by Arnav on 22/07/26'; drafts/ holds the 569-line unit sheet. ISSUES.md is empty."
-      ],
-      [
-       "Manual intervention",
-       "Not logged in the folder. kpmg/timesheet (Sep 2026) books 8 h on ZMM_VEND_UPLOAD: 01/09 'Analysed BP/vendor master fields for upload template' and 16-17/09 'Reviewed FSD for vendor upload program; clarifications raised'."
-      ],
-      [
-       "Effort without AI",
-       "20 h"
-      ],
-      [
-       "Actual effort with AI",
-       "16 h"
-      ],
-      [
-       "Effort saved",
-       "4 h (0.5 man-days)"
-      ],
-      [
-       "Effort reduction (%)",
-       "19%"
-      ],
-      [
-       "Delivery impact",
-       "not stated to not stated; 3 active AI-session day(s), 4 commits"
-      ],
-      [
-       "Quality improvement",
-       "A bad record is logged and skipped instead of stopping the whole batch (hard stop removed); Blank-safe Change mode: datax set only when the source cell is filled"
-      ],
-      [
-       "Completion status",
-       "Completed"
-      ],
-      [
-       "Source evidence",
-       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md; kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md"
       ],
       [
        "Confidence",
@@ -8649,7 +8664,7 @@
       ],
       [
        "Development type",
-       "Enhancement - ABAP Program Development - complexity Medium"
+       "Enhancement - ABAP Program Development - complexity High"
       ],
       [
        "Business requirement",
@@ -8673,19 +8688,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "12 h"
       ],
       [
        "Effort saved",
-       "2 h (0.2 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "16%"
+       "15%"
       ],
       [
        "Delivery impact",
@@ -8769,19 +8784,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "4 h (0.5 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "53%"
       ],
       [
        "Delivery impact",
@@ -8810,7 +8825,7 @@
     },
     {
      "t": "h3",
-     "text": "UC-068  WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)"
+     "text": "UC-068  PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing"
     },
     {
      "t": "table",
@@ -8826,6 +8841,102 @@
       [
        "Sr. No.",
        "UC-068"
+      ],
+      [
+       "Project",
+       "T&G (Astral Ltd / Project UDAY (via KPMG))"
+      ],
+      [
+       "Development / use case",
+       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing"
+      ],
+      [
+       "SAP object",
+       "ME_PROCESS_PO_CUST (classic BAdI, method IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER of the existing implementation); ZPO_VALIDITY_DOCTYPE (TVARVC variable - part of the withdrawn approach); NBF (field selection key, OMF4); ZBRD (field selection key)"
+      ],
+      [
+       "Development type",
+       "Analysis - Debugging and Troubleshooting - complexity Medium"
+      ],
+      [
+       "Business requirement",
+       "The PO header fields Validity Start / Validity End (EKKO-KDATB / KDATE) must be input-ready for PO document type SBP only, in SAP GUI as in Fiori; no validation is wanted."
+      ],
+      [
+       "Technical challenge",
+       "The status of a standard field is the most restrictive of the merged field-selection keys (transaction, activity, document type, release), and the BAdI method FIELDSELECTION_HEADER only ever receives customer metafields, never the standard metafields 37/38 - so it cannot show or hide these fields."
+      ],
+      [
+       "AI tool used",
+       "Claude Code (Anthropic)"
+      ],
+      [
+       "AI contribution",
+       "First delivered a FIELDSELECTION_HEADER method body that hides the two fields unless the document type is listed in TVARVC ZPO_VALIDITY_DOCTYPE, then corrected the metafield constants. After Arnav's debugger finding, concluded that the BAdI cannot reach standard metafields, located the cause in OMF4 key NBF (the two fields have no option ticked = Hide; T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to [contact]. The withdrawn code is kept as the record of why."
+      ],
+      [
+       "Manual intervention",
+       "Arnav supplied the existing method body (original/), checked type group MMMFD, debugged FIELDSELECTION_HEADER ('CH_FIELDSELECTION holds only customer metafields (90000121\u201390000141)') and checked OMF4 / T161. The customizing change is for the functional consultant; sending the mail is manual."
+      ],
+      [
+       "Effort without AI",
+       "4 h"
+      ],
+      [
+       "Actual effort with AI",
+       "3 h"
+      ],
+      [
+       "Effort saved",
+       "1 h (0.1 man-days)"
+      ],
+      [
+       "Effort reduction (%)",
+       "22%"
+      ],
+      [
+       "Delivery impact",
+       "12/10/26 to 12/10/26; 1 active AI-session day(s), 4 commits"
+      ],
+      [
+       "Quality improvement",
+       "Root cause proven in the debugger instead of shipping a change that could not work; Document types read from TVARVC rather than hardcoded (in the withdrawn version)"
+      ],
+      [
+       "Completion status",
+       "Completed - analysis / root cause delivered"
+      ],
+      [
+       "Source evidence",
+       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md; kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap; git log / git show 0a4cc83, df2eb5b -- kpmg/zmm_po_validity_fs"
+      ],
+      [
+       "Confidence",
+       "Verified"
+      ]
+     ],
+     "boldFirst": true,
+     "fontSize": 7.5,
+     "cantSplit": true
+    },
+    {
+     "t": "h3",
+     "text": "UC-069  WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)"
+    },
+    {
+     "t": "table",
+     "widths": [
+      22,
+      78
+     ],
+     "header": [
+      "Field",
+      "Detail"
+     ],
+     "rows": [
+      [
+       "Sr. No.",
+       "UC-069"
       ],
       [
        "Project",
@@ -8865,7 +8976,7 @@
       ],
       [
        "Effort without AI",
-       "5 h"
+       "4 h"
       ],
       [
        "Actual effort with AI",
@@ -8873,11 +8984,11 @@
       ],
       [
        "Effort saved",
-       "3 h (0.4 man-days)"
+       "2 h (0.3 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "62%"
       ],
       [
        "Delivery impact",
@@ -8894,102 +9005,6 @@
       [
        "Source evidence",
        "kpmg/zsd_mis_customer; kpmg/zsd_mis_customer/ISSUES.md; kpmg/zsd_mis_customer/NOTES.md; kpmg/zsd_mis_customer/FS_QUERIES.md; kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx"
-      ],
-      [
-       "Confidence",
-       "Verified"
-      ]
-     ],
-     "boldFirst": true,
-     "fontSize": 7.5,
-     "cantSplit": true
-    },
-    {
-     "t": "h3",
-     "text": "UC-069  PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing"
-    },
-    {
-     "t": "table",
-     "widths": [
-      22,
-      78
-     ],
-     "header": [
-      "Field",
-      "Detail"
-     ],
-     "rows": [
-      [
-       "Sr. No.",
-       "UC-069"
-      ],
-      [
-       "Project",
-       "T&G (Astral Ltd / Project UDAY (via KPMG))"
-      ],
-      [
-       "Development / use case",
-       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing"
-      ],
-      [
-       "SAP object",
-       "ME_PROCESS_PO_CUST (classic BAdI, method IF_EX_ME_PROCESS_PO_CUST~FIELDSELECTION_HEADER of the existing implementation); ZPO_VALIDITY_DOCTYPE (TVARVC variable - part of the withdrawn approach); NBF (field selection key, OMF4); ZBRD (field selection key)"
-      ],
-      [
-       "Development type",
-       "Analysis - Debugging and Troubleshooting - complexity Low"
-      ],
-      [
-       "Business requirement",
-       "The PO header fields Validity Start / Validity End (EKKO-KDATB / KDATE) must be input-ready for PO document type SBP only, in SAP GUI as in Fiori; no validation is wanted."
-      ],
-      [
-       "Technical challenge",
-       "The status of a standard field is the most restrictive of the merged field-selection keys (transaction, activity, document type, release), and the BAdI method FIELDSELECTION_HEADER only ever receives customer metafields, never the standard metafields 37/38 - so it cannot show or hide these fields."
-      ],
-      [
-       "AI tool used",
-       "Claude Code (Anthropic)"
-      ],
-      [
-       "AI contribution",
-       "First delivered a FIELDSELECTION_HEADER method body that hides the two fields unless the document type is listed in TVARVC ZPO_VALIDITY_DOCTYPE, then corrected the metafield constants. After Arnav's debugger finding, concluded that the BAdI cannot reach standard metafields, located the cause in OMF4 key NBF (the two fields have no option ticked = Hide; T161 maps SBP to NBF), recommended a customizing-only fix and drafted the mail to [contact]. The withdrawn code is kept as the record of why."
-      ],
-      [
-       "Manual intervention",
-       "Arnav supplied the existing method body (original/), checked type group MMMFD, debugged FIELDSELECTION_HEADER ('CH_FIELDSELECTION holds only customer metafields (90000121\u201390000141)') and checked OMF4 / T161. The customizing change is for the functional consultant; sending the mail is manual."
-      ],
-      [
-       "Effort without AI",
-       "2 h"
-      ],
-      [
-       "Actual effort with AI",
-       "2 h"
-      ],
-      [
-       "Effort saved",
-       "0 h (0.0 man-days)"
-      ],
-      [
-       "Effort reduction (%)",
-       "10%"
-      ],
-      [
-       "Delivery impact",
-       "12/10/26 to 12/10/26; 1 active AI-session day(s), 4 commits"
-      ],
-      [
-       "Quality improvement",
-       "Root cause proven in the debugger instead of shipping a change that could not work; Document types read from TVARVC rather than hardcoded (in the withdrawn version)"
-      ],
-      [
-       "Completion status",
-       "Completed - analysis / root cause delivered"
-      ],
-      [
-       "Source evidence",
-       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md; kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap; git log / git show 0a4cc83, df2eb5b -- kpmg/zmm_po_validity_fs"
       ],
       [
        "Confidence",
@@ -9061,19 +9076,19 @@
       ],
       [
        "Effort without AI",
-       "32 h"
+       "22 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "15 h"
       ],
       [
        "Effort saved",
-       "16 h (2.0 man-days)"
+       "7 h (0.8 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "50%"
+       "31%"
       ],
       [
        "Delivery impact",
@@ -9157,19 +9172,19 @@
       ],
       [
        "Effort without AI",
-       "20 h"
+       "14 h"
       ],
       [
        "Actual effort with AI",
-       "8 h"
+       "6 h"
       ],
       [
        "Effort saved",
-       "12 h (1.5 man-days)"
+       "8 h (1.0 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "57%"
       ],
       [
        "Delivery impact",
@@ -9253,19 +9268,19 @@
       ],
       [
        "Effort without AI",
-       "10 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Effort saved",
-       "6 h (0.8 man-days)"
+       "4 h (0.5 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "60%"
+       "57%"
       ],
       [
        "Delivery impact",
@@ -9349,7 +9364,7 @@
       ],
       [
        "Effort without AI",
-       "4 h"
+       "3 h"
       ],
       [
        "Actual effort with AI",
@@ -9421,7 +9436,7 @@
       ],
       [
        "Development type",
-       "Analysis - Analysis & Solution Design - complexity Medium"
+       "Analysis - Analysis & Solution Design - complexity High"
       ],
       [
        "Business requirement",
@@ -9445,19 +9460,19 @@
       ],
       [
        "Effort without AI",
-       "5 h"
+       "7 h"
       ],
       [
        "Actual effort with AI",
-       "3 h"
+       "5 h"
       ],
       [
        "Effort saved",
-       "2 h (0.3 man-days)"
+       "2 h (0.2 man-days)"
       ],
       [
        "Effort reduction (%)",
-       "42%"
+       "26%"
       ],
       [
        "Delivery impact",
@@ -9523,52 +9538,52 @@
      "rows": [
       [
        "New development",
-       "8",
-       "20",
-       "36",
-       "60"
+       "6",
+       "14",
+       "25",
+       "42"
       ],
       [
        "Enhancement / change request",
-       "4",
-       "10",
-       "20",
-       "36"
+       "3",
+       "7",
+       "14",
+       "25"
       ],
       [
        "Bug fix / root-cause analysis",
-       "3",
-       "6",
-       "12",
-       "20"
+       "2",
+       "4",
+       "8",
+       "14"
       ],
       [
        "S/4HANA remediation (per object)",
-       "3",
-       "8",
-       "16",
-       "28"
+       "2",
+       "6",
+       "11",
+       "20"
       ],
       [
        "Analysis / feasibility / design",
-       "2",
-       "5",
-       "10",
-       "16"
+       "1",
+       "4",
+       "7",
+       "11"
       ],
       [
        "Automation utility / developer tool",
-       "4",
-       "10",
-       "20",
-       "32"
+       "3",
+       "7",
+       "14",
+       "22"
       ],
       [
        "Documentation only",
        "1",
-       "3",
-       "6",
-       "10"
+       "2",
+       "4",
+       "7"
       ]
      ]
     },
@@ -9578,7 +9593,7 @@
     },
     {
      "t": "p",
-     "text": "Actual effort counts the full development time of the period: 85 working days x 8 h, less the 13.5% share of status calls and transport administration (436 h from 19/08/26, plus dated work before it). It is distributed over the use cases by the measured AI session time of each object (commit timestamps), with a minimum per use case for prompting, review, activation and unit testing (2 / 4 / 8 / 16 h by complexity; 1 / 2 / 4 / 6 h for analyses). Review and correction time is therefore included in every figure."
+     "text": "Actual effort counts the full working time of the period: 69 days worked from 19/08/26 (weekdays after leave plus the weekend days worked) x 8 h = 552 h, plus dated work before 19/08/26. It is distributed over the use cases half by the measured AI session time of each object (commit timestamps) and half by its size, with a minimum per use case for prompting, review, activation and unit testing. Review and correction time is included in every figure."
     },
     {
      "t": "h3",
@@ -9611,27 +9626,27 @@
      "rows": [
       [
        "Effort without AI",
-       "60 h"
+       "42 h"
       ],
       [
        "Actual effort with AI",
-       "16 h"
+       "21 h"
       ],
       [
        "Effort saved",
-       "44 h"
+       "21 h"
       ],
       [
        "Effort reduction",
-       "73%"
+       "50%"
       ],
       [
        "Man-days saved",
-       "5.5"
+       "2.6"
       ],
       [
        "Productivity improvement",
-       "275%"
+       "98%"
       ]
      ]
     },
@@ -10916,6 +10931,16 @@
       [
        "UC-050",
        "ONGC (OVL)",
+       "Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_...",
+       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md; ovl/cnsldtn_grpjrnl_api/testdata/TD01_pl01_balanced.json;...",
+       "Completed - analysis / root cause delivered\n22/10/26 -> 22/10/26",
+       "Git session hours x allocation factor, minimum-effort floor",
+       "ANA / High / x1",
+       "Verified"
+      ],
+      [
+       "UC-051",
+       "ONGC (OVL)",
        "CJ88 settlement reversal - update termination in FLQ_INSERT_EXTSN (standard SAP Liquidity Calculation): root-cause diagnosis, no code",
        "ovl/cj88_flq; ovl/cj88_flq/ISSUES.md; ovl/cj88_flq/NOTES.md; ovl/cj88_flq/evidence/ST22_RAISE_EXCEPTION_20260826_154256.txt; ovl/cj88_flq/original/FLQEXT.TXT",
        "Completed - analysis / root cause delivered\n26/08/26 -> 26/08/26",
@@ -10924,7 +10949,7 @@
        "Verified"
       ],
       [
-       "UC-051",
+       "UC-052",
        "ONGC (OVL)",
        "FBV0 posting error CORE_GJ 912 on corporate venture CP0001 (JVA) - root-cause diagnosis in standard FM VALID_BTYPE, no code",
        "ovl/fbv0_core_gj_912; ovl/fbv0_core_gj_912/ISSUES.md; ovl/fbv0_core_gj_912/NOTES.md",
@@ -10934,7 +10959,7 @@
        "Verified"
       ],
       [
-       "UC-052",
+       "UC-053",
        "ONGC (OVL)",
        "ZFI_CP_MASS_VEN_PAY (tcode ZFIAPP) mass vendor payment + cheque creation - payment posted without a cheque: diagnosis only, no code written",
        "ovl/zfi_cp_mass_ven_pay; ovl/zfi_cp_mass_ven_pay/ISSUES.md; ovl/zfi_cp_mass_ven_pay/NOTES.md; ovl/_engagement/WORKLOG_2026-08.md",
@@ -10944,21 +10969,11 @@
        "Verified"
       ],
       [
-       "UC-053",
+       "UC-054",
        "ONGC (OVL)",
        "Provisional Capex / Opex fortnightly punching - FS assessment and design sketch (nothing built)",
        "ovl/capex_provisional; ovl/capex_provisional/NOTES.md",
        "Completed - analysis / root cause delivered\n18/11/26 -> 18/11/26",
-       "Git session hours x allocation factor, minimum-effort floor",
-       "ANA / Medium / x1",
-       "Verified"
-      ],
-      [
-       "UC-054",
-       "ONGC (OVL)",
-       "Group Reporting group journal entry APIs - research trail (API_CNSLDTNGRPJRNLITEM read API, posting options) plus a test data pack for FINCS_JRNLENTR_...",
-       "ovl/cnsldtn_grpjrnl_api; ovl/cnsldtn_grpjrnl_api/NOTES.md; ovl/cnsldtn_grpjrnl_api/testdata/FINCS_JRNLENTR_POST_SRV_TESTDATA.md; ovl/cnsldtn_grpjrnl_api/testdata/TD01_pl01_balanced.json;...",
-       "Completed - analysis / root cause delivered\n22/10/26 -> 22/10/26",
        "Git session hours x allocation factor, minimum-effort floor",
        "ANA / Medium / x1",
        "Verified"
@@ -11056,21 +11071,21 @@
       [
        "UC-064",
        "T&G",
-       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
-       "kpmg/zmm_bp_mail; kpmg/zmm_bp_mail/ISSUES.md; kpmg/zmm_bp_mail/NOTES.md; kpmg/zmm_bp_mail/QUERIES.md; kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md",
-       "Completed\n22/09/26 -> 05/10/26",
-       "Git session hours x allocation factor, minimum-effort floor",
-       "NEW / Medium / x1",
+       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
+       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md; kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md",
+       "Completed\nnot stated -> not stated",
+       "Git session hours x allocation factor, minimum-effort floor + 16 h dated pre-repository...",
+       "ENH / Very High / x1",
        "Verified"
       ],
       [
        "UC-065",
        "T&G",
-       "ZMM_VEND_UPLOAD / ZMM_VEND_MASTER - vendor (supplier BP) mass upload enhancement (FSD 30)",
-       "kpmg/zmm_vend_upload; kpmg/zmm_vend_upload/ISSUES.md; kpmg/zmm_vend_upload/NOTES.md; kpmg/zmm_vend_upload/drafts/README.md; kpmg/zmm_vend_upload/docs/TS_ZMM_VEND_UPLOAD.md",
-       "Completed\nnot stated -> not stated",
-       "Git session hours x allocation factor, minimum-effort floor + 16 h dated pre-repository...",
-       "ENH / High / x1",
+       "ZMM_BP_CREATE_MAIL - daily e-mail for newly created supplier business partners",
+       "kpmg/zmm_bp_mail; kpmg/zmm_bp_mail/ISSUES.md; kpmg/zmm_bp_mail/NOTES.md; kpmg/zmm_bp_mail/QUERIES.md; kpmg/zmm_bp_mail/TS_ZMM_BP_CREATE_MAIL.md",
+       "Completed\n22/09/26 -> 05/10/26",
+       "Git session hours x allocation factor, minimum-effort floor",
+       "NEW / Medium / x1",
        "Verified"
       ],
       [
@@ -11080,7 +11095,7 @@
        "kpmg/zmb5b; kpmg/zmb5b/ISSUES.md; kpmg/zmb5b/NOTES.md; kpmg/zmb5b/docs/TS_ZMB5B.md; kpmg/zmb5b/src/ZMB5B_receipt_issue_amount.abap",
        "Completed\nnot stated -> not stated",
        "Git session hours x allocation factor, minimum-effort floor + 8 h dated pre-repository...",
-       "ENH / Medium / x1",
+       "ENH / High / x1",
        "Verified"
       ],
       [
@@ -11096,9 +11111,9 @@
       [
        "UC-068",
        "T&G",
-       "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)",
-       "kpmg/zsd_mis_customer; kpmg/zsd_mis_customer/ISSUES.md; kpmg/zsd_mis_customer/NOTES.md; kpmg/zsd_mis_customer/FS_QUERIES.md; kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
-       "Completed - analysis / root cause delivered\n21/09/26 -> 21/09/26",
+       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing",
+       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md; kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap; git log / git show 0a4cc83,...",
+       "Completed - analysis / root cause delivered\n12/10/26 -> 12/10/26",
        "Git session hours x allocation factor, minimum-effort floor",
        "ANA / Medium / x1",
        "Verified"
@@ -11106,11 +11121,11 @@
       [
        "UC-069",
        "T&G",
-       "PO header Validity Start / End input-ready for document type SBP - BAdI attempt withdrawn, root cause is field-selection customizing",
-       "kpmg/zmm_po_validity_fs; kpmg/zmm_po_validity_fs/ISSUES.md; kpmg/zmm_po_validity_fs/NOTES.md; kpmg/zmm_po_validity_fs/ME_PROCESS_PO_CUST_FIELDSELECTION_HEADER.abap; git log / git show 0a4cc83,...",
-       "Completed - analysis / root cause delivered\n12/10/26 -> 12/10/26",
+       "WRICEF 147 - Overall CC MIS, summary-wise and customer-wise (feasibility assessment and query list only)",
+       "kpmg/zsd_mis_customer; kpmg/zsd_mis_customer/ISSUES.md; kpmg/zsd_mis_customer/NOTES.md; kpmg/zsd_mis_customer/FS_QUERIES.md; kpmg/timesheet/Timesheet_KPMG_Sep2026.xlsx",
+       "Completed - analysis / root cause delivered\n21/09/26 -> 21/09/26",
        "Git session hours x allocation factor, minimum-effort floor",
-       "ANA / Low / x1",
+       "ANA / Medium / x1",
        "Verified"
       ],
       [
@@ -11160,7 +11175,7 @@
        "research/copilot-btp-mcp; research/copilot-btp-mcp/README.md; research/copilot-btp-mcp/Teams_SAP_Automation_Proposal_v1.0.md; research/copilot-btp-mcp/Teams_SAP_Connection_Brief_v1.0.md;...",
        "Completed - analysis / root cause delivered\n27/09/26 -> 27/09/26",
        "Git session hours x allocation factor, minimum-effort floor",
-       "ANA / Medium / x1",
+       "ANA / High / x1",
        "Verified"
       ]
      ]
