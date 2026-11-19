@@ -92,7 +92,6 @@ metrics = [
     ("Past mistakes written up as standing rules", 31, "MEMORY.md section 5"),
 ]
 gaps = [
-    "No document, issue log, commit or timesheet in the repository names a project 'T&G'.",
     "Client timesheets record hours per client per day, not per object; they were not used as per-object effort actuals.",
     "No conventional (manual) effort baselines exist in project records; baselines are rubric estimates by work type and complexity.",
     "ATC: no import, activation, syntax check or ATC re-run of the 51 corrected includes is recorded; the 847-finding figure comes from the work log, not from an export in the repository.",
@@ -105,7 +104,7 @@ gaps = [
 ]
 highlights = [
     f"{all_commits} commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about {round(all_commits / len(days))} commits per active day.",
-    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on {len(days)} active days including {weekend} weekends; peak day {peak.strftime('%d/%m')} with {len(byday[peak])} commits over {spans[peak]:.1f} hours.",
+    f"Three engagements in parallel - PAL, ONGC Videsh (OVL) and Astral (KPMG) - on {len(days)} active days including {weekend} weekends; peak day {peak.strftime('%d/%m')} with {len(byday[peak])} commits over {spans[peak]:.1f} hours.",
     "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
     "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
     f"{len(objs)} custom SAP objects built, enhanced or analysed; {len(ts_docs)} technical specifications; {issue_entries} issue-log entries; {code_lines:,} lines of code written.",

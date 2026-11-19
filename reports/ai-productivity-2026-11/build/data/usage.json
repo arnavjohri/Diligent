@@ -2,7 +2,7 @@
  "metrics": [
   [
    "Total commits in the repository, 19/08 - 19/11/26 (all branches)",
-   869,
+   870,
    "git rev-list --all --count"
   ],
   [
@@ -27,7 +27,7 @@
   ],
   [
    "Commits made after 19:00 or before 07:00 IST",
-   33,
+   34,
    "git commit timestamps (IST)"
   ],
   [
@@ -67,12 +67,12 @@
   ],
   [
    "Commits in the repository (all branches, non-merge)",
-   798,
+   799,
    "git log --all --no-merges"
   ],
   [
    "  of which AI co-authored or AI-authored",
-   728,
+   729,
    "Co-Authored-By: Claude trailer or author 'Claude'"
   ],
   [
@@ -137,8 +137,8 @@
   ]
  ],
  "highlights": [
-  "869 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
-  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and T&G - on 58 active days including 6 weekends; peak day 22/10 with 68 commits over 12.5 hours.",
+  "870 commits in under four months (git history 19/08 - 19/11/26), after 30 Claude Code sessions with 557 prompts from 20/07/26 - about 15 commits per active day.",
+  "Three engagements in parallel - PAL, ONGC Videsh (OVL) and Astral (KPMG) - on 58 active days including 6 weekends; peak day 22/10 with 68 commits over 12.5 hours.",
   "ATC (ONGC): 847 assigned findings remediated through 205 correction blocks in 51 includes across 14 packages, with 76 reusable correction patterns.",
   "JIB Status management dashboard for ONGC Videsh: from requirement (03/11/26) to written client confirmation (17/11/26) in 11 working days.",
   "312 custom SAP objects built, enhanced or analysed; 17 technical specifications; 371 issue-log entries; 150,384 lines of code written."
@@ -170,7 +170,6 @@
   ]
  ],
  "gaps": [
-  "No document, issue log, commit or timesheet in the repository names a project 'T&G'.",
   "Client timesheets record hours per client per day, not per object; they were not used as per-object effort actuals.",
   "No conventional (manual) effort baselines exist in project records; baselines are rubric estimates by work type and complexity.",
   "ATC: no import, activation, syntax check or ATC re-run of the 51 corrected includes is recorded; the 847-finding figure comes from the work log, not from an export in the repository.",

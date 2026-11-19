@@ -4,7 +4,7 @@ const fs = require("fs");
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, ShadingType,
   HeadingLevel, AlignmentType, LevelFormat, PageOrientation, BorderStyle, Footer, Header,
-  PageNumber, TableOfContents, VerticalAlign, PageBreak, TableLayoutType,
+  PageNumber, TableOfContents, VerticalAlign, PageBreak, TableLayoutType, ImageRun,
 } = require("docx");
 
 const [, , inPath, outPath] = process.argv;
@@ -172,6 +172,13 @@ function block(b, orientation) {
       return [kpis(b, orientation), para("", { after: 120 })];
     case "toc":
       return [new TableOfContents("Contents", { hyperlink: true, headingStyleRange: "1-2" })];
+    case "image":
+      return [
+        new Paragraph({ spacing: { before: 120, after: 40 }, alignment: AlignmentType.CENTER, keepNext: true,
+          children: [new ImageRun({ type: "png", data: fs.readFileSync(b.path), transformation: { width: b.w, height: b.h },
+                                    altText: { title: b.alt || "chart", description: b.alt || "chart", name: b.alt || "chart" } })] }),
+        para(b.caption || "", { size: 15, color: MUTED, after: 160, align: AlignmentType.CENTER }),
+      ];
     case "pagebreak":
       return [new Paragraph({ children: [new PageBreak()] })];
     case "cover":

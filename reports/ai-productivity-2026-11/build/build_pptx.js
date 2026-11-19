@@ -185,7 +185,7 @@ async function icon(Comp, color, size = 256) {
   badge(s, ic.chart, 0.5, 3.0, 0.62, HEX.accent2, "Portfolio");
   tb(s, "Same method across the whole portfolio", { x: 1.3, y: 2.98, w: 8.2, h: 0.32, fontSize: 15, bold: true, color: C.text2 });
   tb(s, [
-    { text: `${S.n_counted} completed use cases: ${h(S.saved)} h (${md(S.saved)} man-days) saved, ${pc(S.red)} effort reduction across PAL, ONGC and T&G`, options: { bullet: true, breakLine: true } },
+    { text: `${S.n_counted} completed use cases: ${h(S.saved)} h (${md(S.saved)} man-days) saved, ${pc(S.red)} effort reduction across PAL, ONGC and Astral (KPMG)`, options: { bullet: true, breakLine: true } },
     { text: `${COMMITS} commits in under four months; ${USAGE_LINES} lines of code; three projects in parallel`, options: { bullet: true, breakLine: true } },
     { text: "Timeline benefit reported separately from hours: 11 working days from requirement to client confirmation", options: { bullet: true } },
   ], { x: 1.3, y: 3.35, w: 8.2, h: 1.5, fontSize: 13, paraSpaceAfter: 5 });
@@ -214,7 +214,7 @@ async function icon(Comp, color, size = 256) {
   const blocks = [
     ["Principal achievement", `A client-confirmed management dashboard in 11 working days at ${pc(J.red)} less effort, one of ${S.n_counted} AI-assisted use cases.`],
     ["Lessons learned", "Fresh source and production samples first; one object at a time with activation feedback; record every release constraint; claim only what the system confirms."],
-    ["Replicate across PAL · ONGC · T&G", "PAL: finance workflow and upload tiles on the same loop. ONGC: further dashboard cards on the cube pattern. T&G: forecasting and credit-management analytics."],
+    ["Replicate across PAL · ONGC · Astral", "PAL: finance workflow and upload tiles on the same loop. ONGC: further dashboard cards on the cube pattern. Astral (KPMG): forecasting and credit-management analytics."],
     ["Next steps", "Roll the AI delivery toolkit out to the team; extend the dashboard pattern; apply the ATC patterns to the next remediation wave; log effort per object."],
   ];
   blocks.forEach((b, i) => {
@@ -222,7 +222,7 @@ async function icon(Comp, color, size = 256) {
     tb(s, b[0], { x, y, w: 4.2, h: 0.35, fontSize: 15, bold: true, color: C.accent2 });
     tb(s, b[1], { x, y: y + 0.4, w: 4.2, h: 1.3, fontSize: 13, color: C.background1 });
   });
-  s.addNotes("Portfolio figures: AI_Use_Case_Register.xlsx, Dashboard. T&G = Astral Limited / Project UDAY, delivered through KPMG.");
+  s.addNotes("Portfolio figures: AI_Use_Case_Register.xlsx, Dashboard. Astral (KPMG) = Astral Limited / Project UDAY, delivered through KPMG.");
 
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);

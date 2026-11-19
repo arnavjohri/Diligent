@@ -16,11 +16,11 @@ load = lambda f: json.load(open(os.path.join(D, f)))
 # ---------------------------------------------------------------- assumptions
 # Reporting project for each evidence-based client. Astral/UDAY (via KPMG) is
 # not one of the three projects named in the request and the repository never
-# mentions "T&G": it stays in its own bucket until Arnav confirms the mapping.
+# Projects confirmed by Arnav 19/11/26: PAL, OVL and Astral (KPMG).
 PROJECT_MAP = {
     "PAL": "PAL",
     "ONGC": "ONGC (OVL)",
-    "ASTRAL": "T&G",
+    "ASTRAL": "Astral (KPMG)",
     "CROSS": "Common (all projects)",
     "PENDING": "ONGC (OVL)",
     "GAIL": "Other (GAIL)",

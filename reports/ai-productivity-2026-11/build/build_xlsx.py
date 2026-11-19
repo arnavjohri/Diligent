@@ -141,7 +141,7 @@ for i, k in enumerate(D["project_map"]):
     put(A, rr, 8, basis[k], font=f_sub)
 MAPK = f"'Effort Assumptions'!$A${r + 2}:$A${r + 1 + len(D['project_map'])}"
 MAPV = f"'Effort Assumptions'!$C${r + 2}:$C${r + 1 + len(D['project_map'])}"
-A.cell(r + 2 + 2, 3).comment = Comment("Change to T&G (or another name) if this engagement is reported under that project. "
+A.cell(r + 2 + 2, 3).comment = Comment("Reporting project for the Astral Limited / Project UDAY work delivered through KPMG. "
                                        "Dashboard, project sheets and totals follow.", "Register")
 
 r = 45
@@ -199,7 +199,7 @@ cols = ["Sr. No.", "Use case ID", "Evidence-based client", "Reporting project", 
         "Delivery impact", "Quality improvement", "Completion status", "Savings tier", "Source evidence", "Confidence",
         "Effort basis", "Open items / missing information", "Repository folder"]
 widths = [6, 9, 18, 16, 34, 30, 13, 18, 40, 40, 13, 52, 36, 9, 7, 10, 7, 10, 9, 9, 9, 9, 10, 8, 10, 10, 10, 11, 26, 34, 18, 20, 34, 20, 28, 34, 22]
-title(M, "Master AI use-case register - PAL | ONGC (OVL) | T&G and other engagements",
+title(M, "Master AI use-case register - PAL | ONGC (OVL) | Astral (KPMG)",
       f"{len(ROWS)} use cases from the repository (git history 19/08-19/11/26, issue logs, work log 03-31/08, Claude Code handoff 20/07-15/08). "
       "Effort figures are formula-driven (columns R-AB) from the assumptions sheet.")
 header(M, 4, cols, widths)
@@ -249,7 +249,7 @@ RNG = lambda col: f"{MR}!${col}$5:${col}${last}"
 DB = wb.create_sheet("Dashboard", 0)
 title(DB, "Consolidated productivity dashboard - AI-assisted SAP ABAP delivery",
       "All figures are formulas over the Master Register (method: Effort Assumptions). Period 20/07/26 - 19/11/26.")
-projs = ["PAL", "ONGC (OVL)", "T&G", "Common (all projects)"]
+projs = ["PAL", "ONGC (OVL)", "Astral (KPMG)", "Common (all projects)"]
 header(DB, 4, ["KPI"] + projs + ["Overall"], [50, 14, 14, 14, 16, 14])
 kp = [
     ("AI-assisted use cases (counted)", "COUNTIFS({P},{p},{X},\"Yes\")", "0"),
@@ -287,7 +287,6 @@ for i, (lab, frm, fmt) in enumerate(kp):
 put(DB, 22, 1, "Delivery highlights", font=f_bold)
 notes = [
     "ATC (ONGC): 205 marked correction blocks in 51 includes against 847 assigned findings - packaged, not yet imported / re-run in ATC; 46 likely activation failures flagged by the 23/08 audit.",
-    "T&G: no repository evidence names this project. If the Astral (UDAY) engagement is reported as T&G, set it in Effort Assumptions section 4.",
     "Not quantified - AI-era deliveries with no session or time record: ZF01_EXCHANGE_RATE (CPI -> TCURR interface, confirmed working), ZMMME35K release fix (confirmed working), ZMMIMS GeM invoice F4, ZSD_SCHEME (Pipes) module pool.",
     "Recurring automation benefits: frequency and minutes per run are not evidenced; enter them on the Automation Benefits sheet to compute (kept separate from development savings).",
     "Delivery time: 70 use cases over 82 working days (20/07-19/11/26); 58 active AI-session days in the repository period; examples of turnaround on the project sheets (column Delivery impact).",
@@ -355,7 +354,7 @@ def project_sheet(name, keys, note):
 
 project_sheet("PAL", ["PAL"], "PAL (Philippine Airlines): pal/ folders plus the FB70 credit-memo approval workflow filed under kpmg/ (PAL AP mailbox, DS4).")
 project_sheet("ONGC (OVL)", ["ONGC", "PENDING"], "ONGC Videsh: ovl/ folders, ATC remediation, OVL objects filed under kpmg/ and tools/, and the August work-log items.")
-project_sheet("T&G", ["ASTRAL"], "T&G: Astral Limited / Project UDAY, delivered through KPMG - forecasting, credit management, TDS, purchasing and MM reporting.")
+project_sheet("Astral (KPMG)", ["ASTRAL"], "Astral Limited / Project UDAY, delivered through KPMG - forecasting, credit management, TDS, purchasing and MM reporting.")
 project_sheet("Common (all projects)", ["CROSS"], "Developer tools and the AI delivery toolkit used on every engagement.")
 
 # ================================================================ ATC
@@ -445,7 +444,7 @@ for i, m in enumerate(USAGE["monthly"]):
     for j, v in enumerate(m, 1):
         put(U, r + 2 + i, j, v, fmt=NUM if j == 2 else "0")
 
-order = ["Dashboard", "Master Register", "PAL", "ONGC (OVL)", "T&G", "Common (all projects)", "ATC Remediation", "Automation Benefits",
+order = ["Dashboard", "Master Register", "PAL", "ONGC (OVL)", "Astral (KPMG)", "Common (all projects)", "ATC Remediation", "Automation Benefits",
          "Effort Assumptions", "AI Usage", "Evidence References"]
 wb._sheets = [wb[n] for n in order]
 for ws in wb.worksheets:
