@@ -139,6 +139,17 @@ TYPES: BEGIN OF ty_itd,
          clos   TYPE ty_amt,
        END OF ty_itd.
 
+TYPES: BEGIN OF ty_stat,
+         projid  TYPE zfi_pcx_projid,
+         projnm  TYPE zfi_pcx_projnm,
+         bu      TYPE zfi_pcx_bu,
+         entered TYPE c LENGTH 3,
+         prior   TYPE ty_amt,
+         total   TYPE ty_amt,
+         aenam   TYPE aenam,
+         aedat   TYPE aedat,
+       END OF ty_stat.
+
 TYPES: BEGIN OF ty_col,
          name TYPE ty_name,
          text TYPE ty_text,
@@ -166,6 +177,7 @@ DATA: gs_proj   TYPE zfi_pcx_proj,
       gt_his    TYPE STANDARD TABLE OF ty_his WITH DEFAULT KEY,
       gt_cat    TYPE STANDARD TABLE OF ty_cat WITH DEFAULT KEY,
       gt_itd    TYPE STANDARD TABLE OF ty_itd WITH DEFAULT KEY,
+      gt_stat   TYPE STANDARD TABLE OF ty_stat WITH DEFAULT KEY,
       gt_col    TYPE STANDARD TABLE OF ty_col WITH DEFAULT KEY,
       gv_fytxt  TYPE c LENGTH 7,
       gv_asat   TYPE i,
@@ -185,7 +197,8 @@ PARAMETERS: r_cum  RADIOBUTTON GROUP vw DEFAULT 'X',
             r_ent  RADIOBUTTON GROUP vw,
             r_cat  RADIOBUTTON GROUP vw,
             r_itdu RADIOBUTTON GROUP vw,
-            r_itdi RADIOBUTTON GROUP vw.
+            r_itdi RADIOBUTTON GROUP vw,
+            r_stat RADIOBUTTON GROUP vw.
 SELECTION-SCREEN END OF BLOCK b02.
 
 AT SELECTION-SCREEN.
@@ -204,7 +217,7 @@ FORM run.
         lv_fy2 TYPE n LENGTH 2.
 
   CLEAR: gt_proj, gt_per, gt_cap, gt_fyp, gs_fy, gt_usd, gt_inr, gt_ent,
-         gt_cum, gt_his, gt_cat, gt_itd, gt_col.
+         gt_cum, gt_his, gt_cat, gt_itd, gt_stat, gt_col.
   lv_fy2   = ( p_gjahr + 1 ) MOD 100.
   gv_fytxt = |{ p_gjahr }-{ lv_fy2 }|.
   gv_asat  = p_perno.
@@ -238,6 +251,8 @@ FORM run.
       PERFORM view_itd USING abap_false.
     WHEN r_itdi.
       PERFORM view_itd USING abap_true.
+    WHEN r_stat.
+      PERFORM view_stat.
   ENDCASE.
 ENDFORM.
 
@@ -879,6 +894,56 @@ FORM view_itd USING iv_inr TYPE abap_bool.
     gv_title = |Capex inception to date, USD million, FY { gv_fytxt }|.
   ENDIF.
   PERFORM show CHANGING gt_itd.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form view_stat - who has entered the selected fortnight, who has not
+*&---------------------------------------------------------------------*
+FORM view_stat.
+  DATA: ls_proj TYPE zfi_pcx_proj,
+        ls_cap  TYPE zfi_pcx_capex,
+        ls_cum  TYPE ty_cum,
+        ls_stat TYPE ty_stat,
+        lv_pn   TYPE zfi_pcx_perno,
+        lv_text TYPE ty_text.
+
+  lv_pn = gv_asat.
+  LOOP AT gt_proj INTO ls_proj.
+    CLEAR: ls_stat, ls_cum.
+    READ TABLE gt_cum INTO ls_cum WITH KEY projid = ls_proj-projid.
+    IF sy-subrc <> 0.
+      CLEAR ls_cum.
+    ENDIF.
+    ls_stat-projid = ls_proj-projid.
+    ls_stat-projnm = ls_proj-projnm.
+    ls_stat-bu     = ls_proj-bu.
+    ls_stat-prior  = ls_cum-prior.
+    ls_stat-total  = ls_cum-total.
+    READ TABLE gt_cap INTO ls_cap WITH KEY projid = ls_proj-projid perno = lv_pn BINARY SEARCH.
+    IF sy-subrc = 0.
+      ls_stat-entered = 'Yes'.
+      ls_stat-aenam   = ls_cap-aenam.
+      ls_stat-aedat   = ls_cap-aedat.
+    ELSE.
+      ls_stat-entered = 'No'.
+    ENDIF.
+    APPEND ls_stat TO gt_stat.
+  ENDLOOP.
+* projects still to be entered come first
+  SORT gt_stat STABLE BY entered bu.
+
+  CLEAR gt_col.
+  PERFORM col USING 'PROJID'  'Project'.
+  PERFORM col USING 'PROJNM'  'Project Name'.
+  PERFORM col USING 'BU'      'Business Unit'.
+  PERFORM col USING 'ENTERED' 'Entered'.
+  PERFORM col USING 'PRIOR'   'Prior Reported Capex'.
+  PERFORM col USING 'TOTAL'   'Cumulative Capex'.
+  PERFORM col USING 'AENAM'   'Entered By'.
+  PERFORM col USING 'AEDAT'   'Entered On'.
+  PERFORM per_text USING gv_asat abap_false CHANGING lv_text.
+  gv_title = |Entry status of the fortnight to { lv_text }|.
+  PERFORM show CHANGING gt_stat.
 ENDFORM.
 
 *&---------------------------------------------------------------------*

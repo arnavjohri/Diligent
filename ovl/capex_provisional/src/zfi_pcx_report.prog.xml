@@ -87,6 +87,12 @@
      <ENTRY>Inception to Date, INR Crore</ENTRY>
      <LENGTH>36</LENGTH>
     </item>
+    <item>
+     <ID>S</ID>
+     <KEY>R_STAT</KEY>
+     <ENTRY>Entry Status of the Fortnight</ENTRY>
+     <LENGTH>37</LENGTH>
+    </item>
    </TPOOL>
   </asx:values>
  </asx:abap>

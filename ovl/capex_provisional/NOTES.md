@@ -7,7 +7,8 @@ Queries issued (`ASSUMPTIONS_AND_QUERIES.md`, Word copy
 `FSD/CAPEX_PROVISIONAL_Assumptions_and_Queries.docx`) and object list proposed (below).
 **20/11/26, Arnav: assume and build, everything as an abapGit ZIP.** The "assumed if no answer"
 column of the queries is the build basis. **Built, not imported, not tested:** `ZFI_PCX.zip`
-(10 domains, 27 data elements, 6 tables, 2 programs). TS: `TS_ZFI_PCX.md` / `.docx`.
+(10 domains, 27 data elements, 6 tables, 3 programs — `ZFI_PCX_ADMIN` and the entry-status view
+added the same day on Arnav's "what the business will need"). TS: `TS_ZFI_PCX.md` / `.docx`.
 
 ## What the workbook asks for
 
@@ -78,7 +79,8 @@ Why an editable `CL_GUI_ALV_GRID` in an executable program, and not the alternat
 
 ## Objects — built 20/11/26, all in `ZFI_PCX.zip` (Arnav: "create everything, I will use abapGit standalone")
 
-47 files in `src/`, generated DDIC (`build/build_ddic.py`) plus two hand-written programs. No DEVC
+49 files in `src/`, generated DDIC (`build/build_ddic.py`) and program XML (`build/build_prog_xml.py`)
+plus three hand-written programs. No DEVC
 file: the package is chosen at import. **Nothing here has been activated or run.**
 
 | # | Object | Type | Purpose |
@@ -92,7 +94,8 @@ file: the package is chosen at import. **Nothing here has been activated or run.
 | 7 | `ZFI_PCX_FYPROJ` | TABL | per year and project: Capex BE, RE, opening ITD and prior-year Capex in USD and INR |
 | 8 | `ZFI_PCX_CAPEX` | TABL | entered cumulative EWIP / DWIP / CWIP / Other per year, fortnight, project; changed by / on / at |
 | 9 | `ZFI_PCX_ENTRY` (624 lines) | PROG | BU entry: editable grid, pre-fill, checks, colours, Save button in the grid toolbar, correction mode |
-| 10 | `ZFI_PCX_REPORT` (935 lines) | PROG | eight views: cumulative by category, cumulative per fortnight, per period USD, per period INR, by entity, by category INR, ITD USD, ITD INR |
+| 10 | `ZFI_PCX_REPORT` (1000 lines) | PROG | nine views: cumulative by category, cumulative per fortnight, per period USD, per period INR, by entity, by category INR, ITD USD, ITD INR, **entry status of the fortnight** (who has entered, who has not) |
+| 11 | `ZFI_PCX_ADMIN` (444 lines) | PROG | Corporate Budgeting: generate the 24 fortnights of a year (15th and month-end, April to March), freeze the open fortnight and open the next in one step (popup says how many projects have no entry), freeze / reopen one fortnight, save the TTA rate of a fortnight; ends with the calendar and projects entered per fortnight. Activity 70 |
 
 Changed against the 20/11 proposal, and why:
 
@@ -138,14 +141,17 @@ column uses the 15-day rate (`" ASSUMPTION` in the code); the total row is calcu
 1. `ZABAPGIT_STANDALONE` → New Offline Repo → package (new or existing) → Import `ZFI_PCX.zip` → Pull.
    Check first that no `ZFI_PCX*` object exists other than what was keyed by hand.
 2. SE54 / SE11 → Table Maintenance Generator for `ZFI_PCX_ENT`, `ZFI_PCX_PROJ`, `ZFI_PCX_FY`,
-   `ZFI_PCX_PERIOD`, `ZFI_PCX_FYPROJ` (one step). Not for `ZFI_PCX_CAPEX`.
+   `ZFI_PCX_FYPROJ` (one step). Not for `ZFI_PCX_CAPEX`; `ZFI_PCX_PERIOD` is run from `ZFI_PCX_ADMIN`
+   and needs none.
 3. SU20: field `ZPCX_BU` (data element `ZFI_PCX_BU`). SU21: object `ZFI_PCX` with `ZPCX_BU` and `ACTVT`
    (02 enter, 03 display, 70 correct a frozen fortnight). PFCG roles. **Until this exists nobody passes
    the check, in either program.**
 4. SM30 data: `ZFI_PCX_ENT` and `ZFI_PCX_PROJ` from `load/*.txt` (tab-separated, field order of the
-   table without client; BU column is empty — query 11); `ZFI_PCX_PERIOD` 24 rows for the year with
-   cutoff dates and rates, status `O` on the one open fortnight; `ZFI_PCX_FY`; `ZFI_PCX_FYPROJ`.
-5. SE93: report transactions for the two programs (suggested `ZFI_PCX01`, `ZFI_PCX02`).
+   table without client; BU column is empty — query 11); `ZFI_PCX_FY`; `ZFI_PCX_FYPROJ`. Calendar:
+   `ZFI_PCX_ADMIN` → *Generate the 24 Fortnights*, then *Freeze Open, Open Next* opens fortnight 01;
+   the rate per fortnight with *Save TTA Rate of Fortnight*.
+5. SE93: report transactions for the three programs (suggested `ZFI_PCX01` entry, `ZFI_PCX02` report,
+   `ZFI_PCX03` fortnight control).
 
 Load sheets (`build/build_ddic.py <workbook>` rebuilds them): 17 entities, 71 projects. Three projects
 sit in two entity formulas of the workbook (GNPOC Sudan, Namibia PEL 0037, Block-32 Israel) — kept

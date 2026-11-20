@@ -2,7 +2,7 @@
 
 ## 1. Document control
 
-Version 1.0 · Arnav Johri · 20.11.2026 · Project OVL · Related FS: `SAP_Automation_Provisional_Capex_Process_-V3.xlsx` (received 18.11.2026) · Queries: `CAPEX_PROVISIONAL_Assumptions_and_Queries.docx` · Status: built, not yet imported or tested.
+Version 1.1 · Arnav Johri · 20.11.2026 · Project OVL · Related FS: `SAP_Automation_Provisional_Capex_Process_-V3.xlsx` (received 18.11.2026) · Queries: `CAPEX_PROVISIONAL_Assumptions_and_Queries.docx` · Status: built, not yet imported or tested.
 
 ## 2. Purpose
 
@@ -18,6 +18,7 @@ Corporate Budgeting collects provisional Capex from the Business Units every for
 | `ZFI_PCX_CAPEX` | Table, written by the entry program | New | at import | `<TR>` |
 | `ZFI_PCX_ENTRY` | Executable program | New | at import | `<TR>` |
 | `ZFI_PCX_REPORT` | Executable program | New | at import | `<TR>` |
+| `ZFI_PCX_ADMIN` | Executable program | New | at import | `<TR>` |
 
 Field lists of all domains, data elements and tables: `ddic/01_domains_data_elements.md`.
 
@@ -26,11 +27,12 @@ Field lists of all domains, data elements and tables: `ddic/01_domains_data_elem
 ### 4.1 Manual steps, in order
 
 1. `ZABAPGIT_STANDALONE`: new offline repository on the chosen package, import `ZFI_PCX.zip`, pull, activate.
-2. SE11, Table Maintenance Generator (one step, function group of the same name) for `ZFI_PCX_ENT`, `ZFI_PCX_PROJ`, `ZFI_PCX_FY`, `ZFI_PCX_PERIOD`, `ZFI_PCX_FYPROJ`.
+2. SE11, Table Maintenance Generator (one step, function group of the same name) for `ZFI_PCX_ENT`, `ZFI_PCX_PROJ`, `ZFI_PCX_FY`, `ZFI_PCX_FYPROJ`. The calendar table `ZFI_PCX_PERIOD` is maintained with `ZFI_PCX_ADMIN`.
 3. SU20: authorisation field `ZPCX_BU` with data element `ZFI_PCX_BU`. SU21: object `ZFI_PCX` with fields `ZPCX_BU` and `ACTVT`, permitted activities 02 (enter), 03 (display), 70 (correct a frozen fortnight). PFCG: roles per Business Unit.
-4. SM30: entities and projects from the load sheets in `load/`; Business Unit per project; 24 calendar rows per year in `ZFI_PCX_PERIOD` with cutoff date and rate; BE and RE rate in `ZFI_PCX_FY`; budgets and opening ITD in `ZFI_PCX_FYPROJ`.
-5. SE93: report transactions `ZFI_PCX01` (program `ZFI_PCX_ENTRY`) and `ZFI_PCX02` (program `ZFI_PCX_REPORT`).
-6. Each fortnight: Corporate Budgeting sets status `F` on the closed fortnight and `O` on the next one in `ZFI_PCX_PERIOD`.
+4. SM30: entities and projects from the load sheets in `load/`; Business Unit per project; BE and RE rate in `ZFI_PCX_FY`; budgets and opening ITD in `ZFI_PCX_FYPROJ`.
+5. SE93: report transactions `ZFI_PCX01` (program `ZFI_PCX_ENTRY`), `ZFI_PCX02` (program `ZFI_PCX_REPORT`), `ZFI_PCX03` (program `ZFI_PCX_ADMIN`).
+6. Once a year: `ZFI_PCX_ADMIN`, *Generate the 24 Fortnights*.
+7. Each fortnight: `ZFI_PCX_ADMIN`, *Save TTA Rate of Fortnight*, then *Freeze Open, Open Next*.
 
 ### 4.2 Program ZFI_PCX_ENTRY
 
@@ -57,8 +59,21 @@ Field lists of all domains, data elements and tables: `ddic/01_domains_data_elem
 | Capex by Entity, INR Crore | Capex INR, Tab 5 | INR rows added up per entity of the project master; entities without project shown with zero; utilisation from the totals. |
 | Capex by Category, INR Crore | Capex INR, Tab 6 | Category figures x one factor (INR to date / USD to date, 5 decimals); difference to the INR figure to date. |
 | Inception to Date, USD / INR | Capex USD Tab 3, Capex INR Tab 7 | Opening ITD + prior-year Capex + quarters of the current year. |
+| Entry Status of the Fortnight | not in the workbook | Per project: entered in the selected fortnight yes / no, by whom and when; projects not yet entered first. |
 
-Units: `FORM read_data`, `build_base`, `finish_wide`, `add_wide`, `total_wide`, `cols_wide`, `view_cum`, `view_his`, `view_ent`, `view_cat`, `view_itd`, `show`.
+Units: `FORM read_data`, `build_base`, `finish_wide`, `add_wide`, `total_wide`, `cols_wide`, `view_cum`, `view_his`, `view_ent`, `view_cat`, `view_itd`, `view_stat`, `show`.
+
+### 4.4 Program ZFI_PCX_ADMIN
+
+| Action (radio button) | What it does |
+|---|---|
+| Show the Calendar | The 24 fortnights with cutoff date, status, rate and number of projects entered. No authorisation needed beyond the transaction. |
+| Generate the 24 Fortnights | `FORM generate`: 15th and last day of each month, April of the year to March of the next; existing rows are kept. |
+| Freeze Open, Open Next | `FORM next_fortnight`: popup with the number of projects without entry, then status F on the open fortnight and O on the next. With nothing open it opens the first fortnight that is not frozen. |
+| Freeze / Reopen This Fortnight | `FORM set_status`: a fortnight is reopened only while no other one is open. |
+| Save TTA Rate of Fortnight | `FORM set_rate`. |
+
+All changing actions need activity 70 of object `ZFI_PCX` and lock the calendar of the year.
 
 ## 5. Requirement mapping
 
@@ -88,6 +103,9 @@ Units: `FORM read_data`, `build_base`, `finish_wide`, `add_wide`, `total_wide`, 
 | 10 | User without authorisation for a Business Unit | Its projects left out with a message | |
 | 11 | Report, each of the eight views, as at 02 | Figures agree with a hand calculation from the workbook formulas | |
 | 12 | Report for a year with fewer than 24 calendar rows | Message, no list | |
+| 13 | Admin: generate the calendar for 2027 | 24 rows, 15.04.2027 to 31.03.2028, 29.02.2028 for fortnight 22 | |
+| 14 | Admin: Freeze Open, Open Next with 5 projects not entered | Popup names 5; after Yes the old fortnight is F, the next is O | |
+| 15 | Report: Entry Status of the Fortnight | The 5 projects listed first with No | |
 
 ## 7. Open points
 
