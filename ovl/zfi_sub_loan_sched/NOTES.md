@@ -1,7 +1,8 @@
 # ovl/zfi_sub_loan_sched - Subsidiaries Loan and Deemed Investment Schedule (custom analytical query)
 
-**Client:** OVL · **Filed:** 20/11/26 · **Status:** design only, nothing built. Waiting for the answers to
-`FSD/ZFI_SLDI_Assumptions_and_Queries.docx` and approval of the object list below.
+**Client:** OVL · **Filed:** 20/11/26 · **Status 20/11/26 (later):** Arnav: build on the assumptions, ship by abapGit ZIP. All objects written, **none imported or
+activated yet**. The queries in `FSD/ZFI_SLDI_Assumptions_and_Queries.docx` were not sent to functional; every assumed
+answer is an `ASSUMPTION:` line in the sources.
 **Requirement:** `docs/SAP_FIORI_-_Subsidiaries_Loan_and_Deemed_Investment_Schedule_-_Annual_FY26.xlsx`
 
 ## What it is
@@ -23,7 +24,7 @@ Yes, as bank reval / PBA / JIB: custom cube, query built in the app. Not on the 
 a query cannot (a) put two G/Ls on one row or one G/L on two rows, (b) split a movement by item text,
 (c) take open items at two different key dates. All three go into the data source.
 
-## Proposed objects (dependency = creation order) - NOT approved yet
+## Objects (dependency = creation order) - built 20/11/26
 
 | # | Object | Type | Purpose | Depends on |
 |---|---|---|---|---|
@@ -58,3 +59,18 @@ Not yet proven: passing view parameters into a table function.
 2. RACCT 100125, GJAHR 2025: is GKONT filled on the conversion lines (100618 on the conversion to loan)?
 3. RACCT 100115: is AUGDT filled on cleared lines, and do old years (2006 onwards) exist as line items
    with SGTXT? If history exists only as period 000 rows, the open-item basis cannot be rebuilt from ACDOCA.
+
+## Shipping (20/11/26)
+
+`src/` = 2 DOMA, 7 DTEL, 2 TABL, 2 DDLS, 1 CLAS, no DEVC (package chosen at import). Two ZIPs, same offline repo:
+
+1. `ZFI_SLDI_1_of_2_without_cube.zip` - everything except `ZI_SLDI_CUBE`. Pull, activate.
+2. `ZFI_SLDI_2_of_2_full.zip` - same plus the cube. Pull once the class is active (abapGit activates DDLS
+   before CLAS, and a view on a table function does not activate before its class - PBA, 10/11/26).
+
+XML shapes copied from bank reval (DOMA/DTEL/TABL/DDLS, pulled 28/10/26), `zdo_mts_mto` (fixed values) and
+forecast paints (CLAS). **Not proven:** DDLS `SOURCE_TYPE = F` for the table function, and a CLAS without
+`CLSCCINCL`. If either fails, paste `src/zi_sldi_item_tf.ddls.asddls` / `src/zcl_sldi_item_tf.clas.abap` in ADT.
+Then by hand: SE54 for both tables, entries from `ZFI_SLDI_load.txt`, C1 release of the cube, the three queries.
+
+Data elements reuse standard domains NUMC3, NUMC2, TEXT60, CHAR50, XFELD - assumed present (SE11 check).

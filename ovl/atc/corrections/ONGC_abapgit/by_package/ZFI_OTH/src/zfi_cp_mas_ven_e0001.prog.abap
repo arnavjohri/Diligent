@@ -862,6 +862,18 @@ FORM zz_s4_bseg_zlspr USING p_bukrs p_belnr p_gjahr p_buzei p_zlspr.
   REFRESH lt_acchg. CLEAR ls_acchg.
   ls_acchg-fdname = 'ZLSPR'. ls_acchg-newval = p_zlspr.
   APPEND ls_acchg TO lt_acchg.
-  CALL FUNCTION 'FI_DOCUMENT_CHANGE' EXPORTING i_bukrs = p_bukrs i_belnr = p_belnr i_gjahr = p_gjahr
-       i_buzei = p_buzei TABLES t_acchg = lt_acchg EXCEPTIONS OTHERS = 0.
+*BOC By SAP_ABAP on 20/11/26
+* ST22 CALL_FUNCTION_PARM_MISSING / CX_SY_DYN_CALL_PARAM_MISSING in ZFIAPP:
+* the TABLES parameter name was misspelled (T_ACCHG), so the mandatory
+* T_ACCCHG table never reached FI_DOCUMENT_CHANGE and the call dumped
+* instead of changing the payment block.
+* ASSUMPTION: FI_DOCUMENT_CHANGE applies NEWVAL with OLDVAL left blank.
+* Not verified - check FORM DOCUMENT_CHANGE (SE37) for T_ACCCHG-OLDVAL.
+*  CALL FUNCTION 'FI_DOCUMENT_CHANGE' EXPORTING i_bukrs = p_bukrs i_belnr = p_belnr i_gjahr = p_gjahr
+*       i_buzei = p_buzei TABLES t_acchg = lt_acchg EXCEPTIONS OTHERS = 0.
+  CALL FUNCTION 'FI_DOCUMENT_CHANGE'
+    EXPORTING i_bukrs = p_bukrs i_belnr = p_belnr i_gjahr = p_gjahr i_buzei = p_buzei
+    TABLES    t_accchg = lt_acchg
+    EXCEPTIONS OTHERS = 0.
+*EOC By SAP_ABAP on 20/11/26
 ENDFORM.

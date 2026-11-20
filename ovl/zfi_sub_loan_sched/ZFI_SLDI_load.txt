@@ -1,0 +1,31 @@
+Entries for SM30 after the SE54 maintenance dialogs exist. G/L accounts are stored 10 digits (SM30 pads them).
+Words marked (?) are ASSUMED from the row names - check them against real item texts in FBL3N before loading.
+
+ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary                                Prov
+               OVL   100121   001                      L      01   Imperial Energy Limited
+               OVL   100133   001                      L      02   Loan to OVRL India Ltd
+               OVL   100115   001                      L      03   ONGC Narmada Limited
+               OVL   100611   001                      L      04   ONGC Videsh Singapore Pte. Ltd
+               OVL   100136   001                      L      04   ONGC Videsh Singapore Pte. Ltd
+               OVL   100618   001                      L      05   Loan to BREML
+               OVL   91905    001  SINGAPORE (?)       I      03   ONGC Videsh Singapore Pte. Ltd
+               OVL   91905    002  OVSL (?)            I      03   ONGC Videsh Singapore Pte. Ltd
+               OVL   91905    999                      I      01   Imperial Energy Limited
+               OVL   391908   001  BREML (?)           I      04   BREML
+               OVL   391908   999                      I      02   OVRL India Ltd
+               OVL   100122   001                      D      01   Carabobo One AB
+               OVL   100125   001                      D      02   BREML
+               OVL   80538    001                      D      03   OVRL India Limited
+               OVL   80541    001                      D      04   OVRL India Limited - Interest Component
+               OVL   <provision G/L - not named in the workbook>  001   L  03  ONGC Narmada Limited      X
+
+  Seq 999 with a blank word is the "everything else" line of a shared G/L. Without it, unmatched lines show
+  on row 99 Unassigned.
+
+ZFI_SLDI_MOV   CoCd  Sched  Seq  Item Text Contains  D/C  Movement Column
+               OVL   D      010  PREFERENCE (?)      H    4  Conversion to preference shares
+               OVL   D      020  EQUITY (?)          H    3  Conversion to equity shares
+               OVL   D      030  LOAN (?)            H    5  Conversion to loan
+
+  No entry needed for the rest: a debit is column 1, a credit on Loan / Interest is column 2, a credit on
+  Deemed Investment that matches no word is Unclassified.
