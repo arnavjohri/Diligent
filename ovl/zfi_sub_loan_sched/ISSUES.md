@@ -4,3 +4,4 @@
 |---|---|---|---|---|---|
 | 20/11/26 | Requirement workbook received: can it be a Custom Analytical Query, and the data source | Feasible with a custom cube; 11 queries to functional and object list raised, no code yet | `NOTES.md`, `FSD/ZFI_SLDI_Assumptions_and_Queries.*` | | |
 | 20/11/26 | Build everything on the assumptions, ship by abapGit | 14 objects written, two-stage ZIP; nothing activated yet | `src/*`, `ZFI_SLDI_*.zip`, `ZFI_SLDI_load.txt` | | |
+| 20/11/26 | DDIC-only ZIP wanted for abapGit standalone | `ZFI_SLDI_DDIC.zip`: 2 DOMA, 7 DTEL, 2 TABL from `src/` | `ZFI_SLDI_DDIC.zip` | | |
