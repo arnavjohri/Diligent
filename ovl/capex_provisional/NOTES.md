@@ -2,11 +2,12 @@
 
 **Project:** OVL (ONGC Videsh) · Corporate Budgeting / finance MIS
 **Status (20/11/26):** FS received 18/11/26, sent again 20/11/26 — byte-identical to
-`original/SAP_Automation_Provisional_Capex_Process_V3.xlsx`. Feasible. **Nothing built.**
+`original/SAP_Automation_Provisional_Capex_Process_V3.xlsx`. Feasible. 
 Queries issued (`ASSUMPTIONS_AND_QUERIES.md`, Word copy
 `FSD/CAPEX_PROVISIONAL_Assumptions_and_Queries.docx`) and object list proposed (below).
-Build starts only after the list is approved and query items 1, 3, 5, 8, 10, 11, 13, 15 are
-answered — they fix table keys and field types. Object names are proposals.
+**20/11/26, Arnav: assume and build.** The "assumed if no answer" column of the queries is the
+build basis. Build in progress, one object at a time: object 1 delivered
+(`ddic/01_domains_data_elements.md`), not yet confirmed active.
 
 ## What the workbook asks for
 
