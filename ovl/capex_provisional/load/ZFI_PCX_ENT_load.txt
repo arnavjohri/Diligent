@@ -1,0 +1,17 @@
+001	ONGC Nile Ganga B.V. (ONGBV)-Subsidiary	S	0010
+002	Imperial Energy Limited (IEL)-Subsidiary	S	0020
+003	Carabobo One AB-Subsidiary	S	0030
+004	ONGC Videsh Singapore Pte. Ltd. -Subsidiary	S	0040
+005	ONGC Narmada Limited-Subsidiary	S	0050
+006	ONGC Amazon Alaknanda Limited*-Subsidiary	S	0060
+007	ONGC (BTC) Limited-Subsidiary	S	0070
+008	Beas Rovuma Energy Mozambique Limited-Subsidiary	S	0080
+009	ONGC Videsh Atlantic Inc.-Subsidiary	S	0090
+010	ONGC Videsh Rovuma Limited-Subsidiary	S	0100
+011	Indus East Mediterranean Exploration Ltd.-Subsidiary	S	0110
+012	ONGC Videsh Rovuma Limited, India-Subsidiary	S	0120
+013	Sudd Petroleum Operating Company-Incorporated JV	J	0130
+014	ONGC Mittal Energy Limited-Incorporated JV	J	0140
+015	Mansarovar Energy Colombia Limited-Incorporated JV	J	0150
+016	Himalaya Energy Syria BV-Incorporated JV	J	0160
+017	Capex for HQ (incl capex for projects directly held )	H	0170

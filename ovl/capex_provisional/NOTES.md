@@ -5,9 +5,9 @@
 `original/SAP_Automation_Provisional_Capex_Process_V3.xlsx`. Feasible. 
 Queries issued (`ASSUMPTIONS_AND_QUERIES.md`, Word copy
 `FSD/CAPEX_PROVISIONAL_Assumptions_and_Queries.docx`) and object list proposed (below).
-**20/11/26, Arnav: assume and build.** The "assumed if no answer" column of the queries is the
-build basis. Build in progress, one object at a time: object 1 delivered
-(`ddic/01_domains_data_elements.md`), not yet confirmed active.
+**20/11/26, Arnav: assume and build, everything as an abapGit ZIP.** The "assumed if no answer"
+column of the queries is the build basis. **Built, not imported, not tested:** `ZFI_PCX.zip`
+(10 domains, 27 data elements, 6 tables, 2 programs). TS: `TS_ZFI_PCX.md` / `.docx`.
 
 ## What the workbook asks for
 
@@ -76,59 +76,82 @@ Why an editable `CL_GUI_ALV_GRID` in an executable program, and not the alternat
 - **Excel upload program**: loses the pre-fill and colour interaction; could be added later
   as a second input path on the same tables.
 
-## Proposed object list (20/11/26) — in dependency order, which is paste order
+## Objects — built 20/11/26, all in `ZFI_PCX.zip` (Arnav: "create everything, I will use abapGit standalone")
 
-Built on the "assumed if no answer" column of the queries. Not approved yet.
+47 files in `src/`, generated DDIC (`build/build_ddic.py`) plus two hand-written programs. No DEVC
+file: the package is chosen at import. **Nothing here has been activated or run.**
 
-| # | Object | Type | Purpose | Depends on |
-|---|---|---|---|---|
-| 1 | `ZFI_PCX_*` domains and data elements (about 12) | DDIC | project number, fortnight number, amount (DEC 15,2), rate (DEC 9,5), period status, Opex class, BU, entity number, texts — readable headings in SM30 and ALV | — |
-| 2 | `ZFI_PCX_ENT` | table, SM30 | Tab 5 entities: number, name, type, sort number | 1 |
-| 3 | `ZFI_PCX_PROJ` | table, SM30 | project master: number, name, sort number, active flag, BU, entity, JV code as text, Opex class | 1, 2 |
-| 4 | `ZFI_PCX_FY` | table, SM30 | per year: BE rate, RE rate | 1 |
-| 5 | `ZFI_PCX_PERIOD` | table, SM30 | per year and fortnight 01–24: cutoff date, status open / frozen, TTA rate | 1 |
-| 6 | `ZFI_PCX_FYPROJ` | table, SM30 | per year and project: Capex BE and RE; opening ITD and prior-year Capex, USD and INR | 1, 3 |
-| 7 | `ZFI_PCX_CAPEX` | table | punched cumulative EWIP / DWIP / CWIP / Other per year, fortnight and project; changed by / on / at | 1, 3, 5 |
-| 8 | `EZFI_PCX_CAPEX` | lock object | one user per project and fortnight at a time | 7 |
-| 9 | `ZFI_PCX` | message class | messages of both programs | — |
-| 10 | `ZFI_PCX_ENTRY` + includes `_TOP`, `_SEL`, `_CLS`, `_F01` | executable program | BU entry: editable grid, pre-fill, checks, three colours, save; correction mode for Corporate Budgeting | 1–9 |
-| 11 | `ZFI_PCX_REPORT` + includes | executable program | the tabs as views: cumulative by category, marginal USD with utilisation, INR, entity roll-up, category-wise INR, ITD INR, ITD USD | 1–7, 9 |
-| 12 | Step 2, Opex: `ZFI_PCX_OPEX` (+ lock), Opex / Survey BE and RE fields on `ZFI_PCX_FYPROJ`, Opex view in 10, Opex USD / INR views in 11 | table + changes | Opex and Survey entry and reports | 1–11 |
+| # | Object | Type | Purpose |
+|---|---|---|---|
+| 1 | 10 domains `ZFI_PCX_*` | DOMA | amount DEC 15,2 and rate DEC 9,5 (no sign), NUMC 2/3/4, CHAR 10/60, three with fixed values (status O/F, entity type S/J/H, Opex class C/E) |
+| 2 | 27 data elements `ZFI_PCX_*` | DTEL | all domain-based (the shape that has pulled here); labels are the SM30 / ALV headings |
+| 3 | `ZFI_PCX_ENT` | TABL | entities for the roll-up: number, name, type, sort number |
+| 4 | `ZFI_PCX_PROJ` | TABL | project master: number, name, sort number, active, BU, entity, JV code text, Opex class |
+| 5 | `ZFI_PCX_FY` | TABL | per year: BE rate, RE rate |
+| 6 | `ZFI_PCX_PERIOD` | TABL | per year and fortnight 01–24: cutoff date, status (blank / O / F), TTA rate |
+| 7 | `ZFI_PCX_FYPROJ` | TABL | per year and project: Capex BE, RE, opening ITD and prior-year Capex in USD and INR |
+| 8 | `ZFI_PCX_CAPEX` | TABL | entered cumulative EWIP / DWIP / CWIP / Other per year, fortnight, project; changed by / on / at |
+| 9 | `ZFI_PCX_ENTRY` (624 lines) | PROG | BU entry: editable grid, pre-fill, checks, colours, Save button in the grid toolbar, correction mode |
+| 10 | `ZFI_PCX_REPORT` (935 lines) | PROG | eight views: cumulative by category, cumulative per fortnight, per period USD, per period INR, by entity, by category INR, ITD USD, ITD INR |
 
-Manual, never delivered as code: SE54 maintenance generation for tables 2–6; SE93 transaction
-codes (entry, report, the SM30 calls); SU21 authorisation object (BU + activity) and the PFCG
-roles; package and transport.
+Changed against the 20/11 proposal, and why:
 
-Screen: first choice is the grid on `CL_GUI_CONTAINER=>DEFAULT_SCREEN` with Save / Check as
-grid-toolbar buttons — no SE51 screen and no SE41 status. `kpmg/zpp_forecast_v2` proves that
-container for a display SALV only; **an editable grid on it is not yet proven on this
-landscape.** Fallback: one screen 0100 with a custom container and one GUI status, keyed by hand.
+- **No lock object, no message class.** Neither shape has ever been pulled on this landscape. Locking
+  uses the standard `ENQUEUE_E_TABLE` on `ZFI_PCX_CAPEX` + client/year/fortnight/project; messages are
+  literals in the programs.
+- **Data elements are domain-based**, so 10 domains instead of 5 (`DATUM`, `UZEIT`, `XFELD` are standard).
+  If object 1 was already keyed by hand from the first sheet, the pull overwrites those data elements.
+- **Opex is not built** (query 3: Capex first). `OPXCLS` on the project master is ready for it.
+- Each program is one source, no includes.
 
-### FS requirement → object
+How the entry program behaves (`src/zfi_pcx_entry.prog.abap`):
 
-| Requirement (where) | Implemented by |
-|---|---|
-| 1 Category-wise cumulative punching per fortnight by BU (`Capex USD` C5) | `ZFI_PCX_ENTRY`, stored in `ZFI_PCX_CAPEX` |
-| 2 Error if below prior period (C6); B174 not accepted by SAP | `ZFI_PCX_ENTRY` check on cell change and again on save |
-| 3 BU cannot decrease (C7) | same check; correction mode by authorisation |
-| 4 Prior reported pre-filled (C8) | `ZFI_PCX_ENTRY` read of the latest earlier fortnight |
-| 5 Three colours, frozen not changeable (C9) | `ZFI_PCX_ENTRY` cell colour and cell style; status in `ZFI_PCX_PERIOD` |
-| Tab 1 / Tab 2 cumulative, every period retained | `ZFI_PCX_CAPEX` keeps each fortnight; `ZFI_PCX_REPORT` view |
-| YTD marginal USD, BE / RE balance, utilisation | `ZFI_PCX_REPORT` view; BE / RE from `ZFI_PCX_FYPROJ` |
-| Tab 4 INR | `ZFI_PCX_REPORT` view; rates from `ZFI_PCX_PERIOD`, `ZFI_PCX_FY` |
-| Tab 5 entity contribution | `ZFI_PCX_REPORT` view; `ZFI_PCX_ENT`, `ZFI_PCX_PROJ` |
-| Weighted rate and Tab 6 category-wise INR | `ZFI_PCX_REPORT` view |
-| Tabs 7 / 8 inception to date | `ZFI_PCX_REPORT` views; opening figures from `ZFI_PCX_FYPROJ` |
-| Opex: no negatives; Opex USD / INR; consolidated / equity summary | step 2 (object 12) |
-| JV code list | attribute on `ZFI_PCX_PROJ`, information only |
-| Process sheet findings C1–C8, O1–O8 | not requirements. C1–C3 are closed by the design; the rest are query items |
+- Selection: year, fortnight, BU, project, *Display Only*, *Correct a Frozen Fortnight*.
+- Status `O` in `ZFI_PCX_PERIOD` = editable; `F` = display, or editable in correction mode with
+  activity 70; blank = display with a message.
+- Prior reported = latest earlier fortnight that has a row (carried forward). Category cells start
+  from the prior figures until the project is saved in this fortnight.
+- Refused, with the cells put back: a negative, a total below prior reported, a total above the next
+  later fortnight already saved.
+- Colours: grey-blue = frozen (prior column, frozen fortnight), yellow = pre-filled, green = entered.
+- **Save writes only the rows changed in the session.** Leaving the list with Back does not warn about
+  unsaved cells — the price of having no GUI status.
 
-**Gaps — in the requirement but in no sheet:** the list of Business Units and the
-project-to-BU assignment; who may enter, display and correct; who freezes a fortnight and when.
-Raised as query items 8 and 11, not invented.
+Report (`src/zfi_pcx_report.prog.abap`): everything is "as at" the selected fortnight; a fortnight
+without a row carries the last figure forward; INR = USD x rate / 10; as at mid-month the month
+column uses the 15-day rate (`" ASSUMPTION` in the code); the total row is calculated by the program
+(utilisation from totals), so it moves if the user sorts.
 
-## Shipping
+### Unproven on this landscape — expect the first error here
 
-Programs by paste. DDIC (domains, data elements, tables, lock object) by SE11 / ADT by hand —
-hand-written abapGit XML has not yet imported on this landscape. SM30 generation (SE54), SU21
-object and SE93 codes are manual in any case.
+1. **Editable `CL_GUI_ALV_GRID` on `CL_GUI_CONTAINER=>DEFAULT_SCREEN`** with `WRITE space` as carrier.
+   `kpmg/zpp_forecast_v2` proves it for a display SALV only. Fallback: screen 0100 + custom container
+   + GUI status by hand.
+2. **Domains with fixed values** (`DD07V_TAB`): shape taken from `kpmg/zpp_forecast_v2`, never pulled on OCD.
+3. **TABL on OCD**: pulled on 28/10 (`ZFI_BR_GLMAP`), "table not created" on 03/11 (`ZFI_TR_BANKACCT`,
+   never diagnosed). If a table is missing after the pull: `ddic/01_domains_data_elements.md` is the
+   SE11 sheet, and the abapGit log line is what is needed here.
+4. Selection texts in the program XML carry `LENGTH` = text + 8, the abapGit convention.
+
+## Import and set-up
+
+1. `ZABAPGIT_STANDALONE` → New Offline Repo → package (new or existing) → Import `ZFI_PCX.zip` → Pull.
+   Check first that no `ZFI_PCX*` object exists other than what was keyed by hand.
+2. SE54 / SE11 → Table Maintenance Generator for `ZFI_PCX_ENT`, `ZFI_PCX_PROJ`, `ZFI_PCX_FY`,
+   `ZFI_PCX_PERIOD`, `ZFI_PCX_FYPROJ` (one step). Not for `ZFI_PCX_CAPEX`.
+3. SU20: field `ZPCX_BU` (data element `ZFI_PCX_BU`). SU21: object `ZFI_PCX` with `ZPCX_BU` and `ACTVT`
+   (02 enter, 03 display, 70 correct a frozen fortnight). PFCG roles. **Until this exists nobody passes
+   the check, in either program.**
+4. SM30 data: `ZFI_PCX_ENT` and `ZFI_PCX_PROJ` from `load/*.txt` (tab-separated, field order of the
+   table without client; BU column is empty — query 11); `ZFI_PCX_PERIOD` 24 rows for the year with
+   cutoff dates and rates, status `O` on the one open fortnight; `ZFI_PCX_FY`; `ZFI_PCX_FYPROJ`.
+5. SE93: report transactions for the two programs (suggested `ZFI_PCX01`, `ZFI_PCX02`).
+
+Load sheets (`build/build_ddic.py <workbook>` rebuilds them): 17 entities, 71 projects. Three projects
+sit in two entity formulas of the workbook (GNPOC Sudan, Namibia PEL 0037, Block-32 Israel) — kept
+under the named entity, not HQ. Eleven rows (Myanmar AD2 … OMEL 285) are in no formula — put under
+HQ. Seven projects are flagged equity investee, Sakhalin I among them (query 20).
+
+Re-zip after any change:
+
+    cd ovl/capex_provisional && rm -f ZFI_PCX.zip && zip -X ZFI_PCX.zip .abapgit.xml src/*

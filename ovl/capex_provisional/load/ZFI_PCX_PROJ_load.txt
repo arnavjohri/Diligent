@@ -1,0 +1,71 @@
+0001	Sakhalin I, Russia	0010	X		017	RU2002	E
+0002	Block 06.1, Vietnam	0020	X		017	VN2012	C
+0003	Imperial Energy, Russia	0030	X		002		C
+0004	GPOC, South Sudan	0040	X		001		C
+0005	SPOC (5A), South Sudan	0050	X		017	SD2002	C
+0006	BC-10 (OCL, Brazil - 15% PI)	0060	X		001		C
+0007	BC-10 (OCL, Brazil - 12% PI)	0070	X		001		C
+0008	MECL, OAAL, Colombia	0080	X		015		E
+0009	PIVSA, San Cristobal, Venezuela	0090	X		001		E
+0010	ACG, Azerbaijan	0100	X		017	AA2002	C
+0011	BTC Pipeline (ACG), Azerbaijan	0110	X		007		C
+0012	Block A-1, Myanmar	0120	X		017	MM2002	C
+0013	Block A-3, Myanmar	0130	X		017	MM2012	C
+0014	Offshore Pipeline (Pipeco 1), Myanmar	0140	X		017	MM2013	C
+0015	Onshore Pipeline, (Pipeco 2), Myanmar	0150	X		001		E
+0016	AFPC, Syria	0160	X		016		C
+0017	Vankorneft, Russia	0170	X		004		E
+0018	Lower Zakum, Abu Dhabi	0180	X		001		E
+0019	Carabobo, Venezuela	0190	X		003		E
+0020	Rovuma, Area-1, Mozambique 10%	0200	X		012		C
+0021	Rovuma, Area-1, Mozambique 6%	0210	X		008		C
+0022	Farsi Block, Iran	0220	X		017	IR1012	C
+0023	Block 24, Syria	0230	X		017	SY2002	C
+0024	Block CPO 5, Colombia	0240	X		017	CL1202	C
+0025	Block SSJN7, Colombia	0250	X		017	CL2202	C
+0026	Block RC-9, Colombia	0260	X		017	CL2102	C
+0027	Block RC-10, Colombia	0270	X		017	CL1102	C
+0028	Block GUA Offshore 2, Colombia	0280	X		017	CL1301/CL1302	C
+0029	Block LLA-69, Colombia	0290	X		006		C
+0030	Block 128, Vietnam	0300	X		017	VN1102	C
+0031	Area-43,Blk-1,2,3,4, Libya	0310	X		017		C
+0032	BM-SEAL4 (OCL), Brazil	0320	X		001		C
+0033	Block SS-04, Bangladesh	0330	X		017	BD1011/BD1012	C
+0034	Block SS-09, Bangladesh	0340	X		017	BD1111/BD1112	C
+0035	Block B-2, Myanmar	0350	X		017	MM1701/MM1702	C
+0036	Block EP-3, Myanmar	0360	X		017	MM1601/MM1602	C
+0037	Block-8 Iraq (Closed Feb'09)	0370	X		017		C
+0038	Block RC-8, Colombia	0380	X		017	CL1002	C
+0039	Sao Tome JDZ, ONL, Nigeria	0390	X		017		C
+0040	Sudan 5B- (Closed)	0400	X		017		C
+0041	Block NC-188/189, Libya	0410	X		017		C
+0042	Block 6, North Ramadan, Egypt	0420	X		017		C
+0043	NEMED, Egypt	0430	X		017		C
+0044	MTPN Congo (Closed 31.12.09)	0440	X		017		C
+0045	Block 11-12, Turkmenistan (OMEL)	0450	X		017		C
+0046	GNPOC, Sudan	0460	X		001		C
+0047	Sudan Pipeline	0470	X		017		C
+0048	Block Satpayev, Kazakhstan	0480	X		017		C
+0049	Namibia PEL 0037	0490	X		004		C
+0050	Block-32 , Israel	0500	X		011		C
+0051	PEP 57090, New Zealand	0510	X		017		C
+0052	BM - BAR1 (OCL), Brazil	0520	X		001		C
+0053	BM-ES-42 (OCL), Brazil	0530	X		001		C
+0054	BM-S-73 (OCL), Brazil	0540	X		001		C
+0055	BM-S-74 (OCL), Brazil	0550	X		001		C
+0056	Myanmar AD2	0560	X		017		C
+0057	Myanmar AD3	0570	X		017		C
+0058	Myanmar AD9	0580	X		017		C
+0059	Myanmar AD7	0590	X		017		C
+0060	Vietnam Block 127	0600	X		017		C
+0061	Block 81/1, Libya	0610	X		017		C
+0062	Block-25-29,36, Cuba(Closed Sep'13)	0620	X		017		C
+0063	Block-34,35, Cuba	0630	X		017		C
+0064	Block Najwat Najem, Qatar	0640	X		017		C
+0065	OMEL 279	0650	X		017		C
+0066	OMEL 285	0660	X		017		C
+0067	Closed Projects	0670	X		017		C
+0068	Other projects/ pre acquisition expns	0680	X		017		C
+0069	OVAI, US	0690	X		009		C
+0070	Project Branches (VNZ, MZB, ACG etc) BRVZ00, BRMZ00, BRAZ00	0700	X		017	BRVZ00/BRMZ00/BRVN00/RU2000/BRAZ00/BRCL00	C
+0071	HQ/ Capital expnd/ BD	0710	X		017	CP0001	C
