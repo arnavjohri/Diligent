@@ -3,6 +3,22 @@
 | # | Date | Issue | Cause | Fix | TR |
 |---|------|-------|-------|-----|-----|
 | 1 | 31/08/26 | Sachin Thakur (F&A): earlier error gone, but ZFIAPP posted payment document 1726000164 (27.06.2026, co. code OVL) **without consuming a cheque** — FCHN shows "No check information was found"; last cheque in the register is 277581 dated 29.04.2026 | **Confirmed 31/08/26: the cheque lot entered on the ZFIAPP selection screen was exhausted** (PCEC `CHECL` = `CHECT`), so `CHECL + 1` fell outside the lot, FCH5 rejected it, and `bdc_fch5` discarded the error | code fix pending — needs fresh download of `ZFI_CP_MAS_VEN_AI001` | open | — |
+| 2 | 20/11/26 | ST22 on OCP/500, user 134540, three dumps 14:09–14:11: `CALL_FUNCTION_PARM_MISSING` / `CX_SY_DYN_CALL_PARAM_MISSING`, cancelled program `ZFI_CP_MASS_VEN_PAY` | `zz_s4_bseg_zlspr` (include `ZFI_CP_MAS_VEN_E0001`) calls `FI_DOCUMENT_CHANGE` with `TABLES t_acchg` — the FM's parameter is `T_ACCCHG` (three C's), so the mandatory table is never passed. Typo introduced by the 16.06.2026 ATC remediation helper; same defect fixed in `ZFI_CHNG_PYBLCK` on 24/08/26 | parameter renamed to `t_accchg` in `zz_s4_bseg_zlspr`; repo copy `ovl/atc/corrections/ZFI_CP_MAS_VEN_E0001.abap` (867 → 879 lines) | pending — not yet verified in SAP |
+
+## Issue 2 — notes (20/11/26)
+
+- Both callers hit the dump: `rem_pay_block` (block `X` → blank, on POST before F-53) and
+  `put_payblock` (blank → `X`).
+- Fix made against the repo copy; Arnav pasted the FORM from the system and it matches the
+  repo copy line for line, but the rest of the include was **not** re-downloaded.
+- **Open, to verify before transport:** the helper passes only `NEWVAL`. If FORM
+  `DOCUMENT_CHANGE` in `FI_DOCUMENT_CHANGE` compares `T_ACCCHG-OLDVAL` with the document's
+  current value, block *removal* (`X` → blank) will not happen and nothing will say so,
+  because the call also carries `EXCEPTIONS OTHERS = 0`. Marked `* ASSUMPTION:` in the code.
+- **Same typo still open in six more programs** (repo copies under `ovl/atc/corrections/`):
+  `ZFI_BCM_REJREC`, `ZFI_CHNG_PYBLCKD`, `ZFI_REM_PYBLCK`, `ZFI_REP_BLOCK` (ZLSPR),
+  `ZFI_UPDATE_KIDNO` (KIDNO), `ZFI_UPDATE_SECO` (SECCO). Each will dump the same way the
+  first time its `FI_DOCUMENT_CHANGE` path runs.
 
 ## Issue 1 — confirmed cause (31/08/26)
 
