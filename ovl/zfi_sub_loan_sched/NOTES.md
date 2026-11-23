@@ -5,6 +5,53 @@ activated yet**. The queries in `FSD/ZFI_SLDI_Assumptions_and_Queries.docx` were
 answer is an `ASSUMPTION:` line in the sources.
 **Requirement:** `docs/SAP_FIORI_-_Subsidiaries_Loan_and_Deemed_Investment_Schedule_-_Annual_FY26.xlsx`
 
+## Status 23/11/26 - built, active and published on OCD 500 (Claude, desktop control)
+
+Everything below exists in OCD client 500, package `ZFI_OTH`, workbench request **OCDK920552**
+(task OCDK920553, "SAP: FI: Subsidiary Loan & Deemed Investment Schedule CAQ"). **Nothing transported.**
+
+| Step | Done how | Result |
+|---|---|---|
+| 2 DOMA, 7 DTEL, 2 TABL | **ADT wizards** (not abapGit: the only offline repo on `ZFI_OTH` is the JIB one, and a different ZIP in it offers the JIB views for deletion - see `ovl/per_barrel_agenda/NOTES.md`) | all active |
+| `ZI_SLDI_ITEM_TF`, `ZCL_SLDI_ITEM_TF`, `ZI_SLDI_CUBE` | ADT paste of `src/`, in that order | all active. **Proven:** view parameters passed into a table function (`TF( p_from : $parameters.P_FromDate )`) |
+| SM30 | SE54: FG `ZFI_SLDI`, auth group `&NC&`, one step, screens 0001 (ROW) / 0002 (MOV), no recording routine | generated |
+| Entries | SM30, 15 ROW + 5 MOV rows, words checked against ACDOCA first - `ZFI_SLDI_load.txt` | saved (client data, not on the TR) |
+| C1 | ADT, API State, Use System-Internally (C1), Released, Use in Key User Apps | released (warnings only) |
+| Queries | Custom Analytical Queries, all **Published** | see below |
+
+| Query | Label | Technical name for the tile (`#AnalyticQuery-analyze?bsa_query=`) | Filter |
+|---|---|---|---|
+| `ZZ1_SLDI_LOAN` | Subsidiary Loan Movement Schedule | `2CZZ1_200HYYH5R7ZM` | ScheduleType = L |
+| `ZZ1_SLDI_INTEREST` | Accrued Interest Movement Schedule | `2CZZ1_14IFEG0E06GT` | ScheduleType = I |
+| `ZZ1_SLDI_DEEMED` | Deemed Investment Schedule | `2CZZ1_GZ22O2H113GC` | ScheduleType = D |
+
+All three: prompts From Date / To Date (mandatory), rows Row No. + Subsidiary with a Grand Total, G/L Account
+free for drill-down. Deemed adds calculated measures *Closing Balance before Conv. to Loan* (`Closing - Conv. to
+Loan`) and `INR/USD` per movement (`NDIV0( INR / USD )`). Names read from `DDLDEPENDENCY`, not from a preview
+(M-31).
+
+Two cube changes were forced by Custom Analytical Queries (both in `src/zi_sldi_cube.ddls.asddls`, MEMORY §4.1):
+parameters `DATUM` -> `VDM_V_KEY_DATE` ("The use of Data Element DATUM is not permitted") and element
+`Schedule` -> `ScheduleType` ("SCHEDULE is a reserved word"). The rename was blocked until the draft query that
+used the old field was deleted (DDIC: field still used in a view).
+
+FY26 run (01.04.2025-31.03.2026) checks: ONGC Narmada opening = closing = 31,403,156.30 (= the workbook's
+Provision Made amount); BREML deemed conversion to loan -135,528,106.80 = Loan to BREML addition; Carabobo
+opening 246,469.23 fully converted to equity.
+
+**Open - for functional / Arnav:**
+1. Provision G/L still not named (query 3) - Provision Made and Net equal plain balances until it is entered.
+2. Deemed Unclassified FY26: BREML -19.5 M, OVRL -79.5 M (credit "Amount transfer ... cash call" lines and
+   blank-text credits). Decide whether a rule "AMOUNT TRANSFER" -> Additional Funding is wanted (query 2).
+3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL), e.g. 91905 +36.8 M /
+   -36.6 M in FY2025. Confirm or delete the 999 rows so they show as Unassigned.
+4. INR/USD for OVRL conversion to equity shows 39.06 - net of debit and credit "No of Shares" lines at different
+   amounts; check with functional before anyone reads it as a rate.
+5. Tile: catalog / group assignment pending (Arnav to name them). Transport of the queries themselves is a
+   separate key-user step (they are not on OCDK920552).
+6. The ZIPs in this folder were **not** used; the system was built from `src/` by ADT. They predate the two cube
+   changes - do not import them.
+
 ## What it is
 
 Three schedules in USD for company code OVL, period 01.04.2025 - 31.03.2026:

@@ -1,5 +1,16 @@
-Entries for SM30 after the SE54 maintenance dialogs exist. G/L accounts are stored 10 digits (SM30 pads them).
-Words marked (?) are ASSUMED from the row names - check them against real item texts in FBL3N before loading.
+Entries for SM30 (maintenance dialogs in function group ZFI_SLDI, screens 0001 / 0002).
+LOADED in OCD client 500 on 23/11/26 exactly as below. Delivery class A: the entries are client data and
+do NOT travel with transport OCDK920552 - enter them again in each system (SM30 ZFI_SLDI_ROW / ZFI_SLDI_MOV).
+G/L accounts are stored 10 digits (SM30 pads them).
+
+Text words were checked on 23/11/26 against the real FY2025 item texts in ACDOCA (OCD 500, ledger 0L, OVL):
+  91905   "Interest on Loan to OVSL for Q1 Fy 25-26", "Interest on OVL Loan to IEL for Q2 2025-26"
+  391908  "Accrued Interest on Loan to BREML FY 2025-26", "Interest Comp for Q1 FY 25-26-OVRL India"
+  100125  "Conversion of Adv. into P. Share April to June 25", "Conversion of advances to BREML in Loan"
+  100122  "Con. Adv into Equity"
+  80538   "No of Shares - 28381361 (Apr 2025)" (OVRL: shares issued = conversion to equity - ASSUMPTION)
+The assumed words of 20/11 (SINGAPORE, OVSL, BREML, PREFERENCE, EQUITY, LOAN) were replaced where the
+real text differs: PREFERENCE alone would never have matched "P. Share".
 
 ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary                                Prov
                OVL   100121   001                      L      01   Imperial Energy Limited
@@ -8,24 +19,30 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
                OVL   100611   001                      L      04   ONGC Videsh Singapore Pte. Ltd
                OVL   100136   001                      L      04   ONGC Videsh Singapore Pte. Ltd
                OVL   100618   001                      L      05   Loan to BREML
-               OVL   91905    001  SINGAPORE (?)       I      03   ONGC Videsh Singapore Pte. Ltd
-               OVL   91905    002  OVSL (?)            I      03   ONGC Videsh Singapore Pte. Ltd
+               OVL   91905    001  LOAN TO OVSL        I      03   ONGC Videsh Singapore Pte. Ltd
+               OVL   91905    002  LOAN TO IEL         I      01   Imperial Energy Limited
                OVL   91905    999                      I      01   Imperial Energy Limited
-               OVL   391908   001  BREML (?)           I      04   BREML
+               OVL   391908   001  BREML               I      04   BREML
                OVL   391908   999                      I      02   OVRL India Ltd
                OVL   100122   001                      D      01   Carabobo One AB
                OVL   100125   001                      D      02   BREML
                OVL   80538    001                      D      03   OVRL India Limited
                OVL   80541    001                      D      04   OVRL India Limited - Interest Component
-               OVL   <provision G/L - not named in the workbook>  001   L  03  ONGC Narmada Limited      X
+  NOT loaded:  OVL   <provision G/L - not named in the workbook (query 3)>  L  03  ONGC Narmada Limited   X
 
-  Seq 999 with a blank word is the "everything else" line of a shared G/L. Without it, unmatched lines show
-  on row 99 Unassigned.
+  Seq 999 with a blank word is the "everything else" line of a shared G/L (design of 20/11). It also
+  catches the lines with NO item text: on 91905 these are large (OVRL partner +36.8 M, blank -36.6 M in
+  FY2025) and land on Imperial. Delete the 999 rows if unmatched lines should show as row 99 Unassigned.
 
 ZFI_SLDI_MOV   CoCd  Sched  Seq  Item Text Contains  D/C  Movement Column
-               OVL   D      010  PREFERENCE (?)      H    4  Conversion to preference shares
-               OVL   D      020  EQUITY (?)          H    3  Conversion to equity shares
-               OVL   D      030  LOAN (?)            H    5  Conversion to loan
+               OVL   D      010  P. SHARE            H    4  Conversion to preference shares
+               OVL   D      020  PREFERENCE          H    4  Conversion to preference shares
+               OVL   D      030  EQUITY              H    3  Conversion to equity shares
+               OVL   D      040  NO OF SHARES        H    3  Conversion to equity shares
+               OVL   D      050  LOAN                H    5  Conversion to loan
 
   No entry needed for the rest: a debit is column 1, a credit on Loan / Interest is column 2, a credit on
-  Deemed Investment that matches no word is Unclassified.
+  Deemed Investment that matches no word is Unclassified (9). FY2025 result: Unclassified BREML -19.5 M and
+  OVRL -79.5 M = credit "Amount transfer to ... A/c for ... Cash Call" lines (reversals of fundings) and
+  blank-text credits. A rule "AMOUNT TRANSFER" / H / column 1 would net them into Additional Funding -
+  functional to decide (query 2).

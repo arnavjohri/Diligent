@@ -6,13 +6,13 @@
 // Source    : SAP_FIORI_-_Subsidiaries_Loan_and_Deemed_Investment_
 //             Schedule_-_Annual_FY26.xlsx, sheet Loan & Interest Movement
 // Author    : Arnav Johri                            Date: 20.11.2026
-// Transport : <TR>
+// Transport : OCDK920552
 //----------------------------------------------------------------------
 // DESCRIPTION
 //   Object 5 of 5: the data source picked in the Fiori app Custom
 //   Analytical Queries. One row per G/L line item from ZI_SLDI_ITEM_TF.
 //   Prompts: From Date and To Date (01.04.2025 / 31.03.2026 for FY26).
-//   Rows of a query: Schedule (filter: L, I or D - one query per
+//   Rows of a query: ScheduleType (filter: L, I or D - one query per
 //   schedule), Row No. / Subsidiary. Columns per schedule:
 //     Loan       Opening | Addition | Reduction | Closing | Provision |
 //                Net
@@ -31,6 +31,10 @@
 //
 // CHANGE HISTORY
 //   20.11.2026  Arnav Johri  <TR>  Initial development
+//   23.11.2026  Arnav Johri  OCDK920552  Parameters DATUM -> VDM_V_KEY_DATE
+//                                         (refused by Custom Analytical Queries)
+//   23.11.2026  Arnav Johri  OCDK920552  Element Schedule -> ScheduleType
+//                                         (SCHEDULE is a reserved word in CAQ)
 //----------------------------------------------------------------------
 // ASSUMPTION: opening balance = open items as at the day before the
 //   From Date (the workbook's FBL3N key date 01.04.2025 would count
@@ -60,12 +64,15 @@
 @ObjectModel.usageType.sizeCategory: #M
 @ObjectModel.usageType.serviceQuality: #D
 @ObjectModel.usageType.dataClass: #MIXED
+// Parameters typed with released data element VDM_V_KEY_DATE: Custom
+// Analytical Queries refuses DATUM ("The use of Data Element DATUM is not
+// permitted", OCD 23.11.2026); VDM_V_KEY_DATE is the one bank reval uses.
 define view ZI_SLDI_CUBE
   with parameters
     @EndUserText.label: 'From Date'
-    P_FromDate : datum,
+    P_FromDate : vdm_v_key_date,
     @EndUserText.label: 'To Date'
-    P_ToDate   : datum
+    P_ToDate   : vdm_v_key_date
   as select from ZI_SLDI_ITEM_TF( p_clnt : $session.client,
                                   p_from : $parameters.P_FromDate,
                                   p_to   : $parameters.P_ToDate ) as Item
@@ -85,8 +92,10 @@ define view ZI_SLDI_CUBE
 
       // -- schedule and row ------------------------------------------------
       @ObjectModel.text.element: ['ScheduleName']
+      // Element name SCHEDULE is refused by Custom Analytical Queries
+      // ("SCHEDULE is a reserved word"), OCD 23.11.2026.
       @EndUserText.label: 'Schedule'
-      Item.schedule           as Schedule,
+      Item.schedule           as ScheduleType,
       @EndUserText.label: 'Schedule Name'
       case Item.schedule
         when 'L' then 'Loan Movement Schedule'
