@@ -1,0 +1,17 @@
+@EndUserText.label : 'TASA recon: customer / G/L to report row'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #ALLOWED
+define table zfi_tasa_map {
+  key mandt   : mandt not null;
+  key bukrs   : bukrs not null;
+  key partner : zfi_tasa_partner not null;
+  rowtxt      : zfi_tasa_rowtxt;
+  sortno      : zfi_tasa_sortno;
+  tasafl      : zfi_tasa_tasafl;
+  relpty      : zfi_tasa_relpty;
+  reclfl      : zfi_tasa_reclfl;
+  provpc      : zfi_tasa_provpc;
+
+}

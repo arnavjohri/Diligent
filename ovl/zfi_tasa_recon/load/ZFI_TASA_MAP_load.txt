@@ -1,0 +1,58 @@
+OVL	10042	B-2	010	X			
+OVL	B2NONTRADE	B-2	010	X			
+OVL	10033	CPO-5	020	X			
+OVL	CPO5NT	CPO-5	020	X			
+OVL	10041	EP-3	030	X			
+OVL	EP3NT	EP-3	030	X			
+OVL	10034	Iran Farsi	040	X			
+OVL	OVLFARSINT	Iran Farsi	040	X			
+OVL	10036	OAAL	050	X	X	X	
+OVL	10035	ONGBV	060	X	X	X	
+OVL	10068	ONGCSCBV	070	X	X	X	
+OVL	10027	OVSL	080	X	X	X	
+OVL	30002	OVSL	080	X	X		
+OVL	10028	OVVL	090	X	X	X	
+OVL	30001	OVVL	090	X	X		
+OVL	10067	Petro Carabobo Ganga BV	100	X		X	
+OVL	10084	RC8	110	X			
+OVL	10032	RC-10	120	X			
+OVL	RC10NT	RC-10	120	X			
+OVL	10071	SPOC	130	X			
+OVL	10063	Sakhalin-1, Russia	140	X			
+OVL	EXXONNT	Sakhalin-1, Russia	140	X			
+OVL	10039	SS-04	150	X			
+OVL	SS04NT	SS-04	150	X			
+OVL	10062	IEMEL	160	X			
+OVL	10064	FOGBV	170	X		X	
+OVL	10040	SS-09	180	X			
+OVL	SS09NT	SS-09	180	X			
+OVL	10129	OOIL	190	X	X	X	
+OVL	10134	OVRL - TASA Income	200	X	X	X	
+OVL	10135	MECL	210	X	X	X	
+OVL	80801	Block 128	220	X			
+OVL	GUAOFFNT	Gua Offshore	230	X			
+OVL	10059	AIOC Azerbaijan	500				
+OVL	10086	OIL India Limited	510				
+OVL	10099	GAIL (India) Limited	520				
+OVL	10100	Engineer India Limited	530				
+OVL	10101	Indian Oil Corporation Limited	540				
+OVL	10121	M/s Abdin International	550				
+OVL	10123	Oil and Natural Gas Corporation Ltd	560				
+OVL	10126	Bharat Petro Resources Limited	570				
+OVL	BPRL	Bharat Petro Resources Limited	570				
+OVL	30003	Bharat Petro Resources Limited	570				
+OVL	10133	Cosmic Systems	580				
+OVL	10137	Prakriti Power Systems	590				
+OVL	10140	Genuine Agencies	600				
+OVL	IPRNT	IPR - Non Trade	610				100.00
+OVL	10044	Other - Employee	900				
+OVL	10045	Other - Employee	900				
+OVL	10048	Other - Employee	900				
+OVL	10049	Other - Employee	900				
+OVL	EMP_OVLD01	Other - Employee	900				
+OVL	10057	Other - Scrap Sale	910				
+OVL	10069	Other - Alsaad Traders - Scrap Sale	910				
+OVL	10070	Other - Ecolite - Scrap Sale	910				
+OVL	10065	Other - Petrotech-2019 A/c FIPI	920				
+OVL	10075	Other - Superior Securitas	930				
+OVL	10076	Other - Udal Ram	940				
