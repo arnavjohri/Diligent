@@ -39,14 +39,22 @@ FY26 run (01.04.2025-31.03.2026) checks: ONGC Narmada opening = closing = 31,403
 Provision Made amount); BREML deemed conversion to loan -135,528,106.80 = Loan to BREML addition; Carabobo
 opening 246,469.23 fully converted to equity.
 
+**Reconciliation to the workbook (sheet Loan & Interest Movement), FY26, after the movement rules were
+changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
+
+| Block | Result |
+|---|---|
+| Loan | Every row and column equal to the cent, except Provision Made / Net for ONGC Narmada (no provision G/L) |
+| Deemed (USD) | Every row and column equal (Unclassified now 0) |
+| Deemed (INR) | OVRL equal (5.35 INR rounding on conversion to equity); BREML conversions equal; BREML Additional Funding INR 15,321,989,177.29 vs workbook 14,919,977,377.29 (+402,011,800 INR) - the workbook's INR for the netted cash-call reversals differs from the posted INR amounts |
+| Interest | OVRL, BREML equal. Imperial +3,768.54 (WHT line "WHT @ 15% Acc Interest 28Jan to 31 Mar 2025", no subsidiary in the text, falls to seq 999 = Imperial; not in the workbook). OVSL +282,130.71 on interest recognised and closing - not explainable from the workbook (its line-item sheets are FY21); FBL3N 91905 at 31.03.2026 for the OVSL lines will show it |
+
 **Open - for functional / Arnav:**
 1. Provision G/L still not named (query 3) - Provision Made and Net equal plain balances until it is entered.
-2. Deemed Unclassified FY26: BREML -19.5 M, OVRL -79.5 M (credit "Amount transfer ... cash call" lines and
-   blank-text credits). Decide whether a rule "AMOUNT TRANSFER" -> Additional Funding is wanted (query 2).
-3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL), e.g. 91905 +36.8 M /
-   -36.6 M in FY2025. Confirm or delete the 999 rows so they show as Unassigned.
-4. INR/USD for OVRL conversion to equity shows 39.06 - net of debit and credit "No of Shares" lines at different
-   amounts; check with functional before anyone reads it as a rate.
+2. Interest: Imperial +3,768.54 (WHT line) and OVSL +282,130.71 against the workbook - see table above.
+3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
+   the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
+4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
 5. Tile: catalog / group assignment pending (Arnav to name them). Transport of the queries themselves is a
    separate key-user step (they are not on OCDK920552).
 6. The ZIPs in this folder were **not** used; the system was built from `src/` by ADT. They predate the two cube

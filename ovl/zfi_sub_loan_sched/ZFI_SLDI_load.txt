@@ -34,15 +34,28 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
   catches the lines with NO item text: on 91905 these are large (OVRL partner +36.8 M, blank -36.6 M in
   FY2025) and land on Imperial. Delete the 999 rows if unmatched lines should show as row 99 Unassigned.
 
-ZFI_SLDI_MOV   CoCd  Sched  Seq  Item Text Contains  D/C  Movement Column
-               OVL   D      010  P. SHARE            H    4  Conversion to preference shares
-               OVL   D      020  PREFERENCE          H    4  Conversion to preference shares
-               OVL   D      030  EQUITY              H    3  Conversion to equity shares
-               OVL   D      040  NO OF SHARES        H    3  Conversion to equity shares
-               OVL   D      050  LOAN                H    5  Conversion to loan
+ZFI_SLDI_MOV - REPLACED 23/11/26 (later), on Arnav's go-ahead, to net like the workbook. D/C blank = both
+sides, so a reversal lands in the same column as the line it reverses. Loaded in OCD 500 exactly as below.
 
-  No entry needed for the rest: a debit is column 1, a credit on Loan / Interest is column 2, a credit on
-  Deemed Investment that matches no word is Unclassified (9). FY2025 result: Unclassified BREML -19.5 M and
-  OVRL -79.5 M = credit "Amount transfer to ... A/c for ... Cash Call" lines (reversals of fundings) and
-  blank-text credits. A rule "AMOUNT TRANSFER" / H / column 1 would net them into Additional Funding -
-  functional to decide (query 2).
+ZFI_SLDI_MOV   CoCd  Sched  Seq  Item Text Contains  D/C  Movement Column
+               OVL   D      011  P. SHARE                 4  Conversion to preference shares
+               OVL   D      021  PREFERENCE               4  Conversion to preference shares
+               OVL   D      031  EQUITY                   3  Conversion to equity shares
+               OVL   D      041  NO OF SHARES             3  Conversion to equity shares
+               OVL   D      051  LOAN                     5  Conversion to loan
+               OVL   D      090                           1  Additional funding (everything else, net)
+               OVL   L      010  REPAY                    2  Repayment / Conversion / Interest
+               OVL   L      090                           1  Additional funding (everything else, net)
+               OVL   I      010  REPAY                    2  Repayment / Conversion
+               OVL   I      020  CONVERSION               2  Repayment / Conversion
+               OVL   I      090                           1  Interest recognised (everything else, net)
+
+  The workbook's rule ("Bifurcation based on Text"): only a text naming the movement gets its own column,
+  everything else nets into Additional Funding / Interest Recognised. No CONVERSION rule on L: "Conversion of
+  advances to BREML in Loan" on 100618 is Additional Funding in the workbook (it is the other side of the
+  deemed-investment conversion to loan). The 090 rows leave Unclassified empty by design.
+  Deemed sequences are 011..051 (not 010..050) only because SM30 refused a new key that was still marked for
+  deletion in the same save.
+
+  Previous rules (20/11 - 23/11): D 010..050 with D/C = H only; debits default column 1, credits column 2
+  (L/I) or Unclassified (D). Gave the same closing balances but gross debit/credit columns.
