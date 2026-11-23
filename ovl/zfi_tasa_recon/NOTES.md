@@ -50,7 +50,10 @@ Names read from `DDLDEPENDENCY`.
   462,876,293.79, reclassification 2,490,649.71 USD / 227,772,305.98 INR (workbook row 57), rate 93.75.
   Net at closing rate = 477,872,820.94 on the total line against the workbook's 477,872,820.96 (it sums
   per-customer rounded values).
-- `ZZ1_TASA_BALANCE` run in the launchpad: renders per customer as expected. The queries show no
+- All three queries run in the launchpad (24/11/26) and read off the screen against the workbook:
+  `ZZ1_TASA_INCOME` FY 2025 - 17 rows x Q1-Q4 + total, USD and INR, 160 cells, 0 differences;
+  `ZZ1_TASA_AGING` 31.03.2026 - 19 customers x 7 buckets + gross, 152 cells, 0 differences;
+  `ZZ1_TASA_BALANCE` renders per customer as expected. The queries show no
   grand total row by default - *Totals* in the toolbar, or tick Display Result on the row fields.
 
 **Open:** the tile (catalog / group from Arnav), the questions below (defaults taken, each an

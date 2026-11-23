@@ -255,6 +255,7 @@ Analytical queries expose `…Results` / `…Result` in OData — not `Set` / `T
 
 | Problem | Fix that works |
 |---|---|
+| Desktop control of the OCD remote desktop: typing a **long** text (a URL, a description) in one go | The tool sends long text **through the clipboard**, and the remote clipboard can still hold the previous content. On 24/11/26 a launchpad URL typed this way pasted the last SQL result (TASA balance totals) into Chrome's address bar, which **sent it to Google as a search**. Always type in pieces of 8 characters or fewer, and never press Enter in an address bar without zooming on it first |
 | `"'PLANT' and the row type of 'CT_HEAD' are incompatible"` ×16 | **Do not use `VALUE #( ( literal ) )` over an elementary line type.** A string template row `( \|PLANT\| )` is rejected the same way — the release will not take a constructor expression with a literal row over an elementary type at all. **Use `APPEND`**, which assigns by conversion. Structured-row `VALUE #( ( sign = 'I' … ) )` is a different shape and is fine |
 | `ASSIGN COMPONENT` silently returns sy-subrc 4 | A string template **aligns LEFT by default**, so `\|M{ i WIDTH = 2 PAD = '0' }\|` gives `M10`, `M20`…`M90`. **Always `ALIGN = RIGHT` when zero-padding.** This one corrupted data silently — see §5, M-09 |
 | `"<field> is unknown"` ×51 in an include | ABAP resolves declarations in **source order**. A `DATA` block at the end of an include is too late — move it ahead of the first MODULE/FORM that uses it |
