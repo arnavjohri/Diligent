@@ -1,7 +1,7 @@
 # ovl/zfi_tasa_recon - TASA Recon Statement as a Fiori tile (custom analytical query)
 
-**Client:** OVL · **Filed:** 23/11/26 · **Status:** feasibility only. Nothing built, nothing checked
-in the system yet.
+**Client:** OVL · **Filed:** 23/11/26 · **Status:** feasibility checked against OCD 500 data
+(23/11/26, read-only SQL console, results below). Nothing built.
 **Requirement:** `docs/TASA_Recon_Statement_AnnualFY26_v5.xlsx` (Arnav: "make this as a fiori tile
 also .. check if you can do this with the info provided").
 
@@ -29,7 +29,7 @@ CDS views do it - no table function, no AMDP.
 | Workbook block | Proposed object | Notes |
 |---|---|---|
 | Customer List | Table `ZFI_TASA_CUST` (SM30): customer -> row label, sort, TASA flag, related-party flag, include-in-reclass flag, balance-sheet G/L (info) | Several codes map to one row (`CPO5NT` and `10033` -> CPO-5) |
-| P&L-TASA | Cube 1: ACDOCA lines of 230903, offsetting account (`GKONT`, customer) -> mapping row; measures USD (`KSL`) and INR (`HSL`); fiscal year / quarter from `POPER` by literal `CASE` (MEMORY §4.1 - no `month()`, no INT->NUMC) | Query: rows = project, columns = quarter / year. Q-on-Q difference and % as measures in the cube (current and previous quarter for a selected year/quarter), since CAQ cannot offset a quarter on its own |
+| P&L-TASA | Cube 1: ACDOCA lines of 230903, customer taken from the document's customer line (`KOART = 'D'`; `GKONT` / `KUNNR` are blank on the income line - checked 23/11) -> mapping row; measures USD (`KSL`) and INR (`HSL`); fiscal year / quarter from `POPER` by literal `CASE` (MEMORY §4.1 - no `month()`, no INT->NUMC) | Query: rows = project, columns = quarter / year. Q-on-Q difference and % as measures in the cube (current and previous quarter for a selected year/quarter), since CAQ cannot offset a quarter on its own |
 | BS - Customer Balance | Cube 2, parameter key date: open items of 91111 (posting date <= key date, not cleared or cleared after it) per customer; provision G/Ls alongside; INR at closing rate via `currency_conversion` (rate type `M`, key date) next to actual INR; reclass amount = net balance of customers flagged in the table | Same open-item logic as `ZI_SLDI_ITEM_TF`, but in plain CDS |
 | zfi_age | Cube 2 again: bucket from `dats_days_between( posting date, key date )`, 7 buckets as in ZFI_AGE | Or leave aging in ZFI_AGE and link it |
 | Tile | Three queries (Income, Balance, Aging), tiles on the catalog / group Arnav names | As loan schedule |
@@ -53,12 +53,21 @@ CDS views do it - no table function, no AMDP.
    ONGCSCBV 100612, Carabobo 400122): should the balance tile include those G/Ls too?
 10. The two hidden sheets are out of scope - confirm.
 
-## Checks to run in OCD before building (read-only, SQL console)
+## Checks run in OCD 500, 23/11/26 (ADT SQL console, read-only; ACDOCA `RLDNR 0L`, `RBUKRS OVL`)
 
-1. ACDOCA `RLDNR 0L`, `RBUKRS OVL`, `RACCT 0000230903`, `GJAHR 2025`: sum `KSL` / `HSL` by `GKONT`,
-   `GKART` - is `GKONT` the customer on every income line? Annual totals should give the workbook's
-   18,722,408.62 USD / 1,660,654,536.70 INR, and CPO-5 (10033) 6,314,022.52 USD.
-2. Same with `POPER` 010-012 for Q4: total 4,538,174.86 USD.
-3. `RACCT 0000091111` open at 31.03.2026 by `KUNNR`: total 5,107,992.71 USD / 462,876,293.79 INR
-   (the SAP dump in the BS sheet).
-4. `GJAHR` 2020-2024 present as line items for 230903 (history question 1).
+| Check | Result |
+|---|---|
+| 230903, `GJAHR 2025`, total | **-18,722,408.62 USD / -1,660,654,536.70 INR, 393 lines** - equal to the workbook |
+| Where the customer is | **Not on the income line**: `GKONT`, `GKOAR` and `KUNNR` are blank on all 393 lines. It is on the **customer line (`KOART = 'D'`) of the same document** - the cube must join income line to customer line by `RBUKRS / GJAHR / BELNR` |
+| FY26 by customer (via that join) | **All 15 customers equal to the cent** (CPO-5 6,314,022.52, ONGBV 6,543,684.12, SPOC 2,490,391.20, OVRL 53,660.26 ...) |
+| Lines without a customer line (8) | Block 128 = "Parent Co. Overheads 2024 / 2025" (-100,000 x 3, +100,000 = -200,000 USD, JV `CP0001`); "Other" -0.72 = four INTER-ASSOCIATION / CO Exp JIB lines netting to zero. Rule needed: no customer line -> by text or by the other G/L of the document (80801) |
+| Q4 FY26 (`POPER` >= 010) by customer | **All 14 customers equal**, Block 128 -100,000 in period 011 - total 4,538,174.86 |
+| 230903 by year vs the workbook's "P&L Income" row | FY21 (2020) -17,406,050.98 **equal** · FY22 (2021) -20,592,146.63 **equal** · FY23 (2022) **-21,783,750.54 vs -20,080,882.57 (SAP higher by 1,702,867.97 USD)** · FY24 (2023) **-20,279,674.39 vs -20,179,674.39 (SAP higher by 100,000.00 USD / 8,319,000 INR)** · FY25 (2024) -21,612,440.39 **equal**. Line items exist back to 2018 |
+| 91111 open at 31.03.2026 (`BUDAT` <= key date, `AUGDT` blank or later, `BSTAT` <> C) by `KUNNR` | **All 19 customers equal to the SAP dump in the BS sheet**, INR and USD (5,107,992.71 USD / 462,876,293.79 INR) |
+| Provision G/Ls 190790 / 190791, `GJAHR 2025` | Only 190790 has lines (8, -75,340.69 USD / -4,688,227.62 INR), **no customer on any of them**. The workbook provides only IPRNT (10,682.62 USD). Provision per customer cannot come from postings - needs a maintained value or rule |
+
+**Answers this gives:** question 3 (Block 128 has no customer line - a text or G/L rule), question 4
+("Other" = JIB lines netting to zero), question 5 (provisions are not customer-assigned in SAP).
+**New point for question 1:** FY23 and FY24 in SAP no longer equal the workbook (postings after the
+workbook froze them). Reading history from SAP changes those two years - the functional must choose.
+The income cube, the balance cube and the aging all reproduce FY26 exactly with the join above.
