@@ -1,8 +1,8 @@
 # ovl/zfi_tasa_recon - TASA Recon Statement as a Fiori tile (custom analytical query)
 
 **Client:** OVL · **Filed:** 23/11/26 · **Status 24/11/26:** built, active and published on OCD 500
-(Claude, desktop control) on Arnav's "Start building". **Mapping table still empty** (SM30 needs the
-SAP GUI, which had logged out) - until it is loaded every row shows as "Other" / "Not in Customer List".
+(Claude, desktop control) on Arnav's "Start building". **24/11/26 later: SM30 built and the 58 mapping
+entries loaded; income and balance reconcile to the workbook to the cent (below). Open: the tile.**
 **Requirement:** `docs/TASA_Recon_Statement_AnnualFY26_v5.xlsx` (Arnav: "make this as a fiori tile
 also .. check if you can do this with the info provided").
 
@@ -17,7 +17,9 @@ Package **`ZFI_TASA`** (new, HOME / ZOCD, not encapsulated), workbench request *
 | `ZI_TASA_DOCCUST`, `ZI_TASA_DOCGL`, `ZI_TASA_INC_ITEM`, `ZI_TASA_INC_CUBE`, `ZI_TASA_BAL_ITEM`, `ZI_TASA_BAL_CUBE` | ADT paste of `src/*.asddls`, in that order | active (warnings only) |
 | C1 release of both cubes | ADT, API State, Use in Key User Apps | released |
 | Queries | Custom Analytical Queries, all **Published** | see below |
-| SE54 maintenance for `ZFI_TASA_MAP` + 58 entries (`load/ZFI_TASA_MAP_load.txt`) | **open - needs SAP GUI** | - |
+| SE54 maintenance for `ZFI_TASA_MAP` | FG `ZFI_TASA`, auth group `&NC&`, one step, screen 0001 | generated |
+| 58 entries (`load/ZFI_TASA_MAP_load.txt`) | SM30, clipboard paste + checkboxes by hand | saved (client data, not on the TR) |
+| `ZI_TASA_DOCGL_LN` (new) + `ZI_TASA_DOCGL`, `ZI_TASA_INC_ITEM` changed | With the table loaded, Block 128 showed 3,928,054.62 and Other -3,728,054.72: the JIB document 1025003405 (type JM) also posts to G/L 80801. The G/L partner now comes only from the 80801 line that **exactly offsets** the income line | active |
 
 | Query | Label | Technical name for the tile | Layout |
 |---|---|---|---|
@@ -40,8 +42,19 @@ Names read from `DDLDEPENDENCY`.
   6-11 / 12-23 / 24-35 / 36+ months between posting month and key-date month); the cube compares the
   posting date with the first day of month 0, -2, -5, -11, -23, -35.
 
-**Open:** SM30 + entries (GUI login), the tile (catalog / group from Arnav), the questions below
-(defaults taken, each an `ASSUMPTION:` in the views), a query run once the table is loaded.
+**With the table loaded (24/11/26, SQL console on the cubes, FY 2025 / key date 31.03.2026, OVL):**
+- Income, all 17 rows equal to the workbook's Annual FY26 USD and INR to the cent, e.g. CPO-5
+  6,314,022.52 / 560,233,637.21, Block 128 200,000.00 / 18,071,000.00, Other -0.72 / -65.64; Related
+  Party Income 8,294,780.62 (workbook row 32).
+- Balance: gross 5,107,992.71, provision 10,682.62 (IPRNT), net 5,097,310.09, actual G/L INR
+  462,876,293.79, reclassification 2,490,649.71 USD / 227,772,305.98 INR (workbook row 57), rate 93.75.
+  Net at closing rate = 477,872,820.94 on the total line against the workbook's 477,872,820.96 (it sums
+  per-customer rounded values).
+- `ZZ1_TASA_BALANCE` run in the launchpad: renders per customer as expected. The queries show no
+  grand total row by default - *Totals* in the toolbar, or tick Display Result on the row fields.
+
+**Open:** the tile (catalog / group from Arnav), the questions below (defaults taken, each an
+`ASSUMPTION:` in the views).
 
 ## What the workbook is
 

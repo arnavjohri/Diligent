@@ -15,6 +15,8 @@
 //
 // CHANGE HISTORY
 //   24.11.2026  Arnav Johri  OCDK920558  Initial development
+//   24.11.2026  Arnav Johri  OCDK920558  G/L partner only from the line
+//               that exactly offsets the income line (JIB document fix)
 //----------------------------------------------------------------------
 // ASSUMPTION: special periods 013 - 016 count in Q4 (query 2 of
 //   NOTES.md). None carried 230903 in FY26.
@@ -35,6 +37,7 @@ define view ZI_TASA_INC_ITEM
     left outer join ZI_TASA_DOCGL   as Gl   on  Gl.company_code     = Line.rbukrs
                                             and Gl.fiscal_year      = Line.gjahr
                                             and Gl.accounting_doc   = Line.belnr
+                                            and Gl.offset_usd       = Line.ksl   //Changes by Arnav on 24/11/26
 {
   key Line.rbukrs                                     as company_code,
   key Line.gjahr                                      as fiscal_year,
