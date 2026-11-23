@@ -17,6 +17,10 @@
 *&
 *& CHANGE HISTORY
 *&   20.11.2026  Arnav Johri  <TR>  Initial development
+*&   23.11.2026  Arnav Johri  OCDK920554  Screen polish: header pane
+*&               with KPIs and colour legend, status icons, zebra,
+*&               fixed key columns, tooltips, frame titles, defaults
+*&               for year and open fortnight
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_entry.
 
@@ -35,6 +39,7 @@ TYPES: BEGIN OF ty_row,
          total   TYPE ty_amt,
          incr    TYPE ty_amt,
          state   TYPE c LENGTH 12,
+         stico   TYPE icon_d,                     "Changes by Arnav on 23/11/26
          aenam   TYPE aenam,
          aedat   TYPE aedat,
 *        last accepted values of the four entry cells
@@ -76,14 +81,28 @@ DATA: gs_proj TYPE zfi_pcx_proj,
       gv_edit TYPE abap_bool,
       gv_adm  TYPE abap_bool,
       go_grid TYPE REF TO cl_gui_alv_grid.
+*BOC By Arnav on 23/11/26
+* header pane above the grid
+DATA: go_split  TYPE REF TO cl_gui_splitter_container,
+      go_top    TYPE REF TO cl_gui_container,
+      go_body   TYPE REF TO cl_gui_container,
+      go_doc    TYPE REF TO cl_dd_document,
+      gv_doc_on TYPE abap_bool.
+*EOC By Arnav on 23/11/26
 
-SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME TITLE gv_b01.
+*EOC By Arnav on 23/11/26
 PARAMETERS: p_gjahr TYPE gjahr OBLIGATORY,
             p_perno TYPE zfi_pcx_perno OBLIGATORY.
 SELECT-OPTIONS: s_bu   FOR gs_proj-bu,
                 s_proj FOR gs_proj-projid.
 SELECTION-SCREEN END OF BLOCK b01.
-SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME TITLE gv_b02.
+*EOC By Arnav on 23/11/26
 PARAMETERS: p_disp AS CHECKBOX,
             p_adm  AS CHECKBOX.
 SELECTION-SCREEN END OF BLOCK b02.
@@ -101,6 +120,14 @@ CLASS lcl_evt DEFINITION FINAL.
 ENDCLASS.
 
 DATA go_evt TYPE REF TO lcl_evt.
+
+*BOC By Arnav on 23/11/26
+*----------------------------------------------------------------------*
+INITIALIZATION.
+  gv_b01 = 'Fortnight and Projects'.
+  gv_b02 = 'Mode'.
+  PERFORM set_defaults.
+*EOC By Arnav on 23/11/26
 
 *----------------------------------------------------------------------*
 AT SELECTION-SCREEN.
@@ -170,8 +197,44 @@ CLASS lcl_evt IMPLEMENTATION.
       PERFORM derive_row CHANGING <ls_row>.
     ENDLOOP.
     PERFORM refresh.
+    PERFORM header.                               "Changes by Arnav on 23/11/26
   ENDMETHOD.
 ENDCLASS.
+
+*BOC By Arnav on 23/11/26
+*&---------------------------------------------------------------------*
+*& Form set_defaults - financial year of today (April to March) and the
+*& fortnight that is open for entry; without an open one, today's
+*&---------------------------------------------------------------------*
+FORM set_defaults.
+  DATA: lt_open  TYPE STANDARD TABLE OF zfi_pcx_perno WITH DEFAULT KEY,
+        lv_month TYPE i.
+
+  lv_month = sy-datum+4(2).
+  IF lv_month >= 4.
+    p_gjahr = sy-datum(4).
+  ELSE.
+    p_gjahr = sy-datum(4) - 1.
+  ENDIF.
+  SELECT perno FROM zfi_pcx_period
+    WHERE gjahr  = @p_gjahr
+      AND status = @gc_open
+    ORDER BY perno
+    INTO TABLE @lt_open
+    UP TO 1 ROWS.
+  READ TABLE lt_open INTO p_perno INDEX 1.
+  IF sy-subrc <> 0.
+    lv_month = lv_month - 3.
+    IF lv_month <= 0.
+      lv_month = lv_month + 12.
+    ENDIF.
+    p_perno = 2 * lv_month - 1.
+    IF sy-datum+6(2) > '15'.
+      p_perno = p_perno + 1.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+*EOC By Arnav on 23/11/26
 
 *&---------------------------------------------------------------------*
 *& Form run
@@ -185,6 +248,12 @@ FORM run.
     go_grid->free( ).
     CLEAR go_grid.
   ENDIF.
+*BOC By Arnav on 23/11/26
+  IF go_split IS BOUND.
+    go_split->free( ).
+    CLEAR: go_split, go_top, go_body, go_doc, gv_doc_on.
+  ENDIF.
+*EOC By Arnav on 23/11/26
 
   SELECT SINGLE * FROM zfi_pcx_period
     WHERE gjahr = @p_gjahr
@@ -419,16 +488,35 @@ FORM derive_row CHANGING cs_row TYPE ty_row.
   ls_col-color-col = gc_col_frz.
   APPEND ls_col TO cs_row-coltab.
 
+*BOC By Arnav on 23/11/26
+*  IF gs_per-status = gc_frozen AND gv_adm = abap_false.
+*    cs_row-state = 'Frozen'.
+*    lv_base      = gc_col_frz.
+*  ELSEIF cs_row-saved = abap_true OR cs_row-dirty = abap_true.
+*    cs_row-state = 'Entered'.
+*    lv_base      = gc_col_pun.
+*  ELSE.
+*    cs_row-state = 'Pre-filled'.
+*    lv_base      = gc_col_pre.
+*  ENDIF.
   IF gs_per-status = gc_frozen AND gv_adm = abap_false.
     cs_row-state = 'Frozen'.
+    cs_row-stico = icon_locked.
     lv_base      = gc_col_frz.
-  ELSEIF cs_row-saved = abap_true OR cs_row-dirty = abap_true.
+  ELSEIF cs_row-dirty = abap_true.
+    cs_row-state = 'Not saved'.
+    cs_row-stico = icon_change.
+    lv_base      = gc_col_pun.
+  ELSEIF cs_row-saved = abap_true.
     cs_row-state = 'Entered'.
+    cs_row-stico = icon_led_green.
     lv_base      = gc_col_pun.
   ELSE.
     cs_row-state = 'Pre-filled'.
+    cs_row-stico = icon_led_yellow.
     lv_base      = gc_col_pre.
   ENDIF.
+*EOC By Arnav on 23/11/26
 
   ls_col-color-col = lv_base.
   ls_col-fname = 'EWIP'.
@@ -478,6 +566,9 @@ FORM display.
         lv_fy2  TYPE n LENGTH 2,
         lv_st   TYPE string.
 
+*BOC By Arnav on 23/11/26
+  PERFORM add_fcat USING 'STICO'  'Status'               4  ''       abap_false abap_false CHANGING lt_fcat.
+*EOC By Arnav on 23/11/26
   PERFORM add_fcat USING 'PROJID' 'Project'              6  ''       abap_false abap_false CHANGING lt_fcat.
   PERFORM add_fcat USING 'PROJNM' 'Project Name'         36 ''       abap_false abap_false CHANGING lt_fcat.
   PERFORM add_fcat USING 'BU'     'Business Unit'        10 ''       abap_false abap_false CHANGING lt_fcat.
@@ -492,6 +583,7 @@ FORM display.
   PERFORM add_fcat USING 'STATE'  'State'                10 ''       abap_false abap_false CHANGING lt_fcat.
   PERFORM add_fcat USING 'AENAM'  'Changed By'           12 ''       abap_false abap_false CHANGING lt_fcat.
   PERFORM add_fcat USING 'AEDAT'  'Changed On'           10 'AEDAT'  abap_false abap_false CHANGING lt_fcat.
+  PERFORM polish_fcat CHANGING lt_fcat.          "Changes by Arnav on 23/11/26
 
   CASE gs_per-status.
     WHEN gc_open.
@@ -505,11 +597,19 @@ FORM display.
     lv_st = 'correction mode'.
   ENDIF.
   lv_fy2 = ( p_gjahr + 1 ) MOD 100.
-  ls_layo-grid_title = |Capex USD mn FY { p_gjahr }-{ lv_fy2 }, fortnight { p_perno }| &&
-                       | to { gs_per-cutoff DATE = USER } ({ lv_st })|.
+*BOC By Arnav on 23/11/26
+* the header pane carries year, fortnight, cutoff and status now
+*  ls_layo-grid_title = |Capex USD mn FY { p_gjahr }-{ lv_fy2 }, fortnight { p_perno }| &&
+*                       | to { gs_per-cutoff DATE = USER } ({ lv_st })|.
+  ls_layo-grid_title = |Projects of fortnight { p_perno } ({ lv_st })|.
+*EOC By Arnav on 23/11/26
   ls_layo-ctab_fname = 'COLTAB'.
-  ls_layo-zebra      = abap_false.
-  ls_layo-cwidth_opt = abap_false.
+*BOC By Arnav on 23/11/26
+*  ls_layo-zebra      = abap_false.
+*  ls_layo-cwidth_opt = abap_false.
+  ls_layo-zebra      = abap_true.
+  ls_layo-cwidth_opt = abap_true.
+*EOC By Arnav on 23/11/26
   ls_layo-sel_mode   = 'A'.
 
 * no row operations: the project list comes from the project master
@@ -521,9 +621,24 @@ FORM display.
   APPEND cl_gui_alv_grid=>mc_fc_loc_cut           TO lt_excl.
   APPEND cl_gui_alv_grid=>mc_fc_loc_paste_new_row TO lt_excl.
 
+*BOC By Arnav on 23/11/26
+*  CREATE OBJECT go_grid
+*    EXPORTING
+*      i_parent = cl_gui_container=>default_screen.
+* header pane on top, grid below
+  CREATE OBJECT go_split
+    EXPORTING
+      parent  = cl_gui_container=>default_screen
+      rows    = 2
+      columns = 1.
+  go_split->set_row_height( id = 1 height = 18 ).
+  go_top  = go_split->get_container( row = 1 column = 1 ).
+  go_body = go_split->get_container( row = 2 column = 1 ).
   CREATE OBJECT go_grid
     EXPORTING
-      i_parent = cl_gui_container=>default_screen.
+      i_parent = go_body.
+  PERFORM header.
+*EOC By Arnav on 23/11/26
   IF go_evt IS NOT BOUND.
     CREATE OBJECT go_evt.
   ENDIF.
@@ -550,6 +665,164 @@ FORM display.
 * the list screen this WRITE opens is the screen the grid is drawn on
   WRITE space.
 ENDFORM.
+
+*BOC By Arnav on 23/11/26
+*&---------------------------------------------------------------------*
+*& Form polish_fcat - status icon, fixed key columns, emphasis, tooltips
+*&---------------------------------------------------------------------*
+FORM polish_fcat CHANGING ct_fcat TYPE lvc_t_fcat.
+  FIELD-SYMBOLS <ls_fcat> TYPE lvc_s_fcat.
+
+  LOOP AT ct_fcat ASSIGNING <ls_fcat>.
+    CASE <ls_fcat>-fieldname.
+      WHEN 'STICO'.
+        <ls_fcat>-icon       = abap_true.
+        <ls_fcat>-just       = 'C'.
+        <ls_fcat>-key        = abap_true.
+        <ls_fcat>-fix_column = abap_true.
+        <ls_fcat>-tooltip    = 'Pre-filled / entered / unsaved / frozen'.
+      WHEN 'PROJID' OR 'PROJNM'.
+        <ls_fcat>-key        = abap_true.
+        <ls_fcat>-fix_column = abap_true.
+      WHEN 'PRIOR'.
+        <ls_fcat>-tooltip = 'Last reported cumulative, USD million'.
+      WHEN 'EWIP' OR 'DWIP' OR 'CWIP' OR 'OTHCAP'.
+        <ls_fcat>-tooltip = 'Cumulative for the FY, USD million'.
+      WHEN 'TOTAL'.
+        <ls_fcat>-emphasize = 'C410'.
+        <ls_fcat>-tooltip   = 'Sum of the four categories'.
+      WHEN 'INCR'.
+        <ls_fcat>-emphasize = 'C400'.
+        <ls_fcat>-tooltip   = 'Total less prior reported Capex'.
+      WHEN OTHERS.
+    ENDCASE.
+  ENDLOOP.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form header - title, fortnight, figures so far and colour legend in
+*& the pane above the grid; called again after every change and save
+*&---------------------------------------------------------------------*
+FORM header.
+  DATA: lv_text  TYPE sdydo_text_element,
+        lv_fy2   TYPE n LENGTH 2,
+        lv_cnt   TYPE i,
+        lv_ent   TYPE i,
+        lv_unsav TYPE i,
+        lv_prior TYPE ty_amt,
+        lv_total TYPE ty_amt,
+        lv_incr  TYPE ty_amt.
+  FIELD-SYMBOLS <ls_row> TYPE ty_row.
+
+  IF go_top IS NOT BOUND.
+    RETURN.
+  ENDIF.
+  LOOP AT gt_row ASSIGNING <ls_row>.
+    lv_cnt   = lv_cnt + 1.
+    lv_prior = lv_prior + <ls_row>-prior.
+    lv_total = lv_total + <ls_row>-total.
+    IF <ls_row>-saved = abap_true OR <ls_row>-dirty = abap_true.
+      lv_ent = lv_ent + 1.
+    ENDIF.
+    IF <ls_row>-dirty = abap_true.
+      lv_unsav = lv_unsav + 1.
+    ENDIF.
+  ENDLOOP.
+  lv_incr = lv_total - lv_prior.
+
+  IF go_doc IS NOT BOUND.
+    CREATE OBJECT go_doc
+      EXPORTING
+        style = 'ALV_GRID'.
+  ENDIF.
+  go_doc->initialize_document( background_color = cl_dd_area=>col_textarea ).
+
+* line 1: what this screen is
+  lv_fy2  = ( p_gjahr + 1 ) MOD 100.
+  lv_text = |Provisional Capex  -  FY { p_gjahr }-{ lv_fy2 }, fortnight { p_perno }|.
+  go_doc->add_text( text = lv_text sap_style = cl_dd_area=>heading ).
+  go_doc->new_line( ).
+
+* line 2: cutoff, status and mode
+  go_doc->add_text( text = 'Cutoff date:' sap_emphasis = cl_dd_area=>strong ).
+  lv_text = |{ gs_per-cutoff DATE = USER }|.
+  go_doc->add_text( text = lv_text ).
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Fortnight:' sap_emphasis = cl_dd_area=>strong ).
+  CASE gs_per-status.
+    WHEN gc_open.
+      lv_text = 'Open for entry'.
+    WHEN gc_frozen.
+      lv_text = 'Frozen'.
+    WHEN OTHERS.
+      lv_text = 'Not yet open'.
+  ENDCASE.
+  go_doc->add_text( text = lv_text ).
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Mode:' sap_emphasis = cl_dd_area=>strong ).
+  IF gv_adm = abap_true.
+    lv_text = 'Correction by Corporate Budgeting'.
+  ELSEIF gv_edit = abap_true.
+    lv_text = 'Entry'.
+  ELSE.
+    lv_text = 'Display only'.
+  ENDIF.
+  go_doc->add_text( text = lv_text ).
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Amounts:' sap_emphasis = cl_dd_area=>strong ).
+  go_doc->add_text( text = 'USD million, cumulative for the year' ).
+  go_doc->new_line( ).
+
+* line 3: figures so far
+  go_doc->add_text( text = 'Projects entered:' sap_emphasis = cl_dd_area=>strong ).
+  lv_text = |{ lv_ent } of { lv_cnt }|.
+  go_doc->add_text( text = lv_text ).
+  IF lv_unsav > 0.
+    lv_text = |({ lv_unsav } not saved yet)|.
+    go_doc->add_gap( width = 1 ).
+    go_doc->add_text( text = lv_text sap_color = cl_dd_area=>list_negative ).
+  ENDIF.
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Prior reported:' sap_emphasis = cl_dd_area=>strong ).
+  lv_text = |{ lv_prior NUMBER = USER }|.
+  go_doc->add_text( text = lv_text ).
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Now:' sap_emphasis = cl_dd_area=>strong ).
+  lv_text = |{ lv_total NUMBER = USER }|.
+  go_doc->add_text( text = lv_text ).
+  go_doc->add_gap( width = 4 ).
+  go_doc->add_text( text = 'Increase:' sap_emphasis = cl_dd_area=>strong ).
+  lv_text = |{ lv_incr NUMBER = USER }|.
+  go_doc->add_text( text = lv_text sap_color = cl_dd_area=>list_positive ).
+  go_doc->new_line( ).
+
+* line 4: legend of the status icons and cell colours
+  go_doc->add_icon( sap_icon = 'ICON_LED_YELLOW' ).
+  go_doc->add_text( text = 'Pre-filled from the prior fortnight (yellow)' ).
+  go_doc->add_gap( width = 3 ).
+  go_doc->add_icon( sap_icon = 'ICON_CHANGE' ).
+  go_doc->add_text( text = 'Changed, not saved' ).
+  go_doc->add_gap( width = 3 ).
+  go_doc->add_icon( sap_icon = 'ICON_LED_GREEN' ).
+  go_doc->add_text( text = 'Entered (green)' ).
+  go_doc->add_gap( width = 3 ).
+  go_doc->add_icon( sap_icon = 'ICON_LOCKED' ).
+  go_doc->add_text( text = 'Frozen (grey-blue)' ).
+
+  go_doc->merge_document( ).
+  IF gv_doc_on = abap_false.
+    go_doc->display_document( EXPORTING  parent             = go_top
+                              EXCEPTIONS html_display_error = 1
+                                         OTHERS             = 2 ).
+    gv_doc_on = abap_true.
+  ELSE.
+    go_doc->display_document( EXPORTING  reuse_control      = abap_true
+                                         parent             = go_top
+                              EXCEPTIONS html_display_error = 1
+                                         OTHERS             = 2 ).
+  ENDIF.
+ENDFORM.
+*EOC By Arnav on 23/11/26
 
 *&---------------------------------------------------------------------*
 *& Form refresh
@@ -620,5 +893,6 @@ FORM save.
     lv_cnt = lv_cnt + 1.
   ENDLOOP.
   PERFORM refresh.
+  PERFORM header.                                 "Changes by Arnav on 23/11/26
   MESSAGE |{ lv_cnt } project(s) saved for fortnight { p_perno }| TYPE 'S'.
 ENDFORM.

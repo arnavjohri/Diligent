@@ -8,6 +8,7 @@
     <DATATYPE>CHAR</DATATYPE>
     <LENG>000060</LENG>
     <OUTPUTLEN>000060</OUTPUTLEN>
+    <LOWERCASE>X</LOWERCASE>
     <DDTEXT>Prov. Capex: text, 60 characters</DDTEXT>
    </DD01V>
   </asx:values>

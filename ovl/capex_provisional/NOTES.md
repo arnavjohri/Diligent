@@ -10,6 +10,25 @@ column of the queries is the build basis. **Built, not imported, not tested:** `
 (10 domains, 27 data elements, 6 tables, 3 programs — `ZFI_PCX_ADMIN` and the entry-status view
 added the same day on Arnav's "what the business will need"). TS: `TS_ZFI_PCX.md` / `.docx`.
 
+## Status 23/11/26 - built in OCD 500 (Claude, desktop control)
+
+Package **`ZFI_PCX`** (new), workbench request **OCDK920554**. Nothing transported.
+
+| Step | Done how | Result |
+|---|---|---|
+| 10 DOMA, 27 DTEL, 6 TABL, 3 PROG | `ZFI_PCX.zip` through `ZABAPGIT_STANDALONE`, offline repo on package `ZFI_PCX`; pull with the DEVC delete unticked | all active - the first PROG + TPOOL through abapGit on OCD (MEMORY §6) |
+| SM30 | SE54: FG `ZFI_PCX`, auth group `&NC&`, one step, screens 0001 ENT / 0002 PROJ / 0003 FY / 0004 FYPROJ | generated |
+| Entries | SM30: 17 entities, 71 projects from `load/` (all Active, Opex class E on projects 1, 8, 9, 15, 17, 18, 19, C on the rest) | saved (client data, not on the TR) |
+| Domain fix | `ZFI_PCX_CHAR60` had no lower-case flag - SM30 turned the entity and project names to capitals | Case-sensitive ticked, activated; `src/zfi_pcx_char60.doma.xml` carries `LOWERCASE` |
+| Auth | SU20 field `ZPCX_BU` created. SU21 object `ZFI_PCX` created **without fields** - the SU21 field table would not take input (GUI and ADT) | **Open for Arnav:** add `ZPCX_BU` and `ACTVT` to `ZFI_PCX`, then a PFCG role (ACTVT 02 / 03 / 70) |
+| SE93 | `ZFI_PCX01` entry, `ZFI_PCX02` reports, `ZFI_PCX03` fortnight calendar - report transactions, GUI for HTML ticked | saved |
+| Screen polish | Entry: header pane (cl_dd_document in a splitter) with fortnight, status, mode, live totals and colour legend; status icon column; zebra; fixed key columns; tooltips. Reports and admin: header block (top of list), striped rows, total row yellow, over budget / negative balance / not entered in red, 90-100 % in orange, status icons, completion %. All three: frame titles; defaults for the financial year and the open fortnight | active |
+
+**Tested:** the three selection screens (titles, defaults FY 2026 / fortnight 16 from today's date
+as no fortnight is open), admin *Show the Calendar* ("No calendar for 2026 yet"), admin *Generate*
+refused with "No authorisation to change the fortnight calendar". **Not tested:** every grid and
+list - they need the `ZFI_PCX` authorisation, and the calendar (Generate) needs activity 70.
+
 ## What the workbook asks for
 
 Sheets `Capex USD` / `Capex INR`, `Opex USD` / `Opex INR`, and three hidden ones:

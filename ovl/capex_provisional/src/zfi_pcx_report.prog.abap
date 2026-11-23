@@ -16,6 +16,11 @@
 *&
 *& CHANGE HISTORY
 *&   20.11.2026  Arnav Johri  <TR>  Initial development
+*&   23.11.2026  Arnav Johri  OCDK920554  Screen polish: header block
+*&               (year, as-at date, unit, projects), striped rows, total
+*&               row highlighted, over-budget and negative balances in
+*&               colour, status icons, fixed key columns, frame titles,
+*&               defaults for year and open fortnight
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_report.
 
@@ -26,9 +31,10 @@ TYPES: ty_amt  TYPE p LENGTH 8 DECIMALS 2,
        ty_text TYPE c LENGTH 40.
 
 * Capex per fortnight / month / quarter. Fnn = first fortnight of month
-* nn of the financial year, Mnn = the full month. The last four fields
-* are derived (FORM finish_wide); the amounts between JVTXT and BALBE
-* are added up by position in FORM add_wide - keep that order.
+* nn of the financial year, Mnn = the full month. BALBE .. UTLRE are
+* derived (FORM finish_wide), T_COLOR holds the cell colours; the
+* amounts between JVTXT and BALBE are added up by position in FORM
+* add_wide - keep that order and keep T_COLOR last.
 TYPES: BEGIN OF ty_wide,
          projid TYPE zfi_pcx_projid,
          projnm TYPE zfi_pcx_projnm,
@@ -68,6 +74,7 @@ TYPES: BEGIN OF ty_wide,
          balre  TYPE ty_amt,
          utlbe  TYPE ty_pct,
          utlre  TYPE ty_pct,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_wide,
        ty_t_wide TYPE STANDARD TABLE OF ty_wide WITH DEFAULT KEY.
 
@@ -82,6 +89,7 @@ TYPES: BEGIN OF ty_cum,
          othcap TYPE ty_amt,
          total  TYPE ty_amt,
          incr   TYPE ty_amt,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_cum.
 
 TYPES: BEGIN OF ty_his,
@@ -111,6 +119,7 @@ TYPES: BEGIN OF ty_his,
          c22    TYPE ty_amt,
          c23    TYPE ty_amt,
          c24    TYPE ty_amt,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_his.
 
 TYPES: BEGIN OF ty_cat,
@@ -123,6 +132,7 @@ TYPES: BEGIN OF ty_cat,
          total  TYPE ty_amt,
          ytdinr TYPE ty_amt,
          diff   TYPE ty_amt,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_cat.
 
 TYPES: BEGIN OF ty_itd,
@@ -137,17 +147,20 @@ TYPES: BEGIN OF ty_itd,
          q4     TYPE ty_amt,
          ytd    TYPE ty_amt,
          clos   TYPE ty_amt,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_itd.
 
 TYPES: BEGIN OF ty_stat,
          projid  TYPE zfi_pcx_projid,
          projnm  TYPE zfi_pcx_projnm,
          bu      TYPE zfi_pcx_bu,
+         stico   TYPE icon_d,                      "Changes by Arnav on 23/11/26
          entered TYPE c LENGTH 3,
          prior   TYPE ty_amt,
          total   TYPE ty_amt,
          aenam   TYPE aenam,
          aedat   TYPE aedat,
+         t_color TYPE lvc_t_scol,                  "Changes by Arnav on 23/11/26
        END OF ty_stat.
 
 TYPES: BEGIN OF ty_col,
@@ -182,14 +195,21 @@ DATA: gs_proj   TYPE zfi_pcx_proj,
       gv_fytxt  TYPE c LENGTH 7,
       gv_asat   TYPE i,
       gv_title  TYPE lvc_title.
+DATA gv_unit TYPE string.                          "Changes by Arnav on 23/11/26
 
-SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME TITLE gv_b01.
+*EOC By Arnav on 23/11/26
 PARAMETERS: p_gjahr TYPE gjahr OBLIGATORY,
             p_perno TYPE zfi_pcx_perno OBLIGATORY.
 SELECT-OPTIONS: s_bu   FOR gs_proj-bu,
                 s_proj FOR gs_proj-projid.
 SELECTION-SCREEN END OF BLOCK b01.
-SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME TITLE gv_b02.
+*EOC By Arnav on 23/11/26
 PARAMETERS: r_cum  RADIOBUTTON GROUP vw DEFAULT 'X',
             r_his  RADIOBUTTON GROUP vw,
             r_usd  RADIOBUTTON GROUP vw,
@@ -200,6 +220,13 @@ PARAMETERS: r_cum  RADIOBUTTON GROUP vw DEFAULT 'X',
             r_itdi RADIOBUTTON GROUP vw,
             r_stat RADIOBUTTON GROUP vw.
 SELECTION-SCREEN END OF BLOCK b02.
+
+*BOC By Arnav on 23/11/26
+INITIALIZATION.
+  gv_b01 = 'As at Fortnight'.
+  gv_b02 = 'Report'.
+  PERFORM set_defaults.
+*EOC By Arnav on 23/11/26
 
 AT SELECTION-SCREEN.
   IF p_perno < 1 OR p_perno > 24.
@@ -227,6 +254,13 @@ FORM run.
     RETURN.
   ENDIF.
   PERFORM build_base.
+*BOC By Arnav on 23/11/26
+  IF r_inr = abap_true OR r_ent = abap_true OR r_cat = abap_true OR r_itdi = abap_true.
+    gv_unit = 'INR crore'.
+  ELSE.
+    gv_unit = 'USD million'.
+  ENDIF.
+*EOC By Arnav on 23/11/26
 
   CASE abap_true.
     WHEN r_cum.
@@ -255,6 +289,42 @@ FORM run.
       PERFORM view_stat.
   ENDCASE.
 ENDFORM.
+
+*BOC By Arnav on 23/11/26
+*&---------------------------------------------------------------------*
+*& Form set_defaults - financial year of today (April to March) and the
+*& fortnight that is open for entry; without an open one, today's
+*&---------------------------------------------------------------------*
+FORM set_defaults.
+  CONSTANTS lc_open TYPE zfi_pcx_status VALUE 'O'.
+  DATA: lt_open  TYPE STANDARD TABLE OF zfi_pcx_perno WITH DEFAULT KEY,
+        lv_month TYPE i.
+
+  lv_month = sy-datum+4(2).
+  IF lv_month >= 4.
+    p_gjahr = sy-datum(4).
+  ELSE.
+    p_gjahr = sy-datum(4) - 1.
+  ENDIF.
+  SELECT perno FROM zfi_pcx_period
+    WHERE gjahr  = @p_gjahr
+      AND status = @lc_open
+    ORDER BY perno
+    INTO TABLE @lt_open
+    UP TO 1 ROWS.
+  READ TABLE lt_open INTO p_perno INDEX 1.
+  IF sy-subrc <> 0.
+    lv_month = lv_month - 3.
+    IF lv_month <= 0.
+      lv_month = lv_month + 12.
+    ENDIF.
+    p_perno = 2 * lv_month - 1.
+    IF sy-datum+6(2) > '15'.
+      p_perno = p_perno + 1.
+    ENDIF.
+  ENDIF.
+ENDFORM.
+*EOC By Arnav on 23/11/26
 
 *&---------------------------------------------------------------------*
 *& Form read_data
@@ -518,9 +588,15 @@ FORM add_wide USING is_from TYPE ty_wide CHANGING cs_to TYPE ty_wide.
                  <lv_to>   TYPE ty_amt.
 
   DESCRIBE FIELD is_from TYPE lv_type COMPONENTS lv_cnt.
-* components 1-3 are texts, the last four are derived in FINISH_WIDE
+*BOC By Arnav on 23/11/26
+** components 1-3 are texts, the last four are derived in FINISH_WIDE
+*  lv_idx = 4.
+*  WHILE lv_idx <= lv_cnt - 4.
+* components 1-3 are texts, the four before the last are derived in
+* FINISH_WIDE, the last is the colour table T_COLOR
   lv_idx = 4.
-  WHILE lv_idx <= lv_cnt - 4.
+  WHILE lv_idx <= lv_cnt - 5.
+*EOC By Arnav on 23/11/26
     ASSIGN COMPONENT lv_idx OF STRUCTURE is_from TO <lv_from>.
     ASSIGN COMPONENT lv_idx OF STRUCTURE cs_to   TO <lv_to>.
     <lv_to> = <lv_to> + <lv_from>.
@@ -922,10 +998,12 @@ FORM view_stat.
     READ TABLE gt_cap INTO ls_cap WITH KEY projid = ls_proj-projid perno = lv_pn BINARY SEARCH.
     IF sy-subrc = 0.
       ls_stat-entered = 'Yes'.
+      ls_stat-stico   = icon_led_green.          "Changes by Arnav on 23/11/26
       ls_stat-aenam   = ls_cap-aenam.
       ls_stat-aedat   = ls_cap-aedat.
     ELSE.
       ls_stat-entered = 'No'.
+      ls_stat-stico   = icon_led_red.            "Changes by Arnav on 23/11/26
     ENDIF.
     APPEND ls_stat TO gt_stat.
   ENDLOOP.
@@ -933,6 +1011,7 @@ FORM view_stat.
   SORT gt_stat STABLE BY entered bu.
 
   CLEAR gt_col.
+  PERFORM col USING 'STICO'   'Status'.            "Changes by Arnav on 23/11/26
   PERFORM col USING 'PROJID'  'Project'.
   PERFORM col USING 'PROJNM'  'Project Name'.
   PERFORM col USING 'BU'      'Business Unit'.
@@ -945,6 +1024,136 @@ FORM view_stat.
   gv_title = |Entry status of the fortnight to { lv_text }|.
   PERFORM show CHANGING gt_stat.
 ENDFORM.
+
+*BOC By Arnav on 23/11/26
+*&---------------------------------------------------------------------*
+*& Form colour_rows - total row highlighted; over budget, negative
+*& balance and missing entries in colour (column T_COLOR of each view)
+*&---------------------------------------------------------------------*
+FORM colour_rows CHANGING ct_tab TYPE STANDARD TABLE.
+  DATA ls_scol TYPE lvc_s_scol.
+  FIELD-SYMBOLS: <ls_row> TYPE any,
+                 <lt_col> TYPE lvc_t_scol,
+                 <lv_nm>  TYPE any.
+
+  LOOP AT ct_tab ASSIGNING <ls_row>.
+    ASSIGN COMPONENT 'T_COLOR' OF STRUCTURE <ls_row> TO <lt_col>.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+    CLEAR <lt_col>.
+    ASSIGN COMPONENT 'PROJNM' OF STRUCTURE <ls_row> TO <lv_nm>.
+    IF sy-subrc = 0 AND <lv_nm> = gc_total.
+*     total row: yellow, intensified, the whole line
+      CLEAR ls_scol.
+      ls_scol-color-col = 3.
+      ls_scol-color-int = 1.
+      APPEND ls_scol TO <lt_col>.
+      CONTINUE.
+    ENDIF.
+    PERFORM colour_cell USING <ls_row> 'BALBE'   CHANGING <lt_col>.
+    PERFORM colour_cell USING <ls_row> 'BALRE'   CHANGING <lt_col>.
+    PERFORM colour_cell USING <ls_row> 'UTLBE'   CHANGING <lt_col>.
+    PERFORM colour_cell USING <ls_row> 'UTLRE'   CHANGING <lt_col>.
+    PERFORM colour_cell USING <ls_row> 'ENTERED' CHANGING <lt_col>.
+  ENDLOOP.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form colour_cell - red: over budget / not entered; orange: 90-100 %
+*&---------------------------------------------------------------------*
+FORM colour_cell USING is_row TYPE any iv_field TYPE clike CHANGING ct_col TYPE lvc_t_scol.
+  DATA: ls_scol TYPE lvc_s_scol,
+        lv_col  TYPE i.
+  FIELD-SYMBOLS <lv_val> TYPE any.
+
+  ASSIGN COMPONENT iv_field OF STRUCTURE is_row TO <lv_val>.
+  IF sy-subrc <> 0.
+    RETURN.
+  ENDIF.
+  CASE iv_field.
+    WHEN 'BALBE' OR 'BALRE'.
+      IF <lv_val> < 0.
+        lv_col = 6.
+      ENDIF.
+    WHEN 'UTLBE' OR 'UTLRE'.
+      IF <lv_val> > 100.
+        lv_col = 6.
+      ELSEIF <lv_val> >= 90.
+        lv_col = 7.
+      ENDIF.
+    WHEN 'ENTERED'.
+      IF <lv_val> = 'No'.
+        lv_col = 6.
+      ELSE.
+        lv_col = 5.
+      ENDIF.
+    WHEN OTHERS.
+  ENDCASE.
+  IF lv_col > 0.
+    ls_scol-fname     = iv_field.
+    ls_scol-color-col = lv_col.
+    APPEND ls_scol TO ct_col.
+  ENDIF.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form col_props - key columns, status icon, empty instead of 0.00
+*&---------------------------------------------------------------------*
+FORM col_props USING io_cols TYPE REF TO cl_salv_columns_table
+               RAISING cx_salv_not_found.
+  DATA: lo_col  TYPE REF TO cl_salv_column_table,
+        ls_col  TYPE ty_col,
+        lv_name TYPE lvc_fname.
+
+  LOOP AT gt_col INTO ls_col.
+    lv_name = ls_col-name.
+    lo_col ?= io_cols->get_column( lv_name ).
+    CASE lv_name.
+      WHEN 'PROJID' OR 'PROJNM'.
+        lo_col->set_key( abap_true ).
+      WHEN 'STICO'.
+        lo_col->set_icon( abap_true ).
+        lo_col->set_key( abap_true ).
+        lo_col->set_alignment( if_salv_c_alignment=>centered ).
+      WHEN OTHERS.
+        lo_col->set_zero( abap_false ).
+    ENDCASE.
+  ENDLOOP.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form top_of_list - header block above the list (screen and print)
+*&---------------------------------------------------------------------*
+FORM top_of_list USING io_alv TYPE REF TO cl_salv_table.
+  DATA: lo_grid TYPE REF TO cl_salv_form_layout_grid,
+        lv_text TYPE string,
+        lv_asat TYPE ty_text,
+        lv_cnt  TYPE i.
+
+  CREATE OBJECT lo_grid.
+  lv_text = gv_title.
+  lo_grid->create_header_information( row = 1 column = 1 text = lv_text tooltip = lv_text ).
+  lo_grid->create_label( row = 2 column = 1 text = 'Financial year:' ).
+  lv_text = gv_fytxt.
+  lo_grid->create_text( row = 2 column = 2 text = lv_text ).
+  PERFORM per_text USING gv_asat abap_false CHANGING lv_asat.
+  lo_grid->create_label( row = 3 column = 1 text = 'As at:' ).
+  lv_text = |{ lv_asat } (fortnight { p_perno })|.
+  lo_grid->create_text( row = 3 column = 2 text = lv_text ).
+  lo_grid->create_label( row = 4 column = 1 text = 'Amounts in:' ).
+  lo_grid->create_text( row = 4 column = 2 text = gv_unit ).
+  lv_cnt = lines( gt_proj ).
+  lo_grid->create_label( row = 5 column = 1 text = 'Projects:' ).
+  lv_text = |{ lv_cnt }|.
+  lo_grid->create_text( row = 5 column = 2 text = lv_text ).
+  lo_grid->create_label( row = 6 column = 1 text = 'Run:' ).
+  lv_text = |{ sy-datum DATE = USER } { sy-uzeit TIME = USER }, { sy-uname }|.
+  lo_grid->create_text( row = 6 column = 2 text = lv_text ).
+  io_alv->set_top_of_list( lo_grid ).
+  io_alv->set_top_of_list_print( lo_grid ).
+ENDFORM.
+*EOC By Arnav on 23/11/26
 
 *&---------------------------------------------------------------------*
 *& Form show - ALV list with the columns of GT_COL, in that order
@@ -965,6 +1174,7 @@ FORM show CHANGING ct_tab TYPE STANDARD TABLE.
         lx_nf   TYPE REF TO cx_salv_not_found,
         lv_err  TYPE string.
 
+  PERFORM colour_rows CHANGING ct_tab.            "Changes by Arnav on 23/11/26
   TRY.
       cl_salv_table=>factory( IMPORTING r_salv_table = lo_alv
                               CHANGING  t_table      = ct_tab ).
@@ -987,6 +1197,17 @@ FORM show CHANGING ct_tab TYPE STANDARD TABLE.
         lo_cols->set_column_position( columnname = lv_name position = lv_pos ).
       ENDLOOP.
       lo_cols->set_optimize( abap_true ).
+*BOC By Arnav on 23/11/26
+      lo_cols->set_key_fixation( abap_true ).
+      PERFORM col_props USING lo_cols.
+      TRY.
+          lo_cols->set_color_column( 'T_COLOR' ).
+        CATCH cx_salv_data_error.
+*         no colour table in this view: plain rows
+      ENDTRY.
+      lo_alv->get_display_settings( )->set_striped_pattern( abap_true ).
+      PERFORM top_of_list USING lo_alv.
+*EOC By Arnav on 23/11/26
       lo_alv->get_functions( )->set_all( abap_true ).
       lo_alv->get_display_settings( )->set_list_header( gv_title ).
       lo_alv->display( ).

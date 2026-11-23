@@ -15,6 +15,10 @@
 *&
 *& CHANGE HISTORY
 *&   20.11.2026  Arnav Johri  <TR>  Initial development
+*&   23.11.2026  Arnav Johri  OCDK920554  Screen polish: status icons,
+*&               entry completion %, open fortnight highlighted, missing
+*&               TTA rate in red, header block, striped rows, frame
+*&               titles, default year
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_admin.
 
@@ -24,12 +28,17 @@ TYPES: BEGIN OF ty_cnt,
        END OF ty_cnt.
 
 TYPES: BEGIN OF ty_out,
+         stico   TYPE icon_d,                      "Changes by Arnav on 23/11/26
          perno   TYPE zfi_pcx_perno,
          cutoff  TYPE zfi_pcx_cutoff,
          sttxt   TYPE c LENGTH 12,
          ttarate TYPE zfi_pcx_ttarate,
          entered TYPE i,
          active  TYPE i,
+*BOC By Arnav on 23/11/26
+         pct     TYPE p LENGTH 4 DECIMALS 1,
+         t_color TYPE lvc_t_scol,
+*EOC By Arnav on 23/11/26
        END OF ty_out.
 
 CONSTANTS: gc_open     TYPE zfi_pcx_status VALUE 'O',
@@ -44,12 +53,18 @@ CONSTANTS: gc_open     TYPE zfi_pcx_status VALUE 'O',
 DATA: gt_per TYPE STANDARD TABLE OF zfi_pcx_period WITH DEFAULT KEY,
       gt_out TYPE STANDARD TABLE OF ty_out WITH DEFAULT KEY.
 
-SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b01 WITH FRAME TITLE gv_b01.
+*EOC By Arnav on 23/11/26
 PARAMETERS: p_gjahr TYPE gjahr OBLIGATORY,
             p_perno TYPE zfi_pcx_perno,
             p_rate  TYPE zfi_pcx_ttarate.
 SELECTION-SCREEN END OF BLOCK b01.
-SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+*BOC By Arnav on 23/11/26
+*SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME.
+SELECTION-SCREEN BEGIN OF BLOCK b02 WITH FRAME TITLE gv_b02.
+*EOC By Arnav on 23/11/26
 PARAMETERS: r_list RADIOBUTTON GROUP ac DEFAULT 'X',
             r_gen  RADIOBUTTON GROUP ac,
             r_next RADIOBUTTON GROUP ac,
@@ -57,6 +72,18 @@ PARAMETERS: r_list RADIOBUTTON GROUP ac DEFAULT 'X',
             r_open RADIOBUTTON GROUP ac,
             r_rate RADIOBUTTON GROUP ac.
 SELECTION-SCREEN END OF BLOCK b02.
+
+*BOC By Arnav on 23/11/26
+INITIALIZATION.
+  gv_b01 = 'Year and Fortnight'.
+  gv_b02 = 'Action'.
+* financial year of today (April to March)
+  IF sy-datum+4(2) >= '04'.
+    p_gjahr = sy-datum(4).
+  ELSE.
+    p_gjahr = sy-datum(4) - 1.
+  ENDIF.
+*EOC By Arnav on 23/11/26
 
 AT SELECTION-SCREEN.
   IF r_frz = abap_true OR r_open = abap_true OR r_rate = abap_true.
@@ -379,6 +406,7 @@ FORM list.
         lv_head TYPE lvc_title,
         lo_alv  TYPE REF TO cl_salv_table,
         lo_cols TYPE REF TO cl_salv_columns_table,
+        lo_col  TYPE REF TO cl_salv_column_table,   "Changes by Arnav on 23/11/26
         lx_msg  TYPE REF TO cx_salv_msg,
         lx_nf   TYPE REF TO cx_salv_not_found,
         lv_err  TYPE string.
@@ -416,6 +444,7 @@ FORM list.
     IF sy-subrc = 0.
       ls_out-entered = ls_cnt-cnt.
     ENDIF.
+    PERFORM decorate USING ls_per CHANGING ls_out.  "Changes by Arnav on 23/11/26
     APPEND ls_out TO gt_out.
   ENDLOOP.
 
@@ -430,6 +459,25 @@ FORM list.
       PERFORM set_text USING lo_cols 'ENTERED' 'Projects Entered'.
       PERFORM set_text USING lo_cols 'ACTIVE'  'Active Projects'.
       lo_cols->set_optimize( abap_true ).
+*BOC By Arnav on 23/11/26
+      PERFORM set_text USING lo_cols 'STICO' 'Status'.
+      PERFORM set_text USING lo_cols 'PCT'   'Entry Completion %'.
+      lo_col ?= lo_cols->get_column( 'STICO' ).
+      lo_col->set_icon( abap_true ).
+      lo_col->set_key( abap_true ).
+      lo_col->set_alignment( if_salv_c_alignment=>centered ).
+      lo_col ?= lo_cols->get_column( 'PERNO' ).
+      lo_col->set_key( abap_true ).
+      lo_col ?= lo_cols->get_column( 'STTXT' ).
+      lo_col->set_key( abap_true ).
+      TRY.
+          lo_cols->set_color_column( 'T_COLOR' ).
+        CATCH cx_salv_data_error.
+*         plain rows
+      ENDTRY.
+      lo_alv->get_display_settings( )->set_striped_pattern( abap_true ).
+      PERFORM top_of_list USING lo_alv lv_act.
+*EOC By Arnav on 23/11/26
       lo_alv->get_functions( )->set_all( abap_true ).
       lv_head = |Provisional Capex - fortnight calendar { p_gjahr }|.
       lo_alv->get_display_settings( )->set_list_header( lv_head ).
@@ -442,3 +490,70 @@ FORM list.
       MESSAGE lv_err TYPE 'S' DISPLAY LIKE 'E'.
   ENDTRY.
 ENDFORM.
+
+*BOC By Arnav on 23/11/26
+*&---------------------------------------------------------------------*
+*& Form decorate - status icon, completion %, colours of one fortnight
+*&---------------------------------------------------------------------*
+FORM decorate USING is_per TYPE zfi_pcx_period CHANGING cs_out TYPE ty_out.
+  DATA ls_scol TYPE lvc_s_scol.
+
+  CLEAR cs_out-t_color.
+  CASE is_per-status.
+    WHEN gc_open.
+      cs_out-stico = icon_led_green.
+*     the open fortnight: green, the whole line
+      ls_scol-color-col = 5.
+      APPEND ls_scol TO cs_out-t_color.
+    WHEN gc_frozen.
+      cs_out-stico = icon_locked.
+    WHEN OTHERS.
+      cs_out-stico = icon_led_inactive.
+  ENDCASE.
+  IF cs_out-active > 0.
+    cs_out-pct = cs_out-entered * 100 / cs_out-active.
+  ENDIF.
+* a fortnight that is or was open needs its TTA rate for the INR reports
+  IF is_per-status IS NOT INITIAL AND cs_out-ttarate IS INITIAL.
+    CLEAR ls_scol.
+    ls_scol-fname     = 'TTARATE'.
+    ls_scol-color-col = 6.
+    APPEND ls_scol TO cs_out-t_color.
+  ENDIF.
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form top_of_list - header block above the calendar (screen and print)
+*&---------------------------------------------------------------------*
+FORM top_of_list USING io_alv TYPE REF TO cl_salv_table iv_act TYPE i.
+  DATA: lo_grid TYPE REF TO cl_salv_form_layout_grid,
+        ls_per  TYPE zfi_pcx_period,
+        lv_text TYPE string,
+        lv_fy2  TYPE n LENGTH 2,
+        lv_frz  TYPE i.
+
+  lv_text = 'none'.
+  LOOP AT gt_per INTO ls_per.
+    IF ls_per-status = gc_open.
+      lv_text = |{ ls_per-perno } (cutoff { ls_per-cutoff DATE = USER })|.
+    ELSEIF ls_per-status = gc_frozen.
+      lv_frz = lv_frz + 1.
+    ENDIF.
+  ENDLOOP.
+
+  CREATE OBJECT lo_grid.
+  lv_fy2 = ( p_gjahr + 1 ) MOD 100.
+  lo_grid->create_header_information( row = 1 column = 1
+                                      text = 'Provisional Capex - fortnight calendar' ).
+  lo_grid->create_label( row = 2 column = 1 text = 'Financial year:' ).
+  lo_grid->create_text( row = 2 column = 2 text = |{ p_gjahr }-{ lv_fy2 }| ).
+  lo_grid->create_label( row = 3 column = 1 text = 'Open fortnight:' ).
+  lo_grid->create_text( row = 3 column = 2 text = lv_text ).
+  lo_grid->create_label( row = 4 column = 1 text = 'Frozen:' ).
+  lo_grid->create_text( row = 4 column = 2 text = |{ lv_frz } of 24| ).
+  lo_grid->create_label( row = 5 column = 1 text = 'Active projects:' ).
+  lo_grid->create_text( row = 5 column = 2 text = |{ iv_act }| ).
+  io_alv->set_top_of_list( lo_grid ).
+  io_alv->set_top_of_list_print( lo_grid ).
+ENDFORM.
+*EOC By Arnav on 23/11/26
