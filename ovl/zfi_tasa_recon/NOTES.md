@@ -1,9 +1,47 @@
 # ovl/zfi_tasa_recon - TASA Recon Statement as a Fiori tile (custom analytical query)
 
-**Client:** OVL · **Filed:** 23/11/26 · **Status:** feasibility checked against OCD 500 data
-(23/11/26, read-only SQL console, results below). Nothing built.
+**Client:** OVL · **Filed:** 23/11/26 · **Status 24/11/26:** built, active and published on OCD 500
+(Claude, desktop control) on Arnav's "Start building". **Mapping table still empty** (SM30 needs the
+SAP GUI, which had logged out) - until it is loaded every row shows as "Other" / "Not in Customer List".
 **Requirement:** `docs/TASA_Recon_Statement_AnnualFY26_v5.xlsx` (Arnav: "make this as a fiori tile
 also .. check if you can do this with the info provided").
+
+## Status 24/11/26 - what exists on OCD 500
+
+Package **`ZFI_TASA`** (new, HOME / ZOCD, not encapsulated), workbench request **OCDK920558**
+("SAP: FI: TASA Recon Statement Fiori Tile"). Nothing transported.
+
+| Object | How | State |
+|---|---|---|
+| Domain `ZFI_TASA_PCT`, 7 data elements, table `ZFI_TASA_MAP` | ADT wizards (the GUI was logged out, so no abapGit). `src/*.xml` + `ZFI_TASA_DDIC.zip` are the same definitions, unused; `src/zfi_tasa_map.tabl.adt.txt` is the pasted table source | active |
+| `ZI_TASA_DOCCUST`, `ZI_TASA_DOCGL`, `ZI_TASA_INC_ITEM`, `ZI_TASA_INC_CUBE`, `ZI_TASA_BAL_ITEM`, `ZI_TASA_BAL_CUBE` | ADT paste of `src/*.asddls`, in that order | active (warnings only) |
+| C1 release of both cubes | ADT, API State, Use in Key User Apps | released |
+| Queries | Custom Analytical Queries, all **Published** | see below |
+| SE54 maintenance for `ZFI_TASA_MAP` + 58 entries (`load/ZFI_TASA_MAP_load.txt`) | **open - needs SAP GUI** | - |
+
+| Query | Label | Technical name for the tile | Layout |
+|---|---|---|---|
+| `ZZ1_TASA_INCOME` | TASA Income by Project / Subsidiary | `2CZZ1_MV4AETHIWQTD` | Rows Sort No. + Project / Subsidiary; columns Income USD / INR x Fiscal Quarter with year total; prompt Fiscal Year (default 2025 = FY26, mandatory); CompanyCode = OVL |
+| `ZZ1_TASA_BALANCE` | TASA Customer Balance and Reclassification | `2CZZ1_ZAS7W42BS1ZW` | Rows Customer Category, Customer, Project / Subsidiary; Gross, Provision, Net (USD), Closing Rate, Net at Closing Rate (INR, calculated = Net x Rate), Actual G/L INR, Reclassification USD / INR; prompt Key Date (default 31.03.2026); OVL |
+| `ZZ1_TASA_AGING` | TASA Customer Aging | `2CZZ1_5FJ6YJM19FAS` | Same rows; 1 Month .. More than 3 Years + Gross Balance (USD); Key Date; OVL |
+
+Names read from `DDLDEPENDENCY`.
+
+**Checked on OCD 500 with the views (24/11/26, SQL console):**
+- `ZI_TASA_INC_ITEM`, FY 2025, by partner and quarter against the workbook's Q1-Q4 USD and INR:
+  **88 of 88 cells equal**; the only gap is Block 128 Q2 carrying the -0.72 "Other" JIB lines, which
+  separates once `80801` is in the mapping table (then Block 128 = 100,000 / 100,000 and Other -0.72,
+  as the workbook).
+- `ZI_TASA_BAL_CUBE( p_keydate = '20260331' )` by customer: gross USD and all **7 aging buckets equal
+  for all 19 customers** (0 differences) to the ZFI_AGE dump; totals 1,625,610.90 / 2,041,786.03 /
+  645,456.00 / 256,291.77 / 120,615.41 / 281,172.31 / 137,060.29 = 5,107,992.71. Closing rate 93.75.
+  One extra row (customer 10094, 0.36) belongs to another company code - the queries filter OVL.
+- Aging by **calendar months**, not days: derived from the workbook's line items (0 / 1-2 / 3-5 /
+  6-11 / 12-23 / 24-35 / 36+ months between posting month and key-date month); the cube compares the
+  posting date with the first day of month 0, -2, -5, -11, -23, -35.
+
+**Open:** SM30 + entries (GUI login), the tile (catalog / group from Arnav), the questions below
+(defaults taken, each an `ASSUMPTION:` in the views), a query run once the table is loaded.
 
 ## What the workbook is
 
