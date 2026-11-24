@@ -31,6 +31,11 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
                OVL   80541    001                      D      04   OVRL India Limited - Interest Component
   NOT loaded:  OVL   <provision G/L - not named in the workbook (query 3)>  L  03  ONGC Narmada Limited   X
 
+  WHT % (new column WHTPC, 24/11/26): 15.00 on OVL / 91905 / 001 (LOAN TO OVSL), blank everywhere else.
+  The interest OVSL pays is received net of 15% WHT. ZCL_SLDI_ITEM_TF adds a derived line per receipt
+  (receipt x 15 / 85) into Interest Recognised, as the workbook does. CLEAR THIS RATE once functional posts the
+  WHT out of 91905, or the tax is deducted twice.
+
   Seq 003 (added in SM30 on 24/11/26, OCD 500): doc 1025001435 "WHT @ 15% Acc Interest 28Jan to 31 Mar 2025"
   is the 15% WHT gross-up of OVSL's opening interest (21,355.02 / 0.85 x 0.15 = 3,768.54). Before this rule its
   text named no subsidiary, so seq 999 put it on Imperial. See NOTES.md, open point 2.

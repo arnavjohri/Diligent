@@ -17,7 +17,18 @@
 *&
 *& CHANGE HISTORY
 *&   20.11.2026  Arnav Johri  <TR>  Initial development
+*&   24.11.2026  Arnav Johri  OCDK920552  WHT withheld by the subsidiary
+*&               on interest it pays: one derived line per receipt,
+*&               rate from ZFI_SLDI_ROW-WHTPC (workbook nets it)
 *&---------------------------------------------------------------------*
+* ASSUMPTION: a subsidiary with ZFI_SLDI_ROW-WHTPC > 0 pays interest net
+*   of withholding tax at that rate. A credit on that row in movement
+*   column 2 (repayment) is the net receipt; the tax withheld is
+*   receipt x rate / (100 - rate), shown as a derived line netted into
+*   column 1 (interest recognised), as the FY26 workbook does for OVSL
+*   (1,620,095.73 x 15 / 85 = 285,899.25). It is not posted in OVL's
+*   books (24.11.2026). Clear the rate once functional posts the WHT
+*   out of 91905, or it is deducted twice.
 * ASSUMPTION: leading ledger is 0L (S/4 standard ID).
 * ASSUMPTION: USD is the global currency of ACDOCA (KSL / RKCUR), as
 *   confirmed for company code OVL on 10/11/26 (bank revaluation).
@@ -96,6 +107,7 @@ CLASS zcl_sldi_item_tf IMPLEMENTATION.
              COALESCE( r.rowno, CAST( '99' AS NVARCHAR(2) ) )         AS rowno,
              COALESCE( r.rowtxt, CAST( 'Unassigned' AS NVARCHAR(60) ) ) AS rowtxt,
              COALESCE( r.provflag, CAST( '' AS NVARCHAR(1) ) )        AS provflag,
+             COALESCE( r.whtpc, 0 )                                   AS whtpc, --Changes by Arnav on 24/11/26
              ROW_NUMBER() OVER ( PARTITION BY i.rbukrs, i.gjahr, i.belnr, i.docln
                                  ORDER BY r.seqno )                   AS rn
         FROM :lt_item AS i
@@ -113,7 +125,8 @@ CLASS zcl_sldi_item_tf IMPLEMENTATION.
              w.budat, w.augdt, w.blart, w.drcrk, w.sgtxt, w.zuonr,
              w.rassc, w.gkont, w.rhcur, w.rkcur, w.hsl, w.ksl,
              w.sched, w.rowno, w.rowtxt, w.provflag,
-             m.movcol                                                 AS movcol,
+             w.whtpc,                                                 --Changes by Arnav on 24/11/26
+             m.movcol                                                AS movcol,
              ROW_NUMBER() OVER ( PARTITION BY w.rbukrs, w.gjahr, w.belnr, w.docln
                                  ORDER BY m.seqno )                   AS rn2
         FROM :lt_row AS w
@@ -127,6 +140,93 @@ CLASS zcl_sldi_item_tf IMPLEMENTATION.
                 '%' || REPLACE( UPPER( RTRIM( m.txtpat ) ), '*', '%' ) || '%' )
        WHERE w.rn = 1;
 
+*BOC By Arnav on 24/11/26
+--    RETURN
+--      SELECT rclnt                                            AS mandt,
+--             rbukrs                                           AS company_code,
+--             gjahr                                            AS fiscal_year,
+--             belnr                                            AS accounting_doc,
+--             docln                                            AS ledger_gl_item,
+--             racct                                            AS gl_account,
+--             sched                                            AS schedule,
+--             rowno                                            AS row_no,
+--             rowtxt                                           AS row_text,
+--             provflag                                         AS is_provision,
+--             CAST( CASE
+--                     WHEN movcol IS NOT NULL THEN movcol
+--                     WHEN drcrk = 'S'        THEN '1'
+--                     WHEN sched = 'D'        THEN '9'
+--                     ELSE                         '2'
+--                   END AS NVARCHAR(1) )                       AS movement_column,
+--             budat                                            AS posting_date,
+--             augdt                                            AS clearing_date,
+--             blart                                            AS document_type,
+--             drcrk                                            AS debit_credit,
+--             sgtxt                                            AS item_text,
+--             zuonr                                            AS assignment,
+--             rassc                                            AS partner_company,
+--             gkont                                            AS offsetting_account,
+--             rhcur                                            AS co_code_currency,
+--             rkcur                                            AS global_currency,
+--             CAST( CASE
+--                     WHEN budat < :p_from
+--                      AND ( augdt < '19000101' OR augdt >= :p_from )
+--                     THEN ksl ELSE 0
+--                   END AS DECIMAL(23,2) )                     AS opening_usd,
+--             CAST( CASE
+--                     WHEN budat >= :p_from THEN ksl ELSE 0
+--                   END AS DECIMAL(23,2) )                     AS movement_usd,
+--             CAST( CASE
+--                     WHEN augdt < '19000101' OR augdt > :p_to
+--                     THEN ksl ELSE 0
+--                   END AS DECIMAL(23,2) )                     AS closing_usd,
+--             CAST( CASE
+--                     WHEN budat >= :p_from THEN hsl ELSE 0
+--                   END AS DECIMAL(23,2) )                     AS movement_inr
+--        FROM :lt_mov
+--       WHERE rn2 = 1;
+
+    -- one row per line with its movement column
+    lt_base =
+      SELECT rclnt, rbukrs, gjahr, belnr, docln, racct,
+             sched, rowno, rowtxt, provflag, whtpc,
+             CAST( CASE
+                     WHEN movcol IS NOT NULL THEN movcol
+                     WHEN drcrk = 'S'        THEN '1'
+                     WHEN sched = 'D'        THEN '9'
+                     ELSE                         '2'
+                   END AS NVARCHAR(1) )                       AS movcol,
+             budat, augdt, blart, drcrk, sgtxt, zuonr,
+             rassc, gkont, rhcur, rkcur, hsl, ksl
+        FROM :lt_mov
+       WHERE rn2 = 1;
+
+    -- WHT withheld by the subsidiary on interest it paid (net receipt
+    -- in column 2): receipt x rate / (100 - rate), into column 1
+    lt_all =
+      SELECT rclnt, rbukrs, gjahr, belnr, docln, racct,
+             sched, rowno, rowtxt, provflag, movcol,
+             budat, augdt, blart, drcrk, sgtxt, zuonr,
+             rassc, gkont, rhcur, rkcur, hsl, ksl
+        FROM :lt_base
+      UNION ALL
+      SELECT rclnt, rbukrs, gjahr, belnr,
+             CAST( 'W' || RIGHT( docln, 5 ) AS NVARCHAR(6) )  AS docln,
+             racct, sched, rowno, rowtxt, provflag,
+             CAST( '1' AS NVARCHAR(1) )                       AS movcol,
+             budat, augdt, blart, drcrk,
+             CAST( 'WHT ' || TO_NVARCHAR( whtpc )
+                   || '% withheld by subsidiary (derived)'
+                   AS NVARCHAR(50) )                          AS sgtxt,
+             zuonr, rassc, gkont, rhcur, rkcur,
+             ROUND( hsl * whtpc / ( 100 - whtpc ), 2 )        AS hsl,
+             ROUND( ksl * whtpc / ( 100 - whtpc ), 2 )        AS ksl
+        FROM :lt_base
+       WHERE whtpc  > 0
+         AND whtpc  < 100
+         AND movcol = '2'
+         AND drcrk  = 'H';
+
     RETURN
       SELECT rclnt                                            AS mandt,
              rbukrs                                           AS company_code,
@@ -138,12 +238,7 @@ CLASS zcl_sldi_item_tf IMPLEMENTATION.
              rowno                                            AS row_no,
              rowtxt                                           AS row_text,
              provflag                                         AS is_provision,
-             CAST( CASE
-                     WHEN movcol IS NOT NULL THEN movcol
-                     WHEN drcrk = 'S'        THEN '1'
-                     WHEN sched = 'D'        THEN '9'
-                     ELSE                         '2'
-                   END AS NVARCHAR(1) )                       AS movement_column,
+             movcol                                           AS movement_column,
              budat                                            AS posting_date,
              augdt                                            AS clearing_date,
              blart                                            AS document_type,
@@ -169,8 +264,8 @@ CLASS zcl_sldi_item_tf IMPLEMENTATION.
              CAST( CASE
                      WHEN budat >= :p_from THEN hsl ELSE 0
                    END AS DECIMAL(23,2) )                     AS movement_inr
-        FROM :lt_mov
-       WHERE rn2 = 1;
+        FROM :lt_all;
+*EOC By Arnav on 24/11/26
 
   ENDMETHOD.
 ENDCLASS.

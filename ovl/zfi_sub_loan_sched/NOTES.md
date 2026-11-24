@@ -100,6 +100,18 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
        - Imperial interest 13,995.30, closing 16,192.29: equal to the workbook.
        - OVSL interest 2,664,027.00, closing 1,065,286.29: each the workbook figure + 285,899.25 WHT.
        - Interest block total closing unchanged at 535,330,375.40.
+     - **Net of WHT, done 24/11/26 (Arnav: "correct it and make the figures match"):**
+       - New data element `ZSLDI_WHTPC` (DEC 5,2) and a new field `WHTPC` on `ZFI_SLDI_ROW`.
+       - SE54 regenerated with "new field" (screen 0001 rebuilt).
+       - SM30: 15.00 on 91905 / 001 (LOAN TO OVSL).
+       - `ZCL_SLDI_ITEM_TF` adds one derived line per interest receipt on a row with a rate:
+         receipt x rate / (100 - rate), into column 1. Document = the receipt's, line `W` + its line number,
+         text "WHT 15.00% withheld by subsidiary (derived)".
+       - No change to the table function's fields, the cube or the query. All on OCDK920552.
+       - **FY26 result: the interest block equals the workbook in every row and column**
+         (interest recognised 114,360,603.07, closing 535,044,476.15).
+       - The tile now differs from the 91905 G/L balance by 285,899.25 until the WHT is posted. When it is
+         posted, clear the rate, or the tax is deducted twice.
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
 4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
