@@ -24,6 +24,29 @@ Everything below exists in OCD client 500, package `ZFI_OTH`, workbench request 
 | `ZZ1_SLDI_LOAN` | Subsidiary Loan Movement Schedule | `2CZZ1_200HYYH5R7ZM` | ScheduleType = L |
 | `ZZ1_SLDI_INTEREST` | Accrued Interest Movement Schedule | `2CZZ1_14IFEG0E06GT` | ScheduleType = I |
 | `ZZ1_SLDI_DEEMED` | Deemed Investment Schedule | `2CZZ1_GZ22O2H113GC` | ScheduleType = D |
+| **`ZZ1_SLDI_SCHEDULE`** | **Subsidiaries Loan and Deemed Investment Schedule** | **`2CZZ1_0R6A7YF63UIC`** | none - all three blocks |
+
+**One tile (24/11/26, Arnav: "i want one tile").** `ZZ1_SLDI_SCHEDULE` is a copy of the Deemed query with the
+`ScheduleType = D` filter removed, so the workbook's three blocks come out in one table:
+
+- **Rows:** Schedule (sorted descending, so L, I, D = Loan, Interest, Deemed) > Schedule Name > Row No. >
+  Subsidiary. There is a total per block and no grand total, because adding loan, interest and deemed
+  together would mean nothing.
+- **Columns:**
+  - USD: Opening, Additional Funding / Interest Recognised, Repayment / Conversion / Interest, Conv. to
+    Equity, Conv. to Preference, Closing before Conv. to Loan, Conv. to Loan, Closing, Provision Made, Net
+    Balance.
+  - INR: the INR movements and the four INR/USD rates.
+  - Unclassified Movement.
+- **Prompts:** From and To Date, mandatory, with no default. A hard-coded FY26 default would go stale.
+- **Name:** read from the analyze URL of the published query (`ZZ1_` prefix, not a `ZZ9_` preview, M-31).
+- **FY26 check on screen:**
+  - Loan total: opening 2,234,863,836.91, addition 230,634,276.36, closing 2,465,498,113.27 (as the workbook).
+  - Interest total: closing 535,330,375.40.
+  - Deemed total: closing 20,031,307.84.
+  - Unclassified is 0 in every row.
+  - The open points below still apply.
+- **The three single-block queries above stay.** Delete them only if Arnav says so.
 
 All three: prompts From Date / To Date (mandatory), rows Row No. + Subsidiary with a Grand Total, G/L Account
 free for drill-down. Deemed adds calculated measures *Closing Balance before Conv. to Loan* (`Closing - Conv. to
@@ -55,7 +78,8 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
 4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
-5. Tile: catalog / group assignment pending (Arnav to name them). Transport of the queries themselves is a
+5. Tile: one tile on `2CZZ1_0R6A7YF63UIC` (`ZZ1_SLDI_SCHEDULE`); catalog / group assignment pending (Arnav to
+   name them). Transport of the queries themselves is a
    separate key-user step (they are not on OCDK920552).
 6. The ZIPs in this folder were **not** used; the system was built from `src/` by ADT. They predate the two cube
    changes - do not import them.
