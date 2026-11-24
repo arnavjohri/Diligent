@@ -95,8 +95,11 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
    - **Fix:**
      - *Accounting:* a posting from 91905 to the WHT credit G/L for 285,899.25. Functional to confirm the
        G/L and whether it is due.
-     - *Mapping (proposed, not done):* a `ZFI_SLDI_ROW` rule 91905 seq 003, word `WHT @`, to row I 03 OVSL.
-       Imperial then ties exactly, and the whole difference sits on OVSL with this explanation.
+     - *Mapping, done 24/11/26 in SM30 (OCD 500, client data):* `ZFI_SLDI_ROW` rule 91905 seq 003, word
+       `WHT @`, to row I 03 OVSL. Tile re-run for FY26:
+       - Imperial interest 13,995.30, closing 16,192.29: equal to the workbook.
+       - OVSL interest 2,664,027.00, closing 1,065,286.29: each the workbook figure + 285,899.25 WHT.
+       - Interest block total closing unchanged at 535,330,375.40.
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
 4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).

@@ -21,6 +21,7 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
                OVL   100618   001                      L      05   Loan to BREML
                OVL   91905    001  LOAN TO OVSL        I      03   ONGC Videsh Singapore Pte. Ltd
                OVL   91905    002  LOAN TO IEL         I      01   Imperial Energy Limited
+               OVL   91905    003  WHT @               I      03   ONGC Videsh Singapore Pte. Ltd   (added 24/11/26)
                OVL   91905    999                      I      01   Imperial Energy Limited
                OVL   391908   001  BREML               I      04   BREML
                OVL   391908   999                      I      02   OVRL India Ltd
@@ -29,6 +30,10 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
                OVL   80538    001                      D      03   OVRL India Limited
                OVL   80541    001                      D      04   OVRL India Limited - Interest Component
   NOT loaded:  OVL   <provision G/L - not named in the workbook (query 3)>  L  03  ONGC Narmada Limited   X
+
+  Seq 003 (added in SM30 on 24/11/26, OCD 500): doc 1025001435 "WHT @ 15% Acc Interest 28Jan to 31 Mar 2025"
+  is the 15% WHT gross-up of OVSL's opening interest (21,355.02 / 0.85 x 0.15 = 3,768.54). Before this rule its
+  text named no subsidiary, so seq 999 put it on Imperial. See NOTES.md, open point 2.
 
   Seq 999 with a blank word is the "everything else" line of a shared G/L (design of 20/11). It also
   catches the lines with NO item text: on 91905 these are large (OVRL partner +36.8 M, blank -36.6 M in
