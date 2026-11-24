@@ -121,7 +121,21 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
          posted, clear the rate, or the tax is deducted twice.
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
-4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
+4. **Deemed INR: all three differences are on the workbook's side. The tile shows the INR as posted.**
+   Checked 24/11/26, OCD SQL console. Not "fixed": matching would copy the workbook's mistakes into the tile.
+   - **BREML Additional Funding +402,011,800 INR (G/L 100125).**
+     - The March'26 cash call of 5,029,500.00 USD was posted on 12.03.2026 as 1025006468 at 62,361,935.00 INR,
+       an implied rate of 12.40.
+     - It was reversed the same day by 9102500718 and reposted as 1025006731 at 464,373,735.00 INR (rate 92.33).
+     - The workbook uses the INR of the reversed posting: 464,373,735 - 62,361,935 = 402,011,800.
+     - Its BREML INR/USD rate of 86.17 is therefore low; SAP's is 88.49.
+   - **Carabobo Conversion to Equity -21,856,891.32 INR (G/L 100122).** Doc 1025003938 of 10.11.2025,
+     "Con. Adv into Equity", -246,469.23 USD at 88.68. The workbook shows the USD but leaves the INR and rate at 0.
+   - **OVRL Conversion to Equity, 5.35 INR (G/L 80538).** The conversions were posted 5.35 INR below the
+     funding. G/L 80538 at 31.03.2026 is USD 0.00 / INR 5.78 (5.35 from FY26). The workbook sets conversion
+     INR equal to funding INR.
+   Earlier text kept for history: Deemed BREML Additional Funding in INR differs from the workbook by
+   402,011,800 INR (USD equal).
    Carabobo Conversion to Equity in INR is -21,856,891.32 in SAP (rate 88.68) and 0 in the workbook, so the
    INR total of that column is -13,087,561,471.32 against -13,065,704,585.35. The USD side is equal. The
    workbook seems to leave Carabobo's INR out. Found on the one-tile check, 24/11/26.
