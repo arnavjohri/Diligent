@@ -74,7 +74,29 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
 
 **Open - for functional / Arnav:**
 1. Provision G/L still not named (query 3) - Provision Made and Net equal plain balances until it is entered.
-2. Interest: Imperial +3,768.54 (WHT line) and OVSL +282,130.71 against the workbook - see table above.
+2. Interest: Imperial +3,768.54 and OVSL +282,130.71 against the workbook. **Explained 24/11/26** from the
+   ACDOCA lines of G/L 91905, FY26, in the OCD SQL console. Both are the same thing: **15% withholding tax on
+   OVSL interest, 285,899.25 in total**, which is still on 91905.
+   - **Doc 1025001435 (30.06.2025):** Dr 91905 / Cr 209726, 3,768.54, text "WHT @ 15% Acc Interest 28Jan to
+     31 Mar 2025". It grosses up OVSL's opening: 21,355.02 / 0.85 = 25,123.56, and 15% of that is 3,768.54.
+     So it belongs to **OVSL, not Imperial**. It falls on Imperial only because the text names no subsidiary
+     (seq 999). Without it, Imperial equals the workbook (13,995.30).
+   - **Doc 1025005739 (30.01.2026)** is OVSL's "Repayment of interest", 1,620,095.73 to bank G/L 91299.
+     That is 85% of the gross interest accrued up to then:
+     - opening, gross: 25,123.56
+     - Q1 36,289.57 + Q2 735,280.28 + Q3 908,786.78 + Q4 part 200,514.80 = 1,880,871.43
+     - total 1,905,994.99 x 0.85 = 1,620,095.74.
+     The 15% withheld by OVSL, 282,130.71 (= 1,880,871.43 x 0.15), was never posted out of 91905.
+   - **What the workbook does:** it shows OVSL net of WHT. Its interest recognised is the SAP figure minus
+     282,130.71, and its closing 779,387.04 is only the Q4 accrual of 31.03.2026. It leaves the 3,768.54
+     line out altogether.
+   - **The tile shows the G/L as booked.** 91905 OVSL + Imperial at 31.03.2026 is 1,081,478.58. The
+     workbook's 795,579.33 is 285,899.25 lower.
+   - **Fix:**
+     - *Accounting:* a posting from 91905 to the WHT credit G/L for 285,899.25. Functional to confirm the
+       G/L and whether it is due.
+     - *Mapping (proposed, not done):* a `ZFI_SLDI_ROW` rule 91905 seq 003, word `WHT @`, to row I 03 OVSL.
+       Imperial then ties exactly, and the whole difference sits on OVSL with this explanation.
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
 4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
