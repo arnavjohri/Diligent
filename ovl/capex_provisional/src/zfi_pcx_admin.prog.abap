@@ -19,6 +19,8 @@
 *&               entry completion %, open fortnight highlighted, missing
 *&               TTA rate in red, header block, striped rows, frame
 *&               titles, default year
+*&   24.11.2026  Arnav Johri  OCDK920554  TEMPORARY DEMO_BYPASS of the
+*&               ZFI_PCX check for the demo user - REMOVE BEFORE TRANSPORT
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_admin.
 
@@ -48,7 +50,13 @@ CONSTANTS: gc_open     TYPE zfi_pcx_status VALUE 'O',
 *          activity 70 = Corporate Budgeting. The Business Unit field is
 *          not checked here (DUMMY): the calendar is not BU-specific.
            gc_auth_obj TYPE c LENGTH 10 VALUE 'ZFI_PCX',
-           gc_act_adm  TYPE c LENGTH 2 VALUE '70'.
+*BOC By Arnav on 24/11/26
+*          gc_act_adm  TYPE c LENGTH 2 VALUE '70'.
+           gc_act_adm  TYPE c LENGTH 2 VALUE '70',
+*          TEMPORARY DEMO_BYPASS - remove before transport: this user skips
+*          the ZFI_PCX check until the PFCG role exists.
+           gc_demo_user TYPE syuname VALUE 'SAP_ABAP'.
+*EOC By Arnav on 24/11/26
 
 DATA: gt_per TYPE STANDARD TABLE OF zfi_pcx_period WITH DEFAULT KEY,
       gt_out TYPE STANDARD TABLE OF ty_out WITH DEFAULT KEY.
@@ -105,13 +113,25 @@ FORM run.
   DATA lv_ok TYPE abap_bool.
 
   IF r_list = abap_false.
-    AUTHORITY-CHECK OBJECT gc_auth_obj
-      ID 'ZPCX_BU' DUMMY
-      ID 'ACTVT'   FIELD gc_act_adm.
-    IF sy-subrc <> 0.
-      MESSAGE 'No authorisation to change the fortnight calendar' TYPE 'S' DISPLAY LIKE 'E'.
-      RETURN.
+*BOC By Arnav on 24/11/26
+*    AUTHORITY-CHECK OBJECT gc_auth_obj
+*      ID 'ZPCX_BU' DUMMY
+*      ID 'ACTVT'   FIELD gc_act_adm.
+*    IF sy-subrc <> 0.
+*      MESSAGE 'No authorisation to change the fortnight calendar' TYPE 'S' DISPLAY LIKE 'E'.
+*      RETURN.
+*    ENDIF.
+*   TEMPORARY DEMO_BYPASS - remove before transport
+    IF sy-uname <> gc_demo_user.
+      AUTHORITY-CHECK OBJECT gc_auth_obj
+        ID 'ZPCX_BU' DUMMY
+        ID 'ACTVT'   FIELD gc_act_adm.
+      IF sy-subrc <> 0.
+        MESSAGE 'No authorisation to change the fortnight calendar' TYPE 'S' DISPLAY LIKE 'E'.
+        RETURN.
+      ENDIF.
     ENDIF.
+*EOC By Arnav on 24/11/26
     PERFORM lock CHANGING lv_ok.
     IF lv_ok = abap_false.
       RETURN.

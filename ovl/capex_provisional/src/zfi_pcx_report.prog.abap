@@ -21,6 +21,8 @@
 *&               row highlighted, over-budget and negative balances in
 *&               colour, status icons, fixed key columns, frame titles,
 *&               defaults for year and open fortnight
+*&   24.11.2026  Arnav Johri  OCDK920554  TEMPORARY DEMO_BYPASS of the
+*&               ZFI_PCX check for the demo user - REMOVE BEFORE TRANSPORT
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_report.
 
@@ -175,7 +177,13 @@ CONSTANTS: gc_total    TYPE zfi_pcx_projnm VALUE 'Total',
 *          ASSUMPTION: authorisation object ZFI_PCX (SU21, manual) with
 *          fields ZPCX_BU and ACTVT; 03 = display.
            gc_auth_obj TYPE c LENGTH 10 VALUE 'ZFI_PCX',
-           gc_act_dis  TYPE c LENGTH 2 VALUE '03'.
+*BOC By Arnav on 24/11/26
+*          gc_act_dis  TYPE c LENGTH 2 VALUE '03'.
+           gc_act_dis  TYPE c LENGTH 2 VALUE '03',
+*          TEMPORARY DEMO_BYPASS - remove before transport: this user skips
+*          the ZFI_PCX check until the PFCG role exists.
+           gc_demo_user TYPE syuname VALUE 'SAP_ABAP'.
+*EOC By Arnav on 24/11/26
 
 DATA: gs_proj   TYPE zfi_pcx_proj,
       gt_proj   TYPE STANDARD TABLE OF zfi_pcx_proj WITH DEFAULT KEY,
@@ -351,6 +359,13 @@ FORM read_data CHANGING cv_ok TYPE abap_bool.
     ORDER BY PRIMARY KEY
     INTO TABLE @lt_all.
   LOOP AT lt_all INTO ls_proj.
+*BOC By Arnav on 24/11/26
+*   TEMPORARY DEMO_BYPASS - remove before transport
+    IF sy-uname = gc_demo_user.
+      APPEND ls_proj TO gt_proj.
+      CONTINUE.
+    ENDIF.
+*EOC By Arnav on 24/11/26
     AUTHORITY-CHECK OBJECT gc_auth_obj
       ID 'ZPCX_BU' FIELD ls_proj-bu
       ID 'ACTVT'   FIELD gc_act_dis.

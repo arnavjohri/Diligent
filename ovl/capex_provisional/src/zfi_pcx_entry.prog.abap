@@ -21,6 +21,8 @@
 *&               with KPIs and colour legend, status icons, zebra,
 *&               fixed key columns, tooltips, frame titles, defaults
 *&               for year and open fortnight
+*&   24.11.2026  Arnav Johri  OCDK920554  TEMPORARY DEMO_BYPASS of the
+*&               ZFI_PCX check for the demo user - REMOVE BEFORE TRANSPORT
 *&---------------------------------------------------------------------*
 REPORT zfi_pcx_entry.
 
@@ -71,6 +73,13 @@ CONSTANTS: gc_tab_capex TYPE rstable-tabname VALUE 'ZFI_PCX_CAPEX',
            gc_act_chg   TYPE c LENGTH 2 VALUE '02',
            gc_act_dis   TYPE c LENGTH 2 VALUE '03',
            gc_act_adm   TYPE c LENGTH 2 VALUE '70',
+*BOC By Arnav on 24/11/26
+*          TEMPORARY DEMO_BYPASS - remove before transport: this user skips
+*          the ZFI_PCX check until the PFCG role exists.
+           gc_demo_user TYPE syuname VALUE 'SAP_ABAP',
+*          list user command that builds the grid once the list is up
+           gc_fc_hdr    TYPE syucomm VALUE 'ZHDR',
+*EOC By Arnav on 24/11/26
            gc_col_frz   TYPE i VALUE 1,
            gc_col_pre   TYPE i VALUE 3,
            gc_col_pun   TYPE i VALUE 5.
@@ -137,6 +146,16 @@ AT SELECTION-SCREEN.
 
 START-OF-SELECTION.
   PERFORM run.
+
+*BOC By Arnav on 24/11/26
+* ZHDR comes from SET USER-COMMAND in FORM run: the list screen is current
+* now, so the grid and the header pane are created on it. Nothing may be
+* written here - a WRITE would open a detail list.
+AT USER-COMMAND.
+  IF sy-ucomm = gc_fc_hdr.
+    PERFORM display.
+  ENDIF.
+*EOC By Arnav on 24/11/26
 
 *----------------------------------------------------------------------*
 CLASS lcl_evt IMPLEMENTATION.
@@ -292,7 +311,15 @@ FORM run.
       MESSAGE 'Fortnight is not open for entry - display only' TYPE 'S' DISPLAY LIKE 'W'.
     ENDIF.
   ENDIF.
-  PERFORM display.
+*BOC By Arnav on 24/11/26
+*  PERFORM display.
+* GUI controls attach to the screen that is current when they are created.
+* Created here (START-OF-SELECTION) they went to the selection screen and the
+* list came up empty (OCD, 24/11/26). The list is opened first; ZHDR then
+* builds the grid from AT USER-COMMAND, when the list screen is current.
+  WRITE space.
+  SET USER-COMMAND gc_fc_hdr.
+*EOC By Arnav on 24/11/26
 ENDFORM.
 
 *&---------------------------------------------------------------------*
@@ -353,6 +380,13 @@ ENDFORM.
 *& Form check_auth
 *&---------------------------------------------------------------------*
 FORM check_auth USING iv_bu TYPE zfi_pcx_bu iv_act TYPE clike CHANGING cv_ok TYPE abap_bool.
+*BOC By Arnav on 24/11/26
+* TEMPORARY DEMO_BYPASS - remove before transport
+  IF sy-uname = gc_demo_user.
+    cv_ok = abap_true.
+    RETURN.
+  ENDIF.
+*EOC By Arnav on 24/11/26
   AUTHORITY-CHECK OBJECT gc_auth_obj
     ID 'ZPCX_BU' FIELD iv_bu
     ID 'ACTVT'   FIELD iv_act.
@@ -663,7 +697,7 @@ FORM display.
   ENDIF.
 
 * the list screen this WRITE opens is the screen the grid is drawn on
-  WRITE space.
+*  WRITE space.                                   "Changes by Arnav on 24/11/26
 ENDFORM.
 
 *BOC By Arnav on 23/11/26

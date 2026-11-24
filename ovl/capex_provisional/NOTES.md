@@ -24,7 +24,19 @@ Package **`ZFI_PCX`** (new), workbench request **OCDK920554**. Nothing transport
 | SE93 | `ZFI_PCX01` entry, `ZFI_PCX02` reports, `ZFI_PCX03` fortnight calendar - report transactions, GUI for HTML ticked | saved |
 | Screen polish | Entry: header pane (cl_dd_document in a splitter) with fortnight, status, mode, live totals and colour legend; status icon column; zebra; fixed key columns; tooltips. Reports and admin: header block (top of list), striped rows, total row yellow, over budget / negative balance / not entered in red, 90-100 % in orange, status icons, completion %. All three: frame titles; defaults for the financial year and the open fortnight | active |
 
-**Tested:** the three selection screens (titles, defaults FY 2026 / fortnight 16 from today's date
+**24/11/26 - entry screen working, with test data (Arnav: "load some test data and show me the entry screen"):**
+- **TEMPORARY `DEMO_BYPASS`** in all three programs: user `SAP_ABAP` skips the `ZFI_PCX` check until the role
+  exists. Arnav's choice over building the role first. **Remove before transport**:
+  `grep -n DEMO_BYPASS src/*.abap`, delete the `*BOC/*EOC 24/11/26` bypass blocks, restore the commented admin check.
+- **Real fix, stays:** the grid is now built from `AT USER-COMMAND` (ZHDR, set in `FORM run`) once the list screen
+  is current. Created in START-OF-SELECTION it attached to the selection screen, and the list was empty. That
+  resolves "unproven #1" below.
+- **Test data on OCD 500, FY 2026-27:** calendar generated; fortnight 01 with 5 projects, frozen; fortnight 02
+  open with Sakhalin I and Block 06.1 increased. Checked on screen: pre-fill from 01, decrease refused with a
+  message and the cell put back, green / yellow states, header counts, save. **Delete before real use.**
+- Still open: SU21 fields + PFCG role (then remove the bypass), BU on projects, BE/RE and opening figures.
+
+**Tested (23/11):** the three selection screens (titles, defaults FY 2026 / fortnight 16 from today's date
 as no fortnight is open), admin *Show the Calendar* ("No calendar for 2026 yet"), admin *Generate*
 refused with "No authorisation to change the fortnight calendar". **Not tested:** every grid and
 list - they need the `ZFI_PCX` authorisation, and the calendar (Generate) needs activity 70.
@@ -146,9 +158,9 @@ column uses the 15-day rate (`" ASSUMPTION` in the code); the total row is calcu
 
 ### Unproven on this landscape — expect the first error here
 
-1. **Editable `CL_GUI_ALV_GRID` on `CL_GUI_CONTAINER=>DEFAULT_SCREEN`** with `WRITE space` as carrier.
-   `kpmg/zpp_forecast_v2` proves it for a display SALV only. Fallback: screen 0100 + custom container
-   + GUI status by hand.
+1. ~~**Editable `CL_GUI_ALV_GRID` on `CL_GUI_CONTAINER=>DEFAULT_SCREEN`** with `WRITE space` as carrier.~~
+   **Resolved 24/11/26.** Created in START-OF-SELECTION, the controls went to the selection screen and the list
+   was empty. Created from `AT USER-COMMAND` (ZHDR) after `WRITE space` + `SET USER-COMMAND`, they show and edit.
 2. **Domains with fixed values** (`DD07V_TAB`): shape taken from `kpmg/zpp_forecast_v2`, never pulled on OCD.
 3. **TABL on OCD**: pulled on 28/10 (`ZFI_BR_GLMAP`), "table not created" on 03/11 (`ZFI_TR_BANKACCT`,
    never diagnosed). If a table is missing after the pull: `ddic/01_domains_data_elements.md` is the
