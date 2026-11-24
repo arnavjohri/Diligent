@@ -29,6 +29,30 @@ Package **`ZFI_TASA`** (new, HOME / ZOCD, not encapsulated), workbench request *
 
 Names read from `DDLDEPENDENCY`.
 
+### One tile (24/11/26, Arnav: "build the single combined tile")
+
+**`ZZ1_TASA_RECON`**, "TASA Recon Statement - Income, Balance and Aging", technical name
+**`2CZZ1_G2YB45BIWRCW`** (read from the analyze URL of the published query; `ZZ1_` prefix, not a `ZZ9_`
+preview, M-31). This is the tile. The three queries above stay.
+
+| New object | What |
+|---|---|
+| `ZI_TASA_RCN_INC` | Income lines up to the key date, plus the key date's fiscal year: key date - 3 months, first 4 characters (31.03.2026 -> 2025). A classic view allows no function in WHERE, so the next view compares two fields. |
+| `ZI_TASA_RCN_ITEM` | `UNION ALL` of income (`fiscal_year = key_fiscal_year`) and open items of 91111 (`ZI_TASA_BAL_ITEM`). Every element is cast in both branches. Ageing buckets are computed here. `line_kind` I / B: `SECTION` is a reserved word, and the first activation failed on it. |
+| `ZI_TASA_RCN_CUBE` | Cube with prompt Key Date. Income Q1-Q4 + year to date as separate measures (USD and INR), so balance columns are not split by quarter. Balance, provision, net, closing rate (M), actual INR, reclassification and 7 ageing buckets as on `ZI_TASA_BAL_CUBE`. C1 released. |
+| `ZZ1_TASA_RECON` | Rows: Customer Category (descending, TASA first; grand total) > Sort No. (category subtotal) > Project / Subsidiary > Customer. Columns: income USD Q1-Q4 + year, income INR Q1-Q4 + year, Gross, Provision, Net, Closing Rate, Net at Closing Rate (INR, calculated = Net x Rate), Actual G/L INR, Reclassification USD / INR, 7 ageing buckets. Company Code = OVL (fixed, as the other three queries). Key Date mandatory, no default. Zero suppression on rows. Free: Line Type, G/L Account, Document Number, Posting Date. |
+
+**Reconciled on screen, key date 31.03.2026, against the workbook: 0 differences.**
+- **Income USD and INR:** 16 rows + Other x Q1-Q4 + year. Totals 18,722,408.62 USD / 1,660,654,536.70 INR.
+- **Balance per customer:** gross 5,107,992.71, provision 10,682.62, net 5,097,310.09, actual G/L INR
+  462,876,293.79, net at closing rate 93.75, reclassification 2,490,649.71 USD / 227,772,305.98 INR.
+- **Ageing:** 19 customers x 7 buckets. Grand totals 1,625,610.90 / 2,041,786.03 / 645,456.00 / 256,291.77 /
+  120,615.41 / 281,172.31 / 137,060.29.
+
+Without the Company Code filter (SQL console) there is one more 91111 open item: customer 10094,
+0.36 USD, not in the customer list. The tile's OVL filter leaves it out, as the workbook does.
+Zero suppression does not hide all-zero customer rows, because Closing Rate (93.75) is filled on every row.
+
 **Checked on OCD 500 with the views (24/11/26, SQL console):**
 - `ZI_TASA_INC_ITEM`, FY 2025, by partner and quarter against the workbook's Q1-Q4 USD and INR:
   **88 of 88 cells equal**; the only gap is Block 128 Q2 carrying the -0.72 "Other" JIB lines, which
