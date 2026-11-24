@@ -53,6 +53,10 @@ Without the Company Code filter (SQL console) there is one more 91111 open item:
 0.36 USD, not in the customer list. The tile's OVL filter leaves it out, as the workbook does.
 Zero suppression does not hide all-zero customer rows, because Closing Rate (93.75) is filled on every row.
 
+**Net at Closing Rate (INR), changed 24/11/26:** set to 2 decimals in the query (Arnav), so every row reads
+as the workbook. The total is 477,872,820.94 against the workbook's 477,872,820.96. The query multiplies
+first and rounds once; the workbook rounds each row and then adds. This is rounding only.
+
 **Checked on OCD 500 with the views (24/11/26, SQL console):**
 - `ZI_TASA_INC_ITEM`, FY 2025, by partner and quarter against the workbook's Q1-Q4 USD and INR:
   **88 of 88 cells equal**; the only gap is Block 128 Q2 carrying the -0.72 "Other" JIB lines, which
