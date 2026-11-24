@@ -78,6 +78,9 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
 3. 91905 / 391908 lines **without item text** fall to the seq 999 rows (Imperial / OVRL). With the FY26 data
    the OVRL interest row matches the workbook this way; confirm before deleting any 999 row.
 4. Deemed BREML Additional Funding in INR differs from the workbook by 402,011,800 INR (USD equal).
+   Carabobo Conversion to Equity in INR is -21,856,891.32 in SAP (rate 88.68) and 0 in the workbook, so the
+   INR total of that column is -13,087,561,471.32 against -13,065,704,585.35. The USD side is equal. The
+   workbook seems to leave Carabobo's INR out. Found on the one-tile check, 24/11/26.
 5. Tile: one tile on `2CZZ1_0R6A7YF63UIC` (`ZZ1_SLDI_SCHEDULE`); catalog / group assignment pending (Arnav to
    name them). Transport of the queries themselves is a
    separate key-user step (they are not on OCDK920552).
