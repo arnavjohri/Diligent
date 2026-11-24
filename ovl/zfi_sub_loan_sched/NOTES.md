@@ -73,7 +73,14 @@ changed to net like the workbook (23/11/26 later, `ZFI_SLDI_load.txt`):**
 | Interest | OVRL, BREML equal. Imperial +3,768.54 (WHT line "WHT @ 15% Acc Interest 28Jan to 31 Mar 2025", no subsidiary in the text, falls to seq 999 = Imperial; not in the workbook). OVSL +282,130.71 on interest recognised and closing - not explainable from the workbook (its line-item sheets are FY21); FBL3N 91905 at 31.03.2026 for the OVSL lines will show it |
 
 **Open - for functional / Arnav:**
-1. Provision G/L still not named (query 3) - Provision Made and Net equal plain balances until it is entered.
+1. ~~Provision G/L still not named (query 3).~~ **Found and mapped 24/11/26.**
+   - **How it was found:** OCD SQL console, searching for a G/L with an FY26 balance equal to the Narmada loan.
+     That gave 400998, SKAT "Provision for Loans/Advances to ONGC Narmada Limited". Its only line items are
+     three documents of 01.04.2016, "USD Correction entry for Ind AS" (1016003619, 1016003767, 9101600175),
+     netting to -31,403,156.30 and carried forward unchanged since.
+   - **Mapping:** SM30 `ZFI_SLDI_ROW` OVL / 400998 / 001 / L / 03 / ONGC Narmada Limited / Provision = X.
+   - **Tile, FY26:** Narmada Provision Made -31,403,156.30, Net 0.00. Loan total Net 2,434,094,956.97.
+     **The Loan block now equals the workbook in every column.**
 2. Interest: Imperial +3,768.54 and OVSL +282,130.71 against the workbook. **Explained 24/11/26** from the
    ACDOCA lines of G/L 91905, FY26, in the OCD SQL console. Both are the same thing: **15% withholding tax on
    OVSL interest, 285,899.25 in total**, which is still on 91905.

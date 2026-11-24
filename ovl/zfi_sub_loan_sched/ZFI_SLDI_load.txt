@@ -29,7 +29,10 @@ ZFI_SLDI_ROW   CoCd  G/L      Seq  Item Text Contains  Sched  Row  Subsidiary   
                OVL   100125   001                      D      02   BREML
                OVL   80538    001                      D      03   OVRL India Limited
                OVL   80541    001                      D      04   OVRL India Limited - Interest Component
-  NOT loaded:  OVL   <provision G/L - not named in the workbook (query 3)>  L  03  ONGC Narmada Limited   X
+               OVL   400998   001                      L      03   ONGC Narmada Limited                      X
+                     (added 24/11/26. G/L 400998 = "Provision for Loans/Advances to ONGC Narmada Limited".
+                      Balance -31,403,156.30, from 3 docs of 01.04.2016 "USD Correction entry for Ind AS",
+                      carried forward unchanged since.)
 
   WHT % (new column WHTPC, 24/11/26): 15.00 on OVL / 91905 / 001 (LOAN TO OVSL), blank everywhere else.
   The interest OVSL pays is received net of 15% WHT. ZCL_SLDI_ITEM_TF adds a derived line per receipt
